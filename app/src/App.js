@@ -25,14 +25,15 @@ import { db } from './firebase';
 import { collection, getDocs } from 'firebase/firestore';
 import PdfFlipbookReader from './components/PdfFlipbookReader';
 
-// Lazy load Dashboard to save ~250KB in the public site bundle
-const Dashboard = React.lazy(() => import('./components/Dashboard'));
 import { pageService } from './services/pageService';
 import { BlockRenderer } from './components/page-builder/BlockRenderer';
 import { PublicHeader, PublicFooter } from './components/PublicComponents';
 import { PublicNav } from './components/PublicNav';
 import { ContactForm } from './components/ContactForm';
 import { PrivacyPolicy } from './components/PrivacyPolicy';
+
+// Lazy load Dashboard to save ~250KB in the public site bundle
+const Dashboard = React.lazy(() => import('./components/Dashboard'));
 
 const Youtube = ({ size = 20, color = "currentColor", fill = "none", ...props }) => (
   <svg
