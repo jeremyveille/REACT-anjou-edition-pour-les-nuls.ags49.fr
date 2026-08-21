@@ -23,8 +23,10 @@ import {
 } from './data';
 import { db } from './firebase';
 import { collection, getDocs } from 'firebase/firestore';
-import Dashboard from './components/Dashboard';
 import PdfFlipbookReader from './components/PdfFlipbookReader';
+
+// Lazy load Dashboard to save ~250KB in the public site bundle
+const Dashboard = React.lazy(() => import('./components/Dashboard'));
 import { pageService } from './services/pageService';
 import { BlockRenderer } from './components/page-builder/BlockRenderer';
 import { PublicHeader, PublicFooter } from './components/PublicComponents';
@@ -603,7 +605,9 @@ function App() {
   if (view.type === 'dashboard') {
     return (
       <div className="min-h-screen">
-        <Dashboard onBackToSite={handleBackToSite} flipbooks={flipbooks} setFlipbooks={setFlipbooks} />
+        <React.Suspense fallback={<div className="p-8 text-center text-slate-500">Chargement de l'administration...</div>}>
+          <Dashboard onBackToSite={handleBackToSite} flipbooks={flipbooks} setFlipbooks={setFlipbooks} />
+        </React.Suspense>
       </div>
     );
   }
