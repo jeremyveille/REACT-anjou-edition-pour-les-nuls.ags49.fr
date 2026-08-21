@@ -64,8 +64,8 @@ export const ContactForm = ({ setView }) => {
       <p>Une suggestion ? Une question sur nos ouvrages ? Contactez-nous via ce formulaire.</p>
 
       {formStatus.message && (
-        <div className={`form-status-alert ${formStatus.type}`}>
-          {formStatus.type === 'success' ? <CheckCircle2 size={20} /> : <AlertCircle size={20} />}
+        <div className={`form-status-alert ${formStatus.type}`} role="alert" aria-live="polite">
+          {formStatus.type === 'success' ? <CheckCircle2 size={20} aria-hidden="true" /> : <AlertCircle size={20} aria-hidden="true" />}
           <p>{formStatus.message}</p>
         </div>
       )}
