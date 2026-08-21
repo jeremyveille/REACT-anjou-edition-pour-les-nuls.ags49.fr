@@ -206,6 +206,7 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
   const [newMenuItemParentId, setNewMenuItemParentId] = useState("");
   const [menuAriaAnnouncement, setMenuAriaAnnouncement] = useState("");
   const [draggedItemId, setDraggedItemId] = useState(null);
+  const [newlyAddedMenuItemId, setNewlyAddedMenuItemId] = useState(null);
 
   // Search, Preview & Focus tracking
   const [menusSearchQuery, setMenusSearchQuery] = useState("");
@@ -1652,6 +1653,8 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
 
       updatedList = [...menusList, newMenuItem];
       setNotification(`Élément "${newMenuItem.title}" créé.`);
+      setNewlyAddedMenuItemId(newMenuItem.id);
+      setTimeout(() => setNewlyAddedMenuItemId(null), 3000);
     }
 
     const reindexed = reindexMenuOrders(updatedList);
@@ -2150,6 +2153,160 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
       </div>
     );
   }
+
+  const renderMenuForm = (isInline = false) => (
+    <form onSubmit={handleAddMenuSubmit} className={isInline ? "space-y-4" : "ae-modal-body space-y-4"}>
+      <div>
+        <label htmlFor="menu-item-title" className="ae-modal-label">Intitulé de l'élément <span className="text-red-500">*</span></label>
+        <input 
+          id="menu-item-title"
+          type="text" 
+          required 
+          placeholder="ex: Accueil" 
+          value={newMenuItemTitle} 
+          onChange={(e) => setNewMenuItemTitle(e.target.value)} 
+          className="db-input"
+        />
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label htmlFor="menu-item-type" className="ae-modal-label">Type d'action</label>
+          <select
+            id="menu-item-type"
+            value={newMenuItemType}
+            onChange={(e) => setNewMenuItemType(e.target.value)}
+            className="db-select w-full"
+          >
+            <option value="internal">Lien interne (Route)</option>
+            <option value="external">Lien externe (URL)</option>
+            <option value="shortcode">Contenu dynamique / Action</option>
+          </select>
+        </div>
+        <div>
+          <label htmlFor="menu-item-status" className="ae-modal-label">État de publication</label>
+          <select
+            id="menu-item-status"
+            value={newMenuItemStatus}
+            onChange={(e) => setNewMenuItemStatus(e.target.value)}
+            className="db-select w-full"
+          >
+            <option value="Actif">Actif</option>
+            <option value="Inactif">Inactif</option>
+          </select>
+        </div>
+      </div>
+      {newMenuItemType !== "shortcode" && (
+        <div>
+          <label htmlFor="menu-item-url" className="ae-modal-label">Adresse URL / Route / Slug <span className="text-red-500">*</span></label>
+          <input 
+            id="menu-item-url"
+            type="text" 
+            required 
+            placeholder="ex: /contact" 
+            value={newMenuItemUrl} 
+            onChange={(e) => setNewMenuItemUrl(e.target.value)} 
+            className="db-input"
+          />
+        </div>
+      )}
+      {(!editingMenuItemId || !menusList.some(m => normalizeParentId(m.parentId) === editingMenuItemId)) ? (
+        <div>
+          <label htmlFor="menu-item-shortcode" className="ae-modal-label">Contenu Dynamique / Action au clic</label>
+          <input 
+            id="menu-item-shortcode"
+            type="text" 
+            list="shortcode-options"
+            placeholder="Sélectionnez ou saisissez un identifiant..." 
+            value={newMenuItemShortcode} 
+            onChange={(e) => setNewMenuItemShortcode(e.target.value)} 
+            className="db-input font-mono"
+          />
+          <datalist id="shortcode-options">
+            <option value="open_contact_modal">Action : Formulaire de contact</option>
+            <option value="toggle_theme">Action : Changer de thème</option>
+            <option value="play_speech">Action : Lire bienvenue</option>
+            <option value="increase_font">Action : Agrandir texte</option>
+            <option value="show_flipbooks">Action : Liste des flipbooks</option>
+            <option value="show_videos">Action : Liste des vidéos</option>
+            <option value="show_gallery">Action : Galerie photos</option>
+            {pagesList && pagesList.map(p => (
+              <option key={`page-${p.id}`} value={p.slug || p.title}>Page : {p.title}</option>
+            ))}
+            {textsData && Object.entries(textsData).map(([key, data]) => (
+              <option key={`txt-${key}`} value={key}>Texte : {data.title}</option>
+            ))}
+            {flipbooks && flipbooks.map(fb => (
+              <option key={`fb-${fb.id}`} value={`[PdfFlipbookReader id="${fb.id}"]`}>Flipbook : {fb.title}</option>
+            ))}
+          </datalist>
+          <span className="text-[10px] text-slate-400 block mt-1">
+            Choisissez un contenu dans la liste ou saisissez son identifiant. 
+            {newMenuItemType === "shortcode" && " (Requis pour le type Shortcode/Contenu dynamique)"}
+          </span>
+        </div>
+      ) : (
+        <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-800 text-xs text-slate-550">
+          ℹ️ Le champ shortcode est masqué car cet élément possède des sous-menus (menu parent).
+        </div>
+      )}
+      <div>
+        <label htmlFor="menu-item-parent" className="ae-modal-label">Élément parent (niveaux illimités)</label>
+        <select
+          id="menu-item-parent"
+          value={newMenuItemParentId}
+          onChange={(e) => setNewMenuItemParentId(e.target.value)}
+          className="db-select w-full"
+        >
+          <option value="">-- Aucun parent (Élément principal) --</option>
+          {(() => {
+            const flatTree = getFlattenedMenuTree(menusList);
+            const excludedIds = editingMenuItemId ? [editingMenuItemId, ...getDescendantIds(editingMenuItemId, menusList)] : [];
+            return flatTree
+              .filter(m => !excludedIds.includes(m.id))
+              .map(m => (
+                <option key={m.id} value={m.id}>
+                  {"\u00a0\u00a0".repeat(m.depth || 0) + (m.depth > 0 ? "└── " : "") + m.title}
+                </option>
+              ));
+          })()}
+        </select>
+      </div>
+      <div>
+        <label htmlFor="menu-item-icon" className="ae-modal-label">Icône (Nom du symbole)</label>
+        <select
+          id="menu-item-icon"
+          value={newMenuItemIcon}
+          onChange={(e) => setNewMenuItemIcon(e.target.value)}
+          className="db-select w-full"
+        >
+          <option value="Home">🏠 Accueil (Home)</option>
+          <option value="Newspaper">📰 Actualités (Newspaper)</option>
+          <option value="HelpCircle">❓ Aide / Contact (HelpCircle)</option>
+          <option value="Layers">🧩 Blocs (Layers)</option>
+          <option value="Link">🔗 Lien externe (Link)</option>
+        </select>
+      </div>
+      <div>
+        <label htmlFor="menu-item-desc" className="ae-modal-label">Description courte</label>
+        <textarea 
+          id="menu-item-desc"
+          placeholder="Brève description de la fonction de cet élément..." 
+          value={newMenuItemDescription} 
+          onChange={(e) => setNewMenuItemDescription(e.target.value)} 
+          rows={2}
+          className="db-textarea text-xs"
+        />
+      </div>
+      <div className={isInline ? "flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800" : "ae-modal-footer font-sans"}>
+        <button type="button" onClick={() => setShowAddMenuModal(false)} className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-4 py-2 rounded-lg cursor-pointer text-sm border-none">
+          Annuler
+        </button>
+        <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded-lg cursor-pointer text-sm border-none">
+          {editingMenuItemId ? "Enregistrer" : "Créer l'élément"}
+        </button>
+      </div>
+    </form>
+  );
 
   return (
     <div className="dashboard-body-wrapper">
@@ -3452,23 +3609,6 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                             Gérez et réordonnez la structure du menu de votre site. Glissez-déposez les éléments pour les réorganiser ou les imbriquer.
                           </p>
                         </div>
-                        <button
-                          onClick={() => {
-                            setEditingMenuItemId(null);
-                            setNewMenuItemTitle("");
-                            setNewMenuItemIcon("Layers");
-                            setNewMenuItemUrl("");
-                            setNewMenuItemShortcode("");
-                            setNewMenuItemStatus("Actif");
-                            setNewMenuItemDescription("");
-                            setNewMenuItemType("internal-link");
-                            setNewMenuItemParentId("");
-                            setShowAddMenuModal(true);
-                          }}
-                          className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-4 py-2.5 rounded-lg cursor-pointer transition-colors inline-flex items-center gap-1.5 shadow-sm border-none"
-                        >
-                          <Plus className="w-4 h-4" /> Ajouter un élément
-                        </button>
                       </div>
 
                       {/* Screen reader aria-live region */}
@@ -3506,7 +3646,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                           return (
                             <div 
                               key={item.id}
-                              className={`menu-builder-item ${draggedItemId === item.id ? "dragging" : ""}`}
+                              className={`menu-builder-item ${draggedItemId === item.id ? "dragging" : ""} ${newlyAddedMenuItemId === item.id ? "new-item-highlight" : ""}`}
                               style={{
                                 marginLeft: `${(item.depth || 0) * 30}px`,
                                 borderLeft: item.depth > 0 ? "3px solid var(--secondary)" : "none",
@@ -3656,6 +3796,45 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                           </div>
                         )}
                       </div>
+
+                      {/* Bouton Ajouter un élément & Formulaire Inline */}
+                      {(!showAddMenuModal || editingMenuItemId !== null) ? (
+                        <div className="mt-4">
+                          <button
+                            onClick={() => {
+                              setEditingMenuItemId(null);
+                              setNewMenuItemTitle("");
+                              setNewMenuItemIcon("Layers");
+                              setNewMenuItemUrl("");
+                              setNewMenuItemShortcode("");
+                              setNewMenuItemStatus("Actif");
+                              setNewMenuItemDescription("");
+                              setNewMenuItemType("internal-link");
+                              setNewMenuItemParentId("");
+                              setShowAddMenuModal(true);
+                              
+                              setTimeout(() => {
+                                const formEl = document.getElementById("inline-add-menu-form");
+                                if (formEl && typeof formEl.scrollIntoView === 'function') {
+                                  formEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                                }
+                              }, 100);
+                            }}
+                            className="w-full md:w-auto bg-blue-50 dark:bg-slate-800 hover:bg-blue-100 dark:hover:bg-slate-700 text-blue-700 dark:text-blue-400 text-sm font-bold px-6 py-3 rounded-xl cursor-pointer transition-colors inline-flex items-center justify-center gap-2 border border-blue-200 dark:border-slate-700 shadow-sm"
+                          >
+                            <Plus className="w-4 h-4" /> Ajouter un élément
+                          </button>
+                        </div>
+                      ) : (
+                        <div id="inline-add-menu-form" className="mt-6 inline-form-transition">
+                          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 md:p-6 shadow-sm">
+                            <h3 className="flex items-center gap-2 text-blue-600 font-bold mb-4 text-lg border-b border-slate-100 dark:border-slate-800 pb-3">
+                              <Plus className="w-5 h-5" /> Ajouter un élément
+                            </h3>
+                            {renderMenuForm(true)}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -4894,7 +5073,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
             )}
 
             {/* 9. Add/Edit Menu/Shortcode Item Modal */}
-            {showAddMenuModal && (
+            {showAddMenuModal && editingMenuItemId !== null && (
               <div className="ae-modal-overlay" onClick={() => setShowAddMenuModal(false)}>
                 <div className="ae-modal-container" onClick={(e) => e.stopPropagation()}>
                   <div className="ae-modal-header">
@@ -4905,166 +5084,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                       <X className="w-5 h-5" />
                     </button>
                   </div>
-                  <form onSubmit={handleAddMenuSubmit} className="ae-modal-body space-y-4">
-                    <div>
-                      <label htmlFor="menu-item-title" className="ae-modal-label">Intitulé de l'élément <span className="text-red-500">*</span></label>
-                      <input 
-                        id="menu-item-title"
-                        type="text" 
-                        required 
-                        placeholder="ex: Accueil" 
-                        value={newMenuItemTitle} 
-                        onChange={(e) => setNewMenuItemTitle(e.target.value)} 
-                        className="db-input"
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label htmlFor="menu-item-type" className="ae-modal-label">Type d'action</label>
-                        <select
-                          id="menu-item-type"
-                          value={newMenuItemType}
-                          onChange={(e) => setNewMenuItemType(e.target.value)}
-                          className="db-select w-full"
-                        >
-                          <option value="internal">Lien interne (Route)</option>
-                          <option value="external">Lien externe (URL)</option>
-                          <option value="shortcode">Contenu dynamique / Action</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label htmlFor="menu-item-status" className="ae-modal-label">État de publication</label>
-                        <select
-                          id="menu-item-status"
-                          value={newMenuItemStatus}
-                          onChange={(e) => setNewMenuItemStatus(e.target.value)}
-                          className="db-select w-full"
-                        >
-                          <option value="Actif">Actif</option>
-                          <option value="Inactif">Inactif</option>
-                        </select>
-                      </div>
-                    </div>
-                    {newMenuItemType !== "shortcode" && (
-                      <div>
-                        <label htmlFor="menu-item-url" className="ae-modal-label">Adresse URL / Route / Slug <span className="text-red-500">*</span></label>
-                        <input 
-                          id="menu-item-url"
-                          type="text" 
-                          required 
-                          placeholder="ex: /contact" 
-                          value={newMenuItemUrl} 
-                          onChange={(e) => setNewMenuItemUrl(e.target.value)} 
-                          className="db-input"
-                        />
-                      </div>
-                    )}
-                    {(!editingMenuItemId || !menusList.some(m => normalizeParentId(m.parentId) === editingMenuItemId)) ? (
-                      <div>
-                        <label htmlFor="menu-item-shortcode" className="ae-modal-label">Contenu Dynamique / Action au clic</label>
-                        <input 
-                          id="menu-item-shortcode"
-                          type="text" 
-                          list="shortcode-options"
-                          placeholder="Sélectionnez ou saisissez un identifiant..." 
-                          value={newMenuItemShortcode} 
-                          onChange={(e) => setNewMenuItemShortcode(e.target.value)} 
-                          className="db-input font-mono"
-                        />
-                        <datalist id="shortcode-options">
-                          {/* Actions système */}
-                          <option value="open_contact_modal">Action : Formulaire de contact</option>
-                          <option value="toggle_theme">Action : Changer de thème</option>
-                          <option value="play_speech">Action : Lire bienvenue</option>
-                          <option value="increase_font">Action : Agrandir texte</option>
-                          <option value="show_flipbooks">Action : Liste des flipbooks</option>
-                          <option value="show_videos">Action : Liste des vidéos</option>
-                          <option value="show_gallery">Action : Galerie photos</option>
-                          
-                          {/* Pages custom */}
-                          {pagesList && pagesList.map(p => (
-                            <option key={`page-${p.id}`} value={p.slug || p.title}>Page : {p.title}</option>
-                          ))}
-                          
-                          {/* Textes & Poésies */}
-                          {textsData && Object.entries(textsData).map(([key, data]) => (
-                            <option key={`txt-${key}`} value={key}>Texte : {data.title}</option>
-                          ))}
-                          
-                          {/* Flipbooks */}
-                          {flipbooks && flipbooks.map(fb => (
-                            <option key={`fb-${fb.id}`} value={`[PdfFlipbookReader id="${fb.id}"]`}>Flipbook : {fb.title}</option>
-                          ))}
-                        </datalist>
-                        <span className="text-[10px] text-slate-400 block mt-1">
-                          Choisissez un contenu dans la liste ou saisissez son identifiant. 
-                          {newMenuItemType === "shortcode" && " (Requis pour le type Shortcode/Contenu dynamique)"}
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-800 text-xs text-slate-550">
-                        ℹ️ Le champ shortcode est masqué car cet élément possède des sous-menus (menu parent).
-                      </div>
-                    )}
-                    <div>
-                      <label htmlFor="menu-item-parent" className="ae-modal-label">Élément parent (niveaux illimités)</label>
-                      <select
-                        id="menu-item-parent"
-                        value={newMenuItemParentId}
-                        onChange={(e) => setNewMenuItemParentId(e.target.value)}
-                        className="db-select w-full"
-                      >
-                        <option value="">-- Aucun parent (Élément principal) --</option>
-                        {(() => {
-                          const flatTree = getFlattenedMenuTree(menusList);
-                          const excludedIds = editingMenuItemId ? [editingMenuItemId, ...getDescendantIds(editingMenuItemId, menusList)] : [];
-                          return flatTree
-                            .filter(m => !excludedIds.includes(m.id))
-                            .map(m => (
-                              <option key={m.id} value={m.id}>
-                                {"\u00a0\u00a0".repeat(m.depth || 0) + (m.depth > 0 ? "└── " : "") + m.title}
-                              </option>
-                            ));
-                        })()}
-                      </select>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label htmlFor="menu-item-icon" className="ae-modal-label">Icône (Nom du symbole)</label>
-                        <select
-                          id="menu-item-icon"
-                          value={newMenuItemIcon}
-                          onChange={(e) => setNewMenuItemIcon(e.target.value)}
-                          className="db-select w-full"
-                        >
-                          <option value="Home">🏠 Accueil (Home)</option>
-                          <option value="Newspaper">📰 Actualités (Newspaper)</option>
-                          <option value="HelpCircle">❓ Aide / Contact (HelpCircle)</option>
-                          <option value="Layers">🧩 Blocs (Layers)</option>
-                          <option value="Link">🔗 Lien externe (Link)</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div>
-                      <label htmlFor="menu-item-desc" className="ae-modal-label">Description courte</label>
-                      <textarea 
-                        id="menu-item-desc"
-                        placeholder="Brève description de la fonction de cet élément..." 
-                        value={newMenuItemDescription} 
-                        onChange={(e) => setNewMenuItemDescription(e.target.value)} 
-                        rows={2}
-                        className="db-textarea text-xs"
-                      />
-                    </div>
-                    <div className="ae-modal-footer font-sans">
-                      <button type="button" onClick={() => setShowAddMenuModal(false)} className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-4 py-2 rounded-lg cursor-pointer text-sm border-none">
-                        Annuler
-                      </button>
-                      <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded-lg cursor-pointer text-sm border-none">
-                        {editingMenuItemId ? "Enregistrer" : "Créer l'élément"}
-                      </button>
-                    </div>
-                  </form>
+                  {renderMenuForm(false)}
                 </div>
               </div>
             )}
