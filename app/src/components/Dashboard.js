@@ -147,6 +147,8 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
   // States for Editing a flipbook
   const [showEditFlipbookModal, setShowEditFlipbookModal] = useState(false);
   const [editingFlipbook, setEditingFlipbook] = useState(null);
+  const [editPdfFile, setEditPdfFile] = useState(null);
+  const [isEditingSaving, setIsEditingSaving] = useState(false);
 
   // States for Reading/Viewing a flipbook
   const [showViewFlipbookModal, setShowViewFlipbookModal] = useState(false);
@@ -819,12 +821,42 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
       return;
     }
 
-    const updatedList = flipbooks.map(fb => fb.id === editingFlipbook.id ? editingFlipbook : fb);
+    setIsEditingSaving(true);
+    let finalPdfFile = editingFlipbook.pdfFile;
+    let finalPdfUrl = editingFlipbook.pdfUrl;
+
+    if (editPdfFile) {
+      setGeminiProgressMsg("Enregistrement du nouveau fichier PDF...");
+      try {
+        await storePDFFile(editingFlipbook.id, editPdfFile);
+        finalPdfFile = editPdfFile.name;
+
+        let pdfUrl = null;
+        try {
+          const storageRef = ref(storage, `flipbooks/${editingFlipbook.id}/${editPdfFile.name}`);
+          const uploadResult = await uploadBytes(storageRef, editPdfFile);
+          pdfUrl = await getDownloadURL(uploadResult.ref);
+          finalPdfUrl = pdfUrl;
+        } catch (storageErr) {
+          console.warn("Firebase Storage upload failed for edit:", storageErr);
+        }
+      } catch (err) {
+        console.error("Error storing new PDF:", err);
+      }
+    }
+
+    const updatedFlipbook = { 
+      ...editingFlipbook, 
+      pdfFile: finalPdfFile, 
+      pdfUrl: finalPdfUrl 
+    };
+
+    const updatedList = flipbooks.map(fb => fb.id === editingFlipbook.id ? updatedFlipbook : fb);
     setFlipbooks(updatedList);
     localStorage.setItem("ae_flipbooks", JSON.stringify(updatedList));
 
     try {
-      await setDoc(doc(db, "flipbooks", editingFlipbook.id), editingFlipbook);
+      await setDoc(doc(db, "flipbooks", editingFlipbook.id), updatedFlipbook);
       setNotification(`Flipbook "${editingFlipbook.title}" mis à jour sur Firebase.`);
     } catch (err) {
       console.error("Error updating flipbook on Firebase:", err);
@@ -832,7 +864,9 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
     }
 
     setShowEditFlipbookModal(false);
-    setEditingFlipbook(null);
+    setEditingFlipbook(null); setEditPdfFile(null);
+    setGeminiProgressMsg("");
+    setIsEditingSaving(false);
   };
 
   // Viewer handlers
@@ -4496,7 +4530,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
 
             {/* Edit Flipbook Modal */}
             {showEditFlipbookModal && editingFlipbook && (
-              <div className="ae-modal-overlay" onClick={() => { setShowEditFlipbookModal(false); setEditingFlipbook(null); }}>
+              <div className="ae-modal-overlay" onClick={() => { setShowEditFlipbookModal(false); setEditingFlipbook(null); setEditPdfFile(null); }}>
                 <div className="ae-modal-container max-w-2xl animate-fade-in" onClick={(e) => e.stopPropagation()}>
                   <div className="ae-modal-header">
                     <h3 className="ae-modal-title flex items-center gap-2">
@@ -4504,7 +4538,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                       Modifier le Flipbook : {editingFlipbook.title}
                     </h3>
                     <button 
-                      onClick={() => { setShowEditFlipbookModal(false); setEditingFlipbook(null); }} 
+                      onClick={() => { setShowEditFlipbookModal(false); setEditingFlipbook(null); setEditPdfFile(null); }} 
                       className="ae-modal-close-btn"
                     >
                       <X className="w-5 h-5" />
@@ -4554,25 +4588,69 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                     </div>
 
                      <div>
-                      <label className="ae-modal-label">Nom du fichier PDF</label>
-                      <input 
-                        type="text" 
-                        value={editingFlipbook.pdfFile || ""} 
-                        onChange={(e) => setEditingFlipbook({ ...editingFlipbook, pdfFile: e.target.value })} 
-                        className="db-input"
-                        placeholder="ex: guide_historique_anjou.pdf"
-                      />
-                    </div>
+                      <label className="ae-modal-label">Fichier PDF actuellement associé</label>
+                      <div className="flex items-center space-x-3 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
+                        <div className="flex items-center justify-center w-8 h-8 rounded bg-red-100 dark:bg-red-900/30 text-red-500 shrink-0">
+                          <FileText className="w-4 h-4" />
+                        </div>
+                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300 flex-1 truncate">
+                          {editingFlipbook.pdfFile || "Aucun PDF"}
+                        </span>
+                        
+                        <label className="cursor-pointer bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 px-3 py-1.5 rounded text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors shrink-0">
+                          Modifier / remplacer le PDF
+                          <input 
+                            type="file" 
+                            accept=".pdf" 
+                            className="hidden" 
+                            onChange={(e) => {
+                              const file = e.target.files[0];
+                              if (file) {
+                                if (file.type === "application/pdf" || file.name.endsWith(".pdf")) {
+                                  setEditPdfFile(file);
+                                } else {
+                                  alert("Veuillez sélectionner un fichier PDF valide.");
+                                }
+                              }
+                            }}
+                          />
+                        </label>
+                      </div>
 
-                    <div>
-                      <label className="ae-modal-label">URL du fichier PDF (Stockage Firebase ou externe)</label>
-                      <input 
-                        type="text" 
-                        value={editingFlipbook.pdfUrl || ""} 
-                        onChange={(e) => setEditingFlipbook({ ...editingFlipbook, pdfUrl: e.target.value })} 
-                        className="db-input"
-                        placeholder="https://firebasestorage.googleapis.com/..."
-                      />
+                      {editPdfFile && (
+                        <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-lg flex items-center justify-between transition-all">
+                          <div className="flex flex-col overflow-hidden mr-3">
+                            <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold mb-1 uppercase tracking-wider">Nouveau PDF sélectionné :</span>
+                            <div className="flex items-center space-x-2">
+                              <FileText className="w-4 h-4 text-blue-500 shrink-0" />
+                              <span className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">
+                                {editPdfFile.name}
+                              </span>
+                            </div>
+                          </div>
+                          <button 
+                            type="button" 
+                            onClick={() => setEditPdfFile(null)}
+                            className="text-xs text-red-500 hover:text-red-600 bg-white dark:bg-slate-800 border border-red-200 dark:border-red-900/50 px-2 py-1 rounded transition-colors shrink-0"
+                          >
+                            Annuler
+                          </button>
+                        </div>
+                      )}
+                      
+                      <details className="mt-2">
+                        <summary className="text-xs text-slate-400 cursor-pointer hover:text-slate-600 dark:hover:text-slate-300 transition-colors">Options avancées (URL externe)</summary>
+                        <div className="mt-2">
+                          <label className="ae-modal-label text-xs">URL du fichier PDF</label>
+                          <input 
+                            type="text" 
+                            value={editingFlipbook.pdfUrl || ""} 
+                            onChange={(e) => setEditingFlipbook({ ...editingFlipbook, pdfUrl: e.target.value })} 
+                            className="db-input text-xs"
+                            placeholder="https://firebasestorage.googleapis.com/..."
+                          />
+                        </div>
+                      </details>
                     </div>
 
                     <div className="border-t border-slate-200 pt-4 mt-4 dark:border-slate-800">
@@ -4641,16 +4719,25 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                     <div className="ae-modal-footer">
                       <button 
                         type="button" 
-                        onClick={() => { setShowEditFlipbookModal(false); setEditingFlipbook(null); }} 
+                        onClick={() => { setShowEditFlipbookModal(false); setEditingFlipbook(null); setEditPdfFile(null); }} 
                         className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-4 py-2 rounded-lg cursor-pointer transition-colors text-sm border-none"
+                        disabled={isEditingSaving}
                       >
                         Annuler
                       </button>
                       <button 
                         type="submit" 
-                        className="bg-[#1e3a8a] hover:bg-[#172554] text-white font-bold px-4 py-2 rounded-lg cursor-pointer transition-colors text-sm border-none"
+                        disabled={isEditingSaving}
+                        className={`font-bold px-4 py-2 rounded-lg cursor-pointer transition-colors text-sm border-none flex items-center gap-2 ${isEditingSaving ? 'bg-[#1e3a8a]/50 text-white cursor-not-allowed' : 'bg-[#1e3a8a] hover:bg-[#172554] text-white'}`}
                       >
-                        Enregistrer
+                        {isEditingSaving ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            {geminiProgressMsg || "Enregistrement..."}
+                          </>
+                        ) : (
+                          "Enregistrer"
+                        )}
                       </button>
                     </div>
                   </form>
