@@ -4,6 +4,18 @@ import { Sun, Moon } from 'lucide-react';
 export const PublicHeader = ({ darkMode, toggleDarkMode }) => {
   return (
     <header>
+      <a href="#main-content" className="skip-to-content" style={{
+        position: 'absolute',
+        top: '-40px',
+        left: '0px',
+        background: 'var(--primary)',
+        color: 'white',
+        padding: '8px',
+        zIndex: 100,
+        transition: 'top 0.3s'
+      }} onFocus={(e) => e.target.style.top = '0px'} onBlur={(e) => e.target.style.top = '-40px'}>
+        Aller au contenu principal
+      </a>
       <div className="header-content">
         <h1>Anjou Édition</h1>
         <h2>Pour Les Nuls</h2>
