@@ -1714,23 +1714,31 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
     const item = menusList.find(m => m.id === id);
     if (!item) return;
     const targetParentId = normalizeParentId(item.parentId);
-    const siblings = menusList
+    
+    // Create a copy of the list to avoid mutating state directly
+    let updated = menusList.map(m => ({ ...m }));
+    
+    const siblings = updated
       .filter(m => normalizeParentId(m.parentId) === targetParentId)
       .sort((a, b) => (a.order || 0) - (b.order || 0));
+      
     const idx = siblings.findIndex(m => m.id === id);
     if (idx <= 0) return; // Already first sibling
 
-    const prevItem = siblings[idx - 1];
+    // Swap in the siblings array
+    const temp = siblings[idx];
+    siblings[idx] = siblings[idx - 1];
+    siblings[idx - 1] = temp;
+    
+    // Force sequential orders on siblings so that they stay in this EXACT order
+    siblings.forEach((sibling, i) => {
+      sibling.order = i + 1;
+    });
 
-    // Swap order
-    const tempOrder = item.order;
-    item.order = prevItem.order;
-    prevItem.order = tempOrder;
-
-    const updated = menusList.map(m => {
-      if (m.id === item.id) return { ...m, order: item.order };
-      if (m.id === prevItem.id) return { ...m, order: prevItem.order };
-      return m;
+    // Merge siblings back into updated array
+    updated = updated.map(m => {
+      const updatedSibling = siblings.find(s => s.id === m.id);
+      return updatedSibling ? updatedSibling : m;
     });
 
     const reindexed = reindexMenuOrders(updated);
@@ -1745,23 +1753,31 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
     const item = menusList.find(m => m.id === id);
     if (!item) return;
     const targetParentId = normalizeParentId(item.parentId);
-    const siblings = menusList
+    
+    // Create a copy of the list to avoid mutating state directly
+    let updated = menusList.map(m => ({ ...m }));
+    
+    const siblings = updated
       .filter(m => normalizeParentId(m.parentId) === targetParentId)
       .sort((a, b) => (a.order || 0) - (b.order || 0));
+      
     const idx = siblings.findIndex(m => m.id === id);
     if (idx === -1 || idx >= siblings.length - 1) return; // Already last sibling
 
-    const nextItem = siblings[idx + 1];
+    // Swap in the siblings array
+    const temp = siblings[idx];
+    siblings[idx] = siblings[idx + 1];
+    siblings[idx + 1] = temp;
+    
+    // Force sequential orders on siblings so that they stay in this EXACT order
+    siblings.forEach((sibling, i) => {
+      sibling.order = i + 1;
+    });
 
-    // Swap order
-    const tempOrder = item.order;
-    item.order = nextItem.order;
-    nextItem.order = tempOrder;
-
-    const updated = menusList.map(m => {
-      if (m.id === item.id) return { ...m, order: item.order };
-      if (m.id === nextItem.id) return { ...m, order: nextItem.order };
-      return m;
+    // Merge siblings back into updated array
+    updated = updated.map(m => {
+      const updatedSibling = siblings.find(s => s.id === m.id);
+      return updatedSibling ? updatedSibling : m;
     });
 
     const reindexed = reindexMenuOrders(updated);
