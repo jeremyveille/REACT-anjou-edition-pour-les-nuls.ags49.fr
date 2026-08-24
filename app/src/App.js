@@ -65,6 +65,9 @@ function App() {
   const [darkMode, setDarkMode] = useState(false);
   const [fontSize, setFontSize] = useState('medium'); // small, medium, large
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => localStorage.getItem('ae_authenticated') === 'true');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
   
   // Navigation View State
   // { type: 'home' } | { type: 'text', data: {...}, categoryName: '...' } | { type: 'flipbooks', selectedId: '...' } | { type: 'videos', selectedId: '...' } | { type: 'gallery' } | { type: 'contact' } | { type: 'preview', pageId: '...' }
@@ -603,7 +606,48 @@ function App() {
     window.history.pushState({}, '', '/');
   };
 
+  const handleLoginSubmit = (e) => {
+    e.preventDefault();
+    // A simple hardcoded password for progressive security improvement 
+    // (In production, Firebase Auth should be fully integrated)
+    if (loginPassword === 'admin2026') {
+      setIsAuthenticated(true);
+      localStorage.setItem('ae_authenticated', 'true');
+      setLoginError('');
+    } else {
+      setLoginError('Mot de passe incorrect.');
+    }
+  };
+
   if (view.type === 'dashboard') {
+    if (!isAuthenticated) {
+      return (
+        <div className={`min-h-screen flex items-center justify-center bg-slate-100 ${darkMode ? 'dark-mode bg-slate-900' : ''}`}>
+          <div className="bg-white dark:bg-slate-800 p-8 rounded-xl shadow-lg w-full max-w-md">
+            <h2 className="text-2xl font-bold text-center mb-6 text-slate-800 dark:text-white">Accès Administration</h2>
+            {loginError && <div className="bg-red-100 text-red-700 p-3 rounded mb-4 text-sm">{loginError}</div>}
+            <form onSubmit={handleLoginSubmit}>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Mot de passe</label>
+                <input 
+                  type="password" 
+                  className="w-full px-3 py-2 border border-slate-300 rounded focus:outline-none focus:border-blue-500" 
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  placeholder="Mot de passe"
+                  required
+                />
+              </div>
+              <div className="flex gap-3">
+                <button type="button" onClick={handleBackToSite} className="flex-1 bg-slate-200 text-slate-800 py-2 rounded hover:bg-slate-300 transition">Retour</button>
+                <button type="submit" className="flex-1 bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">Connexion</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      );
+    }
+    
     return (
       <div className="min-h-screen">
         <React.Suspense fallback={<div className="p-8 text-center text-slate-500">Chargement de l'administration...</div>}>
@@ -678,7 +722,7 @@ function App() {
       />
 
       {/* Layout Main Container */}
-      <main>
+      <main id="main-content">
         {/* Left Sidebar widgets */}
         <aside className="sidebar left-sidebar">
           <div className="card widget">
