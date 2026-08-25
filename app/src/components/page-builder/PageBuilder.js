@@ -493,7 +493,7 @@ export const PageBuilder = ({
     return (
       <div className="d-flex flex-column align-items-center justify-content-center min-vh-100 bg-slate-50 dark:bg-slate-900">
         <Loader className="w-8 h-8 text-blue-500 animate-spin mb-2" />
-        <span className="text-sm font-semibold text-slate-500">Chargement de l'éditeur...</span>
+        <span className="ae-metadata-subtext">Chargement de l'éditeur...</span>
       </div>
     );
   }
@@ -516,29 +516,29 @@ export const PageBuilder = ({
             <button 
               type="button" 
               onClick={() => setDevice('desktop')}
-              className={`btn btn-link p-1.5 rounded-md ${device === 'desktop' ? 'bg-white dark:bg-slate-700 text-blue-500 shadow-sm' : 'text-slate-500'}`}
+              className={`btn btn-link p-1.5 rounded-md ${device === 'desktop' ? 'bg-white dark:bg-slate-700 text-blue-500 shadow-sm' : 'ae-text-muted'}`}
               style={{ border: 'none', background: device === 'desktop' ? '' : 'transparent' }}
               title="Desktop"
             >
-              <Monitor className="w-4 h-4" />
+              <Monitor className="ae-icon-size-sm" />
             </button>
             <button 
               type="button" 
               onClick={() => setDevice('tablet')}
-              className={`btn btn-link p-1.5 rounded-md ${device === 'tablet' ? 'bg-white dark:bg-slate-700 text-blue-500 shadow-sm' : 'text-slate-500'}`}
+              className={`btn btn-link p-1.5 rounded-md ${device === 'tablet' ? 'bg-white dark:bg-slate-700 text-blue-500 shadow-sm' : 'ae-text-muted'}`}
               style={{ border: 'none', background: device === 'tablet' ? '' : 'transparent' }}
               title="Tablette"
             >
-              <Tablet className="w-4 h-4" />
+              <Tablet className="ae-icon-size-sm" />
             </button>
             <button 
               type="button" 
               onClick={() => setDevice('mobile')}
-              className={`btn btn-link p-1.5 rounded-md ${device === 'mobile' ? 'bg-white dark:bg-slate-700 text-blue-500 shadow-sm' : 'text-slate-500'}`}
+              className={`btn btn-link p-1.5 rounded-md ${device === 'mobile' ? 'bg-white dark:bg-slate-700 text-blue-500 shadow-sm' : 'ae-text-muted'}`}
               style={{ border: 'none', background: device === 'mobile' ? '' : 'transparent' }}
               title="Mobile"
             >
-              <Smartphone className="w-4 h-4" />
+              <Smartphone className="ae-icon-size-sm" />
             </button>
           </div>
 
@@ -547,7 +547,7 @@ export const PageBuilder = ({
             onClick={() => setShowPreview(false)}
             className="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1.5 py-1.5 px-3 rounded-lg"
           >
-            <EyeOff className="w-4 h-4" />
+            <EyeOff className="ae-icon-size-sm" />
             Retour à l'éditeur
           </button>
         </div>
@@ -555,20 +555,20 @@ export const PageBuilder = ({
         {/* Browser Mock Address Bar */}
         <div className="browser-address-bar bg-slate-50 dark:bg-slate-900 border-bottom px-3 py-2 d-flex align-items-center gap-2 flex-shrink-0">
           <div className="d-flex gap-1.5 mr-2">
-            <span className="rounded-circle bg-danger inline-block" style={{ width: '10px', height: '10px', opacity: 0.7 }}></span>
-            <span className="rounded-circle bg-warning inline-block" style={{ width: '10px', height: '10px', opacity: 0.7 }}></span>
-            <span className="rounded-circle bg-success inline-block" style={{ width: '10px', height: '10px', opacity: 0.7 }}></span>
+            <span className="ae-status-dot-danger" style={{ width: '10px', height: '10px', opacity: 0.7 }}></span>
+            <span className="ae-status-indicator-warning" style={{ width: '10px', height: '10px', opacity: 0.7 }}></span>
+            <span className="ae-status-dot-success" style={{ width: '10px', height: '10px', opacity: 0.7 }}></span>
           </div>
           <div className="flex-grow-1 bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-lg px-3 py-1.5 d-flex align-items-center gap-2 text-muted shadow-sm" style={{ fontSize: '12px' }}>
-            <Lock className="w-3.5 h-3.5 text-success" />
-            <span className="text-slate-600 dark:text-slate-300 font-mono">
+            <Lock className="ae-icon-success-indicator" />
+            <span className="ae-mono-text-muted">
               https://anjou-edition.ags49.fr/{editingType === 'article' ? 'articles' : 'pages'}/{pageSlug || 'sans-titre'}
             </span>
           </div>
         </div>
 
         {/* Content Preview Frame */}
-        <div className="flex-grow-1 overflow-hidden position-relative">
+        <div className="ae-flex-content-fill">
           <IframePreview 
             device={device} 
             src={`/?preview=true&pageId=${editingId || 'new'}`}
@@ -592,7 +592,7 @@ export const PageBuilder = ({
             className="btn btn-outline-secondary btn-sm p-1.5 rounded-lg"
             title="Quitter le constructeur"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="ae-icon-size-sm" />
           </button>
           <div className="d-flex flex-column">
             <input
@@ -620,7 +620,7 @@ export const PageBuilder = ({
               className="btn btn-link p-1 text-slate-500 hover:text-blue-500 disabled:opacity-30"
               title="Annuler"
             >
-              <Undo className="w-4 h-4" />
+              <Undo className="ae-icon-size-sm" />
             </button>
             <button 
               type="button" 
@@ -629,7 +629,7 @@ export const PageBuilder = ({
               className="btn btn-link p-1 text-slate-500 hover:text-blue-500 disabled:opacity-30"
               title="Rétablir"
             >
-              <Redo className="w-4 h-4" />
+              <Redo className="ae-icon-size-sm" />
             </button>
           </div>
 
@@ -638,26 +638,26 @@ export const PageBuilder = ({
             <button 
               type="button" 
               onClick={() => setDevice('desktop')}
-              className={`btn btn-link p-1 rounded-md ${device === 'desktop' ? 'bg-white dark:bg-slate-700 text-blue-500' : 'text-slate-500'}`}
+              className={`btn btn-link p-1 rounded-md ${device === 'desktop' ? 'bg-white dark:bg-slate-700 text-blue-500' : 'ae-text-muted'}`}
               title="Desktop"
             >
-              <Monitor className="w-4 h-4" />
+              <Monitor className="ae-icon-size-sm" />
             </button>
             <button 
               type="button" 
               onClick={() => setDevice('tablet')}
-              className={`btn btn-link p-1 rounded-md ${device === 'tablet' ? 'bg-white dark:bg-slate-700 text-blue-500' : 'text-slate-500'}`}
+              className={`btn btn-link p-1 rounded-md ${device === 'tablet' ? 'bg-white dark:bg-slate-700 text-blue-500' : 'ae-text-muted'}`}
               title="Tablette"
             >
-              <Tablet className="w-4 h-4" />
+              <Tablet className="ae-icon-size-sm" />
             </button>
             <button 
               type="button" 
               onClick={() => setDevice('mobile')}
-              className={`btn btn-link p-1 rounded-md ${device === 'mobile' ? 'bg-white dark:bg-slate-700 text-blue-500' : 'text-slate-500'}`}
+              className={`btn btn-link p-1 rounded-md ${device === 'mobile' ? 'bg-white dark:bg-slate-700 text-blue-500' : 'ae-text-muted'}`}
               title="Mobile"
             >
-              <Smartphone className="w-4 h-4" />
+              <Smartphone className="ae-icon-size-sm" />
             </button>
           </div>
         </div>
@@ -688,7 +688,7 @@ export const PageBuilder = ({
             className="btn btn-outline-primary btn-sm d-flex align-items-center gap-1.5 py-1.5 px-3 rounded-lg"
             title={blocks.length === 0 ? "Aperçu : le canevas est vide, ajoutez des blocs pour voir votre contenu" : "Prévisualiser la page"}
           >
-            <Eye className="w-4 h-4" />
+            <Eye className="ae-icon-size-sm" />
             Aperçu
           </button>
 
@@ -700,9 +700,9 @@ export const PageBuilder = ({
             className="btn btn-primary btn-sm d-flex align-items-center gap-1.5 py-1.5 px-3 rounded-lg"
           >
             {saving ? (
-              <Loader className="w-4 h-4 animate-spin" />
+              <Loader className="ae-spinner-base" />
             ) : (
-              <Save className="w-4 h-4" />
+              <Save className="ae-icon-size-sm" />
             )}
             {editingId ? 'Mettre à jour' : 'Publier'}
           </button>
@@ -714,7 +714,7 @@ export const PageBuilder = ({
         <div className="d-flex" style={{ flex: 1, overflow: 'hidden', minHeight: 0 }}>
           
           {/* Sidebar gauche */}
-          <div className="w-80 flex-shrink-0" style={{ width: '320px' }}>
+          <div className="ae-sidebar-fixed-width" style={{ width: '320px' }}>
             <BuilderSidebar
               activeTab={activeTab}
               setActiveTab={setActiveTab}
@@ -727,7 +727,7 @@ export const PageBuilder = ({
           </div>
 
           {/* Canvas central */}
-          <div style={{ flex: '1 1 auto', minWidth: 0, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+          <div style={{ flex: '1 1 auto', minWidth: 0, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', position: 'ae-relative-container' }}>
             <BuilderCanvas
               blocks={blocks}
               activeBlockId={activeBlockId}
@@ -748,7 +748,7 @@ export const PageBuilder = ({
         <DragOverlay dropAnimation={{ duration: 160, easing: 'cubic-bezier(.18,.67,.6,1.22)' }}>
           {activeDragWidget ? (
             <div className="pb-widget-item flex flex-col items-center justify-content-center p-3 bg-white border border-blue-400 rounded-lg shadow-lg opacity-90" style={{ width: '100px' }}>
-              <span className="text-xs font-bold text-blue-500">{activeDragWidget.type}</span>
+              <span className="ae-badge-blue-text">{activeDragWidget.type}</span>
             </div>
           ) : null}
         </DragOverlay>

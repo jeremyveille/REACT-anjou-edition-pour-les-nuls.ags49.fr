@@ -73,7 +73,7 @@ export const Button = ({ settings = {} }) => {
       target={settings.newTab ? '_blank' : '_self'}
       rel="noopener noreferrer"
     >
-      {IconComponent && <IconComponent className="w-4 h-4" />}
+      {IconComponent && <IconComponent className="ae-icon-size-sm" />}
       {text}
     </a>
   );

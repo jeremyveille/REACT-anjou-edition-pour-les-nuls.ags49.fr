@@ -174,13 +174,13 @@ export const BuilderCanvas = ({
       {/* Browser Address Bar Mock */}
       <div className="browser-address-bar bg-slate-200 dark:bg-slate-800 border-bottom px-3 py-2 d-flex align-items-center gap-2 rounded-t-lg shadow-sm flex-shrink-0" style={{ width: '100%', maxWidth: device === 'desktop' ? '1200px' : device === 'tablet' ? '768px' : '390px', borderTopLeftRadius: '8px', borderTopRightRadius: '8px' }}>
         <div className="d-flex gap-1.5 mr-2">
-          <span className="rounded-circle bg-danger inline-block" style={{ width: '10px', height: '10px', opacity: 0.7 }}></span>
-          <span className="rounded-circle bg-warning inline-block" style={{ width: '10px', height: '10px', opacity: 0.7 }}></span>
-          <span className="rounded-circle bg-success inline-block" style={{ width: '10px', height: '10px', opacity: 0.7 }}></span>
+          <span className="ae-status-dot-danger" style={{ width: '10px', height: '10px', opacity: 0.7 }}></span>
+          <span className="ae-status-indicator-warning" style={{ width: '10px', height: '10px', opacity: 0.7 }}></span>
+          <span className="ae-status-dot-success" style={{ width: '10px', height: '10px', opacity: 0.7 }}></span>
         </div>
         <div className="flex-grow-1 bg-white dark:bg-slate-700 border dark:border-slate-600 rounded px-2.5 py-1 d-flex align-items-center gap-2 text-muted shadow-sm" style={{ fontSize: '11px' }}>
-          <Lock className="w-3.5 h-3.5 text-success" />
-          <span className="text-slate-500 dark:text-slate-300 font-mono">
+          <Lock className="ae-icon-success-indicator" />
+          <span className="ae-mono-text-secondary">
             https://anjou-edition.ags49.fr/pages/{pageSlug || 'sans-titre'}
           </span>
         </div>
@@ -256,11 +256,11 @@ export const BuilderCanvas = ({
             {/* Central Editable Content Area */}
             <section 
               ref={setCanvasRootRef}
-              className={`main-content ${isOver ? 'ring-2 ring-blue-400 ring-inset rounded-lg bg-blue-50/10 transition-colors duration-200' : ''}`} 
+              className={`ae-dropzone-main-content ${isOver ? 'ae-dropzone-active-main' : ''}`} 
               style={{ display: 'flex', flexDirection: 'column', gap: '2rem', minWidth: 0, minHeight: '300px' }}
             >
-              <div className="custom-page-view p-2">
-                <div className="pb-rendered-page shadow-sm rounded bg-white p-3">
+              <div className="ae-custom-page-view">
+                <div className="ae-page-builder-canvas-panel">
                   
                   {blocks.length > 0 ? (
                     <div className="pb-canvas-inner">
@@ -287,7 +287,7 @@ export const BuilderCanvas = ({
                           onClick={() => onAddChild(null, 'section')}
                           className="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1.5 px-3 rounded-pill"
                         >
-                          <Plus className="w-4 h-4" />
+                          <Plus className="ae-icon-size-sm" />
                           Ajouter une nouvelle section
                         </button>
                       </div>
@@ -296,9 +296,9 @@ export const BuilderCanvas = ({
                     /* Empty canvas */
                     <div className="builder-public-preview__empty cursor-pointer" onClick={() => onAddChild(null, 'section')}>
                       <div className="pb-canvas-empty-icon bg-blue-50 dark:bg-slate-800 text-blue-500 rounded-circle p-4 mb-3">
-                        <Plus className="w-8 h-8" />
+                        <Plus className="ae-icon-2xl" />
                       </div>
-                      <h5 className="font-bold text-slate-800 dark:text-slate-200">Votre canevas est vide</h5>
+                      <h5 className="ae-heading-bold-dark">Votre canevas est vide</h5>
                       <p className="text-sm text-slate-400 max-w-sm mt-1 mb-4 leading-relaxed">
                         Cette page ne contient encore aucun bloc. Cliquez pour ajouter une première <strong>Section</strong>.
                       </p>

@@ -88,18 +88,18 @@ export const BuilderSidebar = ({
               : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 bg-transparent'
           }`}
         >
-          Réglages {activeBlock && <span className="pb-sidebar-dot bg-blue-500 rounded-circle d-inline-block ms-1" style={{ width: '6px', height: '6px' }}></span>}
+          Réglages {activeBlock && <span className="ae-sidebar-status-dot-blue" style={{ width: '6px', height: '6px' }}></span>}
         </button>
       </div>
 
       {/* Contenu de l'onglet Widgets */}
       {activeTab === 'widgets' && (
-        <div className="pb-sidebar-content flex-grow overflow-y-auto p-3 space-y-4">
+        <div className="ae-sidebar-scrollable-body">
           
           {/* Métadonnées de page */}
-          <div className="pb-category-selector bg-slate-50 dark:bg-slate-800/40 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
+          <div className="pb-category-selector-panel">
             <label className="db-label flex items-center gap-1.5 mb-1.5 text-slate-500">
-              <Folder className="w-3.5 h-3.5" />
+              <Folder className="ae-icon-sm" />
               Catégorie de la page
             </label>
             <select
@@ -120,7 +120,7 @@ export const BuilderSidebar = ({
           {/* Section structurelle */}
           <div>
             <h6 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Mise en page & Structure</h6>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="ae-grid-2cols">
               {STRUCTURE_ITEMS.map((item) => (
                 <DraggableWidget key={item.type} item={{...item, category: 'structure'}} onAddBlock={onAddBlock} />
               ))}
@@ -130,7 +130,7 @@ export const BuilderSidebar = ({
           {/* Section contenu */}
           <div>
             <h6 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Éléments de contenu</h6>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="ae-grid-2cols">
               {CONTENT_ITEMS.map((item) => (
                 <DraggableWidget key={item.type} item={{...item, category: 'content'}} onAddBlock={onAddBlock} />
               ))}
@@ -138,7 +138,7 @@ export const BuilderSidebar = ({
           </div>
 
           {/* Aide rapide */}
-          <div className="text-[10px] text-slate-400 leading-relaxed bg-blue-50/10 dark:bg-blue-950/10 p-3 rounded-lg border border-blue-100/20">
+          <div className="ae-info-callout-box">
             <strong>Conseil :</strong> Sélectionnez un élément de structure (Section, Container ou Colonne) sur le canevas puis cliquez sur un widget pour l'y insérer directement. S'il n'y a pas d'élément actif, le bloc sera ajouté en bas de page.
           </div>
         </div>
@@ -146,7 +146,7 @@ export const BuilderSidebar = ({
 
       {/* Contenu de l'onglet Réglages */}
       {activeTab === 'settings' && (
-        <div className="pb-sidebar-content flex-grow overflow-y-auto p-4">
+        <div className="ae-pb-sidebar-content">
           <BuilderSettings 
             block={activeBlock} 
             onChange={onBlockSettingsChange} 

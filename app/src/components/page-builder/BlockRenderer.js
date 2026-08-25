@@ -22,7 +22,7 @@ const DragHandle = ({ id }) => {
       style={{ cursor: 'grab' }}
       onClick={(e) => e.stopPropagation()}
     >
-      <GripVertical className="w-3 h-3" />
+      <GripVertical className="ae-icon-tiny" />
     </button>
   );
 };
@@ -175,7 +175,7 @@ export const BlockRenderer = ({
   return (
     <div 
       ref={setNodeRef}
-      className={`pb-editor-wrapper pb-type-${type} ${isActive ? 'pb-active-block' : ''} ${isOver ? 'ring-2 ring-blue-400 bg-blue-50/20' : ''}`}
+      className={`ae-pagebuilder-block-wrapper pb-type-${type} ${isActive ? 'pb-active-block' : ''} ${isOver ? 'ae-drop-active-block' : ''}`}
       onClick={handleWrapperClick}
       data-block-id={id}
     >
@@ -198,7 +198,7 @@ export const BlockRenderer = ({
               className="pb-control-btn"
               title="Monter"
             >
-              <ArrowUp className="w-3 h-3" />
+              <ArrowUp className="ae-icon-tiny" />
             </button>
             <button 
               type="button" 
@@ -207,7 +207,7 @@ export const BlockRenderer = ({
               className="pb-control-btn"
               title="Descendre"
             >
-              <ArrowDown className="w-3 h-3" />
+              <ArrowDown className="ae-icon-tiny" />
             </button>
           </>
         )}
@@ -224,7 +224,7 @@ export const BlockRenderer = ({
             className="pb-control-btn pb-btn-add"
             title="Ajouter un enfant"
           >
-            <Plus className="w-3 h-3" />
+            <Plus className="ae-icon-tiny" />
           </button>
         )}
 
@@ -235,7 +235,7 @@ export const BlockRenderer = ({
           className="pb-control-btn pb-btn-danger"
           title="Supprimer"
         >
-          <Trash2 className="w-3 h-3" />
+          <Trash2 className="ae-icon-tiny" />
         </button>
       </div>
 

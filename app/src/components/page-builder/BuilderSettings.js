@@ -38,10 +38,10 @@ export const BuilderSettings = ({ block, onChange }) => {
 
   return (
     <div className="builder-settings space-y-4">
-      <div className="border-bottom pb-2">
-        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Réglages du bloc</span>
+      <div className="ae-subnav-border">
+        <span className="ae-label-uppercase-muted">Réglages du bloc</span>
         <h6 className="text-sm font-bold text-slate-800 dark:text-slate-200 mt-1 capitalize">
-          {type} <span className="text-xs font-mono font-normal text-slate-400">({id})</span>
+          {type} <span className="ae-mono-subtext">({id})</span>
         </h6>
       </div>
 
@@ -75,7 +75,7 @@ export const BuilderSettings = ({ block, onChange }) => {
               />
             </div>
             <div className="mt-1">
-              <label className="db-label text-[10px] text-slate-400">Ou téléverser un fichier</label>
+              <label className="ae-stat-card-label">Ou téléverser un fichier</label>
               <input
                 type="file"
                 accept="image/*"
@@ -112,12 +112,12 @@ export const BuilderSettings = ({ block, onChange }) => {
 
         {type === 'container' && (
           <div>
-            <label className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300">
+            <label className="ae-status-indicator-label">
               <input
                 type="checkbox"
                 checked={settings.fluid || false}
                 onChange={(e) => updateSetting('fluid', e.target.checked)}
-                className="rounded border-slate-300 dark:border-slate-700"
+                className="ae-form-control-bordered"
               />
               Pleine largeur (Fluid)
             </label>
@@ -198,7 +198,7 @@ export const BuilderSettings = ({ block, onChange }) => {
               />
             </div>
             <div className="mt-1">
-              <label className="db-label text-[10px] text-slate-400">Ou téléverser un fichier</label>
+              <label className="ae-stat-card-label">Ou téléverser un fichier</label>
               <input
                 type="file"
                 accept="image/*"
@@ -298,12 +298,12 @@ export const BuilderSettings = ({ block, onChange }) => {
               </select>
             </div>
             <div>
-              <label className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300">
+              <label className="ae-status-indicator-label">
                 <input
                   type="checkbox"
                   checked={settings.newTab || false}
                   onChange={(e) => updateSetting('newTab', e.target.checked)}
-                  className="rounded border-slate-300 dark:border-slate-700"
+                  className="ae-form-control-bordered"
                 />
                 Ouvrir dans un nouvel onglet
               </label>
@@ -341,7 +341,7 @@ export const BuilderSettings = ({ block, onChange }) => {
               />
             </div>
             <div className="mt-1">
-              <label className="db-label text-[10px] text-slate-400">Ou téléverser un fichier</label>
+              <label className="ae-stat-card-label">Ou téléverser un fichier</label>
               <input
                 type="file"
                 accept="image/*"
@@ -427,11 +427,11 @@ export const BuilderSettings = ({ block, onChange }) => {
         )}
 
         {/* Espacements CSS avancés */}
-        <div className="border-t border-slate-100 dark:border-slate-800 pt-3">
-          <label className="db-label text-[10px] text-slate-400 uppercase">Espacements (Styles personnalisés)</label>
+        <div className="ae-card-footer-border">
+          <label className="ae-db-label">Espacements (Styles personnalisés)</label>
           <div className="grid grid-cols-2 gap-2 mt-2">
             <div>
-              <label className="text-[10px] font-bold text-slate-500">Margin Top</label>
+              <label className="ae-badge-caption-bold">Margin Top</label>
               <input
                 type="text"
                 value={settings.style?.marginTop || ''}
@@ -441,7 +441,7 @@ export const BuilderSettings = ({ block, onChange }) => {
               />
             </div>
             <div>
-              <label className="text-[10px] font-bold text-slate-500">Margin Bottom</label>
+              <label className="ae-badge-caption-bold">Margin Bottom</label>
               <input
                 type="text"
                 value={settings.style?.marginBottom || ''}
@@ -451,7 +451,7 @@ export const BuilderSettings = ({ block, onChange }) => {
               />
             </div>
             <div>
-              <label className="text-[10px] font-bold text-slate-500">Padding Top</label>
+              <label className="ae-badge-caption-bold">Padding Top</label>
               <input
                 type="text"
                 value={settings.style?.paddingTop || ''}
@@ -461,7 +461,7 @@ export const BuilderSettings = ({ block, onChange }) => {
               />
             </div>
             <div>
-              <label className="text-[10px] font-bold text-slate-500">Padding Bottom</label>
+              <label className="ae-badge-caption-bold">Padding Bottom</label>
               <input
                 type="text"
                 value={settings.style?.paddingBottom || ''}
