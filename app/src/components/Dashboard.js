@@ -110,6 +110,21 @@ const getFlattenedMenuTree = (menuItems) => {
 };
 
 
+const ROUTE_MAP = {
+  'pages': 'Page',
+  'articles': 'Article',
+  'flipbooks': 'Mes Flipbooks',
+  'builder': 'Constructeur de Page',
+  'actualites': 'Actualités',
+  'menus': 'Mes menus',
+  'mediatheque': 'Médiathèque',
+  'galeries': 'Galerie',
+  'videos': 'Vidéos',
+  'messages': 'Messages',
+  'comptes': 'Mes Comptes',
+  'parametres': 'Paramètres'
+};
+
 export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setFlipbooks: propSetFlipbooks }) {
   // Local fallback state if props are not provided
   const [localFlipbooks, setLocalFlipbooks] = useState(() => {
@@ -166,7 +181,24 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
   const fileInputRef = useRef(null);
   
   // Custom navigation state mimicking router path transitions
-  const [activeSection, setActiveSection] = useState(null);
+  const [activeSection, setActiveSection] = useState(() => {
+    const path = window.location.pathname;
+    if (path.startsWith('/ae-dashboard/')) {
+      const slug = path.split('/')[2];
+      return ROUTE_MAP[slug] || null;
+    }
+    return null;
+  });
+
+  useEffect(() => {
+    const slug = Object.keys(ROUTE_MAP).find(key => ROUTE_MAP[key] === activeSection);
+    if (slug) {
+      window.history.pushState(null, '', `/ae-dashboard/${slug}`);
+    } else if (window.location.pathname !== '/ae-dashboard' && window.location.pathname !== '/ae-dashboard/') {
+      window.history.pushState(null, '', '/ae-dashboard');
+    }
+  }, [activeSection]);
+
   const [isLoggedOut, setIsLoggedOut] = useState(false);
   const [notification, setNotification] = useState(
     "Connexion à la base de données Firebase en cours..."

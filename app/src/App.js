@@ -78,7 +78,7 @@ function App() {
   // { type: 'home' } | { type: 'text', data: {...}, categoryName: '...' } | { type: 'flipbooks', selectedId: '...' } | { type: 'videos', selectedId: '...' } | { type: 'gallery' } | { type: 'contact' } | { type: 'preview', pageId: '...' }
   const [view, setView] = useState(() => {
     const path = window.location.pathname;
-    if (path === '/ae-dashboard' || path === '/ae-dashboard/') {
+    if (path.startsWith('/ae-dashboard')) {
       return { type: 'dashboard' };
     }
     const params = new URLSearchParams(window.location.search);
@@ -92,7 +92,7 @@ function App() {
   useEffect(() => {
     const handlePopState = () => {
       const path = window.location.pathname;
-      if (path === '/ae-dashboard' || path === '/ae-dashboard/') {
+      if (path.startsWith('/ae-dashboard')) {
         setView({ type: 'dashboard' });
       } else {
         setView({ type: 'home' });
