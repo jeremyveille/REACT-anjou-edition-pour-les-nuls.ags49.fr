@@ -12,6 +12,7 @@ import {
 import { db, storage } from "../firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storePDFFile } from "../utils/indexedDBStorage";
+import { savePdfToFirestore, deletePdfFromFirestore } from "../utils/firestoreChunker";
 import PdfFlipbookReader from "./PdfFlipbookReader";
 import { 
   collection, 
@@ -795,6 +796,7 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
     setSelectedFlipbookIds(prev => prev.filter(item => item !== id));
     try {
       await deleteDoc(doc(db, "flipbooks", id));
+      await deletePdfFromFirestore(id);
       setNotification(`Flipbook "${title}" supprimé avec succès de Firebase.`);
     } catch (err) {
       console.error("Error deleting flipbook:", err);
@@ -824,6 +826,7 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
     setIsEditingSaving(true);
     let finalPdfFile = editingFlipbook.pdfFile;
     let finalPdfUrl = editingFlipbook.pdfUrl;
+    let hasFirestoreChunks = editingFlipbook.hasFirestoreChunks || false;
 
     if (editPdfFile) {
       setGeminiProgressMsg("Enregistrement du nouveau fichier PDF...");
@@ -839,6 +842,13 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
           finalPdfUrl = pdfUrl;
         } catch (storageErr) {
           console.warn("Firebase Storage upload failed for edit:", storageErr);
+          try {
+            setGeminiProgressMsg("Sauvegarde du PDF dans Firestore (découpage automatique)...");
+            await savePdfToFirestore(editingFlipbook.id, editPdfFile);
+            hasFirestoreChunks = true;
+          } catch (chunkErr) {
+            console.error("Failed to save chunks:", chunkErr);
+          }
         }
       } catch (err) {
         console.error("Error storing new PDF:", err);
@@ -848,7 +858,8 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
     const updatedFlipbook = { 
       ...editingFlipbook, 
       pdfFile: finalPdfFile, 
-      pdfUrl: finalPdfUrl 
+      pdfUrl: finalPdfUrl,
+      hasFirestoreChunks: hasFirestoreChunks
     };
 
     const updatedList = flipbooks.map(fb => fb.id === editingFlipbook.id ? updatedFlipbook : fb);
@@ -1077,6 +1088,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
 
       // 2. Upload to Firebase Storage if online
       let pdfUrl = null;
+      let hasFirestoreChunks = false;
       try {
         setGeminiProgressMsg("Envoi du PDF vers Firebase Storage...");
         setUploadProgress(90);
@@ -1086,6 +1098,13 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
         console.log("PDF uploaded successfully to Firebase Storage:", pdfUrl);
       } catch (storageErr) {
         console.warn("Firebase Storage upload failed, using IndexedDB local storage fallback:", storageErr);
+        try {
+          setGeminiProgressMsg("Sauvegarde du PDF dans Firestore (découpage automatique)...");
+          await savePdfToFirestore(newId, selectedPdfFile);
+          hasFirestoreChunks = true;
+        } catch (chunkErr) {
+          console.error("Failed to save chunks:", chunkErr);
+        }
       }
 
       setGeminiProgressMsg("Finalisation du flipbook...");
@@ -1099,6 +1118,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
         category: newFlipbookCategory,
         pdfFile: fileName,
         pdfUrl: pdfUrl,
+        hasFirestoreChunks: hasFirestoreChunks,
         date: new Date().toLocaleDateString("fr-FR") + " à " + new Date().toLocaleTimeString("fr-FR", { hour: '2-digit', minute: '2-digit' }),
         pages: generatedPages
       };

@@ -6,6 +6,7 @@ import {
   Volume2, VolumeX
 } from "lucide-react";
 import { getPDFFile } from "../utils/indexedDBStorage";
+import { loadPdfFromFirestore } from "../utils/firestoreChunker";
 import "../styles/pdf-reader.css";
 
 // Helper to resolve PDF Outline destination to page number
@@ -485,7 +486,18 @@ export default function PdfFlipbookReader({ book, onClose }) {
           console.log(`Loading PDF for book "${book.title}" from Firebase URL.`);
         }
 
-        // 3. Fallback to local public folder file (e.g. guide_historique_anjou.pdf)
+        // 3. Try Firestore Base64 Chunks
+        if (!pdfSource && book.hasFirestoreChunks) {
+          const chunkBlob = await loadPdfFromFirestore(book.id);
+          if (chunkBlob) {
+            const url = URL.createObjectURL(chunkBlob);
+            setPdfObjectUrl(url);
+            pdfSource = url;
+            console.log(`Loaded PDF for book "${book.title}" from Firestore chunks.`);
+          }
+        }
+
+        // 4. Fallback to local public folder file (e.g. guide_historique_anjou.pdf)
         if (!pdfSource && book.pdfFile) {
           pdfSource = book.pdfFile.startsWith("http") ? book.pdfFile : `/${book.pdfFile}`;
           console.log(`Loading PDF for book "${book.title}" from relative path: ${pdfSource}`);
