@@ -13,7 +13,11 @@ import {
   ArrowLeft,
   ArrowRight,
   ZoomIn,
-  ZoomOut
+  ZoomOut,
+  Lock,
+  Eye,
+  EyeOff,
+  AlertCircle
 } from 'lucide-react';
 import {
   textsData,
@@ -68,6 +72,7 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(() => localStorage.getItem('ae_authenticated') === 'true');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   
   // Navigation View State
   // { type: 'home' } | { type: 'text', data: {...}, categoryName: '...' } | { type: 'flipbooks', selectedId: '...' } | { type: 'videos', selectedId: '...' } | { type: 'gallery' } | { type: 'contact' } | { type: 'preview', pageId: '...' }
@@ -622,25 +627,55 @@ function App() {
   if (view.type === 'dashboard') {
     if (!isAuthenticated) {
       return (
-        <div className={`min-h-screen flex items-center justify-center bg-slate-100 ${darkMode ? 'dark-mode bg-slate-900' : ''}`}>
-          <div className="bg-white dark:bg-slate-800 p-8 rounded-xl shadow-lg w-full max-w-md">
-            <h2 className="text-2xl font-bold text-center mb-6 text-slate-800 dark:text-white">Accès Administration</h2>
-            {loginError && <div className="bg-red-100 text-red-700 p-3 rounded mb-4 text-sm">{loginError}</div>}
-            <form onSubmit={handleLoginSubmit}>
-              <div className="mb-4">
-                <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Mot de passe</label>
-                <input 
-                  type="password" 
-                  className="w-full px-3 py-2 border border-slate-300 rounded focus:outline-none focus:border-blue-500" 
-                  value={loginPassword}
-                  onChange={(e) => setLoginPassword(e.target.value)}
-                  placeholder="Mot de passe"
-                  required
-                />
+        <div className={`admin-login-page ${darkMode ? 'dark-mode' : ''}`}>
+          <div className="admin-login-card fade-in">
+            <div className="admin-login-header">
+              <div className="admin-login-icon-wrapper">
+                <Lock size={28} />
               </div>
-              <div className="flex gap-3">
-                <button type="button" onClick={handleBackToSite} className="flex-1 bg-slate-200 text-slate-800 py-2 rounded hover:bg-slate-300 transition">Retour</button>
-                <button type="submit" className="flex-1 bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">Connexion</button>
+              <h1 className="admin-login-title">Anjou Édition</h1>
+              <h2 className="admin-login-subtitle">Accès Administration</h2>
+              <p className="admin-login-desc">Connectez-vous pour accéder au tableau de bord.</p>
+            </div>
+            
+            {loginError && (
+              <div className="admin-login-error fade-in" role="alert">
+                <AlertCircle size={18} />
+                <span>{loginError}</span>
+              </div>
+            )}
+            
+            <form onSubmit={handleLoginSubmit} className="admin-login-form">
+              <div className="admin-login-field">
+                <label htmlFor="admin-pwd" className="admin-login-label">Mot de passe</label>
+                <div className="admin-login-input-wrapper">
+                  <input 
+                    id="admin-pwd"
+                    type={showPassword ? "text" : "password"} 
+                    className="admin-login-input" 
+                    value={loginPassword}
+                    onChange={(e) => { setLoginPassword(e.target.value); if (loginError) setLoginError(''); }}
+                    placeholder="Saisissez votre mot de passe"
+                    autoComplete="current-password"
+                    required
+                  />
+                  <button 
+                    type="button" 
+                    className="admin-login-toggle-pwd"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+              <div className="admin-login-actions">
+                <button type="submit" className="admin-login-submit">
+                  Connexion
+                </button>
+                <button type="button" onClick={handleBackToSite} className="admin-login-back">
+                  <ArrowLeft size={16} /> Retour au site
+                </button>
               </div>
             </form>
           </div>
