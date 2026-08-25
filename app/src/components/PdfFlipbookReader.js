@@ -144,14 +144,14 @@ const PdfPage = ({ pdfDoc, pageNumber, scale, textLayerActive, searchQuery }) =>
   }, [pdfDoc, pageNumber, scale, textLayerActive, searchQuery]);
 
   return (
-    <div ref={containerRef} className="pdf-page-wrapper" style={{ position: "relative", display: "inline-block" }}>
+    <div ref={containerRef} className="pdf-page-wrapper" style={{ position: "ae-relative-container", display: "inline-block" }}>
       {loading && (
-        <div className="absolute inset-0 bg-slate-900/10 dark:bg-slate-955/20 flex flex-col items-center justify-center text-xs text-slate-500 z-10">
+        <div className="ae-overlay-backdrop-spinner">
           <div className="pdf-spinner mb-2"></div>
           <span>Chargement...</span>
         </div>
       )}
-      <canvas ref={canvasRef} className="pdf-canvas shadow-md border border-slate-200 dark:border-slate-800" />
+      <canvas ref={canvasRef} className="pdf-canvas-viewer" />
     </div>
   );
 };
@@ -208,16 +208,14 @@ const ThumbnailPage = ({ pdfDoc, pageNumber, onClick, isActive }) => {
   return (
     <button 
       type="button"
-      className={`thumb-page flex flex-col items-center flex-shrink-0 cursor-pointer p-1 rounded transition-all ${
-        isActive ? 'active' : 'hover-state'
-      }`} 
+      className={`ae-pdf-thumb-item ${isActive ? 'active' : 'hover-state'}`} 
       onClick={onClick}
       style={{ background: 'none', border: 'none', font: 'inherit', color: 'inherit' }}
       aria-label={`Aller à la page ${pageNumber}`}
     >
-      <div className={`thumb-page-img-wrapper relative bg-white p-0.5 shadow-md transition-all ${isActive ? 'active' : ''}`}>
+      <div className={`ae-thumbnail-page-wrapper ${isActive ? 'active' : ''}`}>
         {loading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-slate-900/10">
+          <div className="ae-backdrop-overlay">
             <div className="pdf-spinner" style={{ width: "16px", height: "16px" }}></div>
           </div>
         )}
@@ -785,7 +783,7 @@ export default function PdfFlipbookReader({ book, onClose }) {
       {/* Header / Toolbar */}
       <div className="pdf-reader-header">
         <h3 className="pdf-reader-title">
-          <BookOpen className="w-5 h-5 pdf-reader-title-icon animate-pulse" />
+          <BookOpen className="ae-pdf-reader-icon-pulse" />
           <span>{book.title}</span>
         </h3>
 
@@ -800,7 +798,7 @@ export default function PdfFlipbookReader({ book, onClose }) {
               title="Sommaire"
               disabled={loading || !!error}
             >
-              <List className="w-4 h-4" />
+              <List className="ae-icon-size-sm" />
             </button>
             <button 
               type="button" 
@@ -809,7 +807,7 @@ export default function PdfFlipbookReader({ book, onClose }) {
               title="Rechercher"
               disabled={loading || !!error}
             >
-              <Search className="w-4 h-4" />
+              <Search className="ae-icon-size-sm" />
             </button>
             <button 
               type="button" 
@@ -818,7 +816,7 @@ export default function PdfFlipbookReader({ book, onClose }) {
               title="Miniatures"
               disabled={loading || !!error}
             >
-              <Grid className="w-4 h-4" />
+              <Grid className="ae-icon-size-sm" />
             </button>
           </div>
 
@@ -831,7 +829,7 @@ export default function PdfFlipbookReader({ book, onClose }) {
               title={soundEnabled ? "Désactiver le son de page" : "Activer le son de page"}
               disabled={loading || !!error}
             >
-              {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+              {soundEnabled ? <Volume2 className="ae-icon-size-sm" /> : <VolumeX className="ae-icon-size-sm" />}
             </button>
           </div>
 
@@ -844,7 +842,7 @@ export default function PdfFlipbookReader({ book, onClose }) {
               className="pdf-toolbar-btn" 
               title="Zoom arrière"
             >
-              <ZoomOut className="w-4 h-4" />
+              <ZoomOut className="ae-icon-size-sm" />
             </button>
             <span className="pdf-zoom-val">{Math.round(scale * 100)}%</span>
             <button 
@@ -854,7 +852,7 @@ export default function PdfFlipbookReader({ book, onClose }) {
               className="pdf-toolbar-btn" 
               title="Zoom avant"
             >
-              <ZoomIn className="w-4 h-4" />
+              <ZoomIn className="ae-icon-size-sm" />
             </button>
             <button 
               type="button" 
@@ -879,7 +877,7 @@ export default function PdfFlipbookReader({ book, onClose }) {
               className={`pdf-toolbar-btn ${readerMode === "single" ? "active" : ""}`}
               title="Affichage page unique"
             >
-              <FileText className="w-4 h-4" />
+              <FileText className="ae-icon-size-sm" />
             </button>
             <button
               type="button"
@@ -891,7 +889,7 @@ export default function PdfFlipbookReader({ book, onClose }) {
               className={`pdf-toolbar-btn ${readerMode === "double" ? "active" : ""}`}
               title="Affichage double page"
             >
-              <BookOpen className="w-4 h-4" />
+              <BookOpen className="ae-icon-size-sm" />
             </button>
           </div>
 
@@ -904,7 +902,7 @@ export default function PdfFlipbookReader({ book, onClose }) {
               className="pdf-toolbar-btn"
               title={isFullscreen ? "Quitter le plein écran" : "Plein écran"}
             >
-              {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+              {isFullscreen ? <Minimize className="ae-icon-size-sm" /> : <Maximize className="ae-icon-size-sm" />}
             </button>
             <button 
               type="button" 
@@ -913,7 +911,7 @@ export default function PdfFlipbookReader({ book, onClose }) {
               className="pdf-toolbar-btn"
               title="Télécharger le PDF original"
             >
-              <Download className="w-4 h-4" />
+              <Download className="ae-icon-size-sm" />
             </button>
           </div>
 
@@ -937,8 +935,8 @@ export default function PdfFlipbookReader({ book, onClose }) {
           <div className="pdf-sidebar">
             <div className="pdf-sidebar-header">
               <h4>Sommaire</h4>
-              <button onClick={() => setShowToc(false)} className="text-slate-400 hover:text-white">
-                <X className="w-4 h-4" />
+              <button onClick={() => setShowToc(false)} className="ae-text-hover-white">
+                <X className="ae-icon-size-sm" />
               </button>
             </div>
             <div className="pdf-sidebar-body">
@@ -950,7 +948,7 @@ export default function PdfFlipbookReader({ book, onClose }) {
                     <button 
                       key={idx} 
                       onClick={() => item.pageNum && goToPage(item.pageNum)} 
-                      className="pdf-toc-item text-left flex justify-between items-center"
+                      className="ae-pdf-toc-item"
                       disabled={!item.pageNum}
                     >
                       <span className="truncate" title={item.title}>{item.title}</span>
@@ -974,7 +972,7 @@ export default function PdfFlipbookReader({ book, onClose }) {
             <div className="pdf-loading-container">
               <div className="pdf-spinner"></div>
               <p className="text-sm font-semibold">Chargement du document PDF original...</p>
-              <p className="text-xs text-slate-500">Mise en page, polices et illustrations d'origine respectées</p>
+              <p className="ae-meta-text-muted-xs">Mise en page, polices et illustrations d'origine respectées</p>
             </div>
           )}
 
@@ -982,7 +980,7 @@ export default function PdfFlipbookReader({ book, onClose }) {
             <div className="pdf-error-container">
               <AlertCircle className="w-12 h-12 mb-2 text-red-500" />
               <p className="font-bold text-md">{error}</p>
-              <p className="text-xs text-slate-400 max-w-md">Veuifiez vérifier que le PDF existe et qu'il est disponible.</p>
+              <p className="ae-helper-text-muted-xs">Veuifiez vérifier que le PDF existe et qu'il est disponible.</p>
               {book.pdfFile && (
                 <div className="text-xs bg-slate-800 p-2 rounded font-mono text-slate-300 mt-2">
                   Fichier : {book.pdfFile}
@@ -1009,10 +1007,10 @@ export default function PdfFlipbookReader({ book, onClose }) {
                     </div>
                   ) : (
                     /* Inside Left Cover */
-                    <div className="pdf-page-container empty-cover text-slate-400" style={containerStyle}>
+                    <div className="ae-pdf-empty-placeholder" style={containerStyle}>
                       <span className="text-4xl mb-3">⚜️</span>
                       <h3>Anjou Édition</h3>
-                      <p className="text-xs text-slate-550 italic max-w-[200px]">Lecteur PDF Numérique Premium</p>
+                      <p className="ae-caption-constrained">Lecteur PDF Numérique Premium</p>
                     </div>
                   )}
 
@@ -1029,21 +1027,21 @@ export default function PdfFlipbookReader({ book, onClose }) {
                     </div>
                   ) : (
                     /* Inside Right Cover (End of Book) */
-                    <div className="pdf-page-container empty-cover text-slate-400" style={containerStyle}>
+                    <div className="ae-pdf-empty-placeholder" style={containerStyle}>
                       <span className="text-3xl mb-2">📖</span>
                       <h3>Fin de l'ouvrage</h3>
-                      <p className="text-xs text-slate-550 italic">Merci pour votre lecture !</p>
+                      <p className="ae-caption-italic-muted">Merci pour votre lecture !</p>
                     </div>
                   )}
                 </>
               ) : (
                 /* SINGLE PAGE VIEW */
-                <div className="flex flex-col items-center">
+                <div className="ae-flex-col-center">
                   {currentPage === 0 ? (
-                    <div className="pdf-page-container empty-cover text-slate-400" style={containerStyle}>
+                    <div className="ae-pdf-empty-placeholder" style={containerStyle}>
                       <span className="text-4xl mb-3">⚜️</span>
                       <h3>Anjou Édition</h3>
-                      <p className="text-xs text-slate-550 italic max-w-[200px]">{book.title}</p>
+                      <p className="ae-caption-constrained">{book.title}</p>
                       <button 
                         type="button" 
                         onClick={() => setCurrentPage(1)} 
@@ -1053,7 +1051,7 @@ export default function PdfFlipbookReader({ book, onClose }) {
                       </button>
                     </div>
                   ) : currentPage > numPages ? (
-                    <div className="pdf-page-container empty-cover text-slate-400" style={containerStyle}>
+                    <div className="ae-pdf-empty-placeholder" style={containerStyle}>
                       <span className="text-3xl mb-2">📖</span>
                       <h3>Fin de l'ouvrage</h3>
                       <button 
@@ -1086,8 +1084,8 @@ export default function PdfFlipbookReader({ book, onClose }) {
           <div className="pdf-sidebar right">
             <div className="pdf-sidebar-header">
               <h4>Recherche</h4>
-              <button onClick={() => setShowSearch(false)} className="text-slate-400 hover:text-white">
-                <X className="w-4 h-4" />
+              <button onClick={() => setShowSearch(false)} className="ae-text-hover-white">
+                <X className="ae-icon-size-sm" />
               </button>
             </div>
             <div className="pdf-sidebar-body">
@@ -1100,7 +1098,7 @@ export default function PdfFlipbookReader({ book, onClose }) {
                   className="pdf-search-input"
                 />
                 <button type="submit" className="pdf-search-submit">
-                  <Search className="w-4 h-4" />
+                  <Search className="ae-icon-size-sm" />
                 </button>
               </form>
 
@@ -1115,20 +1113,20 @@ export default function PdfFlipbookReader({ book, onClose }) {
                 <>
                   <div className="pdf-search-results-nav">
                     <span>{currentMatchIdx + 1} / {searchMatches.length} résultats</span>
-                    <div className="flex gap-1">
+                    <div className="ae-flex-tight-row">
                       <button 
                         onClick={() => jumpToMatch(currentMatchIdx - 1)} 
                         disabled={currentMatchIdx <= 0}
                         title="Précédent"
                       >
-                        <ChevronLeft className="w-3.5 h-3.5" />
+                        <ChevronLeft className="ae-icon-sm" />
                       </button>
                       <button 
                         onClick={() => jumpToMatch(currentMatchIdx + 1)} 
                         disabled={currentMatchIdx >= searchMatches.length - 1}
                         title="Suivant"
                       >
-                        <ChevronRight className="w-3.5 h-3.5" />
+                        <ChevronRight className="ae-icon-sm" />
                       </button>
                     </div>
                   </div>
@@ -1177,7 +1175,7 @@ export default function PdfFlipbookReader({ book, onClose }) {
       {/* Footer / Pagination Controls */}
       {!loading && !error && pdfDoc && (
         <div className="pdf-reader-footer">
-          <div className="flex gap-2">
+          <div className="ae-flex-gap-sm">
             <button 
               type="button" 
               onClick={handleGoToFirst} 
@@ -1185,7 +1183,7 @@ export default function PdfFlipbookReader({ book, onClose }) {
               className="pdf-nav-btn px-2.5" 
               title="Première page"
             >
-              <ChevronsLeft className="w-4 h-4" />
+              <ChevronsLeft className="ae-icon-size-sm" />
             </button>
             <button 
               type="button" 
@@ -1194,7 +1192,7 @@ export default function PdfFlipbookReader({ book, onClose }) {
               className="pdf-nav-btn"
               title="Page précédente"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="ae-icon-size-sm" />
             </button>
           </div>
 
@@ -1209,7 +1207,7 @@ export default function PdfFlipbookReader({ book, onClose }) {
             <span>sur {numPages}</span>
           </div>
 
-          <div className="flex gap-2">
+          <div className="ae-flex-gap-sm">
             <button 
               type="button" 
               onClick={handleNextPage} 
@@ -1217,7 +1215,7 @@ export default function PdfFlipbookReader({ book, onClose }) {
               className="pdf-nav-btn"
               title="Page suivante"
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="ae-icon-size-sm" />
             </button>
             <button 
               type="button" 
@@ -1226,7 +1224,7 @@ export default function PdfFlipbookReader({ book, onClose }) {
               className="pdf-nav-btn px-2.5" 
               title="Dernière page"
             >
-              <ChevronsRight className="w-4 h-4" />
+              <ChevronsRight className="ae-icon-size-sm" />
             </button>
           </div>
         </div>

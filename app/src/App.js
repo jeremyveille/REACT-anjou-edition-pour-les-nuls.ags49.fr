@@ -685,7 +685,7 @@ function App() {
     
     return (
       <div className="min-h-screen">
-        <React.Suspense fallback={<div className="p-8 text-center text-slate-500">Chargement de l'administration...</div>}>
+        <React.Suspense fallback={<div className="ae-empty-state-container">Chargement de l'administration...</div>}>
           <Dashboard onBackToSite={handleBackToSite} flipbooks={flipbooks} setFlipbooks={setFlipbooks} />
         </React.Suspense>
       </div>
@@ -811,8 +811,8 @@ function App() {
           
           {/* VIEW: PREVIEW */}
           {view.type === 'preview' && (
-            <div className="custom-page-view fade-in p-4">
-              <div className="pb-rendered-page shadow-sm rounded bg-white p-3">
+            <div className="ae-page-view-container">
+              <div className="ae-page-builder-canvas-panel">
                 {previewData?.blocks && previewData.blocks.length > 0 ? (
                   previewData.blocks.map((block) => (
                     <BlockRenderer key={block.id} block={block} isEditing={false} />
@@ -962,7 +962,7 @@ function App() {
 
           {/* VIEW: CUSTOM PAGE BUILDER RENDER */}
           {view.type === 'custom-page' && (
-            <div className="custom-page-view fade-in p-4">
+            <div className="ae-page-view-container">
               <button 
                 type="button" 
                 onClick={() => setView({ type: 'home' })} 
@@ -971,7 +971,7 @@ function App() {
                 <ArrowLeft size={16} /> Retour à l'accueil
               </button>
               
-              <div className="pb-rendered-page shadow-sm rounded bg-white p-3">
+              <div className="ae-page-builder-canvas-panel">
                 {view.page.blocks && view.page.blocks.length > 0 ? (
                   view.page.blocks.map((block) => (
                     <BlockRenderer key={block.id} block={block} isEditing={false} />

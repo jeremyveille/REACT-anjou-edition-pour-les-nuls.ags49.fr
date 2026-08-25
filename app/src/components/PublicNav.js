@@ -19,7 +19,7 @@ export const PublicNav = ({
       if (hasChilds) {
         return (
           <div key={child.id} className="dropdown-submenu">
-            <div className="dropdown-item submenu-trigger flex items-center justify-between w-full p-0">
+            <div className="ae-dropdown-submenu-item">
               {(child.status === "Actif" || child.isActive) && (child.url || child.shortcode) ? (
                 <button 
                   type="button"
@@ -72,7 +72,7 @@ export const PublicNav = ({
                 {(item.status === "Actif" || item.isActive) && (item.url || item.shortcode) ? (
                   <button 
                     type="button"
-                    className="mobile-nav-link flex-grow text-left m-0 p-0"
+                    className="ae-mobile-nav-item-button"
                     style={{ border: 'none', background: 'transparent' }}
                     onClick={(e) => {
                       e.preventDefault();
@@ -85,7 +85,7 @@ export const PublicNav = ({
                 ) : (
                   <span className="flex-grow">{item.title}</span>
                 )}
-                <span className="ml-2 flex items-center justify-center p-2"><ChevronDown size={14} /></span>
+                <span className="ae-action-icon-wrapper"><ChevronDown size={14} /></span>
               </summary>
               <div className="mobile-details-content">
                 {renderMobileMenuItems(item.children, depth + 1)}
@@ -128,7 +128,7 @@ export const PublicNav = ({
               if (hasChildren) {
                 return (
                   <div className="dropdown" key={item.id} ref={(el) => { if(dropdownRefs) dropdownRefs.current[item.title] = el; }}>
-                    <div className="nav-item flex items-center p-0" style={{ color: activeDropdown === item.title ? 'var(--secondary)' : 'inherit' }}>
+                    <div className="ae-nav-item-compact" style={{ color: activeDropdown === item.title ? 'var(--secondary)' : 'inherit' }}>
                       {(item.status === "Actif" || item.isActive) && (item.url || item.shortcode) ? (
                         <button 
                           type="button"
@@ -145,7 +145,7 @@ export const PublicNav = ({
                       )}
                       <button
                         type="button"
-                        className="bg-transparent border-none cursor-pointer pr-4 pl-1 h-full flex items-center"
+                        className="ae-input-addon-btn"
                         onClick={() => setActiveDropdown(activeDropdown === item.title ? null : item.title)}
                         aria-label={`Ouvrir le menu ${item.title}`}
                       >
@@ -179,7 +179,7 @@ export const PublicNav = ({
                 <input 
                   type="text" 
                   placeholder="Rechercher..." 
-                  className="bg-transparent border-0 text-xs p-0 m-0 text-dark" 
+                  className="ae-btn-reset-inline-xs" 
                   style={{ outline: 'none', width: '80px', fontSize: '0.8rem', height: '20px', border: 'none', background: 'transparent' }} 
                   disabled 
                 />
