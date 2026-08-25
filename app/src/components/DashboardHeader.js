@@ -32,41 +32,46 @@ export default function DashboardHeader({
   };
 
   return (
-    <header className="dashboard-topbar flex justify-between items-center w-full">
+    <header className="dashboard-topbar ae-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '0 0 24px 0', padding: '16px 24px', background: 'linear-gradient(135deg, var(--blue-dark, #004b7a) 0%, var(--blue-primary, #336ddc) 100%)', color: 'white', borderRadius: '12px' }}>
       {/* LEFT: Toggle & Title */}
-      <div className="topbar-left">
+      <div className="topbar-left" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="mobile-nav-toggle p-2"
+          className="ae-icon-button"
           aria-label="Toggle navigation menu"
+          style={{ color: 'white', background: 'rgba(255,255,255,0.1)' }}
         >
-          <Menu className="w-5 h-5" />
+          <Menu size={20} />
         </button>
-        <h2 className="topbar-title">
-          {getSectionTitle()}
-        </h2>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <h2 className="topbar-title" style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: 'white' }}>
+            {getSectionTitle()}
+          </h2>
+          <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>Administration Anjou Édition</span>
+        </div>
       </div>
 
       {/* RIGHT: Quick Action Buttons */}
-      <div className="topbar-right flex items-center gap-2">
+      <div className="topbar-right" style={{ display: 'flex', gap: '12px' }}>
         {onBackToSiteClick && (
           <button
             id="btn-nav-back-to-site"
             onClick={onBackToSiteClick}
-            className="header-btn cursor-pointer inline-flex items-center gap-1.5"
+            className="ae-button"
+            style={{ background: 'rgba(255,255,255,0.15)', color: 'white', border: '1px solid rgba(255,255,255,0.2)' }}
           >
-            <BookOpen className="w-3.5 h-3.5 text-emerald-600" />
-            <span className="hidden sm:inline">Voir le site</span>
+            <BookOpen size={16} />
+            <span>Voir le site</span>
           </button>
         )}
         
         <button
           id="btn-nav-logout"
           onClick={onLogoutClick}
-          className="header-btn-danger cursor-pointer inline-flex items-center gap-1.5"
+          className="ae-button ae-button--danger"
         >
-          <Lock className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">Déconnexion</span>
+          <Lock size={16} />
+          <span>Déconnexion</span>
         </button>
       </div>
     </header>

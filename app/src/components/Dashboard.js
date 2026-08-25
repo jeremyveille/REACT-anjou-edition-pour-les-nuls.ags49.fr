@@ -27,6 +27,7 @@ import { GoogleGenAI } from "@google/genai";
 import { flipbooksData, textsData } from "../data";
 import { PageBuilder } from "./page-builder/PageBuilder";
 import '../styles/page-builder.css';
+import '../styles/dashboard.css';
 
 
 const normalizeParentId = (id) => {
@@ -2026,13 +2027,13 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
 
     if (sc.startsWith("[mon_menu")) {
       return (
-        <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800">
+        <div className="ae-card-panel">
           <p className="text-[10px] uppercase font-bold text-slate-400 mb-2">Aperçu Menu Horizontal :</p>
-          <div className="flex gap-4 text-sm font-semibold text-blue-600 dark:text-blue-400">
-            <span className="cursor-pointer hover:underline">Accueil</span>
-            <span className="cursor-pointer hover:underline">Poésies</span>
-            <span className="cursor-pointer hover:underline">À Propos</span>
-            <span className="cursor-pointer hover:underline">Contact</span>
+          <div className="ae-action-links-row">
+            <span className="ae-link-clickable">Accueil</span>
+            <span className="ae-link-clickable">Poésies</span>
+            <span className="ae-link-clickable">À Propos</span>
+            <span className="ae-link-clickable">Contact</span>
           </div>
         </div>
       );
@@ -2040,16 +2041,16 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
 
     if (sc.startsWith("[article_liste")) {
       return (
-        <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 space-y-3">
-          <p className="text-[10px] uppercase font-bold text-slate-400">Aperçu Liste d'Articles :</p>
+        <div className="ae-info-panel-box">
+          <p className="ae-label-caption-bold">Aperçu Liste d'Articles :</p>
           <div className="space-y-2 text-xs">
-            <div className="border-b pb-2 border-slate-200 dark:border-slate-800">
-              <p className="font-bold text-slate-805 dark:text-slate-200">Festival l'Anjou Littéraire 2026</p>
-              <p className="text-slate-400 text-[10px]">Publié le 08/06/2026</p>
+            <div className="ae-header-divider">
+              <p className="ae-text-title-bold">Festival l'Anjou Littéraire 2026</p>
+              <p className="ae-caption-muted-micro">Publié le 08/06/2026</p>
             </div>
-            <div className="border-b pb-2 border-slate-200 dark:border-slate-800">
-              <p className="font-bold text-slate-805 dark:text-slate-200">La poésie angevine contemporaine au XXIe siècle</p>
-              <p className="text-slate-400 text-[10px]">Publié le 03/06/2026</p>
+            <div className="ae-header-divider">
+              <p className="ae-text-title-bold">La poésie angevine contemporaine au XXIe siècle</p>
+              <p className="ae-caption-muted-micro">Publié le 03/06/2026</p>
             </div>
           </div>
         </div>
@@ -2060,7 +2061,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
       const textMatch = sc.match(/texte="([^"]+)"/) || sc.match(/text="([^"]+)"/);
       const text = textMatch ? textMatch[1] : "Bouton";
       return (
-        <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 text-center">
+        <div className="ae-summary-card-centered">
           <p className="text-[10px] uppercase font-bold text-slate-400 text-left mb-3">Aperçu Bouton d'Action :</p>
           <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm px-5 py-2 rounded-lg cursor-pointer border-none shadow-sm transition-colors">
             {text}
@@ -2071,10 +2072,10 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
 
     if (sc.startsWith("[bloc_contenu")) {
       return (
-        <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800">
+        <div className="ae-card-panel">
           <p className="text-[10px] uppercase font-bold text-slate-400 mb-2">Aperçu Bloc de Contenu :</p>
           <div className="border-l-4 border-emerald-500 pl-3 py-1">
-            <h6 className="font-bold text-sm text-slate-855 dark:text-slate-200">Bienvenue sur le portail Anjou Édition</h6>
+            <h6 className="ae-item-title-bold-sm">Bienvenue sur le portail Anjou Édition</h6>
             <p className="text-xs text-slate-550 leading-relaxed mt-1">
               Ce contenu réutilisable s'insère dynamiquement dans vos constructeurs de page et dans vos articles d'édition.
             </p>
@@ -2084,7 +2085,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
     }
 
     return (
-      <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 font-mono text-xs text-slate-600 dark:text-slate-400">
+      <div className="ae-code-snippet-box">
         <p className="text-[10px] uppercase font-bold text-slate-400 mb-2 font-sans">Aperçu Générique :</p>
         Code court : {sc}
       </div>
@@ -2203,10 +2204,10 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
 
   if (isLoggedOut) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center border border-slate-200">
+      <div className="ae-fullscreen-center-wrapper">
+        <div className="ae-modal-card-dialog">
           <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <ShieldCheck className="w-10 h-10 text-amber-600 animate-bounce" />
+            <ShieldCheck className="ae-icon-warning-bounce" />
           </div>
           <h1 className="text-2xl font-black text-slate-800 mb-2">Déconnexion Réussie</h1>
           <p className="text-slate-600 text-sm mb-6">
@@ -2227,7 +2228,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
   const renderMenuForm = (isInline = false) => (
     <form onSubmit={handleAddMenuSubmit} className={isInline ? "space-y-4" : "ae-modal-body space-y-4"}>
       <div>
-        <label htmlFor="menu-item-title" className="ae-modal-label">Intitulé de l'élément <span className="text-red-500">*</span></label>
+        <label htmlFor="menu-item-title" className="ae-modal-label">Intitulé de l'élément <span className="ae-text-danger">*</span></label>
         <input 
           id="menu-item-title"
           type="text" 
@@ -2238,7 +2239,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
           className="db-input"
         />
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="ae-grid-2cols-responsive">
         <div>
           <label htmlFor="menu-item-type" className="ae-modal-label">Type d'action</label>
           <select
@@ -2267,7 +2268,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
       </div>
       {newMenuItemType !== "shortcode" && (
         <div>
-          <label htmlFor="menu-item-url" className="ae-modal-label">Adresse URL / Route / Slug <span className="text-red-500">*</span></label>
+          <label htmlFor="menu-item-url" className="ae-modal-label">Adresse URL / Route / Slug <span className="ae-text-danger">*</span></label>
           <input 
             id="menu-item-url"
             type="text" 
@@ -2315,7 +2316,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
           </span>
         </div>
       ) : (
-        <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-800 text-xs text-slate-550">
+        <div className="ae-callout-badge-card">
           ℹ️ Le champ shortcode est masqué car cet élément possède des sous-menus (menu parent).
         </div>
       )}
@@ -2418,8 +2419,8 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
       <div className="blue-top-accent"></div>
 
       {/* Main Container positioned elegantly top-level */}
-      <div className="max-w-7xl mx-auto px-4 py-8 md:py-12 position-relative">
-        <div className={`container-card dashboard-layout-container ${sidebarOpen ? "sidebar-open" : ""}`}>
+      <div className="ae-layout-container position-relative">
+        <div className={`container-card dashboard-layout-container ${sidebarOpen ? "sidebar-open" : ""}`} style={{ overflow: 'hidden' }}>
           
           {/* Mobile sidebar overlay */}
           <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)}></div>
@@ -2438,7 +2439,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                 }}
               >
                 <div className="sidebar-brand-icon">
-                  <BookOpen className="w-5 h-5" />
+                  <BookOpen className="ae-icon-md" />
                 </div>
                 <div className="sidebar-brand-text">
                   <span>ANJOU ÉDITION</span>
@@ -2458,7 +2459,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                   className={`sidebar-menu-btn ${!activeSection ? "active" : ""}`}
                 >
                   <span className="sidebar-menu-btn-inner">
-                    <LayoutDashboard className="w-4 h-4" />
+                    <LayoutDashboard className="ae-icon-size-sm" />
                     Vue d'ensemble
                   </span>
                 </button>
@@ -2472,7 +2473,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                   className={`sidebar-menu-btn ${activeSection === "Page" ? "active" : ""}`}
                 >
                   <span className="sidebar-menu-btn-inner">
-                    <FileText className="w-4 h-4" />
+                    <FileText className="ae-icon-size-sm" />
                     Pages
                   </span>
                   <span className="sidebar-badge">{pagesList.length}</span>
@@ -2486,7 +2487,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                   className={`sidebar-menu-btn ${activeSection === "Article" ? "active" : ""}`}
                 >
                   <span className="sidebar-menu-btn-inner">
-                    <Newspaper className="w-4 h-4" />
+                    <Newspaper className="ae-icon-size-sm" />
                     Articles
                   </span>
                   <span className="sidebar-badge">{articlesList.length}</span>
@@ -2500,7 +2501,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                   className={`sidebar-menu-btn ${activeSection === "Mes Flipbooks" ? "active" : ""}`}
                 >
                   <span className="sidebar-menu-btn-inner">
-                    <BookOpen className="w-4 h-4" />
+                    <BookOpen className="ae-icon-size-sm" />
                     Flipbooks
                   </span>
                   <span className="sidebar-badge">{flipbooks.length}</span>
@@ -2514,7 +2515,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                   className={`sidebar-menu-btn ${activeSection === "Constructeur de Page" ? "active" : ""}`}
                 >
                   <span className="sidebar-menu-btn-inner">
-                    <Layers className="w-4 h-4" />
+                    <Layers className="ae-icon-size-sm" />
                     Constructeur
                   </span>
                 </button>
@@ -2527,7 +2528,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                   className={`sidebar-menu-btn ${activeSection === "Actualités" ? "active" : ""}`}
                 >
                   <span className="sidebar-menu-btn-inner">
-                    <Megaphone className="w-4 h-4" />
+                    <Megaphone className="ae-icon-size-sm" />
                     Actualités
                   </span>
                 </button>
@@ -2540,7 +2541,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                   className={`sidebar-menu-btn ${activeSection === "Mes menus" ? "active" : ""}`}
                 >
                   <span className="sidebar-menu-btn-inner">
-                    <Menu className="w-4 h-4" />
+                    <Menu className="ae-icon-size-sm" />
                     Mes menus
                   </span>
                 </button>
@@ -2554,7 +2555,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                   className={`sidebar-menu-btn ${activeSection === "Médiathèque" ? "active" : ""}`}
                 >
                   <span className="sidebar-menu-btn-inner">
-                    <FolderOpen className="w-4 h-4" />
+                    <FolderOpen className="ae-icon-size-sm" />
                     Médiathèque
                   </span>
                 </button>
@@ -2567,7 +2568,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                   className={`sidebar-menu-btn ${activeSection === "Galerie" ? "active" : ""}`}
                 >
                   <span className="sidebar-menu-btn-inner">
-                    <Image className="w-4 h-4" />
+                    <Image className="ae-icon-size-sm" />
                     Galerie Photos
                   </span>
                 </button>
@@ -2580,7 +2581,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                   className={`sidebar-menu-btn ${activeSection === "Vidéos" ? "active" : ""}`}
                 >
                   <span className="sidebar-menu-btn-inner">
-                    <Play className="w-4 h-4" />
+                    <Play className="ae-icon-size-sm" />
                     Vidéos
                   </span>
                 </button>
@@ -2594,7 +2595,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                   className={`sidebar-menu-btn ${activeSection === "Messages" ? "active" : ""}`}
                 >
                   <span className="sidebar-menu-btn-inner">
-                    <MessageSquare className="w-4 h-4" />
+                    <MessageSquare className="ae-icon-size-sm" />
                     Messages
                   </span>
                   {messagesList.length > 0 && (
@@ -2610,7 +2611,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                   className={`sidebar-menu-btn ${activeSection === "Mes Comptes" ? "active" : ""}`}
                 >
                   <span className="sidebar-menu-btn-inner">
-                    <Users className="w-4 h-4" />
+                    <Users className="ae-icon-size-sm" />
                     Comptes / Écrivains
                   </span>
                 </button>
@@ -2623,7 +2624,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                   className={`sidebar-menu-btn ${activeSection === "Paramètres" ? "active" : ""}`}
                 >
                   <span className="sidebar-menu-btn-inner">
-                    <Settings className="w-4 h-4" />
+                    <Settings className="ae-icon-size-sm" />
                     Paramètres
                   </span>
                 </button>
@@ -2631,24 +2632,25 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
             </div>
 
             {/* Sidebar User Footer */}
-            <div className="sidebar-footer">
-              <div className="sidebar-user">
-                <div className="sidebar-user-avatar">
+            <div className="sidebar-footer" style={{ padding: '24px', borderTop: '1px solid #e2e8f0', background: '#f8fafc' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#004b7a', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1rem' }}>
                   {userName.charAt(0)}
                 </div>
-                <div className="sidebar-user-info">
-                  <span className="sidebar-user-name">{userName}</span>
-                  <span className="sidebar-user-role">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#0f172a' }}>{userName}</span>
+                  <span style={{ fontSize: '0.75rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }}></span>
                     Administrateur
                   </span>
                 </div>
               </div>
               <button
                 onClick={handleLogout}
-                className="sidebar-logout-btn"
+                className="ae-button ae-button--danger"
+                style={{ width: '100%', justifyContent: 'center' }}
               >
-                <LogOut className="w-3.5 h-3.5" />
+                <LogOut size={16} />
                 Déconnexion
               </button>
             </div>
@@ -2675,9 +2677,9 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
             />
 
             {/* Main Area Content */}
-            <div className="dashboard-main p-6 relative">
+            <div className="ae-dashboard-main-panel">
               {isInitializing ? (
-                <div className="flex flex-col items-center justify-center h-64 text-slate-400">
+                <div className="ae-empty-state-placeholder">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#004b7a] mb-4"></div>
                   <p>Chargement des données...</p>
                 </div>
@@ -2687,14 +2689,14 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                 /* ======================================================== */
                 <div className="detail-view-container">
                   <div className="flex items-center justify-between border-b border-slate-200 pb-4 mb-6">
-                    <div className="flex items-center gap-3">
+                    <div className="ae-flex-center-gap-3">
                       <button
                         id="btn-back-to-home"
                         onClick={() => setActiveSection(null)}
-                        className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer"
+                        className="ae-btn-control-secondary"
                         title="Retour au Tableau de bord"
                       >
-                        <ArrowLeft className="w-5 h-5" />
+                        <ArrowLeft className="ae-icon-md" />
                       </button>
                       <div>
                         <h3 className="text-xl md:text-2xl font-black text-[#004b7a]">
@@ -2706,11 +2708,11 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
 
                   {/* Simulated views per Section Type */}
                   {activeSection === "Page" && (
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="ae-grid-3cols-responsive">
                       <div className="lg:col-span-2 space-y-6">
                         <div className="db-panel-card">
                           <h4 className="db-title">
-                            <FileText className="w-5 h-5 text-blue-500" />
+                            <FileText className="ae-icon-md-blue" />
                             Pages existantes sur le site de publication
                           </h4>
                           <div className="overflow-x-auto">
@@ -2733,7 +2735,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                                         Catégorie: {p.category || "Outils"}
                                       </span>
                                     </td>
-                                    <td className="text-slate-500">{p.author}</td>
+                                    <td className="ae-text-muted">{p.author}</td>
                                     <td className="hidden md:table-cell">
                                       <span className="bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 px-2.5 py-0.5 rounded-full text-xs font-semibold">
                                         {p.category || "Outils"}
@@ -2749,17 +2751,17 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                                     <td className="text-right">
                                        <button
                                          onClick={() => handleLoadPageToBuilder(p)}
-                                         className="p-1 rounded hover:bg-blue-50 text-blue-500 hover:text-blue-700 transition-colors cursor-pointer border-none bg-transparent me-2"
+                                         className="ae-btn-icon-blue-action"
                                          title="Éditer avec le constructeur"
                                        >
-                                         <Edit3 className="w-4.5 h-4.5" />
+                                         <Edit3 className="ae-icon-md" />
                                        </button>
                                       <button
                                         onClick={() => handleDeletePage(p.id)}
-                                        className="p-1 rounded hover:bg-red-50 text-red-500 hover:text-red-700 transition-colors cursor-pointer border-none bg-transparent"
+                                        className="ae-btn-icon-danger-hover"
                                         title="Supprimer la page"
                                       >
-                                        <Trash2 className="w-4.5 h-4.5" />
+                                        <Trash2 className="ae-icon-md" />
                                       </button>
                                     </td>
                                   </tr>
@@ -2822,37 +2824,37 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                   )}
 
                   {activeSection === "Article" && (
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="ae-grid-3cols-responsive">
                       <div className="lg:col-span-2 space-y-6">
                         <div className="db-panel-card">
                           <h4 className="db-title">
-                            <Newspaper className="w-5 h-5 text-blue-500" />
+                            <Newspaper className="ae-icon-md-blue" />
                             Articles récents
                           </h4>
                           <div className="space-y-3">
                             {displayedArticles.map(a => (
-                              <div key={a.id} className="p-4 border border-slate-100 rounded-lg flex items-center justify-between hover:bg-slate-50 transition-colors">
+                              <div key={a.id} className="ae-list-card-interactive">
                                 <div>
-                                  <h5 className="font-bold text-slate-800">{a.title}</h5>
-                                  <p className="text-xs text-slate-400">
-                                    Date: {a.date} | {a.views || 0} lectures | Catégorie: <span className="font-semibold text-slate-605">{a.category || "Outils"}</span>
+                                  <h5 className="ae-text-heading-dark">{a.title}</h5>
+                                  <p className="ae-meta-muted-sm">
+                                    Date: {a.date} | {a.views || 0} lectures | Catégorie: <span className="ae-text-subtitle-semibold">{a.category || "Outils"}</span>
                                   </p>
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="ae-flex-row-gap-md">
                                   <span className="text-xs bg-badge bg-blue-50 text-blue-600 px-2 py-1 rounded font-bold">Livre d'or</span>
                                   <button
                                     onClick={() => handleLoadArticleToBuilder(a)}
-                                    className="p-1.5 rounded-md hover:bg-blue-50 text-blue-500 hover:text-blue-700 transition-colors cursor-pointer border-none bg-transparent"
+                                    className="ae-action-btn-blue"
                                     title="Éditer avec le constructeur"
                                   >
-                                    <Edit3 className="w-4.5 h-4.5" />
+                                    <Edit3 className="ae-icon-md" />
                                   </button>
                                   <button
                                     onClick={() => handleDeleteArticle(a.id)}
-                                    className="p-1.5 rounded-md hover:bg-red-50 text-red-500 hover:text-red-700 transition-colors cursor-pointer border-none bg-transparent"
+                                    className="ae-btn-danger-ghost"
                                     title="Supprimer l'article"
                                   >
-                                    <Trash2 className="w-4.5 h-4.5" />
+                                    <Trash2 className="ae-icon-md" />
                                   </button>
                                 </div>
                               </div>
@@ -2909,21 +2911,21 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
 
                         {/* Gemini Generator section */}
                         <div className="db-panel-sidebar gemini-generator-panel space-y-4">
-                          <h4 className="text-sm font-bold text-indigo-900 flex items-center gap-1.5 dark-text-indigo">
-                            <Sparkles className="w-4 h-4 text-indigo-650 animate-pulse" />
+                          <h4 className="ae-badge-title-indigo">
+                            <Sparkles className="ae-status-pulse-indigo" />
                             Générateur d'Article IA (Gemini)
                           </h4>
                           
                           {!getGeminiClient() ? (
                             <div className="text-xs space-y-2">
-                              <p className="text-amber-700 bg-amber-50 p-2.5 rounded border border-amber-200/50 leading-relaxed">
+                              <p className="ae-warning-box-compact">
                                 Clé API Gemini manquante. Veuillez la configurer dans l'onglet <strong>Paramètres</strong> pour activer la rédaction assistée.
                               </p>
                             </div>
                           ) : (
                             <div className="space-y-3">
                               <div>
-                                <label className="db-label text-indigo-700">Sujet de l'article</label>
+                                <label className="ae-dashboard-label-accent">Sujet de l'article</label>
                                 <input
                                   type="text"
                                   value={aiTopic}
@@ -2934,7 +2936,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                               </div>
                               
                               <div>
-                                <label className="db-label text-indigo-700">Style d'écriture</label>
+                                <label className="ae-dashboard-label-accent">Style d'écriture</label>
                                 <select
                                   value={aiStyle}
                                   onChange={(e) => setAiStyle(e.target.value)}
@@ -2955,12 +2957,12 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                               >
                                 {aiLoading ? (
                                   <>
-                                    <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                                    <span className="ae-spinner-indicator"></span>
                                     Génération en cours...
                                   </>
                                 ) : (
                                   <>
-                                    <Sparkles className="w-3.5 h-3.5" />
+                                    <Sparkles className="ae-icon-sm" />
                                     Générer avec Gemini
                                   </>
                                 )}
@@ -2968,7 +2970,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                               
                               {aiResult && (
                                 <div className="space-y-2 mt-3 pt-3 border-t border-indigo-100">
-                                  <label className="db-label text-indigo-700">Aperçu du texte généré</label>
+                                  <label className="ae-dashboard-label-accent">Aperçu du texte généré</label>
                                   <textarea
                                     value={aiResult}
                                     onChange={(e) => setAiResult(e.target.value)}
@@ -2996,7 +2998,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                     <div className="space-y-6">
                       <div className="db-panel-card">
                         <h4 className="text-md font-bold text-slate-700 mb-4 flex items-center gap-1.5">
-                          <MessageSquare className="w-5 h-5 text-blue-500" />
+                          <MessageSquare className="ae-icon-md-blue" />
                           Messages de contact (Formulaires reçus)
                         </h4>
                         {displayedMessages.length === 0 ? (
@@ -3005,23 +3007,23 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                           </div>
                         ) : (
                           <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse">
+                            <table className="ae-table-full">
                               <thead>
-                                <tr className="border-b border-slate-200 text-slate-400 text-xs uppercase font-bold">
-                                  <th className="pb-3 text-slate-600">Expéditeur</th>
-                                  <th className="pb-3 text-slate-600">E-mail</th>
-                                  <th className="pb-3 text-slate-600">Sujet</th>
-                                  <th className="pb-3 text-slate-600">Message</th>
-                                  <th className="pb-3 text-slate-600">Date</th>
-                                  <th className="pb-3 text-slate-600 text-right">Actions</th>
+                                <tr className="ae-divider-heading-row">
+                                  <th className="ae-table-cell-muted">Expéditeur</th>
+                                  <th className="ae-table-cell-muted">E-mail</th>
+                                  <th className="ae-table-cell-muted">Sujet</th>
+                                  <th className="ae-table-cell-muted">Message</th>
+                                  <th className="ae-table-cell-muted">Date</th>
+                                  <th className="ae-table-cell-right-muted">Actions</th>
                                 </tr>
                               </thead>
                               <tbody>
                                 {displayedMessages.map((m) => (
-                                  <tr key={m.id} className="border-b border-slate-100 last:border-b-0 text-sm hover:bg-slate-50 transition-colors">
+                                  <tr key={m.id} className="ae-table-row">
                                     <td className="py-3 font-semibold text-slate-805">{m.name}</td>
                                     <td className="py-3 text-slate-500">
-                                      <a href={`mailto:${m.email}`} className="text-blue-600 hover:underline">{m.email}</a>
+                                      <a href={`mailto:${m.email}`} className="ae-link-primary-underline">{m.email}</a>
                                     </td>
                                     <td className="py-3 text-slate-700 font-bold">{m.subject}</td>
                                     <td className="py-3 text-slate-600 max-w-xs truncate" title={m.message}>{m.message}</td>
@@ -3029,10 +3031,10 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                                     <td className="py-3 text-right">
                                       <button
                                         onClick={() => handleDeleteMessage(m.id)}
-                                        className="p-1.5 rounded-md hover:bg-red-50 text-red-500 hover:text-red-700 transition-colors cursor-pointer inline-flex items-center border-none bg-transparent"
+                                        className="ae-btn-danger-icon"
                                         title="Supprimer le message"
                                       >
-                                        <Trash2 className="w-4.5 h-4.5" />
+                                        <Trash2 className="ae-icon-md" />
                                       </button>
                                     </td>
                                   </tr>
@@ -3052,12 +3054,12 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
 
                   {activeSection === "Mes Flipbooks" && (
                     <div className="space-y-6">
-                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                      <div className="ae-toolbar-header-responsive">
                         <div>
-                          <h4 className="text-lg font-bold text-slate-800 dark:text-slate-200">
+                          <h4 className="ae-card-title-lg">
                             Bibliothèque de Flipbooks interactifs
                           </h4>
-                          <p className="text-sm text-slate-505">
+                          <p className="ae-body-secondary-sm">
                             Gérez les flipbooks PDF de la plateforme de publication en toute simplicité.
                           </p>
                         </div>
@@ -3073,14 +3075,14 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                           }}
                           className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-4 py-2.5 rounded-lg cursor-pointer transition-colors inline-flex items-center gap-1.5 self-start md:self-auto shadow-sm"
                         >
-                          <Plus className="w-4 h-4" /> Ajouter un flipbook
+                          <Plus className="ae-icon-size-sm" /> Ajouter un flipbook
                         </button>
                       </div>
 
                       <div className="db-panel-card">
                         {/* Filtres et actions groupées */}
                         <div className="flex flex-wrap items-center justify-between gap-4 mb-4 pb-4 border-b border-slate-100 dark:border-slate-800">
-                          <div className="flex flex-wrap items-center gap-2">
+                          <div className="ae-tag-container">
                             <select 
                               value={bulkActionTop}
                               onChange={(e) => setBulkActionTop(e.target.value)}
@@ -3117,7 +3119,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                             </button>
                           </div>
 
-                          <div className="text-xs text-slate-500 font-semibold">
+                          <div className="ae-text-caption-semibold">
                             {displayedFlipbooks.length} élément{displayedFlipbooks.length > 1 ? 's' : ''} trouvé{displayedFlipbooks.length > 1 ? 's' : ''}
                           </div>
                         </div>
@@ -3127,7 +3129,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                           <table className="db-table">
                             <thead>
                               <tr>
-                                <th className="w-10">
+                                <th className="ae-fixed-width-10">
                                   <input 
                                     type="checkbox" 
                                     checked={displayedFlipbooks.length > 0 && selectedFlipbookIds.length === displayedFlipbooks.length}
@@ -3138,7 +3140,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                                         setSelectedFlipbookIds([]);
                                       }
                                     }}
-                                    className="rounded border-slate-300 accent-blue-600 cursor-pointer"
+                                    className="ae-form-checkbox"
                                   />
                                 </th>
                                 <th>Flipbook</th>
@@ -3161,11 +3163,11 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                                           prev.includes(fb.id) ? prev.filter(id => id !== fb.id) : [...prev, fb.id]
                                         );
                                       }}
-                                      className="rounded border-slate-300 accent-blue-600 cursor-pointer"
+                                      className="ae-form-checkbox"
                                     />
                                   </td>
                                   <td>
-                                    <div className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 flex-wrap">
+                                    <div className="ae-section-heading-row">
                                       <span>{fb.title}</span>
                                       <span className="px-2.5 py-0.5 text-[9px] font-extrabold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 rounded-full border border-blue-100 dark:border-blue-900/40 uppercase tracking-wider">
                                         {fb.category || "Outils"}
@@ -3174,8 +3176,8 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                                     <p className="text-xs text-slate-505 mt-1 max-w-md line-clamp-2">{fb.description}</p>
                                   </td>
                                   <td className="hidden md:table-cell">
-                                    <div className="flex items-center gap-2">
-                                      <code className="text-[11px] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-1.5 rounded text-blue-605 dark:text-blue-400 font-mono select-all">
+                                    <div className="ae-flex-row-gap-md">
+                                      <code className="ae-code-badge-selectable">
                                         {`<PdfFlipbookReader book={book} />`}
                                       </code>
                                       <button
@@ -3183,17 +3185,17 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                                           navigator.clipboard.writeText(`<PdfFlipbookReader book={flipbooks.find(f => f.id === "${fb.id}")} onClose={handleClose} />`);
                                           setNotification("Snippet React copié avec succès !");
                                         }}
-                                        className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-400 hover:text-slate-650 transition-colors cursor-pointer border-none bg-transparent"
+                                        className="ae-icon-btn-muted"
                                         title="Copier le code d'intégration React"
                                       >
-                                        <Copy className="w-3.5 h-3.5" />
+                                        <Copy className="ae-icon-sm" />
                                       </button>
                                     </div>
                                   </td>
                                   <td>
                                     <a 
                                       href={`#pdf-${fb.id}`} 
-                                      className="text-xs text-blue-650 dark:text-blue-400 hover:underline font-semibold"
+                                      className="ae-action-link-sm"
                                       onClick={(e) => { 
                                         e.preventDefault(); 
                                         setNotification(`Téléchargement du PDF pour : ${fb.title}`); 
@@ -3202,31 +3204,31 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                                       {fb.pdfFile || (fb.id === "3322" ? "guide_historique_anjou.pdf" : "secrets_vignoble_angevin.pdf")}
                                     </a>
                                   </td>
-                                  <td className="hidden lg:table-cell text-xs text-slate-505">
+                                  <td className="ae-table-cell-muted-desktop">
                                     {fb.date || (fb.id === "3322" ? "08/06/2026 à 14h30" : "14/04/2026 à 20h02")}
                                   </td>
                                   <td className="text-right">
-                                    <div className="flex justify-end gap-1">
+                                    <div className="ae-actions-right">
                                       <button
                                         onClick={() => handleViewFlipbookClick(fb)}
-                                        className="p-1.5 rounded-md hover:bg-emerald-50 dark:hover:bg-emerald-950/30 text-emerald-600 dark:text-emerald-405 hover:text-emerald-800 transition-colors cursor-pointer border-none bg-transparent"
+                                        className="ae-btn-emerald-ghost"
                                         title="Afficher le flipbook interactif"
                                       >
-                                        <BookOpen className="w-4.5 h-4.5" />
+                                        <BookOpen className="ae-icon-md" />
                                       </button>
                                       <button
                                         onClick={() => handleEditFlipbookClick(fb)}
-                                        className="p-1.5 rounded-md hover:bg-blue-50 dark:hover:bg-blue-950/30 text-blue-600 dark:text-blue-405 hover:text-blue-805 transition-colors cursor-pointer border-none bg-transparent"
+                                        className="ae-btn-action-icon-blue-md"
                                         title="Modifier le flipbook"
                                       >
-                                        <Edit3 className="w-4.5 h-4.5" />
+                                        <Edit3 className="ae-icon-md" />
                                       </button>
                                       <button
                                         onClick={() => handleDeleteFlipbook(fb.id, fb.title)}
-                                        className="p-1.5 rounded-md hover:bg-red-50 dark:hover:bg-red-950/30 text-red-500 dark:text-red-405 hover:text-red-700 transition-colors cursor-pointer border-none bg-transparent"
+                                        className="ae-btn-danger-ghost"
                                         title="Supprimer le flipbook"
                                       >
-                                        <Trash2 className="w-4.5 h-4.5" />
+                                        <Trash2 className="ae-icon-md" />
                                       </button>
                                     </div>
                                   </td>
@@ -3269,12 +3271,12 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
 
                   {activeSection === "Mes Comptes" && (
                     <div className="space-y-6">
-                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                      <div className="ae-toolbar-header-responsive">
                         <div>
-                          <h4 className="text-lg font-bold text-slate-800 dark:text-slate-200">
+                          <h4 className="ae-card-title-lg">
                             Comptes & Écrivains d'Anjou
                           </h4>
-                          <p className="text-sm text-slate-500">
+                          <p className="ae-text-sm-muted">
                             Gérez les profils et les permissions des auteurs de la plateforme littéraire.
                           </p>
                         </div>
@@ -3288,7 +3290,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                           }}
                           className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-4 py-2.5 rounded-lg cursor-pointer transition-colors inline-flex items-center gap-1.5 shadow-sm border-none"
                         >
-                          <Plus className="w-4 h-4" /> Créer un profil
+                          <Plus className="ae-icon-size-sm" /> Créer un profil
                         </button>
                       </div>
 
@@ -3317,7 +3319,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                                 className="account-btn border-none"
                                 title="Activer / Désactiver le compte"
                               >
-                                <ShieldCheck className="w-4 h-4 text-emerald-650" />
+                                <ShieldCheck className="ae-icon-emerald" />
                               </button>
                               {account.name !== "JEREMY VEILLE" && (
                                 <button
@@ -3325,7 +3327,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                                   className="account-btn account-btn-danger border-none bg-transparent"
                                   title="Supprimer le profil"
                                 >
-                                  <Trash2 className="w-4.5 h-4.5" />
+                                  <Trash2 className="ae-icon-md" />
                                 </button>
                               )}
                             </div>
@@ -3335,7 +3337,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
 
                       <div className="db-panel-card max-w-xl">
                         <h5 className="font-bold text-slate-700 dark:text-slate-200 mb-3 text-sm uppercase">Modifier mon nom administratif</h5>
-                        <div className="flex gap-2">
+                        <div className="ae-flex-gap-sm">
                           <input
                             type="text"
                             value={userName}
@@ -3358,21 +3360,21 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
 
                   {activeSection === "Médiathèque" && (
                     <div className="space-y-6">
-                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                      <div className="ae-toolbar-header-responsive">
                         <div>
-                          <h4 className="text-lg font-bold text-slate-800 dark:text-slate-200">
+                          <h4 className="ae-card-title-lg">
                             Médiathèque Littéraire
                           </h4>
-                          <p className="text-sm text-slate-500">
+                          <p className="ae-text-sm-muted">
                             Centralisez tous les documents du portail : PDF, images, musiques, poèmes.
                           </p>
                         </div>
-                        <div className="relative">
+                        <div className="ae-relative-container">
                           <button
                             onClick={() => fileInputRef.current?.click()}
                             className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-4 py-2.5 rounded-lg cursor-pointer transition-colors inline-flex items-center gap-1.5 shadow-sm border-none"
                           >
-                            <UploadCloud className="w-4 h-4" /> Importer un fichier
+                            <UploadCloud className="ae-icon-size-sm" /> Importer un fichier
                           </button>
                           <input 
                             type="file" 
@@ -3385,10 +3387,10 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
 
                       {mediaUploading && (
                         <div className="db-panel-card text-center py-6 space-y-3">
-                          <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                          <div className="ae-spinner-lg"></div>
                           <p className="text-sm font-bold">Importation du fichier... {mediaProgress}%</p>
-                          <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden max-w-xs mx-auto">
-                            <div className="bg-blue-600 h-full transition-all" style={{ width: `${mediaProgress}%` }}></div>
+                          <div className="ae-progress-track-sm">
+                            <div className="ae-progress-fill-primary" style={{ width: `${mediaProgress}%` }}></div>
                           </div>
                         </div>
                       )}
@@ -3425,7 +3427,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                                   className="canvas-btn"
                                   title="Visualiser"
                                 >
-                                  <Eye className="w-3.5 h-3.5" />
+                                  <Eye className="ae-icon-sm" />
                                 </button>
                                 <button
                                   onClick={() => {
@@ -3435,14 +3437,14 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                                   className="canvas-btn"
                                   title="Copier le lien"
                                 >
-                                  <Copy className="w-3.5 h-3.5" />
+                                  <Copy className="ae-icon-sm" />
                                 </button>
                                 <button
                                   onClick={() => handleDeleteMedia(media.id, media.name)}
                                   className="canvas-btn canvas-btn-danger"
                                   title="Supprimer"
                                 >
-                                  <Trash2 className="w-3.5 h-3.5" />
+                                  <Trash2 className="ae-icon-sm" />
                                 </button>
                               </div>
                             </div>
@@ -3459,12 +3461,12 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
 
                   {activeSection === "Galerie" && (
                     <div className="space-y-6">
-                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                      <div className="ae-toolbar-header-responsive">
                         <div>
-                          <h4 className="text-lg font-bold text-slate-800 dark:text-slate-200">
+                          <h4 className="ae-card-title-lg">
                             Galerie d'Anjou
                           </h4>
-                          <p className="text-sm text-slate-500">
+                          <p className="ae-text-sm-muted">
                             Illustrations et photographies de la douceur angevine.
                           </p>
                         </div>
@@ -3478,7 +3480,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                           }}
                           className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-4 py-2.5 rounded-lg cursor-pointer transition-colors inline-flex items-center gap-1.5 shadow-sm border-none"
                         >
-                          <Plus className="w-4 h-4" /> Ajouter une photo
+                          <Plus className="ae-icon-size-sm" /> Ajouter une photo
                         </button>
                       </div>
 
@@ -3486,7 +3488,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                         {galleryList.map((photo) => (
                           <div 
                             key={photo.id} 
-                            className="gallery-card relative"
+                            className="ae-gallery-card"
                             onClick={() => {
                               setLightboxPhoto(photo);
                               setShowPhotoLightboxModal(true);
@@ -3510,10 +3512,10 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                                 e.stopPropagation();
                                 handleDeletePhoto(photo.id, photo.title);
                               }}
-                              className="absolute top-2 right-2 p-1.5 bg-slate-900/60 hover:bg-red-650 text-white rounded-md transition-colors border-none cursor-pointer"
+                              className="ae-card-delete-overlay-btn"
                               title="Supprimer la photo"
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <Trash2 className="ae-icon-sm" />
                             </button>
                           </div>
                         ))}
@@ -3528,12 +3530,12 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
 
                   {activeSection === "Vidéos" && (
                     <div className="space-y-6">
-                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                      <div className="ae-toolbar-header-responsive">
                         <div>
-                          <h4 className="text-lg font-bold text-slate-800 dark:text-slate-200">
+                          <h4 className="ae-card-title-lg">
                             Capsules Vidéos Littéraires
                           </h4>
-                          <p className="text-sm text-slate-500">
+                          <p className="ae-text-sm-muted">
                             Lectures et documentaires audiovisuels sur le patrimoine régional d'Anjou.
                           </p>
                         </div>
@@ -3547,7 +3549,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                           }}
                           className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-4 py-2.5 rounded-lg cursor-pointer transition-colors inline-flex items-center gap-1.5 shadow-sm border-none"
                         >
-                          <Plus className="w-4 h-4" /> Publier une vidéo
+                          <Plus className="ae-icon-size-sm" /> Publier une vidéo
                         </button>
                       </div>
 
@@ -3555,7 +3557,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                         {videoList.map((video) => (
                           <div 
                             key={video.id} 
-                            className="video-card relative"
+                            className="ae-video-card-container"
                             onClick={() => {
                               setPlayerVideo(video);
                               setShowVideoPlayerModal(true);
@@ -3569,17 +3571,17 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                               />
                               <div className="video-play-overlay">
                                 <div className="video-play-btn-circle">
-                                  <Play className="w-5 h-5 fill-current ml-0.5" />
+                                  <Play className="ae-icon-button-graphic" />
                                 </div>
                               </div>
                             </div>
                             <div className="video-card-content font-sans">
                               <div>
-                                <h5 className="font-bold text-slate-800 dark:text-slate-100 text-sm line-clamp-1">{video.title}</h5>
+                                <h5 className="ae-item-title-single-line">{video.title}</h5>
                                 <p className="text-xs text-slate-500 line-clamp-2 mt-1">{video.description}</p>
                               </div>
                               <div className="flex justify-between items-center text-[10px] text-slate-400 mt-2 border-t border-slate-100 dark:border-slate-800 pt-2">
-                                <span className="font-semibold text-blue-605">{video.category}</span>
+                                <span className="ae-title-primary-semibold">{video.category}</span>
                                 <span>{video.date}</span>
                               </div>
                             </div>
@@ -3589,11 +3591,11 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                                 e.stopPropagation();
                                 handleDeleteVideo(video.id, video.title);
                               }}
-                              className="absolute top-2 right-2 p-1.5 bg-slate-900/60 hover:bg-red-650 text-white rounded-md transition-colors border-none cursor-pointer"
+                              className="ae-card-delete-overlay-btn"
                               style={{ zIndex: 10 }}
                               title="Supprimer la vidéo"
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <Trash2 className="ae-icon-sm" />
                             </button>
                           </div>
                         ))}
@@ -3608,12 +3610,12 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
 
                   {activeSection === "Actualités" && (
                     <div className="space-y-6">
-                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                      <div className="ae-toolbar-header-responsive">
                         <div>
-                          <h4 className="text-lg font-bold text-slate-800 dark:text-slate-200">
+                          <h4 className="ae-card-title-lg">
                             Actualités & Annonces
                           </h4>
-                          <p className="text-sm text-slate-500">
+                          <p className="ae-text-sm-muted">
                             Publiez des informations sur les concours et les événements d'Anjou Édition.
                           </p>
                         </div>
@@ -3626,7 +3628,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                           }}
                           className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-4 py-2.5 rounded-lg cursor-pointer transition-colors inline-flex items-center gap-1.5 shadow-sm border-none"
                         >
-                          <Plus className="w-4 h-4" /> Publier une annonce
+                          <Plus className="ae-icon-size-sm" /> Publier une annonce
                         </button>
                       </div>
 
@@ -3640,21 +3642,21 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                               <span className={`news-badge ${news.type ? news.type.toLowerCase() : "info"}`}>
                                 {news.type || "Info"}
                               </span>
-                              <div className="flex items-center gap-3">
-                                <span className="text-xs text-slate-400 font-mono">{news.date}</span>
+                              <div className="ae-flex-center-gap-3">
+                                <span className="ae-text-mono-muted">{news.date}</span>
                                 <button
                                   onClick={() => handleDeleteNews(news.id, news.title)}
-                                  className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors border-none bg-transparent cursor-pointer"
+                                  className="ae-btn-ghost-remove-item"
                                   title="Supprimer l'annonce"
                                 >
-                                  <Trash2 className="w-3.5 h-3.5" />
+                                  <Trash2 className="ae-icon-sm" />
                                 </button>
                               </div>
                             </div>
                             <h5 className="font-extrabold text-slate-800 dark:text-slate-100 text-base mb-1.5">
                               {news.title}
                             </h5>
-                            <p className="text-sm text-slate-650 dark:text-slate-350 leading-relaxed font-light font-sans">
+                            <p className="ae-paragraph-subtle">
                               {news.content}
                             </p>
                           </div>
@@ -3670,12 +3672,12 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
 
                   {activeSection === "Mes menus" && (
                     <div className="space-y-6">
-                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                      <div className="ae-toolbar-header-responsive">
                         <div>
-                          <h4 className="text-lg font-bold text-slate-800 dark:text-slate-200">
+                          <h4 className="ae-card-title-lg">
                             Menu de Navigation & Actions de Shortcode
                           </h4>
-                          <p className="text-sm text-slate-500">
+                          <p className="ae-text-sm-muted">
                             Gérez et réordonnez la structure du menu de votre site. Glissez-déposez les éléments pour les réorganiser ou les imbriquer.
                           </p>
                         </div>
@@ -3687,7 +3689,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                       </div>
 
                       {/* Search Bar & Focus Information */}
-                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
+                      <div className="ae-banner-header-card">
                         <div className="flex-grow max-w-md">
                           <input 
                             type="text"
@@ -3697,8 +3699,8 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                             className="db-input"
                           />
                         </div>
-                        <div className="text-xs text-slate-500 flex items-center gap-2">
-                          <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                        <div className="ae-caption-with-icon">
+                          <span className="ae-indicator-pulse-blue"></span>
                           <span>Faites glisser les éléments ou utilisez les boutons pour réordonner</span>
                         </div>
                       </div>
@@ -3742,10 +3744,10 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                                   className="menu-drag-handle" 
                                   title="Faites glisser pour réordonner"
                                 >
-                                  <GripVertical className="w-4 h-4" />
+                                  <GripVertical className="ae-icon-size-sm" />
                                 </div>
                                 <div className="menu-item-details">
-                                  <div className="flex items-center gap-2">
+                                  <div className="ae-flex-row-gap-md">
                                     <span className="text-base">
                                       {item.icon === "Home" && "🏠"}
                                       {item.icon === "Newspaper" && "📰"}
@@ -3760,21 +3762,21 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                                       </span>
                                     )}
                                   </div>
-                                  <div className="menu-item-meta font-sans flex items-center gap-3">
+                                  <div className="ae-menu-item-meta">
                                     <span className={`menu-badge-type ${item.type === "internal" || item.type === "internal-link" ? "internal" : item.type === "external" || item.type === "external-link" ? "external" : "shortcode"}`}>
                                       {item.type === "internal" || item.type === "internal-link" ? "Lien interne" : item.type === "external" || item.type === "external-link" ? "Lien externe" : "Shortcode"}
                                     </span>
                                     <span className={`menu-badge-status ${item.status === "Actif" || item.isActive ? "active" : "inactive"}`}>
                                       {item.status || (item.isActive ? "Actif" : "Inactif")}
                                     </span>
-                                    {item.url && <span className="text-[11px] font-mono text-slate-400 dark:text-slate-500 ml-1">({item.url})</span>}
+                                    {item.url && <span className="ae-mono-badge-muted">({item.url})</span>}
                                     {isLeaf && item.shortcode && (
                                       <span className="text-[11px] font-mono font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-1.5 py-0.5 rounded ml-1">
                                         {getShortcodeDisplayValue(item.shortcode)}
                                       </span>
                                     )}
                                     {!isLeaf && item.shortcode && (
-                                      <span className="text-[11px] font-mono text-slate-400 line-through ml-1" title="Masqué car possède des enfants">
+                                      <span className="ae-text-strikethrough-mono" title="Masqué car possède des enfants">
                                         {getShortcodeDisplayValue(item.shortcode)}
                                       </span>
                                     )}
@@ -3792,7 +3794,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                                   aria-label={`Monter l'élément ${item.title}`}
                                   title="Monter"
                                 >
-                                  <ChevronUp className="w-3.5 h-3.5" />
+                                  <ChevronUp className="ae-icon-sm" />
                                 </button>
                                 <button
                                   type="button"
@@ -3801,7 +3803,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                                   aria-label={`Descendre l'élément ${item.title}`}
                                   title="Descendre"
                                 >
-                                  <ChevronDown className="w-3.5 h-3.5" />
+                                  <ChevronDown className="ae-icon-sm" />
                                 </button>
                                 
                                 {/* Nesting controls */}
@@ -3813,7 +3815,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                                     aria-label={`Remonter l'élément d'un niveau`}
                                     title="Remonter d'un niveau (Sortir)"
                                   >
-                                    <ChevronLeft className="w-3.5 h-3.5" />
+                                    <ChevronLeft className="ae-icon-sm" />
                                   </button>
                                 )}
                                 {(!item.parentId || canGoRight) && (
@@ -3824,7 +3826,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                                     aria-label={`Déplacer en sous-menu de l'élément précédent`}
                                     title="Déplacer en sous-menu"
                                   >
-                                    <ChevronRight className="w-3.5 h-3.5" />
+                                    <ChevronRight className="ae-icon-sm" />
                                   </button>
                                 )}
 
@@ -3854,7 +3856,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                                   aria-label={`Supprimer l'élément ${item.title}`}
                                   title="Supprimer"
                                 >
-                                  <Trash2 className="w-3.5 h-3.5" />
+                                  <Trash2 className="ae-icon-sm" />
                                 </button>
                               </div>
                             </div>
@@ -3892,14 +3894,14 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                             }}
                             className="w-full md:w-auto bg-blue-50 dark:bg-slate-800 hover:bg-blue-100 dark:hover:bg-slate-700 text-blue-700 dark:text-blue-400 text-sm font-bold px-6 py-3 rounded-xl cursor-pointer transition-colors inline-flex items-center justify-center gap-2 border border-blue-200 dark:border-slate-700 shadow-sm"
                           >
-                            <Plus className="w-4 h-4" /> Ajouter un élément
+                            <Plus className="ae-icon-size-sm" /> Ajouter un élément
                           </button>
                         </div>
                       ) : (
                         <div id="inline-add-menu-form" className="mt-6 inline-form-transition">
-                          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 md:p-6 shadow-sm">
+                          <div className="ae-dashboard-panel-card">
                             <h3 className="flex items-center gap-2 text-blue-600 font-bold mb-4 text-lg border-b border-slate-100 dark:border-slate-800 pb-3">
-                              <Plus className="w-5 h-5" /> Ajouter un élément
+                              <Plus className="ae-icon-md" /> Ajouter un élément
                             </h3>
                             {renderMenuForm(true)}
                           </div>
@@ -3917,7 +3919,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                             type="text"
                             value={settings.siteName}
                             onChange={(e) => setSettings({ ...settings, siteName: e.target.value })}
-                            className="w-full text-sm border border-slate-300 rounded-lg p-2 bg-white text-slate-800"
+                            className="ae-form-input"
                           />
                         </div>
                         <div>
@@ -3926,11 +3928,11 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                             type="email"
                             value={settings.contactEmail}
                             onChange={(e) => setSettings({ ...settings, contactEmail: e.target.value })}
-                            className="w-full text-sm border border-slate-300 rounded-lg p-2 bg-white text-slate-800"
+                            className="ae-form-input"
                           />
                         </div>
-                        <div className="flex items-center gap-4 pt-2">
-                          <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300 cursor-pointer">
+                        <div className="ae-action-row-padded">
+                          <label className="ae-interactive-row-item">
                             <input
                               type="checkbox"
                               checked={settings.enableComments}
@@ -3947,15 +3949,15 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                         </button>
                       </form>
 
-                      <div className="border-t border-slate-200 pt-6 dark:border-slate-800">
+                      <div className="ae-divider-top-section">
                         <h4 className="text-sm font-bold text-[#004b7a] dark:text-[#3b82f6] mb-3 flex items-center gap-1.5">
-                          <Sparkles className="w-4 h-4 text-indigo-650" />
+                          <Sparkles className="ae-icon-indigo-sm" />
                           Configuration Assistant IA Gemini
                         </h4>
                         <div className="space-y-4">
                           <div>
                             <label className="block text-xs font-bold text-slate-550 uppercase mb-1">Clé API Gemini</label>
-                            <div className="flex gap-2">
+                            <div className="ae-flex-gap-sm">
                               <input
                                 type="password"
                                 value={geminiApiKey}
@@ -3971,7 +3973,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                               </button>
                             </div>
                             <p className="text-[10px] text-slate-400 mt-1">
-                              Obtenez une clé API gratuite sur <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Google AI Studio</a>. La clé est stockée de manière sécurisée localement dans votre navigateur.
+                              Obtenez une clé API gratuite sur <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" className="ae-link-interactive-blue">Google AI Studio</a>. La clé est stockée de manière sécurisée localement dans votre navigateur.
                             </p>
                           </div>
                         </div>
@@ -3983,7 +3985,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                   <div className="mt-8 border-t border-slate-100 dark:border-slate-800 pt-6">
                     <button
                       onClick={() => setActiveSection(null)}
-                      className="inline-flex items-center gap-2 text-[#336ddc] hover:text-[#004b7a] font-bold text-sm cursor-pointer border-none bg-transparent"
+                      className="ae-action-link-btn"
                     >
                       <span>&larr;</span> Retour au tableau d'activité principal
                     </button>
@@ -3994,29 +3996,29 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                 /* GLOBAL SPOTLIGHT SEARCH RESULTS VIEW                     */
                 /* ======================================================== */
                 <div className="space-y-6 animate-fade-in">
-                  <div className="border-b border-slate-200 pb-3 dark:border-slate-800">
-                    <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">
+                  <div className="ae-panel-divider-bottom">
+                    <h3 className="ae-card-title-bold">
                       Résultats de recherche globale pour "<strong>{searchQuery}</strong>"
                     </h3>
-                    <p className="text-xs text-slate-500">
+                    <p className="ae-meta-text-muted-xs">
                       Recherche effectuée dans les pages, articles, flipbooks et messages.
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="ae-grid-responsive-two-column">
                     {/* Matching Pages */}
                     <div className="db-panel-card">
                       <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-3 flex items-center gap-2">
-                        <FileText className="w-4 h-4 text-blue-500" />
+                        <FileText className="ae-icon-sm-blue" />
                         Pages ({displayedPages.length})
                       </h4>
                       {displayedPages.length > 0 ? (
                         <ul className="space-y-2" style={{ listStyle: "none", padding: 0 }}>
                           {displayedPages.map(p => (
-                            <li key={p.id} className="p-2.5 bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg flex justify-between items-center transition-colors">
+                            <li key={p.id} className="ae-interactive-list-row">
                               <div>
-                                <p className="text-xs font-bold text-slate-805">{p.title}</p>
-                                <p className="text-[10px] text-slate-550">Statut: {p.status} | Catégorie: {p.category || "Outils"}</p>
+                                <p className="ae-badge-bold-dark-xs">{p.title}</p>
+                                <p className="ae-caption-micro">Statut: {p.status} | Catégorie: {p.category || "Outils"}</p>
                               </div>
                               <button 
                                 onClick={() => { setActiveSection("Page"); }}
@@ -4035,16 +4037,16 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                     {/* Matching Articles */}
                     <div className="db-panel-card">
                       <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-3 flex items-center gap-2">
-                        <Newspaper className="w-4 h-4 text-amber-500" />
+                        <Newspaper className="ae-icon-amber-warning" />
                         Articles ({displayedArticles.length})
                       </h4>
                       {displayedArticles.length > 0 ? (
                         <ul className="space-y-2" style={{ listStyle: "none", padding: 0 }}>
                           {displayedArticles.map(a => (
-                            <li key={a.id} className="p-2.5 bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg flex justify-between items-center transition-colors">
+                            <li key={a.id} className="ae-interactive-list-row">
                               <div>
-                                <p className="text-xs font-bold text-slate-805">{a.title}</p>
-                                <p className="text-[10px] text-slate-550">Lectures: {a.views} | Catégorie: {a.category || "Outils"}</p>
+                                <p className="ae-badge-bold-dark-xs">{a.title}</p>
+                                <p className="ae-caption-micro">Lectures: {a.views} | Catégorie: {a.category || "Outils"}</p>
                               </div>
                               <button 
                                 onClick={() => { setActiveSection("Article"); }}
@@ -4063,16 +4065,16 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                     {/* Matching Flipbooks */}
                     <div className="db-panel-card">
                       <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-3 flex items-center gap-2">
-                        <BookOpen className="w-4 h-4 text-emerald-500" />
+                        <BookOpen className="ae-icon-emerald-sm" />
                         Flipbooks ({displayedFlipbooks.length})
                       </h4>
                       {displayedFlipbooks.length > 0 ? (
                         <ul className="space-y-2" style={{ listStyle: "none", padding: 0 }}>
                           {displayedFlipbooks.map(fb => (
-                            <li key={fb.id} className="p-2.5 bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg flex justify-between items-center transition-colors">
+                            <li key={fb.id} className="ae-interactive-list-row">
                               <div>
-                                <p className="text-xs font-bold text-slate-805">{fb.title}</p>
-                                <p className="text-[10px] text-slate-550">{fb.description}</p>
+                                <p className="ae-badge-bold-dark-xs">{fb.title}</p>
+                                <p className="ae-caption-micro">{fb.description}</p>
                               </div>
                               <button 
                                 onClick={() => { setActiveSection("Mes Flipbooks"); }}
@@ -4091,16 +4093,16 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                     {/* Matching Messages */}
                     <div className="db-panel-card">
                       <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-3 flex items-center gap-2">
-                        <MessageSquare className="w-4 h-4 text-purple-500" />
+                        <MessageSquare className="ae-icon-purple-sm" />
                         Messages de contact ({displayedMessages.length})
                       </h4>
                       {displayedMessages.length > 0 ? (
                         <ul className="space-y-2" style={{ listStyle: "none", padding: 0 }}>
                           {displayedMessages.map(m => (
-                            <li key={m.id} className="p-2.5 bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg flex justify-between items-center transition-colors">
+                            <li key={m.id} className="ae-interactive-list-row">
                               <div>
-                                <p className="text-xs font-bold text-slate-855">{m.subject}</p>
-                                <p className="text-[10px] text-slate-550 font-light">Expéditeur: {m.name} | Date: {m.date}</p>
+                                <p className="ae-badge-label-dark-xs">{m.subject}</p>
+                                <p className="ae-meta-light-micro">Expéditeur: {m.name} | Date: {m.date}</p>
                               </div>
                               <button 
                                 onClick={() => { setActiveSection("Messages"); }}
@@ -4133,146 +4135,151 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                 <div className="space-y-6">
                   
                   {/* KPI Cards Row */}
-                  <div className="kpi-grid">
-                    <div className="kpi-card">
-                      <div className="kpi-card-info">
-                        <span className="kpi-card-label">Pages existantes</span>
-                        <span className="kpi-card-value">{pagesList.length}</span>
-                        <span className="kpi-card-sub">En ligne & Brouillons</span>
+                  <div className="ae-stats-grid">
+                    <div className="ae-card ae-stat-card">
+                      <div className="ae-stat-content">
+                        <span className="ae-stat-title">Pages existantes</span>
+                        <span className="ae-stat-value">{pagesList.length}</span>
+                        <span className="ae-stat-desc">En ligne & Brouillons</span>
                       </div>
-                      <div className="kpi-card-icon">
-                        <FileText className="w-5 h-5" />
-                      </div>
-                    </div>
-
-                    <div className="kpi-card">
-                      <div className="kpi-card-info">
-                        <span className="kpi-card-label">Articles de blog</span>
-                        <span className="kpi-card-value">{articlesList.length}</span>
-                        <span className="kpi-card-sub">Lectorat & Poésies</span>
-                      </div>
-                      <div className="kpi-card-icon accent-icon">
-                        <Newspaper className="w-5 h-5" />
+                      <div className="ae-stat-icon-wrapper" style={{ background: '#ecfdf5', color: '#059669' }}>
+                        <FileText size={24} />
                       </div>
                     </div>
 
-                    <div className="kpi-card">
-                      <div className="kpi-card-info">
-                        <span className="kpi-card-label">Boîte de Réception</span>
-                        <span className="kpi-card-value">{messagesList.length}</span>
-                        <span className="kpi-card-sub">Messages de contact</span>
+                    <div className="ae-card ae-stat-card">
+                      <div className="ae-stat-content">
+                        <span className="ae-stat-title">Articles de blog</span>
+                        <span className="ae-stat-value">{articlesList.length}</span>
+                        <span className="ae-stat-desc">Lectorat & Poésies</span>
                       </div>
-                      <div className="kpi-card-icon emerald-icon">
-                        <MessageSquare className="w-5 h-5" />
+                      <div className="ae-stat-icon-wrapper" style={{ background: '#eff6ff', color: '#2563eb' }}>
+                        <Newspaper size={24} />
                       </div>
                     </div>
 
-                    <div className="kpi-card">
-                      <div className="kpi-card-info">
-                        <span className="kpi-card-label">Base de données</span>
-                        <span className="kpi-card-value">Active</span>
-                        <span className="kpi-card-sub">Mode Cloud Firestore</span>
+                    <div className="ae-card ae-stat-card">
+                      <div className="ae-stat-content">
+                        <span className="ae-stat-title">Boîte de Réception</span>
+                        <span className="ae-stat-value">{messagesList.length}</span>
+                        <span className="ae-stat-desc">Messages de contact</span>
                       </div>
-                      <div className="kpi-card-icon emerald-icon">
-                        <ShieldCheck className="w-5 h-5" />
+                      <div className="ae-stat-icon-wrapper" style={{ background: '#fffbeb', color: '#d97706' }}>
+                        <MessageSquare size={24} />
+                      </div>
+                    </div>
+
+                    <div className="ae-card ae-stat-card">
+                      <div className="ae-stat-content">
+                        <span className="ae-stat-title">Base de données</span>
+                        <span className="ae-stat-value">Active</span>
+                        <span className="ae-stat-desc">Mode Cloud Firestore</span>
+                      </div>
+                      <div className="ae-stat-icon-wrapper" style={{ background: '#ecfdf5', color: '#059669' }}>
+                        <ShieldCheck size={24} />
                       </div>
                     </div>
                   </div>
 
                   {/* Main Grid: Info & Activities */}
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                  <div className="ae-dashboard-grid-12cols" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
                     
                     {/* Left Column: Welcome Info Card */}
-                    <div className="lg:col-span-4 flex flex-col gap-6">
+                    <div className="ae-column-sidebar" style={{ display: 'flex', flexDirection: 'column' }}>
                       <InfoCard 
                         onLearnMore={() => {
                           setNotification("Le portail Anjou Edition est configuré avec l'API Éditeur v2.4 pour la production.");
                         }} 
                       />
                       
-                      <div className="bg-[#336ddc]/5 border border-[#336ddc]/10 rounded-xl p-4 text-xs text-slate-650 dark:bg-[#336ddc]/10 dark:text-slate-300">
-                        <p className="font-bold mb-1 flex items-center gap-1.5 text-blue-605">
-                          <Sparkles className="w-3.5 h-3.5" />
+                      <div className="ae-card" style={{ marginTop: '24px', background: 'rgba(51, 109, 220, 0.03)', borderColor: 'rgba(51, 109, 220, 0.15)' }}>
+                        <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#004b7a', fontWeight: 700, margin: '0 0 8px 0', fontSize: '0.95rem' }}>
+                          <Sparkles size={16} />
                           Conseil d'administration :
-                        </p>
-                        <p className="font-light leading-relaxed">
+                        </h4>
+                        <p style={{ margin: 0, fontSize: '0.875rem', color: '#475569', lineHeight: 1.6 }}>
                           Le menu latéral vous permet d'accéder instantanément à tous les modules d'administration. Vos modifications sont enregistrées en temps réel dans Firestore.
                         </p>
                       </div>
                     </div>
 
                     {/* Right Column: Activities & AI generation */}
-                    <div className="lg:col-span-8 flex flex-col gap-6">
+                    <div className="ae-layout-main-column-wide" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                       
-                      <div className="recent-activity-grid">
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
                         {/* Recent Pages activity */}
-                        <div className="activity-card">
-                          <div className="activity-card-header">
-                            <h4 className="activity-card-title">
-                              <FileText className="w-4 h-4 text-blue-500" />
+                        <div className="ae-card" style={{ padding: '20px' }}>
+                          <div className="ae-card-header">
+                            <h4 className="ae-card-title">
+                              <FileText className="ae-card-title-icon" size={20} />
                               Pages Récentes
                             </h4>
                             <button 
                               onClick={() => setActiveSection("Page")}
-                              className="activity-card-action border-none bg-transparent cursor-pointer"
+                              className="ae-button ae-button--secondary"
+                              style={{ padding: '4px 12px', fontSize: '0.75rem' }}
                             >
                               Gérer
                             </button>
                           </div>
-                          <ul className="activity-list">
+                          <div>
                             {pagesList.slice(-3).reverse().map(p => (
-                              <li key={p.id} className="activity-item">
-                                <div className="activity-item-info">
-                                  <span className="activity-item-title">{p.title}</span>
-                                  <span className="activity-item-meta">Auteur: {p.author} | {p.status}</span>
+                              <div key={p.id} className="ae-list-item">
+                                <div className="ae-list-item-content">
+                                  <span className="ae-list-item-title">{p.title}</span>
+                                  <span className="ae-list-item-meta">Auteur: {p.author} | {p.status}</span>
                                 </div>
                                 <button 
                                   onClick={() => setActiveSection("Page")}
-                                  className="activity-item-btn"
+                                  className="ae-button ae-button--ghost"
                                 >
                                   Éditer
                                 </button>
-                              </li>
+                              </div>
                             ))}
                             {pagesList.length === 0 && (
-                              <li className="text-center py-4 text-slate-400 text-xs italic">Aucune page créée.</li>
+                              <div className="text-center py-4 text-slate-400 text-sm italic">Aucune page créée.</div>
                             )}
-                          </ul>
+                          </div>
                         </div>
 
                         {/* Recent Messages activity */}
-                        <div className="activity-card">
-                          <div className="activity-card-header">
-                            <h4 className="activity-card-title">
-                              <MessageSquare className="w-4 h-4 text-emerald-500" />
+                        <div className="ae-card" style={{ padding: '20px' }}>
+                          <div className="ae-card-header">
+                            <h4 className="ae-card-title">
+                              <MessageSquare className="ae-card-title-icon" size={20} style={{ color: '#059669' }} />
                               Derniers Messages
                             </h4>
                             <button 
                               onClick={() => setActiveSection("Messages")}
-                              className="activity-card-action border-none bg-transparent cursor-pointer"
+                              className="ae-button ae-button--secondary"
+                              style={{ padding: '4px 12px', fontSize: '0.75rem' }}
                             >
                               Boîte
                             </button>
                           </div>
-                          <ul className="activity-list">
+                          <div>
                             {messagesList.slice(-3).reverse().map(m => (
-                              <li key={m.id} className="activity-item">
-                                <div className="activity-item-info">
-                                  <span className="activity-item-title">{m.subject}</span>
-                                  <span className="activity-item-meta">De: {m.name} | {m.date}</span>
+                              <div key={m.id} className="ae-list-item">
+                                <div className="ae-list-item-content">
+                                  <span className="ae-list-item-title">{m.subject}</span>
+                                  <span className="ae-list-item-meta">De: {m.name} | {m.date}</span>
                                 </div>
                                 <button 
                                   onClick={() => setActiveSection("Messages")}
-                                  className="activity-item-btn"
+                                  className="ae-button ae-button--ghost"
                                 >
                                   Lire
                                 </button>
-                              </li>
+                              </div>
                             ))}
                             {messagesList.length === 0 && (
-                              <li className="text-center py-4 text-slate-400 text-xs italic">Aucun message de contact.</li>
+                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px 0', color: '#94a3b8' }}>
+                                <MessageSquare size={32} style={{ marginBottom: '8px', opacity: 0.5 }} />
+                                <span className="text-sm italic">Aucun message de contact.</span>
+                              </div>
                             )}
-                          </ul>
+                          </div>
                         </div>
                       </div>
 
@@ -4281,18 +4288,18 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                         <div className="quick-ai-widget">
                           <div className="quick-ai-header">
                             <h4 className="quick-ai-title">
-                              <Sparkles className="w-4 h-4 text-indigo-650 animate-pulse" />
+                              <Sparkles className="ae-status-pulse-indigo" />
                               Générateur d'Article Rapide (Gemini)
                             </h4>
                             <button 
                               onClick={() => setActiveSection("Article")}
-                              className="activity-card-action border-none bg-transparent cursor-pointer"
+                              className="ae-activity-action-btn"
                               style={{ color: "#4f46e5" }}
                             >
                               Aller à l'éditeur IA
                             </button>
                           </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 font-sans">
+                          <div className="ae-responsive-grid-2col">
                             <div>
                               <input 
                                 type="text" 
@@ -4302,7 +4309,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                                 className="db-input text-xs"
                               />
                             </div>
-                            <div className="flex gap-2">
+                            <div className="ae-flex-gap-sm">
                               <select
                                 value={aiStyle}
                                 onChange={(e) => setAiStyle(e.target.value)}
@@ -4324,7 +4331,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                           </div>
                           {aiResult && (
                             <div className="mt-2 p-3 bg-white/70 dark:bg-slate-900/60 rounded-lg border border-indigo-150 space-y-2">
-                              <p className="text-xs text-slate-700 dark:text-slate-300 line-clamp-3 leading-relaxed font-light">{aiResult}</p>
+                              <p className="ae-description-clamped">{aiResult}</p>
                               <button
                                 onClick={handlePublishAiArticle}
                                 className="db-btn-primary bg-emerald-600 hover:bg-emerald-700 text-xs py-1 px-3 w-auto border-none cursor-pointer"
@@ -4355,8 +4362,8 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
               <div className="ae-modal-overlay" onClick={handleCloseModal}>
                 <div className="ae-modal-container" onClick={(e) => e.stopPropagation()}>
                   <div className="ae-modal-header">
-                    <h3 className="ae-modal-title flex items-center gap-2">
-                      <BookOpen className="w-5 h-5 text-blue-600" />
+                    <h3 className="ae-modal-header-title">
+                      <BookOpen className="ae-icon-blue-primary" />
                       Créer un nouveau Flipbook
                     </h3>
                     <button 
@@ -4364,7 +4371,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                       className="ae-modal-close-btn"
                       disabled={uploadStep === 1}
                     >
-                      <X className="w-5 h-5" />
+                      <X className="ae-icon-md" />
                     </button>
                   </div>
                   
@@ -4372,7 +4379,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                     {uploadStep === 0 && (
                       <form onSubmit={handleCreateFlipbookSubmit} className="space-y-4">
                         <div>
-                          <label className="ae-modal-label">Titre du Flipbook <span className="text-red-500">*</span></label>
+                          <label className="ae-modal-label">Titre du Flipbook <span className="ae-text-danger">*</span></label>
                           <input 
                             type="text" 
                             required 
@@ -4384,7 +4391,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                         </div>
                         
                         <div>
-                          <label className="ae-modal-label">Description <span className="text-red-500">*</span></label>
+                          <label className="ae-modal-label">Description <span className="ae-text-danger">*</span></label>
                           <textarea 
                             required 
                             rows={3} 
@@ -4396,7 +4403,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                         </div>
 
                         <div>
-                          <label className="ae-modal-label">Catégorie littéraire <span className="text-red-500">*</span></label>
+                          <label className="ae-modal-label">Catégorie littéraire <span className="ae-text-danger">*</span></label>
                           <select 
                             value={newFlipbookCategory} 
                             onChange={(e) => setNewFlipbookCategory(e.target.value)} 
@@ -4415,7 +4422,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                         </div>
 
                         <div>
-                          <label className="ae-modal-label">Fichier PDF <span className="text-red-500">*</span></label>
+                          <label className="ae-modal-label">Fichier PDF <span className="ae-text-danger">*</span></label>
                           
                           {!selectedPdfFile ? (
                             <div 
@@ -4426,20 +4433,20 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                               onClick={() => fileInputRef.current?.click()}
                             >
                               <FileText className="w-8 h-8 text-slate-400 mb-2" />
-                              <p className="font-semibold text-sm text-slate-700 dark:text-slate-300">
+                              <p className="ae-subheading-semibold-slate">
                                 Glissez-déposez un PDF ici ou cliquez pour choisir
                               </p>
                               <p className="text-xs text-slate-400 mt-1">Fichiers PDF uniquement (Max 20 Mo)</p>
                             </div>
                           ) : (
-                            <div className="ae-uploaded-file-card flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-lg dark:bg-slate-800 dark:border-slate-700">
-                              <div className="flex items-center gap-2.5 truncate">
+                            <div className="ae-uploaded-file-card">
+                              <div className="ae-truncate-inline-row">
                                 <span className="text-xl flex-shrink-0">📕</span>
                                 <div className="truncate font-sans">
-                                  <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 truncate" title={selectedPdfFile.name}>
+                                  <p className="ae-item-title-truncate-semibold" title={selectedPdfFile.name}>
                                     {selectedPdfFile.name}
                                   </p>
-                                  <p className="text-xs text-slate-400">
+                                  <p className="ae-meta-muted-sm">
                                     {(selectedPdfFile.size / (1024 * 1024)).toFixed(2)} Mo
                                   </p>
                                 </div>
@@ -4447,10 +4454,10 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                               <button 
                                 type="button" 
                                 onClick={() => setSelectedPdfFile(null)} 
-                                className="text-red-500 hover:text-red-700 p-1 hover:bg-red-50 rounded border-none bg-transparent cursor-pointer"
+                                className="ae-btn-ghost-danger"
                                 title="Supprimer le fichier"
                               >
-                                <Trash2 className="w-4 h-4" />
+                                <Trash2 className="ae-icon-size-sm" />
                               </button>
                             </div>
                           )}
@@ -4465,7 +4472,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                         </div>
 
                         {getGeminiClient() && (
-                          <div className="flex items-center gap-2 p-2 bg-indigo-50 border border-indigo-100 rounded-lg dark:bg-indigo-950/40 dark:border-indigo-900/50">
+                          <div className="ae-info-badge-card">
                             <input 
                               type="checkbox" 
                               id="use-gemini" 
@@ -4473,8 +4480,8 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                               onChange={(e) => setUseGeminiForPages(e.target.checked)} 
                               className="accent-indigo-600 cursor-pointer"
                             />
-                            <label htmlFor="use-gemini" className="text-xs font-semibold text-indigo-905 dark:text-indigo-200 cursor-pointer flex items-center gap-1">
-                              <Sparkles className="w-3.5 h-3.5 text-indigo-600 animate-pulse" />
+                            <label htmlFor="use-gemini" className="ae-link-indigo">
+                              <Sparkles className="ae-icon-pulse-indigo" />
                               Rédiger le contenu des pages avec l'IA Gemini
                             </label>
                           </div>
@@ -4501,40 +4508,40 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                     
                     {uploadStep === 1 && (
                       <div className="text-center py-6 space-y-5">
-                        <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto text-2xl relative">
-                          <span className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin absolute"></span>
+                        <div className="ae-avatar-circle-lg">
+                          <span className="ae-spinner-loader-blue"></span>
                           📖
                         </div>
                         <div className="space-y-2">
-                          <h4 className="font-bold text-slate-800 dark:text-slate-200 text-base">Traitement du document en cours...</h4>
-                          <p className="text-xs text-slate-500 font-mono italic">{geminiProgressMsg}</p>
+                          <h4 className="ae-heading-title-base">Traitement du document en cours...</h4>
+                          <p className="ae-code-meta-italic-xs">{geminiProgressMsg}</p>
                         </div>
-                        <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden max-w-xs mx-auto">
+                        <div className="ae-progress-track-md">
                           <div 
-                            className="bg-blue-600 h-2.5 rounded-full transition-all duration-300 ease-out" 
+                            className="ae-progress-meter-indicator" 
                             style={{ width: `${uploadProgress}%` }}
                           />
                         </div>
-                        <span className="text-sm font-bold text-blue-600 font-mono">{uploadProgress}%</span>
+                        <span className="ae-mono-badge-primary-bold">{uploadProgress}%</span>
                       </div>
                     )}
                     
                     {uploadStep === 2 && (
                       <div className="text-center py-4 space-y-4 font-sans">
-                        <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-3xl animate-bounce">
+                        <div className="ae-avatar-success-animated">
                           ✓
                         </div>
                         <div className="space-y-2 font-sans">
-                          <h4 className="font-bold text-slate-800 dark:text-slate-200 text-base">Flipbook créé avec succès !</h4>
-                          <p className="text-xs text-slate-505">
+                          <h4 className="ae-heading-title-base">Flipbook créé avec succès !</h4>
+                          <p className="ae-meta-subtext-regular">
                             Votre flipbook "{newFlipbookTitle}" est prêt à être intégré dans l'application.
                           </p>
                         </div>
                         
-                        <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 my-2 text-left">
-                          <label className="ae-modal-label font-bold text-slate-655">Intégration React.js :</label>
+                        <div className="ae-card-panel-subtle">
+                          <label className="ae-modal-field-label">Intégration React.js :</label>
                           <div className="flex items-center justify-between gap-2 mt-1.5">
-                            <code className="text-xs bg-slate-100 dark:bg-slate-800 p-2 rounded text-blue-600 dark:text-blue-400 font-mono select-all">
+                            <code className="ae-code-snippet-box">
                               {`<PdfFlipbookReader book={flipbooks.find(f => f.id === "${newGeneratedId}")} onClose={handleClose} />`}
                             </code>
                             <button
@@ -4545,7 +4552,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                               }}
                               className="bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs px-2.5 py-1.5 rounded font-bold cursor-pointer inline-flex items-center gap-1 border border-slate-200 dark:border-slate-700"
                             >
-                              <Copy className="w-3 h-3" /> Copier
+                              <Copy className="ae-icon-tiny" /> Copier
                             </button>
                           </div>
                         </div>
@@ -4569,21 +4576,21 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
               <div className="ae-modal-overlay" onClick={() => { setShowEditFlipbookModal(false); setEditingFlipbook(null); setEditPdfFile(null); }}>
                 <div className="ae-modal-container max-w-2xl animate-fade-in" onClick={(e) => e.stopPropagation()}>
                   <div className="ae-modal-header">
-                    <h3 className="ae-modal-title flex items-center gap-2">
-                      <BookOpen className="w-5 h-5 text-[#1e3a8a]" />
+                    <h3 className="ae-modal-header-title">
+                      <BookOpen className="ae-icon-navy-accent" />
                       Modifier le Flipbook : {editingFlipbook.title}
                     </h3>
                     <button 
                       onClick={() => { setShowEditFlipbookModal(false); setEditingFlipbook(null); setEditPdfFile(null); }} 
                       className="ae-modal-close-btn"
                     >
-                      <X className="w-5 h-5" />
+                      <X className="ae-icon-md" />
                     </button>
                   </div>
                   
                   <form onSubmit={handleEditFlipbookSubmit} className="ae-modal-body space-y-4 max-h-[70vh] overflow-y-auto">
                     <div>
-                      <label className="ae-modal-label">Titre <span className="text-red-500">*</span></label>
+                      <label className="ae-modal-label">Titre <span className="ae-text-danger">*</span></label>
                       <input 
                         type="text" 
                         required 
@@ -4594,7 +4601,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                     </div>
                     
                     <div>
-                      <label className="ae-modal-label">Description <span className="text-red-500">*</span></label>
+                      <label className="ae-modal-label">Description <span className="ae-text-danger">*</span></label>
                       <textarea 
                         required 
                         rows={3} 
@@ -4605,7 +4612,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                     </div>
 
                     <div>
-                      <label className="ae-modal-label">Catégorie littéraire <span className="text-red-500">*</span></label>
+                      <label className="ae-modal-label">Catégorie littéraire <span className="ae-text-danger">*</span></label>
                       <select 
                         value={editingFlipbook.category || "Outils"} 
                         onChange={(e) => setEditingFlipbook({ ...editingFlipbook, category: e.target.value })} 
@@ -4625,11 +4632,11 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
 
                      <div>
                       <label className="ae-modal-label">Fichier PDF actuellement associé</label>
-                      <div className="flex items-center space-x-3 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
-                        <div className="flex items-center justify-center w-8 h-8 rounded bg-red-100 dark:bg-red-900/30 text-red-500 shrink-0">
-                          <FileText className="w-4 h-4" />
+                      <div className="ae-list-item-card-row">
+                        <div className="ae-danger-icon-badge">
+                          <FileText className="ae-icon-size-sm" />
                         </div>
-                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300 flex-1 truncate">
+                        <span className="ae-truncated-nav-label">
                           {editingFlipbook.pdfFile || "Aucun PDF"}
                         </span>
                         
@@ -4655,11 +4662,11 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
 
                       {editPdfFile && (
                         <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-lg flex items-center justify-between transition-all">
-                          <div className="flex flex-col overflow-hidden mr-3">
+                          <div className="ae-flex-col-clipped">
                             <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold mb-1 uppercase tracking-wider">Nouveau PDF sélectionné :</span>
-                            <div className="flex items-center space-x-2">
-                              <FileText className="w-4 h-4 text-blue-500 shrink-0" />
-                              <span className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">
+                            <div className="ae-flex-row-gap-sm">
+                              <FileText className="ae-icon-fixed-blue" />
+                              <span className="ae-item-title-singleline">
                                 {editPdfFile.name}
                               </span>
                             </div>
@@ -4675,7 +4682,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                       )}
                       
                       <details className="mt-2">
-                        <summary className="text-xs text-slate-400 cursor-pointer hover:text-slate-600 dark:hover:text-slate-300 transition-colors">Options avancées (URL externe)</summary>
+                        <summary className="ae-action-link-muted-xs">Options avancées (URL externe)</summary>
                         <div className="mt-2">
                           <label className="ae-modal-label text-xs">URL du fichier PDF</label>
                           <input 
@@ -4691,7 +4698,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
 
                     <div className="border-t border-slate-200 pt-4 mt-4 dark:border-slate-800">
                       <div className="flex justify-between items-center mb-3">
-                        <h4 className="font-bold text-slate-800 dark:text-slate-200 text-sm font-sans">Gestion des Pages ({editingFlipbook.pages.length})</h4>
+                        <h4 className="ae-heading-sm">Gestion des Pages ({editingFlipbook.pages.length})</h4>
                         <button 
                           type="button" 
                           onClick={handleAddPageToEditing}
@@ -4703,9 +4710,9 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                       
                       <div className="space-y-3">
                         {editingFlipbook.pages.map((page, idx) => (
-                          <div key={idx} className="border border-slate-100 dark:border-slate-800 p-3 rounded-lg bg-slate-50 dark:bg-slate-900/60 font-sans">
+                          <div key={idx} className="ae-panel-subtle">
                             <div className="flex justify-between items-center mb-2">
-                              <span className="text-xs font-bold text-slate-400 font-sans">Page {page.pageNum || idx + 1}</span>
+                              <span className="ae-section-label-bold">Page {page.pageNum || idx + 1}</span>
                               <button 
                                 type="button" 
                                 onClick={() => {
@@ -4713,7 +4720,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                                     .map((p, pIdx) => ({ ...p, pageNum: pIdx + 1 }));
                                   setEditingFlipbook({ ...editingFlipbook, pages: newPages });
                                 }}
-                                className="text-red-505 hover:text-red-750 text-[11px] font-bold cursor-pointer border-none bg-transparent"
+                                className="ae-action-btn-danger-micro"
                               >
                                 Supprimer la page
                               </button>
@@ -4768,7 +4775,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                       >
                         {isEditingSaving ? (
                           <>
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            <div className="ae-spinner-btn-white"></div>
                             {geminiProgressMsg || "Enregistrement..."}
                           </>
                         ) : (
@@ -4808,29 +4815,29 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                       Média : {previewingMedia.name}
                     </h3>
                     <button onClick={() => { setShowMediaPreviewModal(false); setPreviewingMedia(null); }} className="ae-modal-close-btn">
-                      <X className="w-5 h-5" />
+                      <X className="ae-icon-md" />
                     </button>
                   </div>
                   <div className="ae-modal-body text-center space-y-4">
-                    <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4 flex items-center justify-center min-h-[200px]">
+                    <div className="ae-empty-preview-box">
                       {previewingMedia.type.startsWith("image/") ? (
-                        <img src={previewingMedia.url} alt={previewingMedia.name} className="max-h-60 max-w-full rounded shadow object-contain" referrerPolicy="no-referrer" />
+                        <img src={previewingMedia.url} alt={previewingMedia.name} className="ae-media-thumbnail-contain" referrerPolicy="no-referrer" />
                       ) : previewingMedia.type.startsWith("audio/") ? (
-                        <div className="w-full space-y-3 p-4">
+                        <div className="ae-card-panel-stacked-p4">
                           <span className="text-5xl block animate-pulse">🎵</span>
                           <audio controls className="w-full" src={previewingMedia.url}></audio>
                         </div>
                       ) : (
                         <div className="space-y-2 text-center font-sans">
                           <span className="text-5xl block">📕</span>
-                          <p className="text-xs text-slate-505 font-mono">Fichier de type : {previewingMedia.type}</p>
+                          <p className="ae-mono-caption-muted-xs">Fichier de type : {previewingMedia.type}</p>
                           <a href={previewingMedia.url} target="_blank" rel="noreferrer" className="text-blue-600 font-bold hover:underline text-xs block mt-2">
                             Télécharger / Ouvrir dans le navigateur
                           </a>
                         </div>
                       )}
                     </div>
-                    <div className="text-left space-y-1.5 text-xs text-slate-505 border-t border-slate-100 dark:border-slate-800 pt-3 font-sans">
+                    <div className="ae-card-footer-details">
                       <p><strong>Nom :</strong> {previewingMedia.name}</p>
                       <p><strong>Type :</strong> {previewingMedia.type}</p>
                       <p><strong>Taille :</strong> {(previewingMedia.size / (1024 * 1024)).toFixed(2)} Mo ({previewingMedia.size.toLocaleString()} octets)</p>
@@ -4851,16 +4858,16 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
               <div className="ae-modal-overlay" onClick={() => setShowAddPhotoModal(false)}>
                 <div className="ae-modal-container" onClick={(e) => e.stopPropagation()}>
                   <div className="ae-modal-header">
-                    <h3 className="ae-modal-title flex items-center gap-2 text-blue-600">
-                      <Image className="w-5 h-5" /> Ajouter une photo à la Galerie
+                    <h3 className="ae-modal-title">
+                      <Image className="ae-icon-md" /> Ajouter une photo à la Galerie
                     </h3>
                     <button onClick={() => setShowAddPhotoModal(false)} className="ae-modal-close-btn">
-                      <X className="w-5 h-5" />
+                      <X className="ae-icon-md" />
                     </button>
                   </div>
                   <form onSubmit={handleAddPhotoSubmit} className="ae-modal-body space-y-4">
                     <div>
-                      <label className="ae-modal-label">Titre de la photo <span className="text-red-500">*</span></label>
+                      <label className="ae-modal-label">Titre de la photo <span className="ae-text-danger">*</span></label>
                       <input 
                         type="text" 
                         required 
@@ -4871,7 +4878,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                       />
                     </div>
                     <div>
-                      <label className="ae-modal-label">Lien de l'image (URL) <span className="text-red-500">*</span></label>
+                      <label className="ae-modal-label">Lien de l'image (URL) <span className="ae-text-danger">*</span></label>
                       <input 
                         type="url" 
                         required 
@@ -4881,14 +4888,14 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                         className="db-input"
                       />
                       <div className="mt-1 flex flex-wrap gap-1.5">
-                        <span className="text-[10px] text-slate-400">Suggestions :</span>
-                        <button type="button" onClick={() => setNewPhotoUrl("https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?q=80&w=800")} className="text-[10px] text-blue-606 hover:underline border-none bg-transparent cursor-pointer">Château</button>
-                        <button type="button" onClick={() => setNewPhotoUrl("https://images.unsplash.com/photo-1516979187457-637abb4f9353?q=80&w=800")} className="text-[10px] text-blue-606 hover:underline border-none bg-transparent cursor-pointer">Loire</button>
-                        <button type="button" onClick={() => setNewPhotoUrl("https://images.unsplash.com/photo-1512820790803-83ca734da794?q=80&w=800")} className="text-[10px] text-blue-606 hover:underline border-none bg-transparent cursor-pointer">Coteaux</button>
+                        <span className="ae-text-micro-muted">Suggestions :</span>
+                        <button type="button" onClick={() => setNewPhotoUrl("https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?q=80&w=800")} className="ae-btn-link-xs">Château</button>
+                        <button type="button" onClick={() => setNewPhotoUrl("https://images.unsplash.com/photo-1516979187457-637abb4f9353?q=80&w=800")} className="ae-btn-link-xs">Loire</button>
+                        <button type="button" onClick={() => setNewPhotoUrl("https://images.unsplash.com/photo-1512820790803-83ca734da794?q=80&w=800")} className="ae-btn-link-xs">Coteaux</button>
                       </div>
                     </div>
                     <div>
-                      <label className="ae-modal-label">Catégorie <span className="text-red-500">*</span></label>
+                      <label className="ae-modal-label">Catégorie <span className="ae-text-danger">*</span></label>
                       <select 
                         value={newPhotoCategory} 
                         onChange={(e) => setNewPhotoCategory(e.target.value)} 
@@ -4927,7 +4934,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
             {showPhotoLightboxModal && lightboxPhoto && (
               <div className="ae-modal-overlay" onClick={() => { setShowPhotoLightboxModal(false); setLightboxPhoto(null); }}>
                 <div className="ae-modal-container max-w-4xl" onClick={(e) => e.stopPropagation()} style={{ padding: 0, backgroundColor: "#020617", border: "none" }}>
-                  <div className="relative">
+                  <div className="ae-relative-container">
                     <img 
                       src={lightboxPhoto.url} 
                       alt={lightboxPhoto.title} 
@@ -4936,19 +4943,19 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                     />
                     <button 
                       onClick={() => { setShowPhotoLightboxModal(false); setLightboxPhoto(null); }} 
-                      className="absolute top-4 right-4 p-2 bg-slate-900/60 hover:bg-slate-800 text-white rounded-full transition-colors border-none cursor-pointer"
+                      className="ae-overlay-action-btn"
                     >
-                      <X className="w-5 h-5" />
+                      <X className="ae-icon-md" />
                     </button>
                   </div>
-                  <div className="p-6 bg-slate-900 text-white border-t border-slate-800 rounded-b-16">
+                  <div className="ae-dark-footer-rounded">
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="text-lg font-extrabold">{lightboxPhoto.title}</h4>
                       <span className="px-2.5 py-0.5 text-[10px] font-extrabold bg-blue-950 text-blue-405 rounded-full border border-blue-900 uppercase tracking-wider font-sans">
                         {lightboxPhoto.category}
                       </span>
                     </div>
-                    <p className="text-sm text-slate-400 leading-relaxed font-light">{lightboxPhoto.description}</p>
+                    <p className="ae-text-description-muted">{lightboxPhoto.description}</p>
                     <p className="text-[10px] text-slate-500 font-mono mt-4">Publiée le : {lightboxPhoto.date}</p>
                   </div>
                 </div>
@@ -4960,16 +4967,16 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
               <div className="ae-modal-overlay" onClick={() => setShowAddVideoModal(false)}>
                 <div className="ae-modal-container" onClick={(e) => e.stopPropagation()}>
                   <div className="ae-modal-header">
-                    <h3 className="ae-modal-title flex items-center gap-2 text-blue-600">
-                      <Play className="w-5 h-5" /> Publier une capsule Vidéo
+                    <h3 className="ae-modal-title">
+                      <Play className="ae-icon-md" /> Publier une capsule Vidéo
                     </h3>
                     <button onClick={() => setShowAddVideoModal(false)} className="ae-modal-close-btn">
-                      <X className="w-5 h-5" />
+                      <X className="ae-icon-md" />
                     </button>
                   </div>
                   <form onSubmit={handleAddVideoSubmit} className="ae-modal-body space-y-4">
                     <div>
-                      <label className="ae-modal-label">Titre de la vidéo <span className="text-red-500">*</span></label>
+                      <label className="ae-modal-label">Titre de la vidéo <span className="ae-text-danger">*</span></label>
                       <input 
                         type="text" 
                         required 
@@ -4980,7 +4987,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                       />
                     </div>
                     <div>
-                      <label className="ae-modal-label">Lien YouTube <span className="text-red-500">*</span></label>
+                      <label className="ae-modal-label">Lien YouTube <span className="ae-text-danger">*</span></label>
                       <input 
                         type="url" 
                         required 
@@ -4991,7 +4998,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                       />
                     </div>
                     <div>
-                      <label className="ae-modal-label">Catégorie <span className="text-red-500">*</span></label>
+                      <label className="ae-modal-label">Catégorie <span className="ae-text-danger">*</span></label>
                       <select 
                         value={newVideoCategory} 
                         onChange={(e) => setNewVideoCategory(e.target.value)} 
@@ -5031,7 +5038,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
             {showVideoPlayerModal && playerVideo && (
               <div className="ae-modal-overlay" onClick={() => { setShowVideoPlayerModal(false); setPlayerVideo(null); }}>
                 <div className="ae-modal-container max-w-4xl" onClick={(e) => e.stopPropagation()} style={{ padding: 0, overflow: "hidden" }}>
-                  <div className="aspect-video w-full bg-black relative" style={{ height: "450px" }}>
+                  <div className="ae-video-container" style={{ height: "450px" }}>
                     <iframe 
                       className="w-full h-full"
                       src={`https://www.youtube.com/embed/${playerVideo.youtubeId}?autoplay=1`}
@@ -5043,19 +5050,19 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                     ></iframe>
                     <button 
                       onClick={() => { setShowVideoPlayerModal(false); setPlayerVideo(null); }} 
-                      className="absolute top-4 right-4 p-2 bg-slate-900/60 hover:bg-slate-800 text-white rounded-full transition-colors border-none cursor-pointer z-10"
+                      className="ae-modal-close-floating"
                     >
-                      <X className="w-5 h-5" />
+                      <X className="ae-icon-md" />
                     </button>
                   </div>
-                  <div className="p-6 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
+                  <div className="ae-card-footer-panel">
                     <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-base font-extrabold text-slate-800 dark:text-slate-105">{playerVideo.title}</h4>
+                      <h4 className="ae-heading-extrabold-base">{playerVideo.title}</h4>
                       <span className="px-2.5 py-0.5 text-[10px] font-extrabold bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 rounded-full border border-blue-100 dark:border-blue-900/40 uppercase tracking-wider font-sans">
                         {playerVideo.category}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-550 leading-relaxed font-light font-sans">{playerVideo.description}</p>
+                    <p className="ae-text-caption-light">{playerVideo.description}</p>
                     <p className="text-[9px] text-slate-400 font-mono mt-4 font-sans">Publiée le : {playerVideo.date}</p>
                   </div>
                 </div>
@@ -5067,16 +5074,16 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
               <div className="ae-modal-overlay" onClick={() => setShowAddNewsModal(false)}>
                 <div className="ae-modal-container" onClick={(e) => e.stopPropagation()}>
                   <div className="ae-modal-header">
-                    <h3 className="ae-modal-title flex items-center gap-2 text-blue-600">
-                      <Megaphone className="w-5 h-5" /> Publier une actualité
+                    <h3 className="ae-modal-title">
+                      <Megaphone className="ae-icon-md" /> Publier une actualité
                     </h3>
                     <button onClick={() => setShowAddNewsModal(false)} className="ae-modal-close-btn">
-                      <X className="w-5 h-5" />
+                      <X className="ae-icon-md" />
                     </button>
                   </div>
                   <form onSubmit={handleAddNewsSubmit} className="ae-modal-body space-y-4">
                     <div>
-                      <label className="ae-modal-label">Titre de l'annonce <span className="text-red-500">*</span></label>
+                      <label className="ae-modal-label">Titre de l'annonce <span className="ae-text-danger">*</span></label>
                       <input 
                         type="text" 
                         required 
@@ -5088,7 +5095,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                       />
                     </div>
                     <div>
-                      <label className="ae-modal-label">Niveau d'urgence <span className="text-red-500">*</span></label>
+                      <label className="ae-modal-label">Niveau d'urgence <span className="ae-text-danger">*</span></label>
                       <select 
                         value={newNewsType} 
                         onChange={(e) => setNewNewsType(e.target.value)} 
@@ -5100,7 +5107,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                       </select>
                     </div>
                     <div>
-                      <label className="ae-modal-label">Contenu de l'actualité <span className="text-red-500">*</span></label>
+                      <label className="ae-modal-label">Contenu de l'actualité <span className="ae-text-danger">*</span></label>
                       <textarea 
                         rows={4} 
                         required
@@ -5129,16 +5136,16 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
               <div className="ae-modal-overlay" onClick={() => setShowAddAccountModal(false)}>
                 <div className="ae-modal-container" onClick={(e) => e.stopPropagation()}>
                   <div className="ae-modal-header">
-                    <h3 className="ae-modal-title flex items-center gap-2 text-blue-600">
-                      <Users className="w-5 h-5" /> Créer un compte d'écrivain
+                    <h3 className="ae-modal-title">
+                      <Users className="ae-icon-md" /> Créer un compte d'écrivain
                     </h3>
                     <button onClick={() => setShowAddAccountModal(false)} className="ae-modal-close-btn">
-                      <X className="w-5 h-5" />
+                      <X className="ae-icon-md" />
                     </button>
                   </div>
                   <form onSubmit={handleAddAccountSubmit} className="ae-modal-body space-y-4">
                     <div>
-                      <label className="ae-modal-label">Nom de l'écrivain <span className="text-red-500">*</span></label>
+                      <label className="ae-modal-label">Nom de l'écrivain <span className="ae-text-danger">*</span></label>
                       <input 
                         type="text" 
                         required 
@@ -5149,7 +5156,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                       />
                     </div>
                     <div>
-                      <label className="ae-modal-label">Adresse E-mail <span className="text-red-500">*</span></label>
+                      <label className="ae-modal-label">Adresse E-mail <span className="ae-text-danger">*</span></label>
                       <input 
                         type="email" 
                         required 
@@ -5160,7 +5167,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                       />
                     </div>
                     <div>
-                      <label className="ae-modal-label">Rôle <span className="text-red-500">*</span></label>
+                      <label className="ae-modal-label">Rôle <span className="ae-text-danger">*</span></label>
                       <select 
                         value={newAccountRole} 
                         onChange={(e) => setNewAccountRole(e.target.value)} 
@@ -5172,7 +5179,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                       </select>
                     </div>
                     <div>
-                      <label className="ae-modal-label">Statut initial <span className="text-red-500">*</span></label>
+                      <label className="ae-modal-label">Statut initial <span className="ae-text-danger">*</span></label>
                       <select 
                         value={newAccountStatus} 
                         onChange={(e) => setNewAccountStatus(e.target.value)} 
@@ -5200,11 +5207,11 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
               <div className="ae-modal-overlay" onClick={() => setShowAddMenuModal(false)}>
                 <div className="ae-modal-container" onClick={(e) => e.stopPropagation()}>
                   <div className="ae-modal-header">
-                    <h3 className="ae-modal-title flex items-center gap-2 text-blue-600">
-                      <Menu className="w-5 h-5" /> {editingMenuItemId ? "Modifier l'élément" : "Ajouter un élément"}
+                    <h3 className="ae-modal-title">
+                      <Menu className="ae-icon-md" /> {editingMenuItemId ? "Modifier l'élément" : "Ajouter un élément"}
                     </h3>
                     <button onClick={() => setShowAddMenuModal(false)} className="ae-modal-close-btn">
-                      <X className="w-5 h-5" />
+                      <X className="ae-icon-md" />
                     </button>
                   </div>
                   {renderMenuForm(false)}
@@ -5217,20 +5224,20 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
               <div className="ae-modal-overlay" onClick={() => { setShowPreviewShortcodeModal(false); setPreviewingShortcodeItem(null); }}>
                 <div className="ae-modal-container max-w-md" onClick={(e) => e.stopPropagation()}>
                   <div className="ae-modal-header">
-                    <h3 className="ae-modal-title flex items-center gap-2 text-indigo-650">
-                      <Sparkles className="w-5 h-5 animate-pulse" /> Prévisualisation du Rendu
+                    <h3 className="ae-modal-header-heading">
+                      <Sparkles className="ae-icon-pulse-lg" /> Prévisualisation du Rendu
                     </h3>
                     <button onClick={() => { setShowPreviewShortcodeModal(false); setPreviewingShortcodeItem(null); }} className="ae-modal-close-btn">
-                      <X className="w-5 h-5" />
+                      <X className="ae-icon-md" />
                     </button>
                   </div>
                   <div className="ae-modal-body space-y-4">
                     <div>
-                      <h4 className="text-sm font-bold text-slate-855 dark:text-slate-100">{previewingShortcodeItem.title}</h4>
+                      <h4 className="ae-section-title-sm">{previewingShortcodeItem.title}</h4>
                       <p className="text-xs text-slate-400 font-mono mt-1">{previewingShortcodeItem.shortcode}</p>
                     </div>
 
-                    <div className="border-t border-slate-200 dark:border-slate-800 pt-3">
+                    <div className="ae-divider-top-section">
                       {renderShortcodePreview(previewingShortcodeItem)}
                     </div>
 
@@ -5272,7 +5279,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                   className="ae-toast-close"
                   title="Fermer la notification"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="ae-icon-size-sm" />
                 </button>
               </div>
             )}
