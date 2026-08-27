@@ -12,12 +12,11 @@ jest.mock('../firebase', () => ({
   auth: { currentUser: { uid: 'admin-123' } }
 }));
 
-let mockMenusInDb = [];
 
 describe('Dashboard Menu Builder Tests', () => {
   beforeEach(() => {
     localStorage.clear();
-    mockMenusInDb = [];
+
   });
 
   test('renders menu builder panel and lists menu items', async () => {
@@ -25,7 +24,7 @@ describe('Dashboard Menu Builder Tests', () => {
       { id: "m1", title: "Accueil", label: "Accueil", icon: "Home", url: "/", shortcode: "", status: "Actif", enabled: true, type: "internal-link", parentId: null, order: 1, description: "Lien vers la page d'accueil." },
       { id: "m2", title: "Contact", label: "Contact", icon: "HelpCircle", url: "", shortcode: "open_contact_modal", status: "Actif", enabled: true, type: "shortcode", parentId: null, order: 2, description: "Ouvre le formulaire de contact." }
     ];
-    mockMenusInDb = mockMenus;
+
     localStorage.setItem("ae_menus", JSON.stringify(mockMenus));
 
     render(<Dashboard onBackToSite={() => {}} />);
@@ -46,7 +45,7 @@ describe('Dashboard Menu Builder Tests', () => {
     const mockMenus = [
       { id: "m1", title: "Accueil", label: "Accueil", icon: "Home", url: "/", shortcode: "", status: "Actif", enabled: true, type: "internal-link", parentId: null, order: 1 }
     ];
-    mockMenusInDb = mockMenus;
+
     localStorage.setItem("ae_menus", JSON.stringify(mockMenus));
     window.alert = jest.fn();
 
@@ -86,7 +85,7 @@ describe('Dashboard Menu Builder Tests', () => {
     const mockMenus = [
       { id: "m1", title: "Accueil", label: "Accueil", icon: "Home", url: "/", shortcode: "", status: "Actif", enabled: true, type: "internal-link", parentId: null, order: 1 }
     ];
-    mockMenusInDb = mockMenus;
+
     localStorage.setItem("ae_menus", JSON.stringify(mockMenus));
     render(<Dashboard onBackToSite={() => {}} />);
     
@@ -99,6 +98,7 @@ describe('Dashboard Menu Builder Tests', () => {
 
     // Fill Title with XSS code
     fireEvent.change(screen.getByPlaceholderText(/ex: Accueil/i), { target: { value: '<script>alert("XSS")</script>Sécurisé' } });
+    // eslint-disable-next-line no-script-url
     fireEvent.change(screen.getByPlaceholderText(/ex: \/contact/i), { target: { value: 'javascript:alert(1)' } });
     
     fireEvent.click(screen.getByRole('button', { name: /Créer l'élément/i }));
@@ -113,7 +113,7 @@ describe('Dashboard Menu Builder Tests', () => {
       { id: "m1", title: "Item 1", label: "Item 1", icon: "Home", url: "/", shortcode: "", status: "Actif", enabled: true, type: "internal-link", parentId: null, order: 1 },
       { id: "m2", title: "Item 2", label: "Item 2", icon: "Layers", url: "/page2", shortcode: "", status: "Actif", enabled: true, type: "internal-link", parentId: null, order: 2 }
     ];
-    mockMenusInDb = mockMenus;
+
     localStorage.setItem("ae_menus", JSON.stringify(mockMenus));
 
     render(<Dashboard onBackToSite={() => {}} />);
