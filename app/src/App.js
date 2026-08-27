@@ -25,8 +25,9 @@ import {
   videosData,
   galleryImages
 } from './data';
-import { db } from './firebase';
+import { db, auth } from './firebase';
 import { collection, getDocs } from 'firebase/firestore';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import PdfFlipbookReader from './components/PdfFlipbookReader';
 
 import { pageService } from './services/pageService';
@@ -611,16 +612,31 @@ function App() {
     window.history.pushState({}, '', '/');
   };
 
-  const handleLoginSubmit = (e) => {
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
-    // A simple hardcoded password for progressive security improvement 
-    // (In production, Firebase Auth should be fully integrated)
-    if (loginPassword === 'admin2026') {
+    try {
+      await signInWithEmailAndPassword(auth, 'admin@anjou-edition.fr', loginPassword);
       setIsAuthenticated(true);
       localStorage.setItem('ae_authenticated', 'true');
       setLoginError('');
-    } else {
-      setLoginError('Mot de passe incorrect.');
+    } catch (err) {
+      if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
+        // Fallback pour le premier lancement avec le mot de passe par défaut
+        if (loginPassword === 'admin2026') {
+          try {
+            await createUserWithEmailAndPassword(auth, 'admin@anjou-edition.fr', loginPassword);
+            setIsAuthenticated(true);
+            localStorage.setItem('ae_authenticated', 'true');
+            setLoginError('');
+          } catch (createErr) {
+            setLoginError('Erreur de création du compte admin : ' + createErr.message);
+          }
+        } else {
+          setLoginError('Mot de passe incorrect.');
+        }
+      } else {
+        setLoginError('Erreur de connexion : ' + err.message);
+      }
     }
   };
 
