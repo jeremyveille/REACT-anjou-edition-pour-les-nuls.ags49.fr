@@ -1,70 +1,94 @@
-# Getting Started with Create React App
+# Anjou Édition – Pour les Nuls
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Portail culturel dédié au patrimoine littéraire, historique, poétique et scientifique de l'Anjou. Ce dépôt inclut le site grand public et le tableau de bord d'administration (Dashboard).
 
-## Available Scripts
+## 🚀 Installation & Lancement en Développement
 
-In the project directory, you can run:
+### 1. Prérequis
+- **Node.js** (v18 ou supérieur recommandé)
+- **npm** (v9 ou supérieur)
+- **Firebase CLI** (optionnel pour le déploiement)
 
-### `npm start`
+### 2. Installation de l'application principale (app)
+```bash
+cd app
+npm install
+npm start
+```
+L'application sera accessible sur [http://localhost:3000](http://localhost:3000).
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### 3. Installation du Page Builder autonome (page-builder-react)
+Si vous devez travailler sur le constructeur visuel autonome :
+```bash
+cd page-builder-react
+npm install
+npm run dev
+```
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## ⚙️ Configuration & Variables d'environnement
 
-### `npm test`
+L'application utilise les variables d'environnement suivantes pour l'IA Gemini. Créez un fichier `.env` à la racine du dossier `app/` (et un autre dans `page-builder-react/` si nécessaire) :
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```env
+REACT_APP_GEMINI_API_KEY=votre_cle_api_gemini
+VITE_GEMINI_API_KEY=votre_cle_api_gemini_pour_vite
+```
+*(Note : La clé d'API peut également être configurée directement via l'interface du Dashboard pour être stockée dans le `localStorage`).*
 
-### `npm run build`
+## 🏗️ Build & Déploiement
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Pour générer la version optimisée pour la production :
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```bash
+cd app
+npm run build
+```
+Les fichiers générés se trouveront dans `app/build/`.
+Pour déployer sur Firebase Hosting :
+```bash
+firebase deploy --only hosting
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## 🧪 Tests
 
-### `npm run eject`
+Le projet utilise Jest et React Testing Library. Pour lancer les tests unitaires et d'intégration :
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+```bash
+cd app
+# Lancer les tests en mode interactif
+npm test
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+# Lancer les tests une seule fois (idéal pour la CI)
+CI=true npm test
+# Sous Windows PowerShell :
+$env:CI="true"; npm test
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## 🏗️ Choix Techniques Importants
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+- **Framework & Routing** : L'application principale n'utilise pas de librairie de routage complexe comme `react-router-dom`. Un routeur personnalisé (`view` state) est utilisé pour des raisons de légèreté et pour s'adapter à la nature "Single Page" enrichie.
+- **Base de données** : Firebase Firestore est utilisé pour persister les articles, les configurations et les messages de contact.
+- **Offline-First / Fallback** : Si Firebase est indisponible, l'application utilise une stratégie de bascule (`fallback`) transparente vers le `localStorage` et les données statiques (`data.js`).
+- **CSS** : Utilisation de Vanilla CSS (aucun framework lourd comme Tailwind n'est compilé dans l'app principale) pour garder un contrôle complet sur les styles.
 
-## Learn More
+## 🛡️ Conformité RGPD
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Le projet a été audité et intègre les fonctionnalités RGPD suivantes :
+- **Consentement explicite** : Le formulaire de contact inclut une case à cocher obligatoire pour le consentement au traitement des données.
+- **Minimisation & Base Légale** : Seules les données nécessaires (Nom, E-mail, Sujet, Message) sont collectées pour répondre à la demande.
+- **Mentions Légales & Politique de Confidentialité** : Une page dédiée est accessible depuis le pied de page (`/privacy`), détaillant la conservation des données (maximum 3 ans).
+- **Cookies & Traceurs** : L'application utilise uniquement le `localStorage` pour des fonctionnalités strictement nécessaires (thème clair/sombre, volume audio), dispensées de bannière de consentement aux cookies selon la CNIL.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## ♿ Accessibilité Numérique (a11y)
 
-### Code Splitting
+Le projet s'efforce de respecter les normes WCAG (niveau AA cible) :
+- Tous les éléments interactifs possèdent des `aria-label` ou `title` pertinents.
+- Le focus clavier a été amélioré globalement avec `:focus-visible` pour assurer un contraste net lors de la navigation sans souris.
+- Le formulaire de contact associe correctement les `label` (via `htmlFor`) aux `input` (via `id`).
+- Le lecteur PDF (Flipbook) intègre des contrôles au clavier natifs pour tourner les pages sans dépendre de la souris.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## ⚠️ Limites Connues et Sécurité (Risques restants)
 
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+1. **Sécurité Firestore** : Actuellement, le tableau de bord d'administration est sécurisé par un mot de passe statique local (`admin2026`). **Conséquence** : les règles de sécurité Firestore (`firestore.rules`) sont configurées en lecture/écriture ouverte pour permettre au frontend de fonctionner sans authentification Firebase.
+   - *Action Requise (Production)* : Implémenter Firebase Auth et mettre à jour `firestore.rules` pour limiter l'écriture aux administrateurs authentifiés. Un avertissement a été ajouté dans le fichier `firestore.rules`.
+2. **Gestion d'état volumineuse** : Le composant `Dashboard.js` gère de très nombreux états et opérations CRUD. Une refonte future avec des contextes React ou Redux/Zustand permettrait de simplifier sa maintenance.
