@@ -49,6 +49,11 @@
   scrollbar-color: var(--text-muted) transparent;
 }
 
+*:focus-visible {
+  outline: 3px solid var(--secondary);
+  outline-offset: 2px;
+}
+
 /* Custom Scrollbars */
 *::-webkit-scrollbar {
   width: 6px;
