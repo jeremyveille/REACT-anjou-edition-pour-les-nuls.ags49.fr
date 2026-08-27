@@ -26,6 +26,7 @@ import {
 import { GoogleGenAI } from "@google/genai";
 import { flipbooksData, textsData } from "../data";
 import { PageBuilder } from "./page-builder/PageBuilder";
+import { pageService } from "../services/pageService";
 import '../styles/page-builder.css';
 import '../styles/dashboard.css';
 
@@ -348,25 +349,10 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
 
   const fetchPages = async () => {
     try {
-      const snap = await getDocs(collection(db, "pages"));
-      if (snap.empty) {
-        const defaults = [
-          { id: "1", title: "Accueil - Anjou Edition", author: "Jeremy Veille", date: "2026-05-12", status: "Publié" },
-          { id: "2", title: "À Propos de nous", author: "Sylvie Gautier", date: "2026-06-01", status: "Brouillon" },
-          { id: "3", title: "Nos Collections Littéraires", author: "Jeremy Veille", date: "2026-06-07", status: "Publié" }
-        ];
-        for (const p of defaults) {
-          const { id, ...pageData } = p;
-          await addDoc(collection(db, "pages"), pageData);
-        }
-        setPagesList(defaults);
-      } else {
-        const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setPagesList(list);
-      }
+      const list = await pageService.getPages('pages');
+      setPagesList(list);
     } catch (e) {
       console.error("Pages error:", e);
-      // Fallback
       setPagesList([
         { id: "1", title: "Accueil - Anjou Edition", author: "Jeremy Veille", date: "2026-05-12", status: "Publié" },
         { id: "2", title: "À Propos de nous", author: "Sylvie Gautier", date: "2026-06-01", status: "Brouillon" }
@@ -376,21 +362,8 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
 
   const fetchArticles = async () => {
     try {
-      const snap = await getDocs(collection(db, "articles"));
-      if (snap.empty) {
-        const defaults = [
-          { id: "1", title: "Les secrets de l'écriture romanesque pour les Nuls", views: 245, date: "2026-05-30" },
-          { id: "2", title: "La poésie angevine contemporaine au XXIe siècle", views: 189, date: "2026-06-03" }
-        ];
-        for (const a of defaults) {
-          const { id, ...artData } = a;
-          await addDoc(collection(db, "articles"), artData);
-        }
-        setArticlesList(defaults);
-      } else {
-        const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setArticlesList(list);
-      }
+      const list = await pageService.getPages('articles');
+      setArticlesList(list);
     } catch (e) {
       console.error("Articles error:", e);
       setArticlesList([

@@ -56,10 +56,34 @@ export const pageService = {
       const q = query(collection(db, collectionName), orderBy('updatedAt', 'desc'));
       const snapshot = await getDocs(q);
       const items = [];
-      if (snapshot && snapshot.docs) {
+      if (snapshot && !snapshot.empty) {
         snapshot.docs.forEach((doc) => {
           items.push({ id: doc.id, ...doc.data() });
         });
+      } else {
+        // Seed initial data if empty
+        let defaults = [];
+        if (collectionName === 'pages') {
+          defaults = [
+            { title: "Accueil - Anjou Edition", author: "Jeremy Veille", date: "2026-05-12", status: "Publié" },
+            { title: "À Propos de nous", author: "Sylvie Gautier", date: "2026-06-01", status: "Brouillon" },
+            { title: "Nos Collections Littéraires", author: "Jeremy Veille", date: "2026-06-07", status: "Publié" }
+          ];
+        } else if (collectionName === 'articles') {
+          defaults = [
+            { title: "Les secrets de l'écriture romanesque pour les Nuls", views: 245, date: "2026-05-30" },
+            { title: "La poésie angevine contemporaine au XXIe siècle", views: 189, date: "2026-06-03" }
+          ];
+        }
+        
+        for (const item of defaults) {
+          try {
+            const docRef = await addDoc(collection(db, collectionName), { ...item, updatedAt: new Date().toISOString() });
+            items.push({ id: docRef.id, ...item });
+          } catch (e) {
+            items.push({ id: `local_${Date.now()}_${Math.random()}`, ...item });
+          }
+        }
       }
 
       // Synchroniser avec le local
