@@ -7,7 +7,7 @@ Ce document sert de guide et de référence pour tout agent ou développeur trav
 ## 📋 Présentation du Projet
 
 **Anjou Édition** est un portail culturel dédié au patrimoine littéraire, historique, poétique et scientifique de l'Anjou. L'application se compose de plusieurs grandes parties :
-1. **Le site grand public** : Permet la lecture de textes et poésies (avec synthèse vocale), le feuilletage de flipbooks numériques interactifs, la consultation d'une galerie de photos et de vidéos HD sur la Loire et l'Anjou, ainsi qu'un formulaire de contact.
+1. **Le site grand public** : Permet la lecture de textes et poésies (avec synthèse vocale), le feuilletage de flipbooks numériques interactifs, la consultation d'une galerie de photos et de vidéos HD sur la Loire et l'Anjou, ainsi qu'un formulaire de contact sécurisé et conforme au RGPD.
 2. **Le Tableau de Bord d'Administration (`/ae-dashboard`)** : Permet de gérer les pages du site, de publier des articles, de lire les messages de contact reçus, et de générer du contenu assisté par IA grâce à l'intégration de Gemini.
 3. **Le Page Builder Visuel (`/page-builder-react`)** : Un éditeur autonome drag-and-drop permettant de concevoir visuellement des structures de pages (sections, lignes, colonnes, texte, images, vidéos, boutons, cartes, alertes) et d'exporter du code HTML propre prêt à l'intégration avec Bootstrap 5.
 
@@ -27,9 +27,9 @@ Ce document sert de guide et de référence pour tout agent ou développeur trav
     *   **Firestore** : Stockage des pages, articles, configurations système et messages de contact.
     *   **Hosting** : Déploiement sur le projet Firebase `react-anjou-edition`.
 *   **Intégration Intelligence Artificielle** : [@google/genai v2.8.0](https://www.npmjs.com/package/@google/genai) (modèle `gemini-2.5-flash`)
-*   **Styling (CSS)** : **Vanilla CSS** ([App.css](file:///C:/Users/jerem/REACT-anjou-edition-pour-les-nuls.ags49.fr/app/src/App.css), [index.css](file:///C:/Users/jerem/REACT-anjou-edition-pour-les-nuls.ags49.fr/app/src/index.css) et [dashboard.css](file:///C:/Users/jerem/REACT-anjou-edition-pour-les-nuls.ags49.fr/app/src/styles/dashboard.css)). Aucun framework CSS comme Tailwind n'est utilisé.
+*   **Styling (CSS)** : **Vanilla CSS** ([App.css](file:///C:/Users/jerem/REACT-anjou-edition-pour-les-nuls.ags49.fr/app/src/App.css), [index.css](file:///C:/Users/jerem/REACT-anjou-edition-pour-les-nuls.ags49.fr/app/src/index.css) et [dashboard.css](file:///C:/Users/jerem/REACT-anjou-edition-pour-les-nuls.ags49.fr/app/src/styles/dashboard.css)).
 *   **Bibliothèque d'Icônes** : [lucide-react v1.17.0](https://lucide.dev/)
-*   **Tests** : Jest et [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/)
+*   **Tests** : Jest et [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/) (5 suites de tests complètes et 24 tests unitaires/d'intégration).
 
 ### 2. Page Builder Visuel (page-builder-react)
 *   **Framework Frontend** : [React v18.3.1](https://react.dev/)
@@ -37,13 +37,11 @@ Ce document sert de guide et de référence pour tout agent ou développeur trav
 *   **Gestion Drag & Drop** : [@dnd-kit/core v6.1.0](https://dndkit.com/)
 *   **Aide à la mise en page** : Classes Bootstrap 5 (styles CSS & icônes intégrés dans la page exportée)
 *   **Bibliothèque d'Icônes** : [lucide-react v0.344.0](https://lucide.dev/)
-*   **Qualité du code** : ESLint v8.57.0 (configuré avec plugins React et React Hooks)
+*   **Qualité du code** : ESLint v8.57.0 (configuré avec plugins React et React Hooks, 0 avertissements).
 
 ---
 
 ## 📂 Structure du Projet
-
-Voici l'arborescence complète du dépôt :
 
 ```
 REACT-anjou-edition-pour-les-nuls.ags49.fr/
@@ -54,9 +52,10 @@ REACT-anjou-edition-pour-les-nuls.ags49.fr/
 │   ├── package.json           # Dépendances npm et scripts de build/test de l'app
 │   ├── public/                # Fichiers statiques public
 │   └── src/                   # Code source de l'application principale
-│       ├── components/        # Composants (Dashboard, PdfFlipbookReader, etc.)
+│       ├── components/        # Composants (Dashboard, PdfFlipbookReader, CookieConsentBanner, ContactForm, PrivacyPolicy...)
 │       ├── styles/            # Fichiers CSS (dashboard.css, pdf-reader.css)
-│       ├── utils/             # IndexedDB et utilitaires
+│       ├── utils/             # Utilitaires (sanitize.js, indexedDBStorage.js)
+│       ├── services/          # Services d'accès aux données (pageService.js)
 │       ├── App.js             # Composant principal (site public & navigation)
 │       ├── App.test.js        # Tests Jest de l'application
 │       ├── data.js            # Données locales de secours (fallback)
@@ -86,8 +85,8 @@ Se déplacer dans le dossier : `cd app`
 | Commande | Rôle / Description |
 | :--- | :--- |
 | `npm start` | Lance le serveur de développement local sur [http://localhost:3000](http://localhost:3000). |
-| `$env:CI="true"; npm test` | Lance tous les tests Jest une seule fois en mode non interactif (PowerShell). |
-| `npm run build` | Compile l'application pour la production dans le dossier `/build`. |
+| `$env:CI="true"; npm test` | Lance tous les tests Jest en mode CI (PowerShell). |
+| `npm run build` | Compile l'application pour la production dans le dossier `/build` (0 avertissements). |
 | `firebase deploy --only hosting` | Déploie l'application compilée sur Firebase Hosting. |
 
 ### 2. Pour le Page Builder Visuel (`page-builder-react/`)
@@ -96,7 +95,7 @@ Se déplacer dans le dossier : `cd page-builder-react`
 | Commande | Rôle / Description |
 | :--- | :--- |
 | `npm install` | Installe toutes les dépendances locales, y compris ESLint et ses plugins. |
-| `npm run dev` | Lance le serveur de développement local sur [http://localhost:3000](http://localhost:3000) (attention aux conflits de ports si l'app principale tourne). |
+| `npm run dev` | Lance le serveur de développement local sur [http://localhost:3000](http://localhost:3000). |
 | `npm run lint` | Lance la validation ESLint sans warnings tolérés (`--max-warnings 0`). |
 | `npm run build` | Compile le Page Builder en bundle optimisé de production dans `/dist`. |
 | `npm run preview` | Lance un serveur local pour prévisualiser le build de production. |
@@ -105,51 +104,31 @@ Se déplacer dans le dossier : `cd page-builder-react`
 
 ## 📌 Conventions de Code & Fonctionnalités Clés
 
-### 1. Routage Applicatif Personnalisé (App Principale)
-Le projet n'utilise pas `react-router-dom`. La navigation est gérée de façon réactive dans le composant [App](file:///C:/Users/jerem/REACT-anjou-edition-pour-les-nuls.ags49.fr/app/src/App.js) :
-*   L'état `view` détermine l'écran à afficher. Par exemple `{ type: 'home' }`, `{ type: 'text', data: {...} }` ou `{ type: 'dashboard' }`.
-*   Le passage au Dashboard d'administration s'effectue par navigation vers `/ae-dashboard`. Un écouteur d'événement `popstate` synchronise l'historique du navigateur.
+### 1. Sécurité & Protection XSS (`sanitize.js`)
+*   Le module [app/src/utils/sanitize.js](file:///C:/Users/jerem/REACT-anjou-edition-pour-les-nuls.ags49.fr/app/src/utils/sanitize.js) protège l'ensemble de l'application contre les attaques XSS stockées et injectées.
+*   Validation et neutralisation systématique des protocoles dangereux (`javascript:`, `data:`, `vbscript:`).
+*   Épuration stricte des balises `<script>` et gestionnaires d'événements inline (`onerror`, `onload`, `onclick`).
+*   Intégré dans le moteur de rendu Bootstrap (`ContentWidgets.js`) et dans le gestionnaire de menus du Dashboard.
 
-### 2. Gestion Hybride des Données (Firestore / LocalStorage)
-Pour les formulaires de contact et la création de pages/articles :
-*   L'application tente d'abord de lire/écrire sur Firestore.
-*   En cas d'erreur réseau ou de permission Firebase, elle retombe (**fallback**) automatiquement sur le `localStorage` de l'utilisateur (ex. clés `contact_messages`, `ae_flipbooks`).
-*   Les données par défaut définies dans [data.js](file:///C:/Users/jerem/REACT-anjou-edition-pour-les-nuls.ags49.fr/app/src/data.js) sont injectées automatiquement dans Firestore lors du premier démarrage si les collections Firestore associées sont détectées comme vides.
+### 2. Gestion Hybride & Résilience Hors-Ligne (Offline-First)
+*   Architecture défensive avec vérification systématique de l'état des snapshots Firestore (`snap && !snap.empty && snap.docs`).
+*   Fallback transparent sur le `localStorage` de l'utilisateur (`ae_menus`, `ae_flipbooks`, `ae_pages`, `ae_articles`, `contact_messages`).
+*   Préservation intégrale des données locales en mode déconnecté.
 
-### 3. Intégration de l'IA (Gemini)
-*   Le module IA utilise le SDK officiel `@google/genai` avec le modèle `gemini-2.5-flash` dans le composant [Dashboard](file:///C:/Users/jerem/REACT-anjou-edition-pour-les-nuls.ags49.fr/app/src/components/Dashboard.js).
-*   La clé d'API est récupérée de la manière suivante :
-    1. Dans le `localStorage` sous la clé `gemini_api_key` (configurable dans l'onglet **Paramètres** du Dashboard).
-    2. Depuis les variables d'environnement (`process.env.REACT_APP_GEMINI_API_KEY`).
+### 3. Conformité RGPD (GDPR) & Gestion des Données
+*   **Bannière de Consentement (`CookieConsentBanner.js`)** : Présente sur le site public avec options « Tout accepter », « Paramétrer » et « Continuer avec le strict minimum ».
+*   **Droit à l'oubli interactif** : Outil intégré dans la bannière et la page de confidentialité permettant à l'utilisateur d'effacer instantanément ses données locales (`localStorage`).
+*   **Politique de Confidentialité Complète (`PrivacyPolicy.js`)** : Couvre les Articles 15 à 22 du RGPD, le contact DPO/référent, la durée de conservation (3 ans maximum), et les voies de réclamation auprès de la CNIL.
+*   **Consentement explicite sur formulaire** : Case à cocher obligatoire et non pré-cochée sur [ContactForm.js](file:///C:/Users/jerem/REACT-anjou-edition-pour-les-nuls.ags49.fr/app/src/components/ContactForm.js).
 
-### 4. Styles CSS & Layout Responsive
-*   L'application implémente deux thèmes : **Clair** et **Sombre** (activé en ajoutant la classe `.dark-mode` sur `document.documentElement` et stocké dans `localStorage` sous la clé `theme`).
-*   **Isolation du Dashboard** : Le conteneur principal du Dashboard utilise la classe `.dashboard-main` (et non la balise `<main>`) pour éviter les conflits de styles avec le site grand public.
-
-### 5. Résolution de l'Incompatibilité des Tests Jest
-*   Jest ne supportant pas nativement la syntaxe ESM des dépendances de la bibliothèque `@google/genai` (comme `p-retry` utilisé en interne), le composant [Dashboard](file:///C:/Users/jerem/REACT-anjou-edition-pour-les-nuls.ags49.fr/app/src/components/Dashboard.js) est mocké dans [App.test.js](file:///C:/Users/jerem/REACT-anjou-edition-pour-les-nuls.ags49.fr/app/src/App.test.js).
-*   Cette isolation garantit que `npm test` s'exécute avec succès.
-
-### 6. Architecture du Page Builder Visuel (`page-builder-react/` & `app/`)
-*   **State & Historique (Undo/Redo)** : Géré par le `BuilderProvider` dans [builderStore.jsx](file:///C:/Users/jerem/REACT-anjou-edition-pour-les-nuls.ags49.fr/page-builder-react/src/store/builderStore.jsx). L'état est persistant via le `localStorage` sous la clé `react_page_builder_content`. Les actions clavier `Ctrl+Z` et `Ctrl+Y` sont interceptées globalement.
-*   **Intégrité des données** : Pour éviter toute instabilité de rendu, les manipulations d'éléments dans [moveElement.js](file:///C:/Users/jerem/REACT-anjou-edition-pour-les-nuls.ags49.fr/page-builder-react/src/utils/moveElement.js) sont implémentées de manière **entièrement immuable** (aucune mutation directe de sous-objets).
-*   **Drag & Drop Sensibilité** : Configurée avec une activation sur déplacement de plus de 8 pixels dans [Layout.jsx](file:///C:/Users/jerem/REACT-anjou-edition-pour-les-nuls.ags49.fr/page-builder-react/src/components/Layout.jsx) pour permettre de cliquer ou de double-cliquer sur les widgets pour éditer leurs textes sans déclencher accidentellement un glisser-déposer.
-*   **Interface avancée style Elementor** : Le Page Builder intègre un *Navigateur* d'arborescence (pour gérer facilement l'empilement des calques), un panneau de *Réglages du site* (couleurs globales), et un *Menu Contextuel* au clic-droit sur les blocs (Dupliquer, Copier/Coller le style, Supprimer, etc.).
-*   **Réglages organisés** : Le panneau de droite est découpé en onglets (Contenu, Style, Avancé) pour plus de lisibilité.
-*   **Apostrophes en français** : La règle ESLint `react/no-unescaped-entities` est désactivée dans `.eslintrc.cjs` pour permettre l'écriture naturelle des textes en français contenant des apostrophes.
-*   **Support hybride Pages & Articles** : Le `pageService` et le composant `PageBuilder` autonome ont été généralisés pour accepter dynamiquement un paramètre `collectionName` (`'pages'` ou `'articles'`).
-*   **Résolution des warnings de build** : Nettoyage des anciennes fonctions, states et modals inutilisés (qui étaient des reliquats de l'ancienne version non-autonome du builder) dans [Dashboard.js](file:///C:/Users/jerem/REACT-anjou-edition-pour-les-nuls.ags49.fr/app/src/components/Dashboard.js), éliminant ainsi toute alerte ESLint lors de la compilation de production.
-
-### 7. Conformité RGPD (GDPR)
-*   **Consentement obligatoire** : Une case à cocher explicite est intégrée au formulaire de contact pour s'assurer du consentement de l'utilisateur.
-*   **Information utilisateur** : Page de Politique de Confidentialité dédiée, récapitulant les informations sur la collecte, la durée de conservation (3 ans maximum), les droits d'accès/rectification et le fonctionnement du stockage local (`localStorage`).
-
-### 8. Accessibilité Numérique (a11y)
-*   **Navigation Clavier** : Tous les éléments interactifs à l'origine cliquables (cartes de poèmes, miniatures, listes de vidéos, items de galerie) ont été convertis de `div` en boutons sémantiques (`<button type="button">`) focusables.
-*   **Indicateurs de focus** : Une mise en surbrillance visible (`focus-visible`) a été appliquée globalement à tous les contrôles interactifs.
-*   **Aide à la lecture** : Synthèse vocale de lecture de textes via l'API Web Speech et modification dynamique de la taille de police.
-*   **Respect des préférences** : Bloc média `@media (prefers-reduced-motion: reduce)` pour désactiver automatiquement les animations pour les utilisateurs sensibles au mouvement.
+### 4. Accessibilité Numérique (a11y - WCAG 2.1 AA)
+*   **Lien d'évitement rapide** : `.skip-to-content` disponible dès le premier appui sur tabulation, avec contraste élevé.
+*   **Gestion du focus** : Mise en surbrillance visible globale `:focus-visible` et indicateurs renforcés.
+*   **Composants modaux & dialogues** : Visionneuse d'agrandissement photo (Lightbox) et modales équipées de `role="dialog"`, `aria-modal="true"`, et `aria-label` explicites.
+*   **Navigation Clavier** : Tous les éléments interactifs sont des boutons natifs focusables avec raccourcis de réorganisation et annonces `aria-live`.
+*   **Respect des préférences** : Désactivation des animations via `@media (prefers-reduced-motion: reduce)`.
+*   **Synthèse vocale** : Lecture de textes intégrée via l'API Web Speech et modification dynamique de la taille de police.
 
 ---
 
-*Dernière mise à jour du contexte par l'agent : 6 juillet 2026.*
+*Dernière mise à jour du contexte par l'agent : 31 août 2026.*
