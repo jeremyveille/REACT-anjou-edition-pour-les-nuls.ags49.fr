@@ -5,7 +5,8 @@ import App from './App';
 // Mock the administrative Dashboard to avoid loading ES modules dependencies like @google/genai in Jest tests
 jest.mock('./components/Dashboard', () => {
   return function MockDashboard() {
-    return <div data-testid="mock-dashboard">Mock Dashboard</div>;
+    const React = require('react');
+    return React.createElement('div', { 'data-testid': 'mock-dashboard' }, 'Mock Dashboard');
   };
 });
 
@@ -26,6 +27,17 @@ beforeAll(() => {
     };
     window.SpeechSynthesisUtterance = jest.fn();
   }
+});
+
+beforeEach(() => {
+  localStorage.clear();
+  Object.defineProperty(window, 'location', {
+    value: {
+      pathname: '/',
+      search: ''
+    },
+    writable: true
+  });
 });
 
 test('renders app header and checks welcome message', () => {
@@ -54,7 +66,7 @@ test('navigates to flipbooks view when clicking flipbooks button', () => {
 test('toggles dark mode class on html document', () => {
   render(<App />);
   
-  const toggleBtn = screen.getByLabelText(/Toggle theme/i);
+  const toggleBtn = screen.getByRole('button', { name: /Activer le mode sombre/i });
   expect(toggleBtn).toBeInTheDocument();
   
   // Initially should not have dark-mode
@@ -65,7 +77,8 @@ test('toggles dark mode class on html document', () => {
   expect(document.documentElement.classList.contains('dark-mode')).toBe(true);
   
   // Toggle back
-  fireEvent.click(toggleBtn);
+  const toggleLightBtn = screen.getByRole('button', { name: /Activer le mode clair/i });
+  fireEvent.click(toggleLightBtn);
   expect(document.documentElement.classList.contains('dark-mode')).toBe(false);
 });
 

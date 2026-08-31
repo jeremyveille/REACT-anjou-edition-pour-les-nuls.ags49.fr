@@ -32,7 +32,7 @@ import PdfFlipbookReader from './components/PdfFlipbookReader';
 
 import { pageService } from './services/pageService';
 import { BlockRenderer } from './components/page-builder/BlockRenderer';
-import { PublicHeader, PublicFooter } from './components/PublicComponents';
+import { PublicHeader, PublicFooter, CookieConsentBanner } from './components/PublicComponents';
 import { PublicNav } from './components/PublicNav';
 import { ContactForm } from './components/ContactForm';
 import { PrivacyPolicy } from './components/PrivacyPolicy';
@@ -126,9 +126,9 @@ function App() {
     const fetchFlipbooks = async () => {
       try {
         const snap = await getDocs(collection(db, "flipbooks"));
-        if (!snap.empty) {
+        if (snap && !snap.empty && snap.docs) {
           const list = snap.docs.map(doc => {
-            const data = doc.data();
+            const data = doc.data() || {};
             return {
               id: doc.id,
               ...data,
@@ -211,9 +211,9 @@ function App() {
     const fetchMenus = async () => {
       try {
         const snap = await getDocs(collection(db, "menus"));
-        if (!snap.empty) {
+        if (snap && !snap.empty && snap.docs) {
           const list = snap.docs.map(doc => {
-            const data = doc.data();
+            const data = doc.data() || {};
             let title = data.title || data.label || "Sans titre";
             if (title === "PoésiesParent" || title === "PoesiesParent") {
               title = "Poésies";
@@ -712,21 +712,29 @@ function App() {
     <div className={`App ${darkMode ? 'dark-mode' : ''}`}>
       {/* Lightbox Component */}
       {lightbox.isOpen && (
-        <div className="lightbox" onClick={() => setLightbox(prev => ({ ...prev, isOpen: false }))}>
+        <div 
+          className="lightbox" 
+          role="dialog" 
+          aria-modal="true" 
+          aria-label="Visionneuse d'agrandissement photo"
+          onClick={() => setLightbox(prev => ({ ...prev, isOpen: false }))}
+        >
           <button 
+            type="button"
             className="lightbox-close" 
             onClick={(e) => { e.stopPropagation(); setLightbox(prev => ({ ...prev, isOpen: false })); }}
             aria-label="Fermer la galerie"
           >
-            <X size={28} />
+            <X size={28} aria-hidden="true" />
           </button>
           
           <button 
+            type="button"
             className="lightbox-btn prev" 
             onClick={(e) => { e.stopPropagation(); handleLightboxPrev(); }}
             aria-label="Image précédente"
           >
-            <ArrowLeft size={24} />
+            <ArrowLeft size={24} aria-hidden="true" />
           </button>
 
           <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
@@ -742,22 +750,27 @@ function App() {
           </div>
 
           <button 
+            type="button"
             className="lightbox-btn next" 
             onClick={(e) => { e.stopPropagation(); handleLightboxNext(); }}
             aria-label="Image suivante"
           >
-            <ArrowRight size={24} />
+            <ArrowRight size={24} aria-hidden="true" />
           </button>
 
           <button 
+            type="button"
             className="lightbox-zoom-btn" 
             onClick={(e) => { e.stopPropagation(); setLightbox(prev => ({ ...prev, zoom: !prev.zoom })); }}
-            title="Zoom"
+            title={lightbox.zoom ? "Dézoomer" : "Zoomer"}
+            aria-label={lightbox.zoom ? "Dézoomer" : "Zoomer"}
           >
-            {lightbox.zoom ? <ZoomOut size={20} /> : <ZoomIn size={20} />}
+            {lightbox.zoom ? <ZoomOut size={20} aria-hidden="true" /> : <ZoomIn size={20} aria-hidden="true" />}
           </button>
         </div>
       )}
+
+      <CookieConsentBanner setView={setView} />
 
       <PublicHeader darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
 

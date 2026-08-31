@@ -1,19 +1,14 @@
 import React from 'react';
 import { Sun, Moon } from 'lucide-react';
+export { CookieConsentBanner } from './CookieConsentBanner';
 
 export const PublicHeader = ({ darkMode, toggleDarkMode }) => {
   return (
-    <header>
-      <a href="#main-content" className="skip-to-content" style={{
-        position: 'absolute',
-        top: '-40px',
-        left: '0px',
-        background: 'var(--primary)',
-        color: 'white',
-        padding: '8px',
-        zIndex: 100,
-        transition: 'top 0.3s'
-      }} onFocus={(e) => e.target.style.top = '0px'} onBlur={(e) => e.target.style.top = '-40px'}>
+    <header role="banner">
+      <a 
+        href="#main-content" 
+        className="skip-to-content"
+      >
         Aller au contenu principal
       </a>
       <div className="header-content">
@@ -22,12 +17,13 @@ export const PublicHeader = ({ darkMode, toggleDarkMode }) => {
       </div>
       
       <button 
+        type="button"
         onClick={toggleDarkMode} 
         className="theme-toggle"
         title={darkMode ? "Activer le mode clair" : "Activer le mode sombre"}
-        aria-label="Toggle theme"
+        aria-label={darkMode ? "Activer le mode clair" : "Activer le mode sombre"}
       >
-        {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+        {darkMode ? <Sun size={20} aria-hidden="true" /> : <Moon size={20} aria-hidden="true" />}
       </button>
     </header>
   );
@@ -35,18 +31,23 @@ export const PublicHeader = ({ darkMode, toggleDarkMode }) => {
 
 export const PublicFooter = ({ setView }) => {
   return (
-    <footer>
+    <footer role="contentinfo">
       <div className="footer-content">
         <p>&copy; 2026 Anjou Édition - Édition de prestige & Histoire locale</p>
         {setView && (
-          <div className="footer-links">
-            <button type="button" onClick={() => setView({ type: 'home' })}>Accueil</button> | 
-            <button type="button" onClick={() => setView({ type: 'flipbooks' })}>Flipbooks</button> | 
-            <button type="button" onClick={() => setView({ type: 'videos' })}>Vidéos</button> | 
-            <button type="button" onClick={() => setView({ type: 'gallery' })}>Galerie</button> | 
-            <button type="button" onClick={() => setView({ type: 'contact' })}>Contact</button> | 
+          <nav className="footer-links" aria-label="Liens de pied de page">
+            <button type="button" onClick={() => setView({ type: 'home' })}>Accueil</button>
+            <span aria-hidden="true"> | </span>
+            <button type="button" onClick={() => setView({ type: 'flipbooks' })}>Flipbooks</button>
+            <span aria-hidden="true"> | </span>
+            <button type="button" onClick={() => setView({ type: 'videos' })}>Vidéos</button>
+            <span aria-hidden="true"> | </span>
+            <button type="button" onClick={() => setView({ type: 'gallery' })}>Galerie</button>
+            <span aria-hidden="true"> | </span>
+            <button type="button" onClick={() => setView({ type: 'contact' })}>Contact</button>
+            <span aria-hidden="true"> | </span>
             <button type="button" onClick={() => setView({ type: 'privacy' })}>Mentions Légales & RGPD</button>
-          </div>
+          </nav>
         )}
       </div>
     </footer>
