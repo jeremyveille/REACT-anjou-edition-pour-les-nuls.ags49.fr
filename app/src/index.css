@@ -12,4 +12,4 @@ code {
     monospace;
 }
 
-@import './styles/tailwind-migration.css';
+@import './styles/ae-components.css';
