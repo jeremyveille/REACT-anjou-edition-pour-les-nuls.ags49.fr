@@ -1,5 +1,6 @@
 import React from 'react';
 import * as Icons from 'lucide-react';
+import { sanitizeHtml, sanitizeUrl } from '../../utils/sanitize';
 
 /**
  * Widget Titre (Heading)
@@ -24,13 +25,14 @@ export const Text = ({ settings = {} }) => {
   const content = settings.content || 'Paragraphe de texte exemple. Vous pouvez modifier ce contenu dans les réglages.';
   const customClasses = settings.classes || 'text-secondary';
   const style = settings.style || {};
+  const sanitizedContent = sanitizeHtml(content);
 
-  // Rendu de texte riche (si HTML) ou paragraphe simple
+  // Rendu de texte riche (si HTML) ou paragraphe simple sécurisé
   return (
     <div 
       className={`pb-widget-text ${customClasses}`} 
       style={style}
-      dangerouslySetInnerHTML={{ __html: content }}
+      dangerouslySetInnerHTML={{ __html: sanitizedContent }}
     />
   );
 };
@@ -39,14 +41,14 @@ export const Text = ({ settings = {} }) => {
  * Widget Image
  */
 export const Image = ({ settings = {} }) => {
-  const src = settings.src || 'https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?q=80&w=600';
+  const src = sanitizeUrl(settings.src || 'https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?q=80&w=600');
   const alt = settings.alt || 'Illustration';
   const customClasses = settings.classes || 'img-fluid rounded';
   const style = settings.style || {};
 
   return (
     <div className="pb-widget-image-container text-center" style={style}>
-      <img src={src} alt={alt} className={customClasses} />
+      <img src={src} alt={alt} className={customClasses} loading="lazy" />
     </div>
   );
 };
@@ -56,7 +58,7 @@ export const Image = ({ settings = {} }) => {
  */
 export const Button = ({ settings = {} }) => {
   const text = settings.text || 'Cliquez ici';
-  const link = settings.link || '#';
+  const link = sanitizeUrl(settings.link || '#');
   const buttonStyle = settings.buttonStyle || 'btn-primary';
   const size = settings.size || ''; // btn-lg, btn-sm, etc.
   const customClasses = settings.classes || '';
@@ -85,15 +87,15 @@ export const Button = ({ settings = {} }) => {
 export const Card = ({ settings = {} }) => {
   const title = settings.title || 'Titre de la carte';
   const text = settings.text || 'Contenu court de la carte pour illustrer un propos.';
-  const image = settings.image || '';
+  const image = settings.image ? sanitizeUrl(settings.image) : '';
   const buttonText = settings.buttonText || '';
-  const buttonLink = settings.buttonLink || '#';
+  const buttonLink = sanitizeUrl(settings.buttonLink || '#');
   const customClasses = settings.classes || 'shadow-sm';
   const style = settings.style || {};
 
   return (
     <div className={`card ${customClasses}`} style={style}>
-      {image && <img src={image} className="card-img-top" alt={title} />}
+      {image && <img src={image} className="card-img-top" alt={title} loading="lazy" />}
       <div className="card-body">
         <h5 className="card-title">{title}</h5>
         <p className="card-text">{text}</p>
@@ -144,7 +146,7 @@ export const Video = ({ settings = {} }) => {
   return (
     <div className={`ratio ratio-16x9 ${customClasses}`} style={style}>
       <iframe 
-        src={embedUrl} 
+        src={sanitizeUrl(embedUrl)} 
         title="Widget Vidéo" 
         allowFullScreen
         className="rounded"
