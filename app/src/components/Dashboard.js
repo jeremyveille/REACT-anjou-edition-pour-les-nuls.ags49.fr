@@ -230,7 +230,15 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
 
   // --- New Interactive States ---
   // Navigation Menus & Reusable Shortcodes
-  const [menusList, setMenusList] = useState([]);
+  const [menusList, setMenusList] = useState(() => {
+    const local = localStorage.getItem("ae_menus");
+    if (local) {
+      try {
+        return JSON.parse(local);
+      } catch (e) {}
+    }
+    return [];
+  });
   const [showAddMenuModal, setShowAddMenuModal] = useState(false);
   const [newMenuItemTitle, setNewMenuItemTitle] = useState("");
   const [newMenuItemIcon, setNewMenuItemIcon] = useState("Layers");
@@ -258,14 +266,26 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
   const [builderEditingType, setBuilderEditingType] = useState(null); // "page" or "article"
 
   // Médiathèque
-  const [mediaList, setMediaList] = useState([]);
+  const [mediaList, setMediaList] = useState(() => {
+    const local = localStorage.getItem("ae_medias");
+    if (local) {
+      try { return JSON.parse(local); } catch (e) {}
+    }
+    return [];
+  });
   const [mediaUploading, setMediaUploading] = useState(false);
   const [mediaProgress, setMediaProgress] = useState(0);
   const [showMediaPreviewModal, setShowMediaPreviewModal] = useState(false);
   const [previewingMedia, setPreviewingMedia] = useState(null);
 
   // Galerie
-  const [galleryList, setGalleryList] = useState([]);
+  const [galleryList, setGalleryList] = useState(() => {
+    const local = localStorage.getItem("ae_gallery");
+    if (local) {
+      try { return JSON.parse(local); } catch (e) {}
+    }
+    return [];
+  });
   const [newPhotoTitle, setNewPhotoTitle] = useState("");
   const [newPhotoUrl, setNewPhotoUrl] = useState("");
   const [newPhotoCategory, setNewPhotoCategory] = useState("Loire");
@@ -275,7 +295,13 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
   const [lightboxPhoto, setLightboxPhoto] = useState(null);
 
   // Vidéos
-  const [videoList, setVideoList] = useState([]);
+  const [videoList, setVideoList] = useState(() => {
+    const local = localStorage.getItem("ae_videos");
+    if (local) {
+      try { return JSON.parse(local); } catch (e) {}
+    }
+    return [];
+  });
   const [newVideoTitle, setNewVideoTitle] = useState("");
   const [newVideoUrl, setNewVideoUrl] = useState("");
   const [newVideoDesc, setNewVideoDesc] = useState("");
@@ -285,14 +311,26 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
   const [playerVideo, setPlayerVideo] = useState(null);
 
   // Actualités
-  const [newsList, setNewsList] = useState([]);
+  const [newsList, setNewsList] = useState(() => {
+    const local = localStorage.getItem("ae_news");
+    if (local) {
+      try { return JSON.parse(local); } catch (e) {}
+    }
+    return [];
+  });
   const [newNewsTitle, setNewNewsTitle] = useState("");
   const [newNewsContent, setNewNewsContent] = useState("");
   const [newNewsType, setNewNewsType] = useState("Info");
   const [showAddNewsModal, setShowAddNewsModal] = useState(false);
 
   // Mes Comptes
-  const [accountsList, setAccountsList] = useState([]);
+  const [accountsList, setAccountsList] = useState(() => {
+    const local = localStorage.getItem("ae_accounts");
+    if (local) {
+      try { return JSON.parse(local); } catch (e) {}
+    }
+    return [];
+  });
   const [newAccountName, setNewAccountName] = useState("");
   const [newAccountEmail, setNewAccountEmail] = useState("");
   const [newAccountRole, setNewAccountRole] = useState("Écrivain");
@@ -375,27 +413,35 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
   const fetchMessages = async () => {
     try {
       const snap = await getDocs(collection(db, "contacts"));
-      const list = snap.docs.map(doc => {
-        const data = doc.data();
-        let formattedDate = "";
-        if (data.timestamp) {
-          if (data.timestamp.toDate) {
-            formattedDate = data.timestamp.toDate().toLocaleDateString("fr-FR");
+      if (snap && snap.docs) {
+        const list = snap.docs.map(doc => {
+          const data = doc.data() || {};
+          let formattedDate = "";
+          if (data.timestamp) {
+            if (typeof data.timestamp.toDate === 'function') {
+              formattedDate = data.timestamp.toDate().toLocaleDateString("fr-FR");
+            } else {
+              formattedDate = new Date(data.timestamp).toLocaleDateString("fr-FR");
+            }
           } else {
-            formattedDate = new Date(data.timestamp).toLocaleDateString("fr-FR");
+            formattedDate = new Date().toLocaleDateString("fr-FR");
           }
-        } else {
-          formattedDate = new Date().toLocaleDateString("fr-FR");
-        }
-        return {
-          id: doc.id,
-          ...data,
-          date: formattedDate
-        };
-      });
-      setMessagesList(list);
+          return {
+            id: doc.id,
+            ...data,
+            date: formattedDate
+          };
+        });
+        setMessagesList(list);
+      }
     } catch (e) {
       console.error("Messages error:", e);
+      const local = localStorage.getItem("contact_messages");
+      if (local) {
+        try {
+          setMessagesList(JSON.parse(local));
+        } catch (err) {}
+      }
     }
   };
 
@@ -403,7 +449,7 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
     try {
       const docRef = doc(db, "settings", "global");
       const snap = await getDoc(docRef);
-      if (snap.exists()) {
+      if (snap && typeof snap.exists === 'function' && snap.exists()) {
         setSettings(snap.data());
       } else {
         const defaultSettings = {
@@ -412,7 +458,11 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
           enableComments: true,
           maintenanceMode: false
         };
-        await setDoc(docRef, defaultSettings);
+        try {
+          await setDoc(docRef, defaultSettings);
+        } catch (setErr) {
+          // Fallback
+        }
         setSettings(defaultSettings);
       }
     } catch (e) {
@@ -424,7 +474,7 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
   const fetchMedias = async () => {
     try {
       const snap = await getDocs(collection(db, "medias"));
-      if (snap.empty) {
+      if (!snap || snap.empty || !snap.docs) {
         const defaults = [
           { id: "m1", name: "couverture_luxe.jpg", type: "image/jpeg", size: 1258291, date: "12/05/2026 à 10h12", url: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=600" },
           { id: "m2", name: "nouvelle_legende.epub", type: "application/epub+zip", size: 4529124, date: "24/05/2026 à 16h45", url: "#" },
@@ -433,7 +483,9 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
           { id: "m5", name: "chateau_angers.jpg", type: "image/jpeg", size: 3452912, date: "14/06/2026 à 15h20", url: "https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?q=80&w=600" }
         ];
         for (const m of defaults) {
-          await setDoc(doc(db, "medias", m.id), m);
+          try {
+            await setDoc(doc(db, "medias", m.id), m);
+          } catch (err) {}
         }
         setMediaList(defaults);
         localStorage.setItem("ae_medias", JSON.stringify(defaults));
@@ -460,7 +512,7 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
   const fetchGallery = async () => {
     try {
       const snap = await getDocs(collection(db, "gallery"));
-      if (snap.empty) {
+      if (!snap || snap.empty || !snap.docs) {
         const defaults = [
           { id: "g1", title: "Château d'Angers", category: "Châteaux", url: "https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?q=80&w=600", description: "L'impressionnante forteresse médiévale d'Angers et ses 17 tours de schiste et de tuffeau.", date: "12/05/2026" },
           { id: "g2", title: "Bords de Loire", category: "Loire", url: "https://images.unsplash.com/photo-1516979187457-637abb4f9353?q=80&w=600", description: "Coucher de soleil poétique sur le plus long fleuve sauvage de France en Maine-et-Loire.", date: "20/05/2026" },
@@ -468,7 +520,9 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
           { id: "g4", title: "Abbaye de Fontevraud", category: "Châteaux", url: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=600", description: "La plus grande cité monastique héritée du Moyen Âge, nécropole des Plantagenêt.", date: "10/06/2026" }
         ];
         for (const g of defaults) {
-          await setDoc(doc(db, "gallery", g.id), g);
+          try {
+            await setDoc(doc(db, "gallery", g.id), g);
+          } catch (err) {}
         }
         setGalleryList(defaults);
         localStorage.setItem("ae_gallery", JSON.stringify(defaults));
@@ -494,13 +548,15 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
   const fetchVideos = async () => {
     try {
       const snap = await getDocs(collection(db, "videos"));
-      if (snap.empty) {
+      if (!snap || snap.empty || !snap.docs) {
         const defaults = [
           { id: "v1", title: "Visite guidée du Château d'Angers", url: "https://www.youtube.com/watch?v=kGgY9fG3g80", youtubeId: "kGgY9fG3g80", description: "Découvrez l'histoire de la forteresse des Ducs d'Anjou et la célèbre tenture de l'Apocalypse.", category: "Châteaux", date: "15/05/2026" },
           { id: "v2", title: "La douceur angevine en images", url: "https://www.youtube.com/watch?v=0kG7R0oK5J0", youtubeId: "0kG7R0oK5J0", description: "Un poème visuel le long de la Loire et à travers les rues historiques d'Angers et de Saumur.", category: "Loire", date: "02/06/2026" }
         ];
         for (const v of defaults) {
-          await setDoc(doc(db, "videos", v.id), v);
+          try {
+            await setDoc(doc(db, "videos", v.id), v);
+          } catch (err) {}
         }
         setVideoList(defaults);
         localStorage.setItem("ae_videos", JSON.stringify(defaults));
@@ -525,14 +581,16 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
   const fetchNews = async () => {
     try {
       const snap = await getDocs(collection(db, "news"));
-      if (snap.empty) {
+      if (!snap || snap.empty || !snap.docs) {
         const defaults = [
           { id: "n1", title: "Festival l'Anjou Littéraire 2026", content: "Le festival aura lieu le 10 Septembre 2026 à Saumur ! Préparez vos manuscrits et venez rencontrer les éditeurs de la région.", type: "Urgent", date: "2026-06-08" },
           { id: "n2", title: "Lancement officiel du portail", content: "Le nouveau site Anjou Édition est en ligne. Les écrivains peuvent s'inscrire pour publier leurs flipbooks numériques.", type: "Info", date: "2026-06-01" },
           { id: "n3", title: "Mise à jour des filtres de recherche", content: "Nous avons ajouté une recherche par date et par mot-clé pour faciliter la consultation de notre bibliothèque historique.", type: "Important", date: "2026-06-15" }
         ];
         for (const n of defaults) {
-          await setDoc(doc(db, "news", n.id), n);
+          try {
+            await setDoc(doc(db, "news", n.id), n);
+          } catch (err) {}
         }
         setNewsList(defaults);
         localStorage.setItem("ae_news", JSON.stringify(defaults));
@@ -557,14 +615,16 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
   const fetchAccounts = async () => {
     try {
       const snap = await getDocs(collection(db, "accounts"));
-      if (snap.empty) {
+      if (!snap || snap.empty || !snap.docs) {
         const defaults = [
           { id: "u1", name: "JEREMY VEILLE", email: "jeremy.veille@hotmail.fr", role: "Administrateur", status: "Actif", color: "#004b7a" },
           { id: "u2", name: "Sylvie Gautier", email: "sylvie.gautier@anjou-lettres.fr", role: "Écrivain", status: "Actif", color: "#336ddc" },
           { id: "u3", name: "Pierre Bougier", email: "p.bougier@maine-loire.fr", role: "Éditeur", status: "Inactif", color: "#64748b" }
         ];
         for (const u of defaults) {
-          await setDoc(doc(db, "accounts", u.id), u);
+          try {
+            await setDoc(doc(db, "accounts", u.id), u);
+          } catch (err) {}
         }
         setAccountsList(defaults);
         localStorage.setItem("ae_accounts", JSON.stringify(defaults));
@@ -618,7 +678,17 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
 
     try {
       const snap = await getDocs(collection(db, "menus"));
-      if (snap.empty) {
+      if (!snap || snap.empty || !snap.docs) {
+        const local = localStorage.getItem("ae_menus");
+        if (local) {
+          try {
+            const parsed = JSON.parse(local);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setMenusList(parsed);
+              return;
+            }
+          } catch (e) {}
+        }
         // Enregistrer les défauts au format propre
         const formattedDefaults = defaults.map(d => ({
           ...d,
@@ -628,14 +698,16 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
           updatedAt: new Date()
         }));
         for (const m of formattedDefaults) {
-          const { id, ...menuData } = m;
-          await setDoc(doc(db, "menus", id), menuData);
+          try {
+            const { id, ...menuData } = m;
+            await setDoc(doc(db, "menus", id), menuData);
+          } catch (err) {}
         }
         setMenusList(formattedDefaults);
         localStorage.setItem("ae_menus", JSON.stringify(formattedDefaults));
       } else {
         const list = snap.docs.map(doc => {
-          const data = doc.data();
+          const data = doc.data() || {};
           let title = data.title || data.label || "Sans titre";
           if (title === "PoésiesParent" || title === "PoesiesParent") {
             title = "Poésies";
@@ -689,35 +761,37 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
       console.error("Menus error:", e);
       const local = localStorage.getItem("ae_menus");
       if (local) {
-        const parsed = JSON.parse(local).map(data => {
-          let title = data.title || data.label || "Sans titre";
-          if (title === "PoésiesParent" || title === "PoesiesParent") {
-            title = "Poésies";
-          }
-          const isActive = data.isActive !== undefined ? data.isActive : (data.enabled !== undefined ? data.enabled : (data.status === "Actif"));
-          
-          const rawType = data.type || (data.shortcode ? "shortcode" : "internal-link");
-          let type = "internal";
-          if (rawType === "external" || rawType === "external-link") {
-            type = "external";
-          } else if (rawType === "shortcode") {
-            type = "shortcode";
-          }
+        try {
+          const parsed = JSON.parse(local).map(data => {
+            let title = data.title || data.label || "Sans titre";
+            if (title === "PoésiesParent" || title === "PoesiesParent") {
+              title = "Poésies";
+            }
+            const isActive = data.isActive !== undefined ? data.isActive : (data.enabled !== undefined ? data.enabled : (data.status === "Actif"));
+            
+            const rawType = data.type || (data.shortcode ? "shortcode" : "internal-link");
+            let type = "internal";
+            if (rawType === "external" || rawType === "external-link") {
+              type = "external";
+            } else if (rawType === "shortcode") {
+              type = "shortcode";
+            }
 
-          return {
-            ...data,
-            title: title,
-            label: title,
-            status: isActive ? "Actif" : "Inactif",
-            enabled: isActive,
-            isActive: isActive,
-            type: type,
-            slug: data.slug || data.url || "",
-            url: data.url || data.slug || "",
-            parentId: normalizeParentId(data.parentId)
-          };
-        });
-        setMenusList(parsed.sort((a, b) => a.order - b.order));
+            return {
+              ...data,
+              title: title,
+              label: title,
+              status: isActive ? "Actif" : "Inactif",
+              enabled: isActive,
+              isActive: isActive,
+              type: type,
+              slug: data.slug || data.url || "",
+              url: data.url || data.slug || "",
+              parentId: normalizeParentId(data.parentId)
+            };
+          });
+          setMenusList(parsed.sort((a, b) => a.order - b.order));
+        } catch (err) {}
       } else {
         const formattedDefaults = defaults.map(d => ({
           ...d,
@@ -736,7 +810,17 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
   const fetchFlipbooks = async () => {
     try {
       const snap = await getDocs(collection(db, "flipbooks"));
-      if (snap.empty) {
+      if (!snap || snap.empty || !snap.docs) {
+        const local = localStorage.getItem("ae_flipbooks");
+        if (local) {
+          try {
+            const parsed = JSON.parse(local);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setFlipbooks(parsed);
+              return;
+            }
+          } catch (err) {}
+        }
         const defaults = flipbooksData.map((fb, idx) => ({
           ...fb,
           category: fb.category || (idx === 0 ? "Sciences" : "Outils"),
@@ -744,13 +828,15 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
           pdfFile: fb.pdfFile || (fb.id === "3322" ? "guide_historique_anjou.pdf" : "secrets_vignoble_angevin.pdf")
         }));
         for (const fb of defaults) {
-          await setDoc(doc(db, "flipbooks", fb.id), fb);
+          try {
+            await setDoc(doc(db, "flipbooks", fb.id), fb);
+          } catch (err) {}
         }
         setFlipbooks(defaults);
         localStorage.setItem("ae_flipbooks", JSON.stringify(defaults));
       } else {
         const list = snap.docs.map((doc, idx) => {
-          const data = doc.data();
+          const data = doc.data() || {};
           return {
             id: doc.id,
             ...data,
@@ -766,7 +852,9 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
       console.error("Flipbooks fetch error:", e);
       const local = localStorage.getItem("ae_flipbooks");
       if (local) {
-        setFlipbooks(JSON.parse(local));
+        try {
+          setFlipbooks(JSON.parse(local));
+        } catch (err) {}
       } else {
         const defaults = flipbooksData.map((fb, idx) => ({
           ...fb,

@@ -16,7 +16,7 @@ jest.mock('../firebase', () => ({
 describe('Dashboard Menu Builder Tests', () => {
   beforeEach(() => {
     localStorage.clear();
-
+    window.history.pushState(null, '', '/ae-dashboard');
   });
 
   test('renders menu builder panel and lists menu items', async () => {
@@ -121,7 +121,8 @@ describe('Dashboard Menu Builder Tests', () => {
     fireEvent.click(screen.getByRole('button', { name: /Mes menus/i }));
 
     // Wait for load
-    await screen.findByText("Item 1");
+    expect(await screen.findByText(/Menu de Navigation & Actions de Shortcode/i)).toBeInTheDocument();
+    expect(await screen.findByText("Item 1")).toBeInTheDocument();
 
     // Check elements focus-ability & labels
     const moveUpBtns = screen.getAllByRole('button', { name: /Monter l'élément Item 1/i });
