@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CheckCircle2, AlertCircle, Send } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Send, ShieldCheck } from 'lucide-react';
 import { db } from '../firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
@@ -24,10 +24,10 @@ export const ContactForm = ({ setView }) => {
 
     try {
       await addDoc(collection(db, 'contacts'), {
-        name: contactForm.name,
-        email: contactForm.email,
-        subject: contactForm.subject,
-        message: contactForm.message,
+        name: contactForm.name.trim(),
+        email: contactForm.email.trim().toLowerCase(),
+        subject: contactForm.subject.trim(),
+        message: contactForm.message.trim(),
         timestamp: serverTimestamp()
       });
 
@@ -50,7 +50,7 @@ export const ContactForm = ({ setView }) => {
 
       setFormStatus({
         type: 'success',
-        message: 'Message enregistré localement ! (Connexion serveur indisponible, nous le traiterons ultérieurement).',
+        message: 'Message enregistré localement ! (Connexion serveur indisponible, nous le traiterons dès le rétablissement du réseau).',
         loading: false
       });
       setContactForm({ name: '', email: '', subject: '', message: '' });
@@ -61,7 +61,7 @@ export const ContactForm = ({ setView }) => {
   return (
     <div className="contact-card">
       <h2>Formulaire de Contact</h2>
-      <p>Une suggestion ? Une question sur nos ouvrages ? Contactez-nous via ce formulaire.</p>
+      <p>Une suggestion ? Une question sur nos ouvrages ou le patrimoine de l'Anjou ? Contactez-nous via ce formulaire.</p>
 
       {formStatus.message && (
         <div className={`form-status-alert ${formStatus.type}`} role="alert" aria-live="polite">
@@ -70,7 +70,7 @@ export const ContactForm = ({ setView }) => {
         </div>
       )}
 
-      <form onSubmit={handleContactSubmit} className="contact-form">
+      <form onSubmit={handleContactSubmit} className="contact-form" noValidate={false}>
         <div className="form-group">
           <label htmlFor="form-name">Nom complet *</label>
           <input 
@@ -79,6 +79,7 @@ export const ContactForm = ({ setView }) => {
             value={contactForm.name}
             onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
             placeholder="Jean Dupont"
+            autoComplete="name"
             required
           />
         </div>
@@ -91,6 +92,7 @@ export const ContactForm = ({ setView }) => {
             value={contactForm.email}
             onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
             placeholder="jean.dupont@email.com"
+            autoComplete="email"
             required
           />
         </div>
@@ -119,7 +121,7 @@ export const ContactForm = ({ setView }) => {
           ></textarea>
         </div>
 
-        <div className="form-group-checkbox" style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', marginTop: '0.5rem', marginBottom: '1rem' }}>
+        <div className="form-group-checkbox" style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', marginTop: '0.5rem', marginBottom: '0.75rem' }}>
           <input 
             type="checkbox" 
             id="form-gdpr" 
@@ -136,15 +138,23 @@ export const ContactForm = ({ setView }) => {
           </div>
         </div>
 
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
+          <ShieldCheck size={16} color="var(--primary)" aria-hidden="true" />
+          <span>Conservation maximale de 3 ans. Droit d'accès et d'effacement garanti.</span>
+        </div>
+
         <button 
           type="submit" 
           className="btn-submit"
           disabled={formStatus.loading}
+          aria-label={formStatus.loading ? "Envoi du message en cours..." : "Envoyer le message"}
         >
           {formStatus.loading ? "Envoi en cours..." : "Envoyer le message"}
-          <Send size={18} style={{ marginLeft: '8px' }} />
+          <Send size={18} style={{ marginLeft: '8px' }} aria-hidden="true" />
         </button>
       </form>
     </div>
   );
 };
+
+export default ContactForm;
