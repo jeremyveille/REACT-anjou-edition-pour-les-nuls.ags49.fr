@@ -624,3 +624,108 @@
     gap: 16px;
   }
 }
+
+/* --- LARGE STYLIZED PAGE NAVIGATION ARROWS --- */
+.pdf-big-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.9);
+  color: var(--primary);
+  border: 2px solid var(--primary);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15), 0 2px 6px rgba(30, 58, 138, 0.12);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+  padding: 0;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.dark-mode .pdf-big-nav-btn {
+  background-color: rgba(15, 23, 42, 0.9);
+  color: #60a5fa;
+  border-color: #3b82f6;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+}
+
+.pdf-big-nav-btn.prev {
+  left: 16px;
+}
+
+.pdf-big-nav-btn.next {
+  right: 16px;
+}
+
+.pdf-big-nav-btn.prev.with-toc {
+  left: 296px;
+}
+
+.pdf-big-nav-btn.next.with-search {
+  right: 296px;
+}
+
+.pdf-big-nav-btn:hover:not(:disabled) {
+  background-color: var(--primary);
+  color: #ffffff;
+  transform: translateY(-50%) scale(1.12);
+  box-shadow: 0 10px 25px rgba(30, 58, 138, 0.35);
+  border-color: var(--primary);
+}
+
+.dark-mode .pdf-big-nav-btn:hover:not(:disabled) {
+  background-color: #2563eb;
+  color: #ffffff;
+  border-color: #60a5fa;
+  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.45);
+}
+
+.pdf-big-nav-btn:active:not(:disabled) {
+  transform: translateY(-50%) scale(0.94);
+}
+
+.pdf-big-nav-btn:disabled {
+  opacity: 0.22;
+  cursor: not-allowed;
+  transform: translateY(-50%);
+  box-shadow: none;
+  pointer-events: auto;
+}
+
+.pdf-big-nav-btn:focus-visible {
+  outline: 3px solid var(--secondary);
+  outline-offset: 3px;
+}
+
+.pdf-big-nav-icon {
+  display: block;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  .pdf-big-nav-btn {
+    width: 44px;
+    height: 44px;
+  }
+  .pdf-big-nav-btn.prev {
+    left: 8px;
+  }
+  .pdf-big-nav-btn.next {
+    right: 8px;
+  }
+  .pdf-big-nav-btn.prev.with-toc {
+    left: 8px;
+  }
+  .pdf-big-nav-btn.next.with-search {
+    right: 8px;
+  }
+}

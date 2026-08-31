@@ -1180,6 +1180,32 @@ export default function PdfFlipbookReader({ book, onClose }) {
           </div>
         )}
 
+        {/* Floating Large Navigation Arrows */}
+        {!loading && !error && pdfDoc && (
+          <>
+            <button
+              type="button"
+              onClick={handlePrevPage}
+              disabled={readerMode === "double" ? currentPage === 0 : currentPage <= 1}
+              className={`pdf-big-nav-btn prev ${showToc ? 'with-toc' : ''}`}
+              aria-label="Page précédente"
+              title="Page précédente"
+            >
+              <ChevronLeft className="pdf-big-nav-icon" size={32} strokeWidth={2.5} />
+            </button>
+            <button
+              type="button"
+              onClick={handleNextPage}
+              disabled={readerMode === "double" ? currentPage >= numPages : currentPage >= numPages}
+              className={`pdf-big-nav-btn next ${showSearch ? 'with-search' : ''}`}
+              aria-label="Page suivante"
+              title="Page suivante"
+            >
+              <ChevronRight className="pdf-big-nav-icon" size={32} strokeWidth={2.5} />
+            </button>
+          </>
+        )}
+
       </div>
 
       {/* Thumbnails Tray Drawer */}
