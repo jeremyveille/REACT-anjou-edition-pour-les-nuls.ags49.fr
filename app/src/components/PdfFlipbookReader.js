@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { 
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, 
-  ZoomIn, ZoomOut, Maximize, Minimize, Download, 
+  ZoomIn, ZoomOut, Maximize, Minimize, 
   BookOpen, FileText, AlertCircle, List, Grid, Search, X,
   Volume2, VolumeX, RotateCw
 } from "lucide-react";
@@ -767,23 +767,6 @@ export default function PdfFlipbookReader({ book, onClose }) {
     }
   };
 
-  // Download PDF
-  const handleDownload = async () => {
-    try {
-      let url = pdfObjectUrl || book.pdfUrl || (book.pdfFile ? (book.pdfFile.startsWith("http") ? book.pdfFile : `/${book.pdfFile}`) : null);
-      if (!url) return;
-
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = book.pdfFile || `${book.title}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (err) {
-      alert("Erreur lors du téléchargement : " + err.message);
-    }
-  };
-
   // Active page computation for displaying page numbers
   const displayCurrentPage = (() => {
     if (readerMode === "double") {
@@ -941,7 +924,7 @@ export default function PdfFlipbookReader({ book, onClose }) {
             </button>
           </div>
 
-          {/* Fullscreen & Download */}
+          {/* Fullscreen */}
           <div className="pdf-toolbar-group">
             <button 
               type="button" 
@@ -951,15 +934,6 @@ export default function PdfFlipbookReader({ book, onClose }) {
               title={isFullscreen ? "Quitter le plein écran" : "Plein écran"}
             >
               {isFullscreen ? <Minimize className="ae-icon-size-sm" /> : <Maximize className="ae-icon-size-sm" />}
-            </button>
-            <button 
-              type="button" 
-              onClick={handleDownload} 
-              disabled={loading || !!error} 
-              className="pdf-toolbar-btn"
-              title="Télécharger le PDF original"
-            >
-              <Download className="ae-icon-size-sm" />
             </button>
           </div>
 
