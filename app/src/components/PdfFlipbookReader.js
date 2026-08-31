@@ -3,7 +3,7 @@ import {
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, 
   ZoomIn, ZoomOut, Maximize, Minimize, Download, 
   BookOpen, FileText, AlertCircle, List, Grid, Search, X,
-  Volume2, VolumeX
+  Volume2, VolumeX, RotateCw
 } from "lucide-react";
 import { getPDFFile } from "../utils/indexedDBStorage";
 import { loadPdfFromFirestore } from "../utils/firestoreChunker";
@@ -25,7 +25,7 @@ const resolveOutlinePage = async (pdf, dest) => {
 };
 
 // PDF Page renderer sub-component
-const PdfPage = ({ pdfDoc, pageNumber, scale, textLayerActive, searchQuery }) => {
+const PdfPage = ({ pdfDoc, pageNumber, scale, rotation = 0, textLayerActive, searchQuery }) => {
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
   const [loading, setLoading] = useState(true);
@@ -42,7 +42,7 @@ const PdfPage = ({ pdfDoc, pageNumber, scale, textLayerActive, searchQuery }) =>
         const page = await pdfDoc.getPage(pageNumber);
         if (isCancelled) return;
 
-        const viewport = page.getViewport({ scale });
+        const viewport = page.getViewport({ scale, rotation });
         const canvas = canvasRef.current;
         if (!canvas) return;
 
@@ -50,10 +50,13 @@ const PdfPage = ({ pdfDoc, pageNumber, scale, textLayerActive, searchQuery }) =>
         
         // Handle high DPI screens for razor-sharp rendering
         const pixelRatio = window.devicePixelRatio || 1;
-        canvas.width = viewport.width * pixelRatio;
-        canvas.height = viewport.height * pixelRatio;
-        canvas.style.width = viewport.width + "px";
-        canvas.style.height = viewport.height + "px";
+        const width = Math.floor(viewport.width);
+        const height = Math.floor(viewport.height);
+
+        canvas.width = Math.floor(width * pixelRatio);
+        canvas.height = Math.floor(height * pixelRatio);
+        canvas.style.width = width + "px";
+        canvas.style.height = height + "px";
 
         context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
 
@@ -92,8 +95,8 @@ const PdfPage = ({ pdfDoc, pageNumber, scale, textLayerActive, searchQuery }) =>
 
             const textLayerDiv = document.createElement("div");
             textLayerDiv.className = "textLayer";
-            textLayerDiv.style.width = `${viewport.width}px`;
-            textLayerDiv.style.height = `${viewport.height}px`;
+            textLayerDiv.style.width = `${width}px`;
+            textLayerDiv.style.height = `${height}px`;
             textLayerDiv.style.position = "absolute";
             textLayerDiv.style.top = "0";
             textLayerDiv.style.left = "0";
@@ -141,10 +144,10 @@ const PdfPage = ({ pdfDoc, pageNumber, scale, textLayerActive, searchQuery }) =>
         renderTaskRef.current.cancel();
       }
     };
-  }, [pdfDoc, pageNumber, scale, textLayerActive, searchQuery]);
+  }, [pdfDoc, pageNumber, scale, rotation, textLayerActive, searchQuery]);
 
   return (
-    <div ref={containerRef} className="pdf-page-wrapper" style={{ position: "ae-relative-container", display: "inline-block" }}>
+    <div ref={containerRef} className="pdf-page-wrapper" style={{ position: "relative", display: "inline-block" }}>
       {loading && (
         <div className="ae-overlay-backdrop-spinner">
           <div className="pdf-spinner mb-2"></div>
@@ -157,7 +160,7 @@ const PdfPage = ({ pdfDoc, pageNumber, scale, textLayerActive, searchQuery }) =>
 };
 
 // Thumbnail Page sub-component
-const ThumbnailPage = ({ pdfDoc, pageNumber, onClick, isActive }) => {
+const ThumbnailPage = ({ pdfDoc, pageNumber, rotation = 0, onClick, isActive }) => {
   const canvasRef = useRef(null);
   const [loading, setLoading] = useState(true);
 
@@ -172,17 +175,19 @@ const ThumbnailPage = ({ pdfDoc, pageNumber, onClick, isActive }) => {
         const page = await pdfDoc.getPage(pageNumber);
         if (!active) return;
 
-        const viewport = page.getViewport({ scale: 0.18 });
+        const viewport = page.getViewport({ scale: 0.18, rotation });
         const canvas = canvasRef.current;
         if (!canvas) return;
 
         const ctx = canvas.getContext("2d");
         const ratio = window.devicePixelRatio || 1;
+        const width = Math.floor(viewport.width);
+        const height = Math.floor(viewport.height);
         
-        canvas.width = viewport.width * ratio;
-        canvas.height = viewport.height * ratio;
-        canvas.style.width = viewport.width + "px";
-        canvas.style.height = viewport.height + "px";
+        canvas.width = Math.floor(width * ratio);
+        canvas.height = Math.floor(height * ratio);
+        canvas.style.width = width + "px";
+        canvas.style.height = height + "px";
         ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
 
         renderTask = page.render({
@@ -203,11 +208,11 @@ const ThumbnailPage = ({ pdfDoc, pageNumber, onClick, isActive }) => {
       active = false;
       if (renderTask) renderTask.cancel();
     };
-  }, [pdfDoc, pageNumber]);
+  }, [pdfDoc, pageNumber, rotation]);
 
   return (
     <button 
-      type="button"
+      type="button" 
       className={`ae-pdf-thumb-item ${isActive ? 'active' : 'hover-state'}`} 
       onClick={onClick}
       style={{ background: 'none', border: 'none', font: 'inherit', color: 'inherit' }}
@@ -238,6 +243,7 @@ export default function PdfFlipbookReader({ book, onClose }) {
   // Navigation states
   const [currentPage, setCurrentPage] = useState(1); // Start directly on page 1
   const [zoomFactor, setZoomFactor] = useState(1.0);
+  const [rotation, setRotation] = useState(0); // 0, 90, 180, 270 degrees
   const [readerMode, setReaderMode] = useState("single"); // Default to single page mode
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [pdfObjectUrl, setPdfObjectUrl] = useState(null);
@@ -279,22 +285,39 @@ export default function PdfFlipbookReader({ book, onClose }) {
     const viewportEl = viewportRef.current;
     if (!viewportEl) return;
 
+    const updateSize = () => {
+      const rect = viewportEl.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        setViewportSize({ width: rect.width, height: rect.height });
+      }
+    };
+
+    updateSize();
+
     const resizeObserver = new ResizeObserver((entries) => {
       if (!entries || entries.length === 0) return;
       const { width, height } = entries[0].contentRect;
-      setViewportSize({ width, height });
+      if (width > 0 && height > 0) {
+        setViewportSize({ width, height });
+      }
     });
 
     resizeObserver.observe(viewportEl);
+    window.addEventListener("resize", updateSize);
+    window.addEventListener("orientationchange", updateSize);
+
     return () => {
       resizeObserver.disconnect();
+      window.removeEventListener("resize", updateSize);
+      window.removeEventListener("orientationchange", updateSize);
     };
-  }, [loading, showToc, showSearch, showThumbnails]);
+  }, [loading, showToc, showSearch, showThumbnails, isFullscreen]);
 
   // Reset navigation and zoom state when opening a new book
   useEffect(() => {
     setCurrentPage(1);
     setZoomFactor(1.0);
+    setRotation(0);
     setPdfPageOriginalSize(null);
     isFirstRender.current = true;
   }, [book]);
@@ -386,37 +409,46 @@ export default function PdfFlipbookReader({ book, onClose }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, readerMode, numPages]);
 
-  // Compute the scale dynamically to fit the viewport size
+  // Compute the scale dynamically to fit the viewport size taking rotation into account
   const scale = useMemo(() => {
     if (!pdfPageOriginalSize) return zoomFactor;
 
-    const padding = 30; // 15px padding on each side
-    const availableWidth = Math.max(200, viewportSize.width - padding);
-    const availableHeight = Math.max(200, viewportSize.height - padding);
+    const isRotated90or270 = rotation === 90 || rotation === 270;
+    const rotatedWidth = isRotated90or270 ? pdfPageOriginalSize.height : pdfPageOriginalSize.width;
+    const rotatedHeight = isRotated90or270 ? pdfPageOriginalSize.width : pdfPageOriginalSize.height;
+
+    const padding = 24; // 12px padding on each side
+    const availableWidth = Math.max(100, viewportSize.width - padding);
+    const availableHeight = Math.max(100, viewportSize.height - padding);
 
     let calculatedFitScale = 1.0;
     if (readerMode === "double") {
       const gap = 16;
-      const totalOriginalWidth = pdfPageOriginalSize.width * 2 + gap;
+      const totalOriginalWidth = rotatedWidth * 2 + gap;
       const scaleW = availableWidth / totalOriginalWidth;
-      const scaleH = availableHeight / pdfPageOriginalSize.height;
+      const scaleH = availableHeight / rotatedHeight;
       calculatedFitScale = Math.min(scaleW, scaleH);
     } else {
-      const scaleW = availableWidth / pdfPageOriginalSize.width;
-      const scaleH = availableHeight / pdfPageOriginalSize.height;
+      const scaleW = availableWidth / rotatedWidth;
+      const scaleH = availableHeight / rotatedHeight;
       calculatedFitScale = Math.min(scaleW, scaleH);
     }
 
+    if (!calculatedFitScale || isNaN(calculatedFitScale) || calculatedFitScale <= 0) {
+      calculatedFitScale = 1.0;
+    }
+
     return calculatedFitScale * zoomFactor;
-  }, [pdfPageOriginalSize, viewportSize, readerMode, zoomFactor]);
+  }, [pdfPageOriginalSize, viewportSize, readerMode, zoomFactor, rotation]);
 
   // Compute container dimensions dynamically
-  const pageWidth = pdfPageOriginalSize ? pdfPageOriginalSize.width : 380;
-  const pageHeight = pdfPageOriginalSize ? pdfPageOriginalSize.height : 530;
+  const isRotated90or270 = rotation === 90 || rotation === 270;
+  const rawWidth = pdfPageOriginalSize ? (isRotated90or270 ? pdfPageOriginalSize.height : pdfPageOriginalSize.width) : (isRotated90or270 ? 530 : 380);
+  const rawHeight = pdfPageOriginalSize ? (isRotated90or270 ? pdfPageOriginalSize.width : pdfPageOriginalSize.height) : (isRotated90or270 ? 380 : 530);
 
   const containerStyle = {
-    width: pageWidth * scale,
-    height: pageHeight * scale
+    width: Math.floor(rawWidth * scale),
+    height: Math.floor(rawHeight * scale)
   };
 
   // Load PDF.js assets dynamically from CDN
@@ -687,10 +719,11 @@ export default function PdfFlipbookReader({ book, onClose }) {
     }
   };
 
-  // Zoom helpers
-  const zoomIn = () => setZoomFactor(prev => Math.min(3.0, prev + 0.2));
-  const zoomOut = () => setZoomFactor(prev => Math.max(0.4, prev - 0.2));
+  // Zoom & Rotation helpers
+  const zoomIn = () => setZoomFactor(prev => Math.min(3.0, Number((prev + 0.2).toFixed(1))));
+  const zoomOut = () => setZoomFactor(prev => Math.max(0.4, Number((prev - 0.2).toFixed(1))));
   const resetZoom = () => setZoomFactor(1.0);
+  const handleRotate = () => setRotation(prev => (prev + 90) % 360);
 
   // Search Logic
   const handleSearchSubmit = async (e) => {
@@ -833,7 +866,20 @@ export default function PdfFlipbookReader({ book, onClose }) {
             </button>
           </div>
 
-          {/* Zoom controls */}
+          {/* Rotation control */}
+          <div className="pdf-toolbar-group">
+            <button 
+              type="button" 
+              onClick={handleRotate} 
+              disabled={loading || !!error} 
+              className={`pdf-toolbar-btn ${rotation !== 0 ? 'active' : ''}`}
+              title={`Faire pivoter de 90° (actuel: ${rotation}°)`}
+            >
+              <RotateCw className="ae-icon-size-sm" />
+            </button>
+          </div>
+
+          {/* Zoom & Fit controls */}
           <div className="pdf-toolbar-group">
             <button 
               type="button" 
@@ -844,7 +890,9 @@ export default function PdfFlipbookReader({ book, onClose }) {
             >
               <ZoomOut className="ae-icon-size-sm" />
             </button>
-            <span className="pdf-zoom-val">{Math.round(scale * 100)}%</span>
+            <span className="pdf-zoom-val" title={`Facteur de zoom: ${Math.round(zoomFactor * 100)}%`}>
+              {Math.round(zoomFactor * 100)}%
+            </span>
             <button 
               type="button" 
               onClick={zoomIn} 
@@ -859,9 +907,9 @@ export default function PdfFlipbookReader({ book, onClose }) {
               onClick={resetZoom} 
               disabled={loading || !!error || zoomFactor === 1.0} 
               className="pdf-toolbar-btn text-btn text-[10px]"
-              title="Zoom normal"
+              title="Ajuster à l'écran (taille maximale)"
             >
-              100%
+              Ajuster
             </button>
           </div>
 
@@ -1001,6 +1049,7 @@ export default function PdfFlipbookReader({ book, onClose }) {
                         pdfDoc={pdfDoc} 
                         pageNumber={currentPage} 
                         scale={scale} 
+                        rotation={rotation}
                         textLayerActive={true} 
                         searchQuery={searchQuery}
                       />
@@ -1021,6 +1070,7 @@ export default function PdfFlipbookReader({ book, onClose }) {
                         pdfDoc={pdfDoc} 
                         pageNumber={currentPage + 1} 
                         scale={scale} 
+                        rotation={rotation}
                         textLayerActive={true} 
                         searchQuery={searchQuery}
                       />
@@ -1068,6 +1118,7 @@ export default function PdfFlipbookReader({ book, onClose }) {
                         pdfDoc={pdfDoc} 
                         pageNumber={currentPage} 
                         scale={scale} 
+                        rotation={rotation}
                         textLayerActive={true} 
                         searchQuery={searchQuery}
                       />
@@ -1165,6 +1216,7 @@ export default function PdfFlipbookReader({ book, onClose }) {
               key={pageNum}
               pdfDoc={pdfDoc}
               pageNumber={pageNum}
+              rotation={rotation}
               isActive={displayCurrentPage === pageNum}
               onClick={() => goToPage(pageNum)}
             />

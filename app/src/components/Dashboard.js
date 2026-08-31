@@ -4884,7 +4884,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
             {/* Viewer/Reader Flipbook Modal */}
             {showViewFlipbookModal && viewingFlipbook && (
               <div className="ae-modal-overlay" onClick={() => { setShowViewFlipbookModal(false); setViewingFlipbook(null); }}>
-                <div className="ae-modal-container max-w-5xl" onClick={(e) => e.stopPropagation()} style={{ padding: 0 }}>
+                <div className="ae-modal-container" onClick={(e) => e.stopPropagation()} style={{ padding: 0, maxWidth: '1150px', width: '95vw', border: 'none', background: 'transparent', boxShadow: 'none' }}>
                   <PdfFlipbookReader 
                     book={viewingFlipbook} 
                     onClose={() => { setShowViewFlipbookModal(false); setViewingFlipbook(null); }} 
