@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { getPDFFile } from "../utils/indexedDBStorage";
 import { loadPdfFromFirestore } from "../utils/firestoreChunker";
+import { escapeHtml } from "../utils/sanitize";
 import "../styles/pdf-reader.css";
 
 // Helper to resolve PDF Outline destination to page number
@@ -119,9 +120,10 @@ const PdfPage = ({ pdfDoc, pageNumber, scale, rotation = 0, textLayerActive, sea
               const regex = new RegExp(searchQuery.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'gi');
               
               textSpans.forEach(span => {
-                const text = span.textContent;
+                const text = span.textContent || "";
                 if (text.toLowerCase().includes(searchQuery.toLowerCase())) {
-                  span.innerHTML = text.replace(regex, '<mark>$&</mark>');
+                  const escapedText = escapeHtml(text);
+                  span.innerHTML = escapedText.replace(regex, '<mark>$&</mark>');
                 }
               });
             }
@@ -389,9 +391,20 @@ export default function PdfFlipbookReader({ book, onClose }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage]);
 
-  // Keyboard navigation
+  // Keyboard navigation & Escape handling
   useEffect(() => {
     const handleKeyDown = (e) => {
+      // Escape closes open drawers or reader
+      if (e.key === "Escape") {
+        if (showToc || showSearch || showThumbnails) {
+          setShowToc(false);
+          setShowSearch(false);
+          setShowThumbnails(false);
+        } else if (onClose) {
+          onClose();
+        }
+        return;
+      }
       // Ignore key events when typing in search input or page number input
       if (document.activeElement.tagName === "INPUT" || document.activeElement.tagName === "TEXTAREA") {
         return;
@@ -407,7 +420,7 @@ export default function PdfFlipbookReader({ book, onClose }) {
       window.removeEventListener("keydown", handleKeyDown);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, readerMode, numPages]);
+  }, [currentPage, readerMode, numPages, showToc, showSearch, showThumbnails, onClose]);
 
   // Compute the scale dynamically to fit the viewport size taking rotation into account
   const scale = useMemo(() => {
@@ -795,16 +808,21 @@ export default function PdfFlipbookReader({ book, onClose }) {
   };
 
   return (
-    <div ref={containerRef} className="pdf-reader-container">
+    <div 
+      ref={containerRef} 
+      className="pdf-reader-container"
+      role="region"
+      aria-label={`Lecteur de livre numérique : ${book.title || 'Document'}`}
+    >
       {/* Header / Toolbar */}
       <div className="pdf-reader-header">
         <h3 className="pdf-reader-title">
-          <BookOpen className="ae-pdf-reader-icon-pulse" />
+          <BookOpen className="ae-pdf-reader-icon-pulse" aria-hidden="true" />
           <span>{book.title}</span>
         </h3>
 
         {/* Toolbar Controls */}
-        <div className="pdf-reader-toolbar">
+        <div className="pdf-reader-toolbar" role="toolbar" aria-label="Contrôles du lecteur de flipbook">
           {/* Panels toggles */}
           <div className="pdf-toolbar-group">
             <button 
@@ -812,27 +830,33 @@ export default function PdfFlipbookReader({ book, onClose }) {
               onClick={() => { setShowToc(!showToc); setShowSearch(false); }} 
               className={`pdf-toolbar-btn ${showToc ? 'active' : ''}`}
               title="Sommaire"
+              aria-label="Afficher ou masquer le sommaire"
+              aria-expanded={showToc}
               disabled={loading || !!error}
             >
-              <List className="ae-icon-size-sm" />
+              <List className="ae-icon-size-sm" aria-hidden="true" />
             </button>
             <button 
               type="button" 
               onClick={() => { setShowSearch(!showSearch); setShowToc(false); }} 
               className={`pdf-toolbar-btn ${showSearch ? 'active' : ''}`}
               title="Rechercher"
+              aria-label="Afficher ou masquer le panneau de recherche"
+              aria-expanded={showSearch}
               disabled={loading || !!error}
             >
-              <Search className="ae-icon-size-sm" />
+              <Search className="ae-icon-size-sm" aria-hidden="true" />
             </button>
             <button 
               type="button" 
               onClick={() => setShowThumbnails(!showThumbnails)} 
               className={`pdf-toolbar-btn ${showThumbnails ? 'active' : ''}`}
               title="Miniatures"
+              aria-label="Afficher ou masquer la grille des miniatures"
+              aria-expanded={showThumbnails}
               disabled={loading || !!error}
             >
-              <Grid className="ae-icon-size-sm" />
+              <Grid className="ae-icon-size-sm" aria-hidden="true" />
             </button>
           </div>
 
@@ -843,9 +867,10 @@ export default function PdfFlipbookReader({ book, onClose }) {
               onClick={() => setSoundEnabled(!soundEnabled)} 
               className={`pdf-toolbar-btn ${soundEnabled ? 'active' : ''}`}
               title={soundEnabled ? "Désactiver le son de page" : "Activer le son de page"}
+              aria-label={soundEnabled ? "Désactiver l'effet sonore de tourne-page" : "Activer l'effet sonore de tourne-page"}
               disabled={loading || !!error}
             >
-              {soundEnabled ? <Volume2 className="ae-icon-size-sm" /> : <VolumeX className="ae-icon-size-sm" />}
+              {soundEnabled ? <Volume2 className="ae-icon-size-sm" aria-hidden="true" /> : <VolumeX className="ae-icon-size-sm" aria-hidden="true" />}
             </button>
           </div>
 
@@ -857,8 +882,9 @@ export default function PdfFlipbookReader({ book, onClose }) {
               disabled={loading || !!error} 
               className={`pdf-toolbar-btn ${rotation !== 0 ? 'active' : ''}`}
               title={`Faire pivoter de 90° (actuel: ${rotation}°)`}
+              aria-label={`Faire pivoter le document de 90 degrés (rotation actuelle: ${rotation} degrés)`}
             >
-              <RotateCw className="ae-icon-size-sm" />
+              <RotateCw className="ae-icon-size-sm" aria-hidden="true" />
             </button>
           </div>
 
@@ -870,10 +896,11 @@ export default function PdfFlipbookReader({ book, onClose }) {
               disabled={loading || !!error} 
               className="pdf-toolbar-btn" 
               title="Zoom arrière"
+              aria-label="Effectuer un zoom arrière"
             >
-              <ZoomOut className="ae-icon-size-sm" />
+              <ZoomOut className="ae-icon-size-sm" aria-hidden="true" />
             </button>
-            <span className="pdf-zoom-val" title={`Facteur de zoom: ${Math.round(zoomFactor * 100)}%`}>
+            <span className="pdf-zoom-val" title={`Facteur de zoom: ${Math.round(zoomFactor * 100)}%`} aria-label={`Niveau de zoom actuel: ${Math.round(zoomFactor * 100)} pour cent`}>
               {Math.round(zoomFactor * 100)}%
             </span>
             <button 
@@ -882,8 +909,9 @@ export default function PdfFlipbookReader({ book, onClose }) {
               disabled={loading || !!error} 
               className="pdf-toolbar-btn" 
               title="Zoom avant"
+              aria-label="Effectuer un zoom avant"
             >
-              <ZoomIn className="ae-icon-size-sm" />
+              <ZoomIn className="ae-icon-size-sm" aria-hidden="true" />
             </button>
             <button 
               type="button" 
@@ -891,6 +919,7 @@ export default function PdfFlipbookReader({ book, onClose }) {
               disabled={loading || !!error || zoomFactor === 1.0} 
               className="pdf-toolbar-btn text-btn text-[10px]"
               title="Ajuster à l'écran (taille maximale)"
+              aria-label="Réinitialiser le zoom pour ajuster la page à l'écran"
             >
               Ajuster
             </button>
@@ -907,8 +936,10 @@ export default function PdfFlipbookReader({ book, onClose }) {
               disabled={loading || !!error}
               className={`pdf-toolbar-btn ${readerMode === "single" ? "active" : ""}`}
               title="Affichage page unique"
+              aria-label="Basculer en mode affichage page unique"
+              aria-pressed={readerMode === "single"}
             >
-              <FileText className="ae-icon-size-sm" />
+              <FileText className="ae-icon-size-sm" aria-hidden="true" />
             </button>
             <button
               type="button"
@@ -919,8 +950,10 @@ export default function PdfFlipbookReader({ book, onClose }) {
               disabled={loading || !!error}
               className={`pdf-toolbar-btn ${readerMode === "double" ? "active" : ""}`}
               title="Affichage double page"
+              aria-label="Basculer en mode affichage double page"
+              aria-pressed={readerMode === "double"}
             >
-              <BookOpen className="ae-icon-size-sm" />
+              <BookOpen className="ae-icon-size-sm" aria-hidden="true" />
             </button>
           </div>
 
@@ -932,8 +965,9 @@ export default function PdfFlipbookReader({ book, onClose }) {
               disabled={loading || !!error} 
               className="pdf-toolbar-btn"
               title={isFullscreen ? "Quitter le plein écran" : "Plein écran"}
+              aria-label={isFullscreen ? "Quitter le mode plein écran" : "Activer le mode plein écran"}
             >
-              {isFullscreen ? <Minimize className="ae-icon-size-sm" /> : <Maximize className="ae-icon-size-sm" />}
+              {isFullscreen ? <Minimize className="ae-icon-size-sm" aria-hidden="true" /> : <Maximize className="ae-icon-size-sm" aria-hidden="true" />}
             </button>
           </div>
 
@@ -942,6 +976,7 @@ export default function PdfFlipbookReader({ book, onClose }) {
               type="button" 
               onClick={onClose} 
               className="bg-red-650 hover:bg-red-700 text-white font-bold text-xs px-3 py-1.5 rounded-lg flex items-center gap-1 cursor-pointer transition-colors"
+              aria-label="Fermer le lecteur de flipbook et retourner à la liste"
             >
               Fermer
             </button>
@@ -1226,7 +1261,7 @@ export default function PdfFlipbookReader({ book, onClose }) {
 
       {/* Footer / Pagination Controls */}
       {!loading && !error && pdfDoc && (
-        <div className="pdf-reader-footer">
+        <div className="pdf-reader-footer" role="navigation" aria-label="Pagination du document">
           <div className="ae-flex-gap-sm">
             <button 
               type="button" 
@@ -1234,8 +1269,9 @@ export default function PdfFlipbookReader({ book, onClose }) {
               disabled={readerMode === "double" ? currentPage === 0 : currentPage <= 1} 
               className="pdf-nav-btn px-2.5" 
               title="Première page"
+              aria-label="Aller à la première page"
             >
-              <ChevronsLeft className="ae-icon-size-sm" />
+              <ChevronsLeft className="ae-icon-size-sm" aria-hidden="true" />
             </button>
             <button 
               type="button" 
@@ -1243,20 +1279,29 @@ export default function PdfFlipbookReader({ book, onClose }) {
               disabled={readerMode === "double" ? currentPage === 0 : currentPage <= 1} 
               className="pdf-nav-btn"
               title="Page précédente"
+              aria-label="Page précédente"
             >
-              <ChevronLeft className="ae-icon-size-sm" />
+              <ChevronLeft className="ae-icon-size-sm" aria-hidden="true" />
             </button>
           </div>
 
           <div className="pdf-page-indicator">
+            <label htmlFor="pdf-current-page-input" className="sr-only">Numéro de page actuelle</label>
             <span>Page</span>
             <input 
+              id="pdf-current-page-input"
               type="text" 
+              inputMode="numeric"
+              pattern="[0-9]*"
               value={displayCurrentPage} 
               onChange={handlePageInputChange} 
               className="pdf-page-input"
+              aria-label={`Page actuelle sur un total de ${numPages}`}
             />
             <span>sur {numPages}</span>
+            <span className="sr-only" aria-live="polite" aria-atomic="true">
+              Page {displayCurrentPage} sur {numPages}
+            </span>
           </div>
 
           <div className="ae-flex-gap-sm">
@@ -1266,8 +1311,9 @@ export default function PdfFlipbookReader({ book, onClose }) {
               disabled={readerMode === "double" ? currentPage >= numPages : currentPage >= numPages} 
               className="pdf-nav-btn"
               title="Page suivante"
+              aria-label="Page suivante"
             >
-              <ChevronRight className="ae-icon-size-sm" />
+              <ChevronRight className="ae-icon-size-sm" aria-hidden="true" />
             </button>
             <button 
               type="button" 
@@ -1275,8 +1321,9 @@ export default function PdfFlipbookReader({ book, onClose }) {
               disabled={readerMode === "double" ? currentPage >= numPages : currentPage >= numPages} 
               className="pdf-nav-btn px-2.5" 
               title="Dernière page"
+              aria-label="Aller à la dernière page"
             >
-              <ChevronsRight className="ae-icon-size-sm" />
+              <ChevronsRight className="ae-icon-size-sm" aria-hidden="true" />
             </button>
           </div>
         </div>

@@ -10,8 +10,19 @@ export const ContactForm = ({ setView }) => {
 
   const handleContactSubmit = async (e) => {
     e.preventDefault();
-    if (!contactForm.name || !contactForm.email || !contactForm.subject || !contactForm.message) {
+    const trimmedName = contactForm.name.trim();
+    const trimmedEmail = contactForm.email.trim();
+    const trimmedSubject = contactForm.subject.trim();
+    const trimmedMessage = contactForm.message.trim();
+
+    if (!trimmedName || !trimmedEmail || !trimmedSubject || !trimmedMessage) {
       setFormStatus({ type: 'error', message: 'Veuillez remplir tous les champs obligatoires.', loading: false });
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      setFormStatus({ type: 'error', message: 'Veuillez saisir une adresse e-mail valide.', loading: false });
       return;
     }
 
@@ -24,10 +35,10 @@ export const ContactForm = ({ setView }) => {
 
     try {
       await addDoc(collection(db, 'contacts'), {
-        name: contactForm.name.trim(),
-        email: contactForm.email.trim().toLowerCase(),
-        subject: contactForm.subject.trim(),
-        message: contactForm.message.trim(),
+        name: trimmedName,
+        email: trimmedEmail.toLowerCase(),
+        subject: trimmedSubject,
+        message: trimmedMessage,
         timestamp: serverTimestamp()
       });
 

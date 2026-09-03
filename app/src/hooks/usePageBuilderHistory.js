@@ -3,7 +3,7 @@ import { useState, useCallback } from 'react';
 /**
  * Hook personnalisé pour gérer l'historique Undo / Redo des blocs du Page Builder.
  */
-export const usePageBuilderHistory = (initialState = []) => {
+export const usePageBuilderHistory = (initialState = [], maxHistory = 30) => {
   const [history, setHistory] = useState([initialState]);
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -13,10 +13,17 @@ export const usePageBuilderHistory = (initialState = []) => {
     const nextStateStr = JSON.stringify(nextState);
     if (currentStateStr === nextStateStr) return;
 
-    const newHistory = history.slice(0, currentIndex + 1);
-    setHistory([...newHistory, nextState]);
-    setCurrentIndex(newHistory.length);
-  }, [history, currentIndex]);
+    let newHistory = history.slice(0, currentIndex + 1);
+    newHistory.push(nextState);
+
+    // Limiter la taille de l'historique pour préserver la mémoire
+    if (newHistory.length > maxHistory) {
+      newHistory = newHistory.slice(newHistory.length - maxHistory);
+    }
+
+    setHistory(newHistory);
+    setCurrentIndex(newHistory.length - 1);
+  }, [history, currentIndex, maxHistory]);
 
   const undo = useCallback(() => {
     if (currentIndex > 0) {
