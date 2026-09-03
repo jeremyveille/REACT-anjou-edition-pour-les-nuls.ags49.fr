@@ -123,14 +123,14 @@ Se déplacer dans le dossier : `cd page-builder-react`
 *   **Politique de Confidentialité Complète (`PrivacyPolicy.js`)** : Couvre les Articles 15 à 22 du RGPD, le contact DPO/référent, la durée de conservation (3 ans maximum), et les voies de réclamation auprès de la CNIL.
 *   **Consentement explicite sur formulaire** : Case à cocher obligatoire et non pré-cochée sur [ContactForm.js](file:///C:/Users/jerem/REACT-anjou-edition-pour-les-nuls.ags49.fr/app/src/components/ContactForm.js).
 
-### 4. Accessibilité Numérique (a11y - WCAG 2.1 AA)
-*   **Lien d'évitement rapide** : `.skip-to-content` disponible dès le premier appui sur tabulation, avec contraste élevé.
-*   **Gestion du focus** : Mise en surbrillance visible globale `:focus-visible` et indicateurs renforcés.
-*   **Composants modaux & dialogues** : Visionneuse d'agrandissement photo (Lightbox) et modales équipées de `role="dialog"`, `aria-modal="true"`, et `aria-label` explicites.
-*   **Navigation Clavier** : Tous les éléments interactifs sont des boutons natifs focusables avec raccourcis de réorganisation et annonces `aria-live`.
-*   **Respect des préférences** : Désactivation des animations via `@media (prefers-reduced-motion: reduce)`.
-*   **Synthèse vocale** : Lecture de textes intégrée via l'API Web Speech et modification dynamique de la taille de police.
+### 5. Architecture Responsive Unifiée (4 Paliers Standard)
+*   **S — Smartphones / petits écrans** : `@media (max-width: 599px)` (Disposition 1 colonne, contrôles tactiles >= 44px, tiroir mobile, modales fluides).
+*   **M — Tablettes / grands smartphones** : `@media (min-width: 600px) and (max-width: 899px)` (Disposition 1 à 2 colonnes, sidebar off-canvas, espacement équilibré).
+*   **L — Ordinateurs portables / petits desktops** : `@media (min-width: 900px) and (max-width: 1199px)` (Disposition 2 colonnes avec sidebar fixe, tables aérées).
+*   **XL — Grands écrans** : `@media (min-width: 1200px)` (Disposition 3 colonnes jusqu'à 1700px max, KPIs 4 colonnes).
+*   **Classes mutualisées** : `.responsive-container`, `.responsive-grid`, `.responsive-actions`, `.responsive-form`, `.responsive-table`, `.responsive-modal`.
 
 ---
 
-*Dernière mise à jour du contexte par l'agent : 31 août 2026.*
+*Dernière mise à jour du contexte par l'agent : 3 septembre 2026.*
+

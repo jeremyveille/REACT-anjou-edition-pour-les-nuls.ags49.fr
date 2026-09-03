@@ -56,13 +56,14 @@ Se déplacer dans le dossier : `cd app`
 *   **Droit à l'oubli interactif** : Bouton de purge intégrale du cache local (`localStorage`) dans la politique de confidentialité et la fenêtre de réglages.
 *   **Politique de Confidentialité (`PrivacyPolicy.js`)** : Référence complète aux Articles 15 à 22 du RGPD, contact DPO et recours CNIL.
 
-### 4. Accessibilité Numérique (WCAG 2.1 AA)
-*   Lien d'accès rapide au contenu `.skip-to-content` navigable au clavier.
-*   Mise en surbrillance visible `:focus-visible` sur l'ensemble des éléments interactifs.
-*   Composants modaux et visionneuse photo conformes (`role="dialog"`, `aria-modal="true"`, `aria-label`).
-*   Prise en compte de `@media (prefers-reduced-motion: reduce)`.
-*   Synthèse vocale intégrée et commandes de contraste.
+### 5. Architecture Responsive Unifiée (4 Paliers Standard)
+*   **S — Smartphones / petits écrans** : `@media (max-width: 599px)` (Disposition 1 colonne, contrôles tactiles >= 44px, tiroir mobile, modales fluides).
+*   **M — Tablettes / grands smartphones** : `@media (min-width: 600px) and (max-width: 899px)` (Disposition 1 à 2 colonnes, sidebar off-canvas, espacement équilibré).
+*   **L — Ordinateurs portables / petits desktops** : `@media (min-width: 900px) and (max-width: 1199px)` (Disposition 2 colonnes avec sidebar fixe, tables aérées).
+*   **XL — Grands écrans** : `@media (min-width: 1200px)` (Disposition 3 colonnes jusqu'à 1700px max, KPIs 4 colonnes).
+*   **Classes mutualisées** : `.responsive-container`, `.responsive-grid`, `.responsive-actions`, `.responsive-form`, `.responsive-table`, `.responsive-modal`.
 
 ---
 
-*Dernière mise à jour du contexte par l'agent : 31 août 2026.*
+*Dernière mise à jour du contexte par l'agent : 3 septembre 2026.*
+
