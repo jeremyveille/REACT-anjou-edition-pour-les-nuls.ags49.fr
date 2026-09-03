@@ -32,36 +32,37 @@ export default function DashboardHeader({
   };
 
   return (
-    <header className="dashboard-topbar ae-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '0 0 24px 0', padding: '16px 24px', background: 'linear-gradient(135deg, var(--blue-dark, #004b7a) 0%, var(--blue-primary, #336ddc) 100%)', color: 'white', borderRadius: '12px' }}>
+    <header className="dashboard-topbar ae-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', margin: '0 0 24px 0', padding: '16px 24px', background: 'linear-gradient(135deg, var(--blue-dark, #004b7a) 0%, var(--blue-primary, #336ddc) 100%)', color: 'white', borderRadius: '12px' }}>
       {/* LEFT: Toggle & Title */}
-      <div className="topbar-left" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+      <div className="topbar-left" style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
           className="ae-icon-button"
           aria-label="Toggle navigation menu"
-          style={{ color: 'white', background: 'rgba(255,255,255,0.1)' }}
+          style={{ color: 'white', background: 'rgba(255,255,255,0.1)', flexShrink: 0 }}
         >
           <Menu size={20} />
         </button>
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <h2 className="topbar-title" style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: 'white' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+          <h2 className="topbar-title" style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {getSectionTitle()}
           </h2>
-          <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>Administration Anjou Édition</span>
+          <span style={{ fontSize: '0.75rem', opacity: 0.8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Administration Anjou Édition</span>
         </div>
       </div>
 
       {/* RIGHT: Quick Action Buttons */}
-      <div className="topbar-right" style={{ display: 'flex', gap: '12px' }}>
+      <div className="topbar-right" style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
         {onBackToSiteClick && (
           <button
             id="btn-nav-back-to-site"
             onClick={onBackToSiteClick}
             className="ae-button"
+            title="Voir le site"
             style={{ background: 'rgba(255,255,255,0.15)', color: 'white', border: '1px solid rgba(255,255,255,0.2)' }}
           >
             <BookOpen size={16} />
-            <span>Voir le site</span>
+            <span className="header-btn-text">Voir le site</span>
           </button>
         )}
         
@@ -69,9 +70,10 @@ export default function DashboardHeader({
           id="btn-nav-logout"
           onClick={onLogoutClick}
           className="ae-button ae-button--danger"
+          title="Déconnexion"
         >
           <Lock size={16} />
-          <span>Déconnexion</span>
+          <span className="header-btn-text">Déconnexion</span>
         </button>
       </div>
     </header>
