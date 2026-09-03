@@ -1,6 +1,7 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Anjou Édition",
+  "name": "Anjou Édition – Pour les Nuls",
+  "description": "Portail culturel, littéraire et patrimonial de l'Anjou : flipbooks numériques interactifs, poésies, galeries et créateur de pages.",
   "icons": [
     {
       "src": "favicon.ico",
@@ -18,8 +19,11 @@
       "sizes": "512x512"
     }
   ],
-  "start_url": ".",
+  "start_url": "/",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "theme_color": "#004b7a",
+  "background_color": "#f8fafc",
+  "lang": "fr-FR",
+  "orientation": "any",
+  "categories": ["books", "education", "lifestyle"]
 }

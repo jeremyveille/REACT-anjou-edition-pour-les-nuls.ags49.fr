@@ -24,6 +24,7 @@ beforeAll(() => {
       speak: jest.fn(),
       cancel: jest.fn(),
       speakUtterance: jest.fn(),
+      getVoices: jest.fn(() => []),
     };
     window.SpeechSynthesisUtterance = jest.fn();
   }

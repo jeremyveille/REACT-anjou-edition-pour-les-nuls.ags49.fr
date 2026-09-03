@@ -936,6 +936,42 @@ main {
   color: white;
 }
 
+.speech-rate-selector {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--bg-sidebar);
+}
+
+.speech-rate-selector button {
+  border: none;
+  background: none;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--text-main);
+  transition: var(--transition);
+}
+
+.speech-rate-selector button.active, .speech-rate-selector button:hover {
+  background: var(--secondary);
+  color: white;
+}
+
+.speech-voice-select {
+  padding: 0.45rem 0.75rem;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg-sidebar);
+  color: var(--text-main);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
 /* Styled text reading content */
 .text-content {
   line-height: 1.8;

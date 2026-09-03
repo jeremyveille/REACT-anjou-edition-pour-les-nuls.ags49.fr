@@ -1,14 +1,30 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // SECURITY UPDATE:
-    // Firebase Authentication is now integrated. 
-    // Write access is strictly limited to authenticated admins.
-
+    
+    // Contact form submissions:
+    // Anyone can create a message if it respects the validation schema.
+    // Reading, updating and deleting contact messages is strictly reserved to authenticated administrators.
     match /contacts/{document} {
-      allow create: if true;
+      allow create: if request.resource.data.name is string 
+                    && request.resource.data.name.size() >= 2 
+                    && request.resource.data.name.size() <= 100
+                    && request.resource.data.email is string 
+                    && request.resource.data.email.size() >= 5 
+                    && request.resource.data.email.size() <= 150
+                    && request.resource.data.subject is string 
+                    && request.resource.data.subject.size() >= 2 
+                    && request.resource.data.subject.size() <= 200
+                    && request.resource.data.message is string 
+                    && request.resource.data.message.size() >= 5 
+                    && request.resource.data.message.size() <= 5000;
+                    
       allow read, update, delete: if request.auth != null;
     }
+
+    // Public collections (pages, articles, flipbooks, menus, photos, videos, site configuration)
+    // Public read is permitted for site visitors.
+    // Writes, updates, and deletes are restricted to authenticated administrators.
     match /{document=**} {
       allow read: if true;
       allow write: if request.auth != null;

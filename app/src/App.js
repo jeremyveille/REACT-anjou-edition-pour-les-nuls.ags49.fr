@@ -70,6 +70,9 @@ function App() {
   const [darkMode, setDarkMode] = useState(false);
   const [fontSize, setFontSize] = useState('medium'); // small, medium, large
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const [availableVoices, setAvailableVoices] = useState([]);
+  const [selectedVoiceName, setSelectedVoiceName] = useState(() => localStorage.getItem('ae_speech_voice') || '');
+  const [speechRate, setSpeechRate] = useState(() => parseFloat(localStorage.getItem('ae_speech_rate') || '1.0'));
   const [isAuthenticated, setIsAuthenticated] = useState(() => localStorage.getItem('ae_authenticated') === 'true');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
@@ -325,6 +328,23 @@ function App() {
     };
   }, [view]);
 
+  // Load available speech synthesis voices
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.speechSynthesis && typeof window.speechSynthesis.getVoices === 'function') {
+      const loadVoices = () => {
+        try {
+          const voices = window.speechSynthesis.getVoices() || [];
+          const frVoices = voices.filter(v => v.lang && v.lang.toLowerCase().startsWith('fr'));
+          setAvailableVoices(frVoices.length > 0 ? frVoices : voices);
+        } catch (e) {
+          // ignore in testing environments without full voice support
+        }
+      };
+      loadVoices();
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+  }, []);
+
   // Text-To-Speech function
   const handleToggleSpeech = (textToRead) => {
     if (!window.speechSynthesis) {
@@ -339,6 +359,13 @@ function App() {
       const cleanText = textToRead.replace(/\n/g, ' ');
       const utterance = new SpeechSynthesisUtterance(cleanText);
       utterance.lang = 'fr-FR';
+      utterance.rate = speechRate;
+      
+      if (selectedVoiceName && availableVoices.length > 0) {
+        const voiceObj = availableVoices.find(v => v.name === selectedVoiceName);
+        if (voiceObj) utterance.voice = voiceObj;
+      }
+
       utterance.onend = () => setIsPlayingAudio(false);
       utterance.onerror = () => setIsPlayingAudio(false);
       
@@ -935,22 +962,64 @@ function App() {
                   <h2>{view.data.title}</h2>
                   
                   {/* Reader controls */}
-                  <div className="reader-controls">
+                  <div className="reader-controls" role="toolbar" aria-label="Contrôles de lecture et d'accessibilité">
                     <button 
                       type="button"
                       className={`control-btn ${isPlayingAudio ? 'active' : ''}`}
                       onClick={() => handleToggleSpeech(view.data.content)}
                       title={isPlayingAudio ? "Arrêter la lecture audio" : "Écouter le texte"}
+                      aria-label={isPlayingAudio ? "Arrêter la lecture audio par synthèse vocale" : "Écouter le texte par synthèse vocale"}
                     >
-                      {isPlayingAudio ? <VolumeX size={18} /> : <Volume2 size={18} />}
+                      {isPlayingAudio ? <VolumeX size={18} aria-hidden="true" /> : <Volume2 size={18} aria-hidden="true" />}
                       <span>{isPlayingAudio ? "Muet" : "Écouter"}</span>
                     </button>
 
-                    <div className="font-sizer">
+                    {/* Speech Speed Selector */}
+                    <div className="speech-rate-selector" role="group" aria-label="Vitesse de lecture vocale">
+                      {[0.8, 1.0, 1.2, 1.5].map(rate => (
+                        <button
+                          key={rate}
+                          type="button"
+                          className={speechRate === rate ? 'active' : ''}
+                          onClick={() => {
+                            setSpeechRate(rate);
+                            localStorage.setItem('ae_speech_rate', rate.toString());
+                          }}
+                          aria-label={`Vitesse de lecture ${rate}x`}
+                          aria-pressed={speechRate === rate}
+                        >
+                          {rate}x
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Voice selector (if multiple voices available) */}
+                    {availableVoices.length > 1 && (
+                      <select
+                        className="speech-voice-select"
+                        value={selectedVoiceName}
+                        onChange={(e) => {
+                          setSelectedVoiceName(e.target.value);
+                          localStorage.setItem('ae_speech_voice', e.target.value);
+                        }}
+                        aria-label="Sélectionner la voix de lecture"
+                      >
+                        <option value="">Voix par défaut</option>
+                        {availableVoices.map(v => (
+                          <option key={v.name} value={v.name}>
+                            {v.name.length > 20 ? v.name.slice(0, 20) + '…' : v.name} ({v.lang})
+                          </option>
+                        ))}
+                      </select>
+                    )}
+
+                    <div className="font-sizer" role="group" aria-label="Taille de police du texte">
                       <button 
                         type="button"
                         className={fontSize === 'small' ? 'active' : ''} 
                         onClick={() => setFontSize('small')}
+                        aria-label="Taille de texte petite"
+                        aria-pressed={fontSize === 'small'}
                       >
                         A-
                       </button>
@@ -958,6 +1027,8 @@ function App() {
                         type="button"
                         className={fontSize === 'medium' ? 'active' : ''} 
                         onClick={() => setFontSize('medium')}
+                        aria-label="Taille de texte normale"
+                        aria-pressed={fontSize === 'medium'}
                       >
                         A
                       </button>
@@ -965,6 +1036,8 @@ function App() {
                         type="button"
                         className={fontSize === 'large' ? 'active' : ''} 
                         onClick={() => setFontSize('large')}
+                        aria-label="Taille de texte grande"
+                        aria-pressed={fontSize === 'large'}
                       >
                         A+
                       </button>
