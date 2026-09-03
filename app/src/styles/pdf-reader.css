@@ -33,13 +33,36 @@
   box-sizing: border-box;
 }
 
-@media (max-width: 768px) {
+/* S & M — Smartphones et Tablettes (899px et moins) */
+@media (max-width: 899px) {
   .pdf-reader-container {
     height: calc(100dvh - 80px);
     min-height: 380px;
     border-radius: 8px;
   }
 }
+
+/* S — Smartphones (599px et moins) */
+@media (max-width: 599px) {
+  .pdf-reader-container {
+    height: calc(100dvh - 60px);
+    min-height: 340px;
+    border-radius: 6px;
+  }
+  .pdf-reader-header {
+    padding: 4px 6px;
+    gap: 4px;
+  }
+  .pdf-reader-title {
+    max-width: 120px;
+    font-size: 11px;
+  }
+  .pdf-control-btn {
+    width: 32px;
+    height: 32px;
+  }
+}
+
 
 /* Fullscreen Mode override */
 .pdf-reader-container:fullscreen {
@@ -617,8 +640,8 @@
   transform-origin: 0% 0%;
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
+/* S & M — Tablettes et Smartphones (899px et moins) */
+@media (max-width: 899px) {
   .pdf-book-layout {
     flex-direction: column;
     gap: 16px;
@@ -711,7 +734,8 @@
   pointer-events: none;
 }
 
-@media (max-width: 768px) {
+/* S & M (899px et moins) */
+@media (max-width: 899px) {
   .pdf-big-nav-btn {
     width: 44px;
     height: 44px;
@@ -727,5 +751,13 @@
   }
   .pdf-big-nav-btn.next.with-search {
     right: 8px;
+  }
+}
+
+/* S (599px et moins) */
+@media (max-width: 599px) {
+  .pdf-big-nav-btn {
+    width: 40px;
+    height: 40px;
   }
 }
