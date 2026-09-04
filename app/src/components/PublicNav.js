@@ -13,17 +13,21 @@ export const PublicNav = ({
   isPreview = false
 }) => {
 
-  const renderDropdownItems = (items) => {
+  const renderDropdownItems = (items, depth = 2, isArts = false) => {
     return items.map((child) => {
       const hasChilds = child.children && child.children.length > 0;
+      const isLevel2 = depth === 2;
       if (hasChilds) {
         return (
-          <div key={child.id} className="dropdown-submenu">
-            <div className="ae-dropdown-submenu-item">
+          <div 
+            key={child.id} 
+            className={`dropdown-submenu level-${depth} ${isArts && isLevel2 ? 'dropdown-submenu-below' : ''}`}
+          >
+            <div className={`ae-dropdown-submenu-item level-${depth}`}>
               {(child.status === "Actif" || child.isActive) && (child.url || child.shortcode) ? (
                 <button 
                   type="button"
-                  className="ae-dropdown-sub-btn"
+                  className={`ae-dropdown-sub-btn level-${depth}`}
                   onClick={(e) => {
                     handleMenuItemClick(child, e);
                     setActiveDropdown(null);
@@ -32,14 +36,14 @@ export const PublicNav = ({
                   {child.title}
                 </button>
               ) : (
-                <span className="ae-dropdown-sub-text">{child.title}</span>
+                <span className={`ae-dropdown-sub-text level-${depth}`}>{child.title}</span>
               )}
               <span className="ae-dropdown-chevron">
-                <ChevronRight size={13} />
+                <ChevronRight size={depth === 2 ? 12 : 11} />
               </span>
             </div>
-            <div className="dropdown-menu">
-              {renderDropdownItems(child.children)}
+            <div className={`dropdown-menu dropdown-level-${depth + 1} ${isArts && isLevel2 ? 'dropdown-menu-below' : ''}`}>
+              {renderDropdownItems(child.children, depth + 1, isArts)}
             </div>
           </div>
         );
@@ -48,7 +52,7 @@ export const PublicNav = ({
           <button 
             key={child.id} 
             type="button" 
-            className="dropdown-item" 
+            className={`dropdown-item level-${depth}`} 
             onClick={(e) => {
               handleMenuItemClick(child, e);
               setActiveDropdown(null);
@@ -65,10 +69,10 @@ export const PublicNav = ({
     return items.map((item) => {
       const hasChilds = item.children && item.children.length > 0;
       return (
-        <div key={item.id} style={{ paddingLeft: `${depth * 12}px`, width: '100%' }}>
+        <div key={item.id} style={{ paddingLeft: `${depth * 10}px`, width: '100%' }}>
           {hasChilds ? (
-            <details className="mobile-details">
-              <summary className="mobile-summary" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <details className={`mobile-details mobile-level-${depth + 1}`}>
+              <summary className={`mobile-summary mobile-summary-level-${depth + 1}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 {(item.status === "Actif" || item.isActive) && (item.url || item.shortcode) ? (
                   <button 
                     type="button"
@@ -94,7 +98,7 @@ export const PublicNav = ({
           ) : (
             <button 
               type="button" 
-              className={`mobile-nav-link ${depth > 0 ? 'sub-link' : 'main-link'}`}
+              className={`mobile-nav-link ${depth === 0 ? 'main-link' : (depth === 1 ? 'sub-link level-2' : 'sub-link level-3')}`}
               style={{ paddingLeft: depth > 0 ? '10px' : '0' }}
               onClick={(e) => {
                 handleMenuItemClick(item, e);
@@ -126,6 +130,7 @@ export const PublicNav = ({
             {getActiveMenuItems().map((item) => {
               const hasChildren = item.children && item.children.length > 0;
               if (hasChildren) {
+                const isArts = (item.title || item.label || "").trim().toLowerCase().startsWith("art");
                 return (
                   <div className="dropdown" key={item.id} ref={(el) => { if(dropdownRefs) dropdownRefs.current[item.title] = el; }}>
                     <div className="ae-nav-item-compact" style={{ color: activeDropdown === item.title ? 'var(--secondary)' : 'inherit' }}>
@@ -153,7 +158,7 @@ export const PublicNav = ({
                       </button>
                     </div>
                     <div className={`dropdown-menu ${activeDropdown === item.title ? 'show' : ''}`} style={{ minWidth: '180px' }}>
-                      {renderDropdownItems(item.children)}
+                      {renderDropdownItems(item.children, 2, isArts)}
                     </div>
                   </div>
                 );
