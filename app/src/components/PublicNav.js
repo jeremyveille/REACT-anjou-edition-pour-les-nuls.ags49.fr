@@ -23,7 +23,7 @@ export const PublicNav = ({
               {(child.status === "Actif" || child.isActive) && (child.url || child.shortcode) ? (
                 <button 
                   type="button"
-                  className="flex-grow text-left px-4 py-2 bg-transparent border-none cursor-pointer"
+                  className="ae-dropdown-sub-btn"
                   onClick={(e) => {
                     handleMenuItemClick(child, e);
                     setActiveDropdown(null);
@@ -32,10 +32,10 @@ export const PublicNav = ({
                   {child.title}
                 </button>
               ) : (
-                <span className="flex-grow text-left px-4 py-2 cursor-default">{child.title}</span>
+                <span className="ae-dropdown-sub-text">{child.title}</span>
               )}
-              <span className="px-3 flex items-center h-full">
-                <ChevronRight size={14} />
+              <span className="ae-dropdown-chevron">
+                <ChevronRight size={13} />
               </span>
             </div>
             <div className="dropdown-menu">
@@ -132,7 +132,7 @@ export const PublicNav = ({
                       {(item.status === "Actif" || item.isActive) && (item.url || item.shortcode) ? (
                         <button 
                           type="button"
-                          className="bg-transparent border-none cursor-pointer h-full px-4 py-2"
+                          className="nav-dropdown-btn"
                           onClick={(e) => {
                             handleMenuItemClick(item, e);
                             setActiveDropdown(null);
@@ -141,7 +141,7 @@ export const PublicNav = ({
                           {item.title}
                         </button>
                       ) : (
-                        <span className="px-4 py-2 cursor-default">{item.title}</span>
+                        <span className="nav-dropdown-label">{item.title}</span>
                       )}
                       <button
                         type="button"
@@ -149,10 +149,10 @@ export const PublicNav = ({
                         onClick={() => setActiveDropdown(activeDropdown === item.title ? null : item.title)}
                         aria-label={`Ouvrir le menu ${item.title}`}
                       >
-                        <ChevronDown size={14} />
+                        <ChevronDown size={13} />
                       </button>
                     </div>
-                    <div className={`dropdown-menu ${activeDropdown === item.title ? 'show' : ''}`} style={{ minWidth: '200px' }}>
+                    <div className={`dropdown-menu ${activeDropdown === item.title ? 'show' : ''}`} style={{ minWidth: '180px' }}>
                       {renderDropdownItems(item.children)}
                     </div>
                   </div>
@@ -174,13 +174,13 @@ export const PublicNav = ({
 
           <div className="nav-actions">
             {isPreview && (
-              <div className="search-bar-simulated" style={{ display: 'flex', alignItems: 'center', backgroundColor: 'var(--bg-search, #f1f5f9)', borderRadius: '20px', padding: '0.25rem 0.75rem', border: '1px solid var(--border-color, #e2e8f0)', marginRight: '1rem' }}>
-                <Search size={14} style={{ color: 'var(--text-muted, #64748b)', marginRight: '0.5rem' }} />
+              <div className="search-bar-simulated" style={{ display: 'flex', alignItems: 'center', backgroundColor: 'var(--bg-search, #f1f5f9)', borderRadius: '20px', padding: '0.2rem 0.6rem', border: '1px solid var(--border-color, #e2e8f0)', marginRight: '0.5rem' }}>
+                <Search size={13} style={{ color: 'var(--text-muted, #64748b)', marginRight: '0.35rem' }} />
                 <input 
                   type="text" 
                   placeholder="Rechercher..." 
                   className="ae-btn-reset-inline-xs" 
-                  style={{ outline: 'none', width: '80px', fontSize: '0.8rem', height: '20px', border: 'none', background: 'transparent' }} 
+                  style={{ outline: 'none', width: '70px', fontSize: '0.75rem', height: '18px', border: 'none', background: 'transparent' }} 
                   disabled 
                 />
               </div>
@@ -189,9 +189,8 @@ export const PublicNav = ({
               type="button" 
               className="nav-item contact-btn" 
               onClick={() => { if(!isPreview && setView) { setView({ type: 'contact' }); setMobileMenuOpen(false); } }}
-              style={{ color: 'var(--primary)', fontWeight: 700 }}
             >
-              Contact <Send size={16} />
+              Contact <Send size={13} />
             </button>
 
             {/* Mobile Hamburger toggle */}
@@ -201,7 +200,7 @@ export const PublicNav = ({
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="Menu Mobile"
             >
-              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+              {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
           </div>
         </div>
