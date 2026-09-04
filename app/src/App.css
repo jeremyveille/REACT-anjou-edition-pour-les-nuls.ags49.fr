@@ -310,9 +310,9 @@ nav {
   transform: translateX(-50%) translateY(8px);
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 0.35rem;
-  min-width: 180px;
+  border-radius: 12px;
+  padding: 0.3rem;
+  min-width: 175px;
   display: none;
   flex-direction: column;
   gap: 0.15rem;
@@ -329,7 +329,7 @@ nav {
 }
 
 .dropdown-item {
-  padding: 0.45rem 0.75rem;
+  padding: 0.38rem 0.65rem;
   border-radius: 8px;
   color: var(--text-main);
   text-decoration: none;
@@ -340,9 +340,11 @@ nav {
   border: none;
   width: 100%;
   text-align: left;
-  font-size: 0.8rem;
+  font-size: 0.76rem;
   font-weight: 500;
+  line-height: 1.25;
   cursor: pointer;
+  white-space: nowrap;
   transition: var(--transition);
 }
 
@@ -359,6 +361,7 @@ nav {
 
 .ae-dropdown-submenu-item {
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: space-between;
   width: 100%;
@@ -374,16 +377,18 @@ nav {
 
 .ae-dropdown-sub-btn,
 .ae-dropdown-sub-text {
-  flex-grow: 1;
+  flex: 1 1 auto;
   text-align: left;
-  padding: 0.45rem 0.75rem;
+  padding: 0.38rem 0.65rem;
   background: transparent;
   border: none;
   color: inherit;
-  font-size: 0.8rem;
+  font-size: 0.76rem;
   font-weight: 500;
+  line-height: 1.25;
   cursor: pointer;
   font-family: inherit;
+  white-space: nowrap;
 }
 
 .ae-dropdown-sub-text {
@@ -394,6 +399,8 @@ nav {
   padding: 0 0.5rem;
   display: flex;
   align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
   height: 100%;
   color: inherit;
 }
@@ -402,7 +409,7 @@ nav {
   top: 0;
   left: 100%;
   transform: translateX(8px) translateY(0);
-  margin-top: -0.35rem;
+  margin-top: -0.3rem;
 }
 
 /* Show Submenus on Hover */
@@ -501,6 +508,13 @@ nav {
   color: var(--secondary);
   font-size: 1.05rem;
   margin-bottom: 1rem;
+}
+
+.mobile-nav-link.sub-link {
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.5rem 0.75rem;
+  line-height: 1.25;
 }
 
 .mobile-separator {
