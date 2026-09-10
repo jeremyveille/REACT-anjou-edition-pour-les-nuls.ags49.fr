@@ -921,7 +921,7 @@ function App() {
                 ))}
               </div>
 
-              <div className="section-title" style={{ marginTop: '2rem' }}>
+              <div className="section-title">
                 <h3>Poésies et Fables Phares</h3>
               </div>
               <div className="featured-poems">

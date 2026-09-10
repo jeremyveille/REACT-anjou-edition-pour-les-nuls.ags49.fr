@@ -118,6 +118,7 @@ header {
   -webkit-text-fill-color: transparent;
 }
 
+.header-content h2,
 .header-content p {
   font-size: 1.25rem;
   opacity: 0.95;
@@ -956,7 +957,12 @@ main {
 .section-title {
   border-left: 4px solid var(--secondary);
   padding-left: 0.75rem;
+  margin-top: 1rem;
   margin-bottom: 1.25rem;
+}
+
+.section-title:not(:first-child) {
+  margin-top: 2rem;
 }
 
 .section-title h3 {
@@ -2235,117 +2241,567 @@ canvas {
 
 /* S — Smartphones / petits écrans (599px et moins) */
 @media (max-width: 599px) {
+  /* 1. Header & Navigation */
   header {
     border-bottom-left-radius: 20px;
     border-bottom-right-radius: 20px;
-    padding: 1.5rem 1rem 3.5rem 1rem;
+    padding: 1.25rem 10px 2.6rem 10px;
+    text-align: center;
+    position: relative;
+  }
+  .header-content {
+    max-width: calc(100% - 48px);
+    margin: 0 auto;
   }
   .header-content h1 {
-    font-size: clamp(1.4rem, 6vw, 1.85rem);
+    font-size: clamp(1.3rem, 5.5vw, 1.7rem);
     letter-spacing: -0.01em;
+    margin-bottom: 0.2rem;
+    line-height: 1.15;
   }
+  .header-content h2,
   .header-content p {
-    font-size: 0.85rem;
-    letter-spacing: 0.03em;
+    font-size: clamp(0.72rem, 3vw, 0.85rem);
+    letter-spacing: 0.04em;
+    line-height: 1.2;
+    margin: 0;
   }
   .theme-toggle {
-    top: 1rem;
-    right: 1rem;
-    width: 38px;
-    height: 38px;
+    top: 0.75rem;
+    right: 0.75rem;
+    width: 36px;
+    height: 36px;
   }
   nav {
-    border-radius: 16px;
-    width: 95%;
-    margin-top: -1.75rem;
-    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    width: calc(100% - 16px);
+    max-width: calc(100% - 16px);
+    margin: -1.35rem auto 0 auto;
+    padding: 0.25rem 0.5rem;
+    box-sizing: border-box;
+  }
+  .nav-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
   }
   .nav-logo {
-    font-size: 0.88rem;
+    font-size: clamp(0.76rem, 3vw, 0.84rem);
     padding: 0.3rem 0.45rem;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+  .nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-shrink: 0;
   }
   .contact-btn {
-    font-size: 0.75rem !important;
-    padding: 0.3rem 0.55rem !important;
+    font-size: 0.72rem !important;
+    padding: 0.26rem 0.55rem !important;
+    gap: 0.25rem;
+    min-height: 32px;
+    border-radius: 99px;
+    white-space: nowrap;
+  }
+  .contact-btn svg {
+    width: 12px;
+    height: 12px;
   }
   .nav-links {
     display: none;
   }
   .mobile-menu-toggle-btn {
     display: flex;
-    padding: 0.35rem;
+    padding: 0.3rem;
+    min-height: 32px;
+    min-width: 32px;
+    border-radius: 8px;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-main);
+  }
+  .mobile-menu-toggle-btn svg {
+    width: 20px;
+    height: 20px;
   }
   .mobile-drawer {
     width: min(300px, 85vw);
     left: -320px;
   }
+  .mobile-drawer-header {
+    padding: 1rem 1.25rem;
+  }
+  .mobile-drawer-content {
+    padding: 1rem;
+    gap: 0.4rem;
+  }
+  .mobile-nav-link {
+    padding: 0.55rem 0.75rem;
+    font-size: 0.88rem;
+    border-radius: 8px;
+  }
+
+  /* 2. Main Layout & Margins */
   main {
-    grid-template-columns: 1fr;
-    padding: 1.5rem 12px;
+    grid-template-columns: minmax(0, 1fr);
+    padding: 1.25rem 8px;
     gap: 1.25rem;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
   }
   .left-sidebar {
     order: 2;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    gap: 1rem;
   }
   .main-content {
     order: 1;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    gap: 1.25rem;
   }
   .right-sidebar {
     display: none;
   }
-  .card {
-    padding: 1.25rem;
-    border-radius: 18px;
+
+  /* 3. Section Titles */
+  .section-title {
+    border-left: 3.5px solid var(--secondary);
+    padding-left: 0.55rem;
+    margin-bottom: 0.75rem;
+    margin-top: 0.25rem;
   }
+  .section-title:not(:first-child) {
+    margin-top: 1rem;
+  }
+  .section-title h3 {
+    font-size: clamp(0.95rem, 4vw, 1.1rem);
+    font-weight: 700;
+    line-height: 1.25;
+    margin: 0;
+  }
+
+  /* 4. Cards & Containers */
+  .card {
+    padding: 1rem 0.85rem;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+  .widget {
+    padding: 1rem 0.85rem;
+  }
+  .widget-title {
+    font-size: clamp(0.85rem, 3.5vw, 0.95rem);
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.35rem;
+    gap: 0.45rem;
+  }
+  .widget-title svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* 5. Flipbook Section */
+  .home-flipbook-section {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+  .home-flipbook-reader-wrapper {
+    padding: 0.35rem;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  /* 6. Featured Flipbooks Grid & Cards */
+  .featured-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+  .featured-card {
+    padding: 0.85rem 1rem;
+    border-radius: 14px;
+    gap: 0.35rem;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+  .featured-card-icon {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.1rem;
+  }
+  .featured-card-icon svg {
+    width: 28px;
+    height: 28px;
+  }
+  .featured-card h4 {
+    font-size: clamp(0.88rem, 3.8vw, 1rem);
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.3;
+  }
+  .featured-card p {
+    font-size: clamp(0.74rem, 3vw, 0.82rem);
+    color: var(--text-muted);
+    line-height: 1.4;
+    margin: 0;
+    word-break: break-word;
+  }
+  .featured-card .btn-card {
+    padding: 0.35rem 0.8rem;
+    font-size: 0.76rem;
+    font-weight: 600;
+    border-radius: 99px;
+    margin-top: 0.35rem;
+    width: fit-content;
+    align-self: flex-start;
+    gap: 0.3rem;
+  }
+
+  /* 7. Poems & Fables Cards */
+  .featured-poems {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.75rem;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+  .poem-card {
+    padding: 0.85rem 1rem;
+    border-radius: 14px;
+    gap: 0.3rem;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+  .poem-card span:first-child {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--accent);
+  }
+  .dark-mode .poem-card span:first-child {
+    color: var(--secondary);
+  }
+  .poem-card h4 {
+    font-size: clamp(0.88rem, 3.8vw, 1rem);
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.3;
+  }
+  .poem-card p {
+    font-size: clamp(0.74rem, 3vw, 0.82rem);
+    font-style: italic;
+    color: var(--text-muted);
+    line-height: 1.4;
+    margin: 0;
+  }
+  .poem-card .read-more {
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--secondary) !important;
+    margin-top: 0.25rem;
+    min-height: 26px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* 8. Popular Videos List (Left Sidebar) */
+  .video-mini-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    width: 100%;
+  }
+  .video-mini-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.35rem 0.45rem;
+    border-radius: 10px;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+  .mini-thumb {
+    width: 52px;
+    aspect-ratio: 16/9;
+    border-radius: 6px;
+    flex-shrink: 0;
+  }
+  .mini-thumb svg {
+    width: 16px;
+    height: 16px;
+  }
+  .mini-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+    flex: 1;
+  }
+  .mini-info h4 {
+    font-size: clamp(0.75rem, 3.2vw, 0.82rem);
+    font-weight: 600;
+    line-height: 1.25;
+    margin-bottom: 0.15rem;
+    white-space: normal;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    text-overflow: ellipsis;
+    word-break: break-word;
+  }
+  .mini-info span {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+  }
+
+  /* 9. News List (Actualités 2026) */
+  .news-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    width: 100%;
+  }
+  .news-list li {
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .news-list li:last-child {
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+  .news-list li strong {
+    font-size: clamp(0.78rem, 3.4vw, 0.84rem);
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 0.15rem;
+    display: block;
+    line-height: 1.3;
+  }
+  .news-list li p {
+    font-size: clamp(0.72rem, 3vw, 0.78rem);
+    color: var(--text-muted);
+    line-height: 1.35;
+    margin: 0;
+    word-break: break-word;
+  }
+
+  /* 10. Footer */
+  footer {
+    padding: 1.25rem 10px;
+    margin: 1rem 8px 1.5rem 8px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    box-shadow: var(--card-shadow);
+    background: var(--bg-card);
+    text-align: center;
+    width: calc(100% - 16px);
+    max-width: calc(100% - 16px);
+    box-sizing: border-box;
+  }
+  .footer-content {
+    gap: 0.6rem;
+    max-width: 100%;
+  }
+  .footer-content p {
+    font-size: clamp(0.72rem, 3vw, 0.78rem);
+    text-align: center;
+    color: var(--text-muted);
+    line-height: 1.35;
+    margin: 0;
+  }
+  .footer-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 0.35rem 0.5rem;
+  }
+  .footer-links button {
+    font-size: clamp(0.72rem, 3vw, 0.78rem);
+    font-weight: 600;
+    padding: 0.25rem 0.45rem;
+    border-radius: 6px;
+    color: var(--text-muted);
+    background: none;
+  }
+  .footer-links span[aria-hidden="true"] {
+    display: none;
+  }
+
+  /* 11. Welcome Banner */
   .welcome-banner {
-    padding: 1.5rem 1rem;
-    border-radius: 20px;
-    margin-bottom: 1.5rem;
+    padding: 1.25rem 0.85rem;
+    border-radius: 16px;
+    margin-bottom: 1.25rem;
   }
   .welcome-banner h2 {
-    font-size: 1.4rem;
+    font-size: clamp(1.15rem, 5vw, 1.35rem);
+  }
+  .welcome-banner p {
+    font-size: clamp(0.78rem, 3.2vw, 0.85rem);
+    margin-bottom: 1rem;
   }
   .banner-buttons {
     flex-direction: column;
     width: 100%;
-    gap: 0.75rem;
+    gap: 0.6rem;
   }
   .banner-buttons .btn-primary,
   .banner-buttons .btn-secondary {
     width: 100%;
     justify-content: center;
+    padding: 0.65rem 1.25rem;
+    font-size: 0.82rem;
   }
-  .featured-grid,
-  .featured-poems,
+
+  /* 12. Sub-views on Mobile */
   .flipbooks-grid,
   .videos-playlist-grid,
   .full-gallery-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.75rem;
+  }
+  .flipbook-card {
+    border-radius: 16px;
+  }
+  .flipbook-cover-mock {
+    height: 140px;
+    padding: 1rem;
+  }
+  .flipbook-cover-mock h3 {
+    font-size: 1rem;
+    margin-top: 0.5rem;
+  }
+  .flipbook-details {
+    padding: 1rem;
+    gap: 0.5rem;
+  }
+  .flipbook-details h4 {
+    font-size: 1rem;
+  }
+  .flipbook-details p {
+    font-size: 0.78rem;
+  }
+  .player-container {
+    border-radius: 14px;
+  }
+  .video-description-card {
+    padding: 1rem;
+    border-radius: 16px;
+  }
+  .video-description-card h3 {
+    font-size: 1.1rem;
+  }
+  .playlist-item {
+    padding: 0.45rem 0.6rem;
+    border-radius: 12px;
+    gap: 0.6rem;
+  }
+  .playlist-item-thumb {
+    width: 60px;
+    border-radius: 6px;
+  }
+  .playlist-item-info h5 {
+    font-size: 0.8rem;
+    white-space: normal;
+  }
+  .full-gallery-item {
+    border-radius: 14px;
   }
   .text-reader-card,
   .contact-card,
   .privacy-view {
-    padding: 1.25rem;
-    border-radius: 18px;
+    padding: 1.1rem;
+    border-radius: 16px;
+  }
+  .text-header {
+    padding-bottom: 1rem;
+    margin-bottom: 1.25rem;
   }
   .text-header h2 {
-    font-size: 1.4rem;
+    font-size: clamp(1.2rem, 5vw, 1.45rem);
   }
   .reader-controls {
     flex-direction: column;
     align-items: stretch;
-    gap: 0.75rem;
+    gap: 0.6rem;
     width: 100%;
   }
-  .reader-controls .control-btn,
+  .reader-controls .control-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 0.5rem;
+    font-size: 0.78rem;
+  }
+  .speech-rate-selector {
+    width: 100%;
+    justify-content: center;
+  }
+  .speech-rate-selector button {
+    flex: 1;
+    padding: 0.45rem 0.3rem;
+    font-size: 0.72rem;
+  }
+  .speech-voice-select {
+    width: 100%;
+    font-size: 0.75rem;
+    padding: 0.4rem 0.5rem;
+  }
   .reader-controls .font-sizer {
     width: 100%;
     justify-content: center;
   }
   .reader-controls .font-sizer button {
     flex: 1;
-    padding: 0.6rem 0.5rem;
+    padding: 0.45rem 0.3rem;
+    font-size: 0.78rem;
+  }
+  .text-content.font-small { font-size: 0.85rem; }
+  .text-content.font-medium { font-size: 0.95rem; }
+  .text-content.font-large { font-size: 1.1rem; }
+  .contact-card h2,
+  .privacy-view h2 {
+    font-size: clamp(1.2rem, 5vw, 1.45rem);
+  }
+  .form-group input,
+  .form-group textarea {
+    padding: 0.65rem 0.85rem;
+    font-size: 0.85rem;
+    border-radius: 10px;
+  }
+  .btn-submit {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.88rem;
   }
   .book-layout {
     flex-direction: column;
@@ -2388,10 +2844,6 @@ canvas {
   }
   .lightbox-content img {
     max-height: 60vh;
-  }
-  .home-flipbook-reader-wrapper {
-    padding: 0.5rem;
-    border-radius: 12px;
   }
 }
 
