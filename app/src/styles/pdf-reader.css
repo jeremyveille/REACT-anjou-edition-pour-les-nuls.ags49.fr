@@ -45,21 +45,109 @@
 /* S — Smartphones (599px et moins) */
 @media (max-width: 599px) {
   .pdf-reader-container {
-    height: calc(100dvh - 60px);
-    min-height: 340px;
-    border-radius: 6px;
+    height: clamp(340px, 62vh, 480px);
+    min-height: 320px;
+    border-radius: 8px;
+    border-width: 1.5px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
   }
   .pdf-reader-header {
     padding: 4px 6px;
     gap: 4px;
+    flex-wrap: wrap;
+    justify-content: space-between;
   }
   .pdf-reader-title {
-    max-width: 120px;
-    font-size: 11px;
+    max-width: 105px;
+    font-size: 10.5px;
   }
-  .pdf-control-btn {
+  .pdf-reader-toolbar {
+    gap: 2px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .pdf-toolbar-group {
+    padding: 0;
+    gap: 1px;
+  }
+  .pdf-toolbar-btn {
+    height: 24px;
+    width: 24px;
+    padding: 2px;
+  }
+  .pdf-toolbar-btn.text-btn {
+    padding: 2px 4px;
+    font-size: 9px;
+  }
+  .pdf-zoom-val {
+    font-size: 9px;
+    min-width: 24px;
+    padding: 0 2px;
+  }
+  .pdf-reader-viewport {
+    padding: 6px 2px;
+  }
+  .pdf-reader-footer {
+    padding: 4px 6px;
+    gap: 4px;
+    justify-content: space-between;
+  }
+  .pdf-nav-btn {
+    height: 24px;
+    width: 24px;
+    padding: 2px;
+  }
+  .pdf-page-indicator {
+    font-size: 10px;
+    gap: 2px;
+  }
+  .pdf-page-input {
+    width: 24px;
+    font-size: 10px;
+    padding: 1px;
+  }
+  .pdf-big-nav-btn {
     width: 32px;
     height: 32px;
+  }
+  .pdf-big-nav-btn.prev {
+    left: 4px;
+  }
+  .pdf-big-nav-btn.next {
+    right: 4px;
+  }
+  .pdf-big-nav-btn.prev.with-toc {
+    left: 4px;
+  }
+  .pdf-big-nav-btn.next.with-search {
+    right: 4px;
+  }
+  .pdf-big-nav-icon {
+    width: 18px;
+    height: 18px;
+  }
+  .pdf-sidebar {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    max-width: 100%;
+    z-index: 25;
+  }
+  .pdf-sidebar.right {
+    left: auto;
+    right: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+  .pdf-thumbnails-tray {
+    height: 100px;
+    padding: 6px 8px;
+    gap: 8px;
   }
 }
 
@@ -751,13 +839,5 @@
   }
   .pdf-big-nav-btn.next.with-search {
     right: 8px;
-  }
-}
-
-/* S (599px et moins) */
-@media (max-width: 599px) {
-  .pdf-big-nav-btn {
-    width: 40px;
-    height: 40px;
   }
 }
