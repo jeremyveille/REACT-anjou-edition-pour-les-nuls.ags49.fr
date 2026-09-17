@@ -1,8 +1,26 @@
 import React from 'react';
 import { Section, Container, Row, Column } from '../bootstrap-blocks/LayoutBlocks';
-import { Heading, Text, Image, Button, Card, Alert, Video } from '../bootstrap-blocks/ContentWidgets';
-import { Trash2, ArrowUp, ArrowDown, Plus, GripVertical } from 'lucide-react';
+import { 
+  Heading, 
+  Text, 
+  Image, 
+  Button, 
+  Card, 
+  Alert, 
+  Video, 
+  Divider, 
+  List,
+  PopularVideos,
+  NewsList,
+  FeaturedPoems,
+  FlipbookFeatured,
+  PhotoGallery,
+  YoutubeChannel,
+  ContactFormWidget
+} from '../bootstrap-blocks/ContentWidgets';
+import { Trash2, ArrowUp, ArrowDown, Plus, GripVertical, Copy } from 'lucide-react';
 import { useDroppable, useDraggable } from '@dnd-kit/core';
+import { BLOCK_DEFINITIONS } from './blockRegistry';
 
 // Composant wrapper pour la poignée de drag
 const DragHandle = ({ id }) => {
@@ -29,17 +47,29 @@ const DragHandle = ({ id }) => {
 };
 
 const blockComponents = {
+  // Structure
   section: Section,
   container: Container,
   row: Row,
   column: Column,
+  // Contenu standard
   heading: Heading,
   text: Text,
   image: Image,
   button: Button,
   card: Card,
   alert: Alert,
-  video: Video
+  video: Video,
+  divider: Divider,
+  list: List,
+  // Sections & modules métier
+  popularVideos: PopularVideos,
+  newsList: NewsList,
+  featuredPoems: FeaturedPoems,
+  flipbookFeatured: FlipbookFeatured,
+  photoGallery: PhotoGallery,
+  youtubeChannel: YoutubeChannel,
+  contactForm: ContactFormWidget
 };
 
 /**
@@ -52,6 +82,7 @@ export const BlockRenderer = ({
   onSelectBlock = () => {},
   onRemoveBlock = () => {},
   onMoveBlock = () => {},
+  onDuplicateBlock = () => {},
   onAddChild = () => {},
   parentBlock = null,
   indexInParent = 0,
@@ -74,9 +105,11 @@ export const BlockRenderer = ({
   }
 
   const isActive = activeBlockId === id;
+  const blockDef = BLOCK_DEFINITIONS[type] || {};
+  const displayLabel = blockDef.label || type;
 
   // Rendu récursif des enfants
-  const renderedChildren = children.map((child, idx) => (
+  const renderedChildren = Array.isArray(children) ? children.map((child, idx) => (
     <BlockRenderer
       key={child.id}
       block={child}
@@ -85,19 +118,18 @@ export const BlockRenderer = ({
       onSelectBlock={onSelectBlock}
       onRemoveBlock={onRemoveBlock}
       onMoveBlock={onMoveBlock}
+      onDuplicateBlock={onDuplicateBlock}
       onAddChild={onAddChild}
       parentBlock={block}
       indexInParent={idx}
       siblingCount={children.length}
     />
-  ));
-
-  // (useDroppable a été déplacé au début du composant)
+  )) : null;
 
   // En mode édition, si un conteneur structurel est vide, on affiche une zone de dépôt vide
   const renderEmptyPlaceholder = () => {
     if (!isEditing) return null;
-    if (children.length > 0) return null;
+    if (children && children.length > 0) return null;
 
     if (type === 'column') {
       return (
@@ -105,11 +137,11 @@ export const BlockRenderer = ({
           className="pb-empty-placeholder d-flex flex-column align-items-center justify-content-center py-3 border border-dashed rounded text-muted cursor-pointer"
           onClick={(e) => {
             e.stopPropagation();
-            onAddChild(id, 'widget');
+            onAddChild(id, 'heading');
           }}
         >
           <Plus className="w-4 h-4 mb-1" />
-          <span style={{ fontSize: '10px' }}>Widget</span>
+          <span style={{ fontSize: '11px' }}>Ajouter un élément dans cette colonne</span>
         </div>
       );
     }
@@ -123,7 +155,7 @@ export const BlockRenderer = ({
           }}
         >
           <Plus className="w-4 h-4 mb-1" />
-          <span style={{ fontSize: '10px' }}>Ajouter une colonne</span>
+          <span style={{ fontSize: '11px' }}>Ajouter une colonne</span>
         </div>
       );
     }
@@ -151,23 +183,23 @@ export const BlockRenderer = ({
           }}
         >
           <Plus className="w-5 h-5 mb-1" />
-          <span style={{ fontSize: '12px' }}>Ajouter un container</span>
+          <span style={{ fontSize: '12px' }}>Ajouter un conteneur</span>
         </div>
       );
     }
     return null;
   };
 
-  // Rendu brut si on n'est pas en mode édition
+  // Rendu brut si on n'est pas en mode édition (site public ou preview)
   if (!isEditing) {
     return (
-      <Component settings={settings}>
+      <Component settings={settings} isEditing={false}>
         {renderedChildren}
       </Component>
     );
   }
 
-  // Rendu en mode édition (avec bordures et boutons de contrôle)
+  // Rendu en mode édition (avec bordures interactives et barre d'actions contextuelle)
   const handleWrapperClick = (e) => {
     e.stopPropagation();
     onSelectBlock(block);
@@ -176,7 +208,7 @@ export const BlockRenderer = ({
   return (
     <div 
       ref={setNodeRef}
-      className={`ae-pagebuilder-block-wrapper pb-type-${type} ${isActive ? 'pb-active-block' : ''} ${isOver ? 'ae-drop-active-block' : ''}`}
+      className={`ae-pagebuilder-block-wrapper pb-editor-wrapper pb-type-${type} ${isActive ? 'pb-active-block' : ''} ${isOver ? 'ae-drop-active-block' : ''}`}
       onClick={handleWrapperClick}
       data-block-id={id}
     >
@@ -185,7 +217,7 @@ export const BlockRenderer = ({
       
       {/* Barre de contrôle contextuelle */}
       <div className="pb-control-bar">
-        <span className="pb-block-label">{type}</span>
+        <span className="pb-block-label">{displayLabel}</span>
         
         {/* Actions de déplacement (Drag & Drop + Flèches) */}
         <DragHandle id={id} />
@@ -198,7 +230,7 @@ export const BlockRenderer = ({
               disabled={indexInParent === 0}
               className="pb-control-btn"
               title="Monter"
-              aria-label={`Monter le bloc ${type}`}
+              aria-label={`Monter le bloc ${displayLabel}`}
             >
               <ArrowUp className="ae-icon-tiny" aria-hidden="true" />
             </button>
@@ -208,12 +240,23 @@ export const BlockRenderer = ({
               disabled={indexInParent === siblingCount - 1}
               className="pb-control-btn"
               title="Descendre"
-              aria-label={`Descendre le bloc ${type}`}
+              aria-label={`Descendre le bloc ${displayLabel}`}
             >
               <ArrowDown className="ae-icon-tiny" aria-hidden="true" />
             </button>
           </>
         )}
+
+        {/* Action de duplication */}
+        <button 
+          type="button" 
+          onClick={(e) => { e.stopPropagation(); onDuplicateBlock(id, parentBlock ? parentBlock.id : null); }}
+          className="pb-control-btn"
+          title="Dupliquer"
+          aria-label={`Dupliquer le bloc ${displayLabel}`}
+        >
+          <Copy className="ae-icon-tiny" aria-hidden="true" />
+        </button>
 
         {/* Action d'ajout rapide pour les colonnes, rows, containers */}
         {['section', 'container', 'row', 'column'].includes(type) && (
@@ -221,12 +264,12 @@ export const BlockRenderer = ({
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              const childType = type === 'section' ? 'container' : type === 'container' ? 'row' : type === 'row' ? 'column' : 'widget';
+              const childType = type === 'section' ? 'container' : type === 'container' ? 'row' : type === 'row' ? 'column' : 'heading';
               onAddChild(id, childType);
             }}
             className="pb-control-btn pb-btn-add"
-            title="Ajouter un enfant"
-            aria-label={`Ajouter un sous-élément dans ${type}`}
+            title="Ajouter un sous-élément"
+            aria-label={`Ajouter un sous-élément dans ${displayLabel}`}
           >
             <Plus className="ae-icon-tiny" aria-hidden="true" />
           </button>
@@ -238,7 +281,7 @@ export const BlockRenderer = ({
           onClick={(e) => { e.stopPropagation(); onRemoveBlock(id, parentBlock ? parentBlock.id : null); }}
           className="pb-control-btn pb-btn-danger"
           title="Supprimer"
-          aria-label={`Supprimer le bloc ${type}`}
+          aria-label={`Supprimer le bloc ${displayLabel}`}
         >
           <Trash2 className="ae-icon-tiny" aria-hidden="true" />
         </button>
@@ -254,4 +297,5 @@ export const BlockRenderer = ({
     </div>
   );
 };
+
 export default BlockRenderer;

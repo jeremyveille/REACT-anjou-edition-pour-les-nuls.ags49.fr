@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { pageService } from '../../services/pageService';
 import { usePageBuilderHistory } from '../../hooks/usePageBuilderHistory';
 import { BuilderSidebar } from './BuilderSidebar';
@@ -19,6 +19,13 @@ import {
 } from 'lucide-react';
 import { DndContext, DragOverlay, useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
 import moveElementInTree from '../../utils/moveElement';
+import { 
+  createBlock, 
+  normalizeBlocks, 
+  cloneBlock, 
+  getDefaultHomepageBlocks 
+} from './blockRegistry';
+
 export const PageBuilder = ({
   editingId = null,
   editingType = 'page', // 'page' or 'article'
@@ -53,7 +60,6 @@ export const PageBuilder = ({
       document.head.appendChild(link);
     }
     
-    // Cleanup on unmount to not pollute the rest of the dashboard
     return () => {
       const link = document.getElementById(linkId);
       if (link) {
@@ -92,11 +98,10 @@ export const PageBuilder = ({
 
     const isNew = activeId.startsWith('widget-');
     
-    // On passe createNewBlock comme callback à moveElementInTree
-    // pour s'assurer que les blocs créés (comme les auto-wrappers) respectent la structure
-    const nextState = moveElementInTree(blocks, activeId, overId, isNew, createNewBlock);
-    pushBlocksState(nextState);
+    const nextState = moveElementInTree(blocks, activeId, overId, isNew, createBlock);
+    pushBlocksState(normalizeBlocks(nextState));
   };
+
   const [device, setDevice] = useState('desktop');
   const [showPreview, setShowPreview] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -112,11 +117,20 @@ export const PageBuilder = ({
           const pages = await pageService.getPages(collectionName);
           const page = pages.find(p => p.id === editingId);
           if (page) {
-            setPageTitle(page.title || '');
+            const title = page.title || '';
+            setPageTitle(title);
             setPageSlug(page.slug || '');
             setPageCategory(page.category || 'Outils');
             setPageStatus(page.status || 'draft');
-            clearHistory(page.blocks || []);
+
+            let pageBlocks = page.blocks;
+            // Si la page est la page d'accueil et n'a pas encore de blocs configurés, on génère sa structure par défaut complète
+            const isHomePage = title.toLowerCase().includes('accueil') || page.slug === 'home' || page.slug === 'accueil';
+            if ((!pageBlocks || pageBlocks.length === 0) && isHomePage) {
+              pageBlocks = getDefaultHomepageBlocks();
+            }
+
+            clearHistory(normalizeBlocks(pageBlocks || []));
           }
         } catch (e) {
           console.error("Erreur de chargement de la page ou de l'article", e);
@@ -144,7 +158,6 @@ export const PageBuilder = ({
     }
   }, [editingId, pageTitle, pageSlug, pageCategory, pageStatus, blocks]);
 
-  // Synchroniser le slug avec le titre en création
   const handleTitleChange = (e) => {
     const val = e.target.value;
     setPageTitle(val);
@@ -154,7 +167,7 @@ export const PageBuilder = ({
   };
 
   // Trouver un bloc dans l'arbre pour les réglages
-  const findBlockById = (blocksList, id) => {
+  const findBlockById = useCallback((blocksList, id) => {
     for (let b of blocksList) {
       if (b.id === id) return b;
       if (b.children) {
@@ -163,42 +176,9 @@ export const PageBuilder = ({
       }
     }
     return null;
-  };
+  }, []);
 
   const activeBlock = activeBlockId ? findBlockById(blocks, activeBlockId) : null;
-
-  // Créer un nouveau bloc avec des paramètres par défaut
-  const createNewBlock = (type) => {
-    const id = `${type}_${Math.random().toString(36).substr(2, 9)}`;
-    let defaultSettings = { classes: '' };
-    let children = [];
-
-    if (type === 'section') {
-      defaultSettings.classes = 'py-5 bg-white';
-    } else if (type === 'container') {
-      defaultSettings.classes = 'container';
-    } else if (type === 'row') {
-      defaultSettings.classes = 'row';
-    } else if (type === 'column') {
-      defaultSettings.sizeClasses = 'col-md-12';
-    } else if (type === 'heading') {
-      defaultSettings = { content: 'Nouveau Titre', level: 'h2', classes: 'mb-3' };
-    } else if (type === 'text') {
-      defaultSettings = { content: '<p>Nouveau paragraphe de texte libre. Double-cliquez pour éditer dans la barre latérale.</p>', classes: 'mb-3' };
-    } else if (type === 'image') {
-      defaultSettings = { src: 'https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?q=80&w=600', alt: 'Illustration', classes: 'img-fluid rounded' };
-    } else if (type === 'button') {
-      defaultSettings = { text: 'En savoir plus', link: '#', buttonStyle: 'btn-primary', newTab: false, classes: '' };
-    } else if (type === 'card') {
-      defaultSettings = { title: 'Titre de la carte', text: 'Description de la carte.', image: '', buttonText: 'Action', buttonLink: '#', classes: 'shadow-sm' };
-    } else if (type === 'alert') {
-      defaultSettings = { content: 'Ceci est un bloc d\'alerte.', type: 'alert-info', classes: '' };
-    } else if (type === 'video') {
-      defaultSettings = { url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', classes: '' };
-    }
-
-    return { id, type, settings: defaultSettings, children };
-  };
 
   // Trouver récursivement une colonne dans l'arbre pour insérer un widget
   const findFirstColumn = (blocksList) => {
@@ -238,27 +218,27 @@ export const PageBuilder = ({
 
   // AJOUTER UN BLOC
   const handleAddBlock = (type) => {
-    const newBlock = createNewBlock(type);
+    const newBlock = createBlock(type);
 
     // Si on ajoute une section, elle va d'office à la racine
     if (type === 'section') {
       const nextState = [...blocks, newBlock];
-      pushBlocksState(nextState);
+      pushBlocksState(normalizeBlocks(nextState));
       setActiveBlockId(newBlock.id);
       setActiveTab('settings');
       return;
     }
 
-    // Si l'utilisateur clique sur un widget ou une structure sans section existante, on initialise tout
+    // Si l'utilisateur clique sur un widget sans section existante, on initialise la hiérarchie standard
     if (blocks.length === 0) {
-      const section = createNewBlock('section');
-      const container = createNewBlock('container');
-      const row = createNewBlock('row');
-      const column = createNewBlock('column');
+      const section = createBlock('section');
+      const container = createBlock('container');
+      const row = createBlock('row');
+      const column = createBlock('column');
 
-      section.children.push(container);
-      container.children.push(row);
-      row.children.push(column);
+      section.children = [container];
+      container.children = [row];
+      row.children = [column];
 
       if (type === 'container') {
         // Déjà créé
@@ -270,7 +250,7 @@ export const PageBuilder = ({
         column.children.push(newBlock);
       }
 
-      pushBlocksState([section]);
+      pushBlocksState(normalizeBlocks([section]));
       setActiveBlockId(newBlock.id);
       setActiveTab('settings');
       return;
@@ -280,17 +260,14 @@ export const PageBuilder = ({
     let targetParentId = activeBlockId;
 
     if (type === 'container') {
-      // Un container va dans une section
       const activeItem = findBlockById(blocks, activeBlockId);
       if (activeItem && activeItem.type === 'section') {
         targetParentId = activeItem.id;
       } else {
-        // Aller dans la dernière section de la page
         const lastSection = blocks[blocks.length - 1];
         targetParentId = lastSection.id;
       }
     } else if (type === 'row') {
-      // Un row va dans un container
       const activeItem = findBlockById(blocks, activeBlockId);
       if (activeItem && activeItem.type === 'container') {
         targetParentId = activeItem.id;
@@ -298,7 +275,6 @@ export const PageBuilder = ({
         targetParentId = findFirstContainer(blocks) || blocks[0].id;
       }
     } else if (type === 'column') {
-      // Une colonne va dans un row
       const activeItem = findBlockById(blocks, activeBlockId);
       if (activeItem && activeItem.type === 'row') {
         targetParentId = activeItem.id;
@@ -306,36 +282,12 @@ export const PageBuilder = ({
         targetParentId = findFirstRow(blocks) || blocks[0].id;
       }
     } else {
-      // Un widget va dans une colonne
+      // Un widget va dans une colonne ou dans un container/section si plein écran
       const activeItem = findBlockById(blocks, activeBlockId);
-      if (activeItem && activeItem.type === 'column') {
+      if (activeItem && (activeItem.type === 'column' || activeItem.type === 'container' || activeItem.type === 'section')) {
         targetParentId = activeItem.id;
       } else {
-        targetParentId = findFirstColumn(blocks);
-        if (!targetParentId) {
-          // Si aucune colonne, en créer une dans la première ligne
-          const firstRowId = findFirstRow(blocks);
-          if (firstRowId) {
-            const col = createNewBlock('column');
-            col.children.push(newBlock);
-            
-            const insertColInTree = (tree) => {
-              return tree.map(b => {
-                if (b.id === firstRowId) {
-                  return { ...b, children: [...(b.children || []), col] };
-                }
-                if (b.children) {
-                  return { ...b, children: insertColInTree(b.children) };
-                }
-                return b;
-              });
-            };
-            pushBlocksState(insertColInTree(blocks));
-            setActiveBlockId(newBlock.id);
-            setActiveTab('settings');
-            return;
-          }
-        }
+        targetParentId = findFirstColumn(blocks) || findFirstContainer(blocks) || blocks[0].id;
       }
     }
 
@@ -353,7 +305,7 @@ export const PageBuilder = ({
       };
       
       const nextState = insertInTree(blocks, targetParentId, newBlock);
-      pushBlocksState(nextState);
+      pushBlocksState(normalizeBlocks(nextState));
       setActiveBlockId(newBlock.id);
       setActiveTab('settings');
     }
@@ -361,8 +313,49 @@ export const PageBuilder = ({
 
   // AJOUTER UN ENFANT VIA LES BOUTONS "+" DU RENDERER
   const handleAddChild = (parentId, childType) => {
+    if (!parentId) {
+      handleAddBlock(childType || 'section');
+      return;
+    }
     setActiveBlockId(parentId);
-    handleAddBlock(childType);
+    handleAddBlock(childType || 'heading');
+  };
+
+  // DUPLIQUER UN BLOC
+  const handleDuplicateBlock = (id, parentId) => {
+    const targetBlock = findBlockById(blocks, id);
+    if (!targetBlock) return;
+
+    const duplicated = cloneBlock(targetBlock);
+
+    const duplicateInTree = (tree) => {
+      if (!parentId) {
+        const idx = tree.findIndex(b => b.id === id);
+        if (idx === -1) return tree;
+        const result = [...tree];
+        result.splice(idx + 1, 0, duplicated);
+        return result;
+      }
+
+      return tree.map(b => {
+        if (b.id === parentId) {
+          const idx = b.children.findIndex(c => c.id === id);
+          if (idx === -1) return b;
+          const newChildren = [...b.children];
+          newChildren.splice(idx + 1, 0, duplicated);
+          return { ...b, children: newChildren };
+        }
+        if (b.children) {
+          return { ...b, children: duplicateInTree(b.children) };
+        }
+        return b;
+      });
+    };
+
+    const nextState = duplicateInTree(blocks);
+    pushBlocksState(normalizeBlocks(nextState));
+    setActiveBlockId(duplicated.id);
+    setActiveTab('settings');
   };
 
   // MODIFIER LES REGLAGES D'UN BLOC
@@ -381,11 +374,10 @@ export const PageBuilder = ({
     pushBlocksState(updateInTree(blocks));
   };
 
-  // DEPLACER UN BLOC
+  // DEPLACER UN BLOC (MONTER / DESCENDRE)
   const handleMoveBlock = (id, parentId, direction) => {
     const moveInTree = (tree) => {
       if (!parentId) {
-        // À la racine
         const idx = tree.findIndex(b => b.id === id);
         if (idx === -1) return tree;
         const nextIdx = direction === 'up' ? idx - 1 : idx + 1;
@@ -464,7 +456,7 @@ export const PageBuilder = ({
         slug: pageSlug,
         category: pageCategory,
         status: pageStatus,
-        blocks: blocks
+        blocks: normalizeBlocks(blocks)
       }, editingId, collectionName);
 
       alert(`${editingType === 'article' ? 'Article' : 'Page'} "${pageTitle}" enregistrée avec succès.`);
@@ -492,8 +484,8 @@ export const PageBuilder = ({
   if (loading) {
     return (
       <div className="d-flex flex-column align-items-center justify-content-center min-vh-100 bg-slate-50 dark:bg-slate-900">
-        <Loader className="w-8 h-8 text-blue-500 animate-spin mb-2" />
-        <span className="ae-metadata-subtext">Chargement de l'éditeur...</span>
+        <Loader className="w-8 h-8 text-primary animate-spin mb-2" />
+        <span className="text-muted text-sm">Chargement de la page dans l'éditeur...</span>
       </div>
     );
   }
@@ -503,7 +495,7 @@ export const PageBuilder = ({
     return (
       <div className="pb-preview-fullscreen min-vh-100 bg-slate-100 dark:bg-slate-950 d-flex flex-column" style={{ height: '100vh', overflow: 'hidden' }}>
         
-        {/* Top Control Bar for Preview */}
+        {/* Barre de contrôle supérieure */}
         <div className="pb-preview-bar bg-white dark:bg-slate-900 border-bottom p-2.5 d-flex justify-content-between align-items-center z-3 shadow-sm flex-shrink-0">
           <div className="d-flex align-items-center gap-2">
             <span className="fw-bold text-slate-800 dark:text-slate-200 px-3" style={{ fontSize: '15px' }}>
@@ -511,34 +503,33 @@ export const PageBuilder = ({
             </span>
           </div>
 
-          {/* Device Toggle Controls (Desktop/Tablet/Mobile) for Preview */}
           <div className="bpb-device-controls d-flex bg-slate-50 dark:bg-slate-800 rounded-lg p-1">
             <button 
               type="button" 
               onClick={() => setDevice('desktop')}
-              className={`btn btn-link p-1.5 rounded-md ${device === 'desktop' ? 'bg-white dark:bg-slate-700 text-blue-500 shadow-sm' : 'ae-text-muted'}`}
+              className={`btn btn-link p-1.5 rounded-md ${device === 'desktop' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-muted'}`}
               style={{ border: 'none', background: device === 'desktop' ? '' : 'transparent' }}
               title="Desktop"
             >
-              <Monitor className="ae-icon-size-sm" />
+              <Monitor size={18} />
             </button>
             <button 
               type="button" 
               onClick={() => setDevice('tablet')}
-              className={`btn btn-link p-1.5 rounded-md ${device === 'tablet' ? 'bg-white dark:bg-slate-700 text-blue-500 shadow-sm' : 'ae-text-muted'}`}
+              className={`btn btn-link p-1.5 rounded-md ${device === 'tablet' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-muted'}`}
               style={{ border: 'none', background: device === 'tablet' ? '' : 'transparent' }}
               title="Tablette"
             >
-              <Tablet className="ae-icon-size-sm" />
+              <Tablet size={18} />
             </button>
             <button 
               type="button" 
               onClick={() => setDevice('mobile')}
-              className={`btn btn-link p-1.5 rounded-md ${device === 'mobile' ? 'bg-white dark:bg-slate-700 text-blue-500 shadow-sm' : 'ae-text-muted'}`}
+              className={`btn btn-link p-1.5 rounded-md ${device === 'mobile' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-muted'}`}
               style={{ border: 'none', background: device === 'mobile' ? '' : 'transparent' }}
               title="Mobile"
             >
-              <Smartphone className="ae-icon-size-sm" />
+              <Smartphone size={18} />
             </button>
           </div>
 
@@ -547,28 +538,28 @@ export const PageBuilder = ({
             onClick={() => setShowPreview(false)}
             className="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1.5 py-1.5 px-3 rounded-lg"
           >
-            <EyeOff className="ae-icon-size-sm" />
+            <EyeOff size={16} />
             Retour à l'éditeur
           </button>
         </div>
 
-        {/* Browser Mock Address Bar */}
+        {/* Barre d'adresse simulée */}
         <div className="browser-address-bar bg-slate-50 dark:bg-slate-900 border-bottom px-3 py-2 d-flex align-items-center gap-2 flex-shrink-0">
           <div className="d-flex gap-1.5 mr-2">
-            <span className="ae-status-dot-danger" style={{ width: '10px', height: '10px', opacity: 0.7 }}></span>
-            <span className="ae-status-indicator-warning" style={{ width: '10px', height: '10px', opacity: 0.7 }}></span>
-            <span className="ae-status-dot-success" style={{ width: '10px', height: '10px', opacity: 0.7 }}></span>
+            <span style={{ width: '10px', height: '10px', opacity: 0.7, borderRadius: '50%', backgroundColor: '#ef4444' }}></span>
+            <span style={{ width: '10px', height: '10px', opacity: 0.7, borderRadius: '50%', backgroundColor: '#f59e0b' }}></span>
+            <span style={{ width: '10px', height: '10px', opacity: 0.7, borderRadius: '50%', backgroundColor: '#10b981' }}></span>
           </div>
           <div className="flex-grow-1 bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-lg px-3 py-1.5 d-flex align-items-center gap-2 text-muted shadow-sm" style={{ fontSize: '12px' }}>
-            <Lock className="ae-icon-success-indicator" />
-            <span className="ae-mono-text-muted">
+            <Lock size={12} className="text-success" />
+            <span className="font-mono text-muted">
               https://anjou-edition.ags49.fr/{editingType === 'article' ? 'articles' : 'pages'}/{pageSlug || 'sans-titre'}
             </span>
           </div>
         </div>
 
-        {/* Content Preview Frame */}
-        <div className="ae-flex-content-fill">
+        {/* Cadre de prévisualisation */}
+        <div className="flex-grow-1" style={{ flex: 1, minHeight: 0 }}>
           <IframePreview 
             device={device} 
             src={`/?preview=true&pageId=${editingId || 'new'}`}
@@ -591,80 +582,83 @@ export const PageBuilder = ({
             onClick={onClose}
             className="btn btn-outline-secondary btn-sm p-1.5 rounded-lg"
             title="Quitter le constructeur"
+            aria-label="Quitter le constructeur"
           >
-            <ArrowLeft className="ae-icon-size-sm" />
+            <ArrowLeft size={18} />
           </button>
           <div className="d-flex flex-column">
             <input
               type="text"
               value={pageTitle}
               onChange={handleTitleChange}
-              placeholder="Titre de la page (ex: Légende d'Anjou)"
+              placeholder="Titre de la page (ex: Accueil - Anjou Edition)"
               className="border-0 bg-transparent text-slate-800 dark:text-slate-100 font-bold px-2 py-0.5"
               style={{ fontSize: '15px', outline: 'none' }}
             />
-            <span className="text-[10px] text-slate-400 px-2">
-              Slug : /pages/{pageSlug || '...'}
+            <span className="text-[10px] text-muted px-2" style={{ fontSize: '11px' }}>
+              Slug : /{editingType === 'article' ? 'articles' : 'pages'}/{pageSlug || '...'}
             </span>
           </div>
         </div>
 
         {/* Historique Undo/Redo & Appareil */}
         <div className="d-flex align-items-center gap-3">
-          {/* Undo/Redo */}
           <div className="bpb-history-controls d-flex bg-slate-50 dark:bg-slate-800 rounded-lg p-1">
             <button 
               type="button" 
               onClick={handleUndo}
               disabled={!canUndo}
-              className="btn btn-link p-1 text-slate-500 hover:text-blue-500 disabled:opacity-30"
+              className="btn btn-link p-1 text-slate-500 hover:text-primary disabled:opacity-30"
               title="Annuler"
+              aria-label="Annuler la dernière action"
             >
-              <Undo className="ae-icon-size-sm" />
+              <Undo size={18} />
             </button>
             <button 
               type="button" 
               onClick={handleRedo}
               disabled={!canRedo}
-              className="btn btn-link p-1 text-slate-500 hover:text-blue-500 disabled:opacity-30"
+              className="btn btn-link p-1 text-slate-500 hover:text-primary disabled:opacity-30"
               title="Rétablir"
+              aria-label="Rétablir l'action annulée"
             >
-              <Redo className="ae-icon-size-sm" />
+              <Redo size={18} />
             </button>
           </div>
 
-          {/* Appareil */}
           <div className="bpb-device-controls d-flex bg-slate-50 dark:bg-slate-800 rounded-lg p-1">
             <button 
               type="button" 
               onClick={() => setDevice('desktop')}
-              className={`btn btn-link p-1 rounded-md ${device === 'desktop' ? 'bg-white dark:bg-slate-700 text-blue-500' : 'ae-text-muted'}`}
+              className={`btn btn-link p-1 rounded-md ${device === 'desktop' ? 'bg-white dark:bg-slate-700 text-primary' : 'text-muted'}`}
               title="Desktop"
+              aria-label="Vue Ordinateur"
             >
-              <Monitor className="ae-icon-size-sm" />
+              <Monitor size={18} />
             </button>
             <button 
               type="button" 
               onClick={() => setDevice('tablet')}
-              className={`btn btn-link p-1 rounded-md ${device === 'tablet' ? 'bg-white dark:bg-slate-700 text-blue-500' : 'ae-text-muted'}`}
+              className={`btn btn-link p-1 rounded-md ${device === 'tablet' ? 'bg-white dark:bg-slate-700 text-primary' : 'text-muted'}`}
               title="Tablette"
+              aria-label="Vue Tablette"
             >
-              <Tablet className="ae-icon-size-sm" />
+              <Tablet size={18} />
             </button>
             <button 
               type="button" 
               onClick={() => setDevice('mobile')}
-              className={`btn btn-link p-1 rounded-md ${device === 'mobile' ? 'bg-white dark:bg-slate-700 text-blue-500' : 'ae-text-muted'}`}
+              className={`btn btn-link p-1 rounded-md ${device === 'mobile' ? 'bg-white dark:bg-slate-700 text-primary' : 'text-muted'}`}
               title="Mobile"
+              aria-label="Vue Mobile"
             >
-              <Smartphone className="ae-icon-size-sm" />
+              <Smartphone size={18} />
             </button>
           </div>
         </div>
 
         {/* Statut et Actions globales */}
         <div className="d-flex align-items-center gap-2">
-          {/* Statut de la page */}
           <select
             value={pageStatus}
             onChange={(e) => setPageStatus(e.target.value)}
@@ -675,7 +669,6 @@ export const PageBuilder = ({
             <option value="published">Publier</option>
           </select>
 
-          {/* Prévisualiser */}
           <button
             type="button"
             onClick={() => {
@@ -686,23 +679,22 @@ export const PageBuilder = ({
               }
             }}
             className="btn btn-outline-primary btn-sm d-flex align-items-center gap-1.5 py-1.5 px-3 rounded-lg"
-            title={blocks.length === 0 ? "Aperçu : le canevas est vide, ajoutez des blocs pour voir votre contenu" : "Prévisualiser la page"}
+            title="Prévisualiser la page"
           >
-            <Eye className="ae-icon-size-sm" />
+            <Eye size={16} />
             Aperçu
           </button>
 
-          {/* Enregistrer */}
           <button
             type="button"
             onClick={handleSavePage}
             disabled={saving || !pageTitle.trim() || blocks.length === 0}
-            className="btn btn-primary btn-sm d-flex align-items-center gap-1.5 py-1.5 px-3 rounded-lg"
+            className="btn btn-primary btn-sm d-flex align-items-center gap-1.5 py-1.5 px-3 rounded-lg font-bold"
           >
             {saving ? (
-              <Loader className="ae-spinner-base" />
+              <Loader size={16} className="animate-spin" />
             ) : (
-              <Save className="ae-icon-size-sm" />
+              <Save size={16} />
             )}
             {editingId ? 'Mettre à jour' : 'Publier'}
           </button>
@@ -714,7 +706,7 @@ export const PageBuilder = ({
         <div className="d-flex" style={{ flex: 1, overflow: 'hidden', minHeight: 0 }}>
           
           {/* Sidebar gauche */}
-          <div className="ae-sidebar-fixed-width" style={{ width: '320px' }}>
+          <div className="ae-sidebar-fixed-width" style={{ width: '340px', flexShrink: 0 }}>
             <BuilderSidebar
               activeTab={activeTab}
               setActiveTab={setActiveTab}
@@ -727,7 +719,7 @@ export const PageBuilder = ({
           </div>
 
           {/* Canvas central */}
-          <div style={{ flex: '1 1 auto', minWidth: 0, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', position: 'ae-relative-container' }}>
+          <div style={{ flex: '1 1 auto', minWidth: 0, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', position: 'relative' }}>
             <BuilderCanvas
               blocks={blocks}
               activeBlockId={activeBlockId}
@@ -737,6 +729,7 @@ export const PageBuilder = ({
               }}
               onRemoveBlock={handleRemoveBlock}
               onMoveBlock={handleMoveBlock}
+              onDuplicateBlock={handleDuplicateBlock}
               onAddChild={handleAddChild}
               device={device}
               pageSlug={pageSlug}
@@ -747,8 +740,8 @@ export const PageBuilder = ({
 
         <DragOverlay dropAnimation={{ duration: 160, easing: 'cubic-bezier(.18,.67,.6,1.22)' }}>
           {activeDragWidget ? (
-            <div className="pb-widget-item flex flex-col items-center justify-content-center p-3 bg-white border border-blue-400 rounded-lg shadow-lg opacity-90" style={{ width: '100px' }}>
-              <span className="ae-badge-blue-text">{activeDragWidget.type}</span>
+            <div className="pb-widget-item d-flex flex-column align-items-center justify-content-center p-3 bg-white border border-primary rounded-lg shadow-lg opacity-90" style={{ width: '120px' }}>
+              <span className="badge bg-primary text-white font-bold">{activeDragWidget.type}</span>
             </div>
           ) : null}
         </DragOverlay>
@@ -757,4 +750,5 @@ export const PageBuilder = ({
     </div>
   );
 };
+
 export default PageBuilder;

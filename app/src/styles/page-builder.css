@@ -112,10 +112,16 @@
 }
 
 /* Couleurs de bordures de repérage selon le type */
-.pb-type-section { border-color: rgba(59, 130, 246, 0.15); }
-.pb-type-container { border-color: rgba(16, 185, 129, 0.15); }
-.pb-type-row { border-color: rgba(245, 158, 11, 0.15); }
-.pb-type-column { border-color: rgba(139, 92, 246, 0.15); }
+.pb-type-section { border-color: rgba(59, 130, 246, 0.2); }
+.pb-type-container { border-color: rgba(16, 185, 129, 0.2); }
+.pb-type-row { border-color: rgba(245, 158, 11, 0.2); }
+.pb-type-column { border-color: rgba(139, 92, 246, 0.2); }
+.pb-type-heading, .pb-type-text, .pb-type-image, .pb-type-button, .pb-type-card, .pb-type-alert, .pb-type-video, .pb-type-divider, .pb-type-list {
+  border-color: rgba(100, 116, 139, 0.15);
+}
+.pb-type-popularVideos, .pb-type-newsList, .pb-type-featuredPoems, .pb-type-flipbookFeatured, .pb-type-photoGallery, .pb-type-youtubeChannel, .pb-type-contactForm {
+  border-color: rgba(234, 88, 12, 0.2);
+}
 
 /* Hover effects */
 .pb-editor-wrapper:hover {
@@ -125,33 +131,56 @@
 .pb-type-container:hover { border-color: #10b981; }
 .pb-type-row:hover { border-color: #f59e0b; }
 .pb-type-column:hover { border-color: #8b5cf6; }
+.pb-type-heading:hover, .pb-type-text:hover, .pb-type-image:hover, .pb-type-button:hover, .pb-type-card:hover, .pb-type-alert:hover, .pb-type-video:hover, .pb-type-divider:hover, .pb-type-list:hover {
+  border-color: #0284c7;
+}
+.pb-type-popularVideos:hover, .pb-type-newsList:hover, .pb-type-featuredPoems:hover, .pb-type-flipbookFeatured:hover, .pb-type-photoGallery:hover, .pb-type-youtubeChannel:hover, .pb-type-contactForm:hover {
+  border-color: #ea580c;
+}
 
 /* Active block state */
 .pb-active-block {
-  border: 2px solid #3b82f6 !important;
-  background-color: rgba(59, 130, 246, 0.02) !important;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
-  border-radius: 4px;
+  border: 2px solid #2563eb !important;
+  background-color: rgba(37, 99, 235, 0.02) !important;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+  border-radius: 6px;
 }
 
 /* Control bar contextuelle */
 .pb-control-bar {
   position: absolute;
-  top: -12px;
+  top: -14px;
   right: 10px;
   display: none;
   align-items: center;
   gap: 4px;
-  background-color: #3b82f6;
-  padding: 2px 6px;
-  border-radius: 4px;
-  z-index: 10;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  background-color: #2563eb;
+  padding: 3px 8px;
+  border-radius: 6px;
+  z-index: 20;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15);
 }
 
-.pb-type-container > .pb-control-bar { background-color: #10b981; }
-.pb-type-row > .pb-control-bar { background-color: #f59e0b; }
-.pb-type-column > .pb-control-bar { background-color: #8b5cf6; }
+.pb-type-container > .pb-control-bar { background-color: #059669; }
+.pb-type-row > .pb-control-bar { background-color: #d97706; }
+.pb-type-column > .pb-control-bar { background-color: #7c3aed; }
+.pb-type-popularVideos > .pb-control-bar, 
+.pb-type-newsList > .pb-control-bar, 
+.pb-type-featuredPoems > .pb-control-bar, 
+.pb-type-flipbookFeatured > .pb-control-bar, 
+.pb-type-photoGallery > .pb-control-bar, 
+.pb-type-youtubeChannel > .pb-control-bar, 
+.pb-type-contactForm > .pb-control-bar { 
+  background-color: #ea580c; 
+}
+
+.video-card-item {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.video-card-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+}
 
 .pb-editor-wrapper:hover > .pb-control-bar,
 .pb-active-block > .pb-control-bar {

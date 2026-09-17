@@ -1,18 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { BuilderSettings } from './BuilderSettings';
 import { 
-  Layout, 
-  Square, 
-  Columns, 
-  Grid, 
-  Heading as HeadingIcon, 
-  AlignLeft, 
-  Image as ImageIcon, 
-  Video as VideoIcon, 
-  PlaySquare,
-  AlertCircle, 
-  Folder 
+  BLOCK_DEFINITIONS 
+} from './blockRegistry';
+import { 
+  Folder,
+  Search
 } from 'lucide-react';
 
 const DraggableWidget = ({ item, onAddBlock }) => {
@@ -29,31 +23,30 @@ const DraggableWidget = ({ item, onAddBlock }) => {
       {...listeners}
       {...attributes}
       onClick={() => onAddBlock(item.type)}
-      className={`pb-widget-item flex flex-col items-center justify-content-center p-3 border border-slate-200 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-500/50 bg-slate-50 hover:bg-blue-50/20 dark:bg-slate-800/30 dark:hover:bg-blue-900/10 rounded-lg text-slate-700 dark:text-slate-300 transition-all cursor-pointer text-center ${isDragging ? 'opacity-50' : ''}`}
-      style={{ touchAction: 'none' }}
+      className={`pb-widget-item d-flex flex-column align-items-center justify-content-center p-2.5 border rounded-lg transition-all cursor-pointer text-center ${
+        isDragging ? 'opacity-50' : ''
+      }`}
+      style={{ 
+        touchAction: 'none',
+        backgroundColor: '#f8fafc',
+        borderColor: '#e2e8f0'
+      }}
+      title={item.desc}
     >
-      <Icon className={`w-5 h-5 mb-1.5 ${item.category === 'structure' ? 'text-blue-500' : 'text-emerald-500'}`} />
-      <span className="text-xs font-bold block">{item.label}</span>
+      <Icon 
+        size={20} 
+        className={`mb-1.5 ${
+          item.category === 'structure' 
+            ? 'text-primary' 
+            : item.category === 'sections'
+              ? 'text-warning'
+              : 'text-success'
+        }`} 
+      />
+      <span className="text-xs font-bold block" style={{ fontSize: '11px' }}>{item.label}</span>
     </div>
   );
 };
-
-const STRUCTURE_ITEMS = [
-  { type: 'section', label: 'Section', icon: Layout, desc: 'Division globale de la page' },
-  { type: 'container', label: 'Container', icon: Square, desc: 'Conteneur centré ou fluide' },
-  { type: 'row', label: 'Ligne (Row)', icon: Columns, desc: 'Ligne pour grille de colonnes' },
-  { type: 'column', label: 'Colonne', icon: Grid, desc: 'Colonne ajustable de la grille' }
-];
-
-const CONTENT_ITEMS = [
-  { type: 'heading', label: 'Titre', icon: HeadingIcon, desc: 'Titre H1 à H6 ajustable' },
-  { type: 'text', label: 'Texte / HTML', icon: AlignLeft, desc: 'Paragraphe de texte riche' },
-  { type: 'image', label: 'Image', icon: ImageIcon, desc: 'Image avec classe responsive' },
-  { type: 'video', label: 'Vidéo', icon: VideoIcon, desc: 'Intégration vidéo YouTube' },
-  { type: 'button', label: 'Bouton', icon: PlaySquare, desc: 'Bouton avec lien et icône' },
-  { type: 'card', label: 'Carte (Card)', icon: Square, desc: 'Boîte avec titre, texte, image' },
-  { type: 'alert', label: 'Alerte', icon: AlertCircle, desc: 'Message d\'alerte de couleur' }
-];
 
 export const BuilderSidebar = ({
   activeTab,
@@ -64,49 +57,78 @@ export const BuilderSidebar = ({
   builderPageCategory,
   setBuilderPageCategory
 }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const allWidgets = Object.values(BLOCK_DEFINITIONS);
+  const filteredWidgets = allWidgets.filter(w => 
+    w.label.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    w.desc.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const structureWidgets = filteredWidgets.filter(w => w.category === 'structure');
+  const contentWidgets = filteredWidgets.filter(w => w.category === 'content');
+  const sectionWidgets = filteredWidgets.filter(w => w.category === 'sections');
+
   return (
-    <div className="builder-sidebar d-flex flex-column h-100 border-end bg-white dark:bg-slate-900">
+    <div className="builder-sidebar d-flex flex-column h-100 border-end bg-white dark:bg-slate-900" style={{ height: '100%' }}>
       {/* Onglets de navigation */}
-      <div className="builder-sidebar-tabs d-flex border-bottom bg-slate-50 dark:bg-slate-900/50">
+      <div className="builder-sidebar-tabs d-flex border-bottom bg-slate-50 dark:bg-slate-900/50 flex-shrink-0">
         <button 
           type="button"
           onClick={() => setActiveTab('widgets')}
           className={`bpb-tab-btn flex-fill py-2.5 text-xs font-bold border-0 cursor-pointer transition-colors ${
             activeTab === 'widgets' 
-              ? 'bg-white dark:bg-slate-900 text-blue-600 border-bottom border-blue-600' 
-              : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 bg-transparent'
+              ? 'bg-white dark:bg-slate-900 text-primary border-bottom border-primary' 
+              : 'text-muted bg-transparent'
           }`}
+          style={{ borderBottomWidth: activeTab === 'widgets' ? '2px' : '0' }}
         >
-          Widgets
+          Bibliothèque de Blocs
         </button>
         <button 
           type="button"
           onClick={() => setActiveTab('settings')}
           className={`bpb-tab-btn flex-fill py-2.5 text-xs font-bold border-0 cursor-pointer transition-colors ${
             activeTab === 'settings' 
-              ? 'bg-white dark:bg-slate-900 text-blue-600 border-bottom border-blue-600' 
-              : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 bg-transparent'
+              ? 'bg-white dark:bg-slate-900 text-primary border-bottom border-primary' 
+              : 'text-muted bg-transparent'
           }`}
+          style={{ borderBottomWidth: activeTab === 'settings' ? '2px' : '0' }}
         >
-          Réglages {activeBlock && <span className="ae-sidebar-status-dot-blue" style={{ width: '6px', height: '6px' }}></span>}
+          Propriétés {activeBlock && <span className="ae-sidebar-status-dot-blue d-inline-block rounded-circle bg-primary ms-1" style={{ width: '6px', height: '6px' }}></span>}
         </button>
       </div>
 
       {/* Contenu de l'onglet Widgets */}
       {activeTab === 'widgets' && (
-        <div className="ae-sidebar-scrollable-body">
+        <div className="ae-sidebar-scrollable-body p-3 overflow-y-auto flex-grow-1" style={{ overflowY: 'auto' }}>
           
+          {/* Recherche de blocs */}
+          <div className="mb-3">
+            <div className="position-relative">
+              <input
+                type="text"
+                placeholder="Rechercher un composant..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="db-input text-xs ps-4 py-1.5 w-100"
+              />
+              <Search size={14} className="position-absolute start-0 top-50 translate-middle-y ms-2 text-muted" />
+            </div>
+          </div>
+
           {/* Métadonnées de page */}
-          <div className="pb-category-selector-panel">
-            <label className="db-label flex items-center gap-1.5 mb-1.5 text-slate-500">
-              <Folder className="ae-icon-sm" />
+          <div className="pb-category-selector-panel p-2 rounded mb-3 bg-slate-50 border">
+            <label className="db-label d-flex align-items-center gap-1.5 mb-1 text-slate-500 font-bold" style={{ fontSize: '11px' }}>
+              <Folder size={14} />
               Catégorie de la page
             </label>
             <select
               value={builderPageCategory}
               onChange={(e) => setBuilderPageCategory(e.target.value)}
-              className="db-select text-xs py-1.5"
+              className="db-select text-xs py-1 w-100"
             >
+              <option value="Accueil">Accueil</option>
               <option value="Outils">Outils</option>
               <option value="Poésies">Poésies</option>
               <option value="Nouvelles">Nouvelles</option>
@@ -117,36 +139,64 @@ export const BuilderSidebar = ({
             </select>
           </div>
 
-          {/* Section structurelle */}
-          <div>
-            <h6 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Mise en page & Structure</h6>
-            <div className="ae-grid-2cols">
-              {STRUCTURE_ITEMS.map((item) => (
-                <DraggableWidget key={item.type} item={{...item, category: 'structure'}} onAddBlock={onAddBlock} />
-              ))}
+          {/* Section 1 : Structure */}
+          {structureWidgets.length > 0 && (
+            <div className="mb-3">
+              <h6 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2" style={{ fontSize: '10px', letterSpacing: '0.05em' }}>
+                Mise en page & Structure
+              </h6>
+              <div className="row g-2">
+                {structureWidgets.map((item) => (
+                  <div key={item.type} className="col-6">
+                    <DraggableWidget item={item} onAddBlock={onAddBlock} />
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Section contenu */}
-          <div>
-            <h6 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Éléments de contenu</h6>
-            <div className="ae-grid-2cols">
-              {CONTENT_ITEMS.map((item) => (
-                <DraggableWidget key={item.type} item={{...item, category: 'content'}} onAddBlock={onAddBlock} />
-              ))}
+          {/* Section 2 : Modules Métier du Site */}
+          {sectionWidgets.length > 0 && (
+            <div className="mb-3">
+              <h6 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2" style={{ fontSize: '10px', letterSpacing: '0.05em' }}>
+                Modules & Sections du Site
+              </h6>
+              <div className="row g-2">
+                {sectionWidgets.map((item) => (
+                  <div key={item.type} className="col-6">
+                    <DraggableWidget item={item} onAddBlock={onAddBlock} />
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Aide rapide */}
-          <div className="ae-info-callout-box">
-            <strong>Conseil :</strong> Sélectionnez un élément de structure (Section, Container ou Colonne) sur le canevas puis cliquez sur un widget pour l'y insérer directement. S'il n'y a pas d'élément actif, le bloc sera ajouté en bas de page.
+          {/* Section 3 : Éléments de Contenu */}
+          {contentWidgets.length > 0 && (
+            <div className="mb-3">
+              <h6 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2" style={{ fontSize: '10px', letterSpacing: '0.05em' }}>
+                Éléments de contenu
+              </h6>
+              <div className="row g-2">
+                {contentWidgets.map((item) => (
+                  <div key={item.type} className="col-6">
+                    <DraggableWidget item={item} onAddBlock={onAddBlock} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Aide */}
+          <div className="ae-info-callout-box p-2.5 rounded bg-blue-50 border border-blue-200 text-xs text-slate-700 mt-3" style={{ fontSize: '11px' }}>
+            <strong>Astuce :</strong> Cliquez sur un composant pour l'ajouter à la page ou dans le conteneur actuellement sélectionné.
           </div>
         </div>
       )}
 
       {/* Contenu de l'onglet Réglages */}
       {activeTab === 'settings' && (
-        <div className="ae-pb-sidebar-content">
+        <div className="ae-pb-sidebar-content flex-grow-1 overflow-y-auto" style={{ overflowY: 'auto' }}>
           <BuilderSettings 
             block={activeBlock} 
             onChange={onBlockSettingsChange} 
@@ -156,4 +206,5 @@ export const BuilderSidebar = ({
     </div>
   );
 };
+
 export default BuilderSidebar;
