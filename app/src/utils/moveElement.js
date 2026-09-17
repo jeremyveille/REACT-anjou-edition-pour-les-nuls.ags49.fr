@@ -92,6 +92,117 @@ export default function moveElement(elements, activeId, overId, isNew = false, g
     return recurse(updatedTree);
   }
 
+  if (targetEl.type === 'row') {
+    // If dropping a column, append to row
+    if (elementToInsert.type === 'column') {
+      const recurse = (list) => {
+        return list.map(el => {
+          if (el.id === overId) {
+            return {
+              ...el,
+              children: [...el.children, elementToInsert]
+            };
+          }
+          if (el.children && el.children.length > 0) {
+            return {
+              ...el,
+              children: recurse(el.children)
+            };
+          }
+          return el;
+        });
+      };
+      return recurse(updatedTree);
+    } else {
+      // Dropping a widget into a row -> put it in the last column or create one
+      const recurse = (list) => {
+        return list.map(el => {
+          if (el.id === overId) {
+            let rowChildren = [...el.children];
+            if (rowChildren.length === 0) {
+              const column = createNode('column');
+              column.children.push(elementToInsert);
+              rowChildren.push(column);
+            } else {
+              const lastCol = rowChildren[rowChildren.length - 1];
+              if (lastCol.type === 'column') {
+                lastCol.children = [...lastCol.children, elementToInsert];
+              } else {
+                rowChildren.push(elementToInsert);
+              }
+            }
+            return {
+              ...el,
+              children: rowChildren
+            };
+          }
+          if (el.children && el.children.length > 0) {
+            return {
+              ...el,
+              children: recurse(el.children)
+            };
+          }
+          return el;
+        });
+      };
+      return recurse(updatedTree);
+    }
+  }
+
+  if (targetEl.type === 'container') {
+    // If dropping a row, append to container
+    if (elementToInsert.type === 'row') {
+      const recurse = (list) => {
+        return list.map(el => {
+          if (el.id === overId) {
+            return {
+              ...el,
+              children: [...el.children, elementToInsert]
+            };
+          }
+          if (el.children && el.children.length > 0) {
+            return {
+              ...el,
+              children: recurse(el.children)
+            };
+          }
+          return el;
+        });
+      };
+      return recurse(updatedTree);
+    } else {
+      // Dropping a widget or column into a container -> ensure row/col structure
+      const recurse = (list) => {
+        return list.map(el => {
+          if (el.id === overId) {
+            let contChildren = [...el.children];
+            if (contChildren.length === 0) {
+              const row = createNode('row');
+              const column = createNode('column');
+              row.children.push(column);
+              column.children.push(elementToInsert);
+              contChildren.push(row);
+            } else {
+              contChildren.push(elementToInsert);
+            }
+            return {
+              ...el,
+              children: contChildren
+            };
+          }
+          if (el.children && el.children.length > 0) {
+            return {
+              ...el,
+              children: recurse(el.children)
+            };
+          }
+          return el;
+        });
+      };
+      return recurse(updatedTree);
+    }
+  }
+
   if (targetEl.type === 'section') {
     // Insert row into section
     if (elementToInsert.type === 'row') {
