@@ -155,22 +155,6 @@ export const BuilderCanvas = ({
   return (
     <div ref={canvasRef} className="pb-canvas-viewport" style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', backgroundColor: '#f1f5f9', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       
-      <div 
-        data-testid="builder-canvas-debug"
-        style={{
-          padding: "10px",
-          marginBottom: "10px",
-          background: "#fff3cd",
-          color: "#664d03",
-          border: "2px solid #ffca2c",
-          fontWeight: 700,
-          width: "100%",
-          textAlign: "center"
-        }}
-      >
-        BuilderCanvas est bien monté - device: {device}
-      </div>
-
       {/* Browser Address Bar Mock */}
       <div className="browser-address-bar bg-slate-200 dark:bg-slate-800 border-bottom px-3 py-2 d-flex align-items-center gap-2 rounded-t-lg shadow-sm flex-shrink-0" style={{ width: '100%', maxWidth: device === 'desktop' ? '1200px' : device === 'tablet' ? '768px' : '390px', borderTopLeftRadius: '8px', borderTopRightRadius: '8px' }}>
         <div className="d-flex gap-1.5 mr-2">

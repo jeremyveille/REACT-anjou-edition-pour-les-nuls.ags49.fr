@@ -126,10 +126,11 @@ function App() {
   });
 
   useEffect(() => {
+    let isMounted = true;
     const fetchFlipbooks = async () => {
       try {
         const snap = await getDocs(collection(db, "flipbooks"));
-        if (snap && !snap.empty && snap.docs) {
+        if (isMounted && snap && !snap.empty && snap.docs) {
           const list = snap.docs.map(doc => {
             const data = doc.data() || {};
             return {
@@ -142,24 +143,37 @@ function App() {
           localStorage.setItem("ae_flipbooks", JSON.stringify(list));
         }
       } catch (err) {
-        console.error("Failed to load flipbooks from Firestore:", err);
+        if (isMounted) {
+          console.error("Failed to load flipbooks from Firestore:", err);
+        }
       }
     };
     fetchFlipbooks();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const [customPages, setCustomPages] = useState([]);
 
   useEffect(() => {
+    let isMounted = true;
     const loadCustomPages = async () => {
       try {
         const pages = await pageService.getPages();
-        setCustomPages(pages);
+        if (isMounted) {
+          setCustomPages(pages);
+        }
       } catch (err) {
-        console.error("Failed to load custom pages", err);
+        if (isMounted) {
+          console.error("Failed to load custom pages", err);
+        }
       }
     };
     loadCustomPages();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const [previewData, setPreviewData] = useState(() => {
@@ -1247,6 +1261,13 @@ function App() {
             </div>
           )}
 
+          {/* VIEW: PRIVACY / RGPD */}
+          {view.type === 'privacy' && (
+            <div className="privacy-view fade-in">
+              <PrivacyPolicy setView={setView} />
+            </div>
+          )}
+
         </section>
 
         {/* Right Sidebar widgets */}
@@ -1294,9 +1315,6 @@ function App() {
             </p>
           </div>
         </aside>
-        {/* VIEW: PRIVACY / RGPD */}
-        {view.type === 'privacy' && <PrivacyPolicy setView={setView} />}
-
       </main>
 
       <PublicFooter setView={setView} />
