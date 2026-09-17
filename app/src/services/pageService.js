@@ -11,7 +11,7 @@ import {
   query, 
   orderBy 
 } from 'firebase/firestore';
-
+import { normalizeBlocks, getDefaultHomepageBlocks } from '../components/page-builder/blockRegistry';
 
 const LOCAL_STORAGE_KEY_MAP = {
   pages: 'ae_pages',
@@ -58,21 +58,69 @@ export const pageService = {
       const items = [];
       if (snapshot && !snapshot.empty) {
         snapshot.docs.forEach((doc) => {
-          items.push({ id: doc.id, ...doc.data() });
+          const data = doc.data() || {};
+          let blocks = data.blocks;
+          const isHome = (data.title || '').toLowerCase().includes('accueil') || data.slug === 'home' || data.slug === 'accueil';
+          if ((!blocks || blocks.length === 0) && isHome && collectionName === 'pages') {
+            blocks = getDefaultHomepageBlocks();
+          }
+          items.push({ 
+            id: doc.id, 
+            ...data, 
+            blocks: normalizeBlocks(blocks || []) 
+          });
         });
       } else {
         // Seed initial data if empty
         let defaults = [];
         if (collectionName === 'pages') {
           defaults = [
-            { title: "Accueil - Anjou Edition", author: "Jeremy Veille", date: "2026-05-12", status: "Publié" },
-            { title: "À Propos de nous", author: "Sylvie Gautier", date: "2026-06-01", status: "Brouillon" },
-            { title: "Nos Collections Littéraires", author: "Jeremy Veille", date: "2026-06-07", status: "Publié" }
+            { 
+              title: "Accueil - Anjou Edition", 
+              author: "Jeremy Veille", 
+              date: "2026-05-12", 
+              status: "Publié",
+              slug: "accueil",
+              category: "Accueil",
+              blocks: getDefaultHomepageBlocks()
+            },
+            { 
+              title: "À Propos de nous", 
+              author: "Sylvie Gautier", 
+              date: "2026-06-01", 
+              status: "Brouillon",
+              slug: "a-propos-de-nous",
+              category: "Outils",
+              blocks: []
+            },
+            { 
+              title: "Nos Collections Littéraires", 
+              author: "Jeremy Veille", 
+              date: "2026-06-07", 
+              status: "Publié",
+              slug: "nos-collections-litteraires",
+              category: "Poésies",
+              blocks: []
+            }
           ];
         } else if (collectionName === 'articles') {
           defaults = [
-            { title: "Les secrets de l'écriture romanesque pour les Nuls", views: 245, date: "2026-05-30" },
-            { title: "La poésie angevine contemporaine au XXIe siècle", views: 189, date: "2026-06-03" }
+            { 
+              title: "Les secrets de l'écriture romanesque pour les Nuls", 
+              views: 245, 
+              date: "2026-05-30",
+              slug: "secrets-ecriture-romanesque",
+              category: "Romans",
+              blocks: []
+            },
+            { 
+              title: "La poésie angevine contemporaine au XXIe siècle", 
+              views: 189, 
+              date: "2026-06-03",
+              slug: "poesie-angevine-contemporaine",
+              category: "Poésies",
+              blocks: []
+            }
           ];
         }
         
@@ -91,7 +139,18 @@ export const pageService = {
       return items;
     } catch (error) {
       console.warn(`Firestore indisponible, récupération des ${collectionName} locaux...`, error);
-      return getLocalItems(collectionName);
+      const local = getLocalItems(collectionName);
+      return local.map(item => {
+        let blocks = item.blocks;
+        const isHome = (item.title || '').toLowerCase().includes('accueil') || item.slug === 'home' || item.slug === 'accueil';
+        if ((!blocks || blocks.length === 0) && isHome && collectionName === 'pages') {
+          blocks = getDefaultHomepageBlocks();
+        }
+        return {
+          ...item,
+          blocks: normalizeBlocks(blocks || [])
+        };
+      });
     }
   },
 
@@ -111,7 +170,7 @@ export const pageService = {
       slug: pageData.slug || (pageData.title ? pageData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'sans-titre'),
       category: pageData.category || 'Outils',
       status: pageData.status || 'draft',
-      blocks: pageData.blocks || [],
+      blocks: normalizeBlocks(pageData.blocks || []),
       updatedAt: timestamp,
       updatedBy: email,
     };
@@ -231,4 +290,3 @@ export const pageService = {
     }
   }
 };
-
