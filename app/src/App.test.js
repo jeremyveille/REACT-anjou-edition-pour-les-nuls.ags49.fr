@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import App from './App';
 
 // Mock the administrative Dashboard to avoid loading ES modules dependencies like @google/genai in Jest tests
@@ -212,15 +212,13 @@ test('navigates to admin dashboard and attempts login', async () => {
   const passwordInput = screen.getByPlaceholderText(/Mot de passe/i);
   expect(passwordInput).toBeInTheDocument();
   
-  // Enter wrong password
+  // Enter password and submit
   fireEvent.change(passwordInput, { target: { value: 'wrongpassword' } });
   
   const submitBtn = screen.getByRole('button', { name: /Connexion/i });
-  fireEvent.click(submitBtn);
-  
-  // In the real app, it calls Firebase Auth, but here it's caught by the error handler
-  // Note: we can't fully test Firebase Auth in this unit test without mocking it, 
-  // but we test that the UI responds to the click and triggers the async flow.
+  await act(async () => {
+    fireEvent.click(submitBtn);
+  });
 });
 
 
