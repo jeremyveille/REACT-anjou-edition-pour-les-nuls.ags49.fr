@@ -830,50 +830,62 @@ function App() {
       <main id="main-content">
         {/* Left Sidebar widgets */}
         <aside className="sidebar left-sidebar">
-          <div className="card widget">
-            <h2 className="widget-title">
-              <PlayCircle size={20} /> Vidéos Populaires
-            </h2>
-            <div className="video-mini-list">
-              {videosData.map((vid) => (
-                <button 
-                  key={vid.id} 
-                  type="button"
-                  className="video-mini-item"
-                  onClick={() => handleOpenVideo(vid.id)}
-                  aria-label={`Lire la vidéo : ${vid.title}`}
-                >
-                  <div className="mini-thumb">
-                    <Play size={20} color="white" fill="white" />
+          {(() => {
+            const homeCustomPage = customPages.find(p => (p.title || '').toLowerCase().includes('accueil') || p.slug === 'home' || p.slug === 'accueil' || p.slug === '');
+            const customVideosBlock = homeCustomPage?.blocks?.find(b => b.type === 'popularVideos');
+            const customNewsBlock = homeCustomPage?.blocks?.find(b => b.type === 'newsList');
+            const videosToDisplay = customVideosBlock?.settings?.videos || videosData;
+            const videosTitle = customVideosBlock?.settings?.title || 'Vidéos Populaires';
+            const newsToDisplay = customNewsBlock?.settings?.news || [
+              { title: "Salon du Livre de Saumur", description: "Retrouvez l'équipe d'Anjou Édition au stand C12 les 14 et 15 octobre 2026." },
+              { title: "Nouvelle parution fables", description: "Découvrez notre nouvelle édition papier des fables locales de Séraphin." },
+              { title: "Mise à jour portail", description: "Nouveau design épuré, lecteur audio de textes intégré et galerie interactive." }
+            ];
+            const newsTitle = customNewsBlock?.settings?.title || 'Actualités 2026';
+
+            return (
+              <>
+                <div className="card widget">
+                  <h2 className="widget-title">
+                    <PlayCircle size={20} /> {videosTitle}
+                  </h2>
+                  <div className="video-mini-list">
+                    {videosToDisplay.map((vid) => (
+                      <button 
+                        key={vid.id || vid.title} 
+                        type="button"
+                        className="video-mini-item"
+                        onClick={() => handleOpenVideo(vid.id)}
+                        aria-label={`Lire la vidéo : ${vid.title}`}
+                      >
+                        <div className="mini-thumb">
+                          <Play size={20} color="white" fill="white" />
+                        </div>
+                        <div className="mini-info">
+                          <h4>{vid.title}</h4>
+                          {vid.duration && <span>{vid.duration}</span>}
+                        </div>
+                      </button>
+                    ))}
                   </div>
-                  <div className="mini-info">
-                    <h4>{vid.title}</h4>
-                    <span>{vid.duration}</span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-          
-          <div className="card widget">
-            <h2 className="widget-title">
-              <Info size={20} /> Actualités 2026
-            </h2>
-            <ul className="news-list">
-              <li>
-                <strong>Salon du Livre de Saumur</strong>
-                <p>Retrouvez l'équipe d'Anjou Édition au stand C12 les 14 et 15 octobre 2026.</p>
-              </li>
-              <li>
-                <strong>Nouvelle parution fables</strong>
-                <p>Découvrez notre nouvelle édition papier des fables locales de Séraphin.</p>
-              </li>
-              <li>
-                <strong>Mise à jour portail</strong>
-                <p>Nouveau design épuré, lecteur audio de textes intégré et galerie interactive.</p>
-              </li>
-            </ul>
-          </div>
+                </div>
+                
+                <div className="card widget">
+                  <h2 className="widget-title">
+                    <Info size={20} /> {newsTitle}
+                  </h2>
+                  <ul className="news-list">
+                    {newsToDisplay.map((item, idx) => (
+                      <li key={item.id || idx}>
+                        <strong>{item.title}</strong>
+                        <p>{item.description}</p>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </>
+            );
+          })()}
         </aside>
 
         {/* Center Dynamic Content Area */}
@@ -905,53 +917,66 @@ function App() {
                 <button type="button" onClick={() => setView({ type: 'flipbooks' })}>Voir les Flipbooks</button>
               </div>
 
-              {/* Principal Flipbook Reader (visible immediately) */}
-              <div className="home-flipbook-section">
-                <div className="section-title">
-                  <h3>Lecteur de Flipbook Interactif</h3>
-                </div>
-                <div className="home-flipbook-reader-wrapper">
-                  <PdfFlipbookReader 
-                    book={flipbooks.find(f => f.id === activeFlipbookId) || flipbooks[0]} 
-                  />
-                </div>
-              </div>
+              {(() => {
+                const homeCustomPage = customPages.find(p => (p.title || '').toLowerCase().includes('accueil') || p.slug === 'home' || p.slug === 'accueil' || p.slug === '');
+                if (homeCustomPage?.blocks && homeCustomPage.blocks.length > 0) {
+                  return homeCustomPage.blocks.map((block) => (
+                    <BlockRenderer key={block.id} block={block} isEditing={false} />
+                  ));
+                }
 
-              <div className="section-title">
-                <h3>À la une : Flipbooks Interactifs</h3>
-              </div>
-              <div className="featured-grid">
-                {flipbooks.map((fb) => (
-                  <div key={fb.id} className="featured-card">
-                    <div className="featured-card-icon">
-                      <BookOpen size={36} color="var(--primary)" />
+                return (
+                  <>
+                    {/* Principal Flipbook Reader (visible immediately) */}
+                    <div className="home-flipbook-section">
+                      <div className="section-title">
+                        <h3>Lecteur de Flipbook Interactif</h3>
+                      </div>
+                      <div className="home-flipbook-reader-wrapper">
+                        <PdfFlipbookReader 
+                          book={flipbooks.find(f => f.id === activeFlipbookId) || flipbooks[0]} 
+                        />
+                      </div>
                     </div>
-                    <h4>{fb.title}</h4>
-                    <p>{fb.description}</p>
-                    <button type="button" onClick={() => handleOpenFlipbook(fb.id)} className="btn-card">
-                      Feuilleter l'ouvrage <ChevronRight size={16} />
-                    </button>
-                  </div>
-                ))}
-              </div>
 
-              <div className="section-title">
-                <h3>Poésies et Fables Phares</h3>
-              </div>
-              <div className="featured-poems">
-                <button type="button" className="poem-card" onClick={() => handleSelectCategory("Ma pomme")} aria-label="Lire la fable Ma pomme">
-                  <span>FABLE</span>
-                  <h4>Ma pomme</h4>
-                  <p>"Une belle pomme rouge, au sommet d'un pommier, se prélassait au soleil du matin printanier..."</p>
-                  <span className="read-more">Lire la fable</span>
-                </button>
-                <button type="button" className="poem-card" onClick={() => handleSelectCategory("RAPPEL")} aria-label="Lire la poésie Rappel d'Anjou">
-                  <span>POÉSIE</span>
-                  <h4>Rappel d'Anjou</h4>
-                  <p>"Doux pays de la Loire où mon enfance a fui, sous un ciel argenté que la brume caresse..."</p>
-                  <span className="read-more">Lire la poésie</span>
-                </button>
-              </div>
+                    <div className="section-title">
+                      <h3>À la une : Flipbooks Interactifs</h3>
+                    </div>
+                    <div className="featured-grid">
+                      {flipbooks.map((fb) => (
+                        <div key={fb.id} className="featured-card">
+                          <div className="featured-card-icon">
+                            <BookOpen size={36} color="var(--primary)" />
+                          </div>
+                          <h4>{fb.title}</h4>
+                          <p>{fb.description}</p>
+                          <button type="button" onClick={() => handleOpenFlipbook(fb.id)} className="btn-card">
+                            Feuilleter l'ouvrage <ChevronRight size={16} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="section-title">
+                      <h3>Poésies et Fables Phares</h3>
+                    </div>
+                    <div className="featured-poems">
+                      <button type="button" className="poem-card" onClick={() => handleSelectCategory("Ma pomme")} aria-label="Lire la fable Ma pomme">
+                        <span>FABLE</span>
+                        <h4>Ma pomme</h4>
+                        <p>"Une belle pomme rouge, au sommet d'un pommier, se prélassait au soleil du matin printanier..."</p>
+                        <span className="read-more">Lire la fable</span>
+                      </button>
+                      <button type="button" className="poem-card" onClick={() => handleSelectCategory("RAPPEL")} aria-label="Lire la poésie Rappel d'Anjou">
+                        <span>POÉSIE</span>
+                        <h4>Rappel d'Anjou</h4>
+                        <p>"Doux pays de la Loire où mon enfance a fui, sous un ciel argenté que la brume caresse..."</p>
+                        <span className="read-more">Lire la poésie</span>
+                      </button>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           )}
 
