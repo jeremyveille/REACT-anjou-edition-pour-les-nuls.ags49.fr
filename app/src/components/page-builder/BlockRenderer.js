@@ -18,11 +18,12 @@ const DragHandle = ({ id }) => {
       {...attributes}
       {...listeners}
       className={`pb-control-btn pb-btn-drag ${isDragging ? 'opacity-50' : ''}`}
-      title="Déplacer"
+      title="Glisser pour déplacer"
+      aria-label="Glisser pour déplacer le bloc"
       style={{ cursor: 'grab' }}
       onClick={(e) => e.stopPropagation()}
     >
-      <GripVertical className="ae-icon-tiny" />
+      <GripVertical className="ae-icon-tiny" aria-hidden="true" />
     </button>
   );
 };
@@ -197,8 +198,9 @@ export const BlockRenderer = ({
               disabled={indexInParent === 0}
               className="pb-control-btn"
               title="Monter"
+              aria-label={`Monter le bloc ${type}`}
             >
-              <ArrowUp className="ae-icon-tiny" />
+              <ArrowUp className="ae-icon-tiny" aria-hidden="true" />
             </button>
             <button 
               type="button" 
@@ -206,8 +208,9 @@ export const BlockRenderer = ({
               disabled={indexInParent === siblingCount - 1}
               className="pb-control-btn"
               title="Descendre"
+              aria-label={`Descendre le bloc ${type}`}
             >
-              <ArrowDown className="ae-icon-tiny" />
+              <ArrowDown className="ae-icon-tiny" aria-hidden="true" />
             </button>
           </>
         )}
@@ -223,8 +226,9 @@ export const BlockRenderer = ({
             }}
             className="pb-control-btn pb-btn-add"
             title="Ajouter un enfant"
+            aria-label={`Ajouter un sous-élément dans ${type}`}
           >
-            <Plus className="ae-icon-tiny" />
+            <Plus className="ae-icon-tiny" aria-hidden="true" />
           </button>
         )}
 
@@ -234,8 +238,9 @@ export const BlockRenderer = ({
           onClick={(e) => { e.stopPropagation(); onRemoveBlock(id, parentBlock ? parentBlock.id : null); }}
           className="pb-control-btn pb-btn-danger"
           title="Supprimer"
+          aria-label={`Supprimer le bloc ${type}`}
         >
-          <Trash2 className="ae-icon-tiny" />
+          <Trash2 className="ae-icon-tiny" aria-hidden="true" />
         </button>
       </div>
 
