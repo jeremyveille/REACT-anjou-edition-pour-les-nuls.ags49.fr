@@ -1,6 +1,36 @@
 import React from 'react';
 import * as Icons from 'lucide-react';
+import { 
+  PlayCircle, 
+  Play, 
+  Info, 
+  BookOpen, 
+  ChevronRight, 
+  Image as ImageIcon,
+  Check
+} from 'lucide-react';
 import { sanitizeHtml, sanitizeUrl } from '../../utils/sanitize';
+import PdfFlipbookReader from '../PdfFlipbookReader';
+import { ContactForm } from '../ContactForm';
+import { flipbooksData } from '../../data';
+
+const YoutubeIcon = ({ size = 20, color = "currentColor", fill = "none" }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill={fill}
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className="lucide lucide-youtube"
+  >
+    <path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17" />
+    <polygon points="10 15 15 12 10 9 10 15" fill={fill !== "none" ? "white" : "none"} />
+  </svg>
+);
 
 /**
  * Widget Titre (Heading)
@@ -9,10 +39,11 @@ export const Heading = ({ settings = {} }) => {
   const Tag = settings.level || 'h2';
   const content = settings.content || 'Titre exemple';
   const customClasses = settings.classes || 'text-dark';
+  const alignment = settings.alignment ? `text-${settings.alignment}` : '';
   const style = settings.style || {};
 
   return (
-    <Tag className={`pb-widget-heading ${customClasses}`} style={style}>
+    <Tag className={`pb-widget-heading ${alignment} ${customClasses}`} style={style}>
       {content}
     </Tag>
   );
@@ -24,13 +55,13 @@ export const Heading = ({ settings = {} }) => {
 export const Text = ({ settings = {} }) => {
   const content = settings.content || 'Paragraphe de texte exemple. Vous pouvez modifier ce contenu dans les réglages.';
   const customClasses = settings.classes || 'text-secondary';
+  const alignment = settings.alignment ? `text-${settings.alignment}` : '';
   const style = settings.style || {};
   const sanitizedContent = sanitizeHtml(content);
 
-  // Rendu de texte riche (si HTML) ou paragraphe simple sécurisé
   return (
     <div 
-      className={`pb-widget-text ${customClasses}`} 
+      className={`pb-widget-text ${alignment} ${customClasses}`} 
       style={style}
       dangerouslySetInnerHTML={{ __html: sanitizedContent }}
     />
@@ -45,10 +76,23 @@ export const Image = ({ settings = {} }) => {
   const alt = settings.alt || 'Illustration';
   const customClasses = settings.classes || 'img-fluid rounded';
   const style = settings.style || {};
+  const caption = settings.caption;
+  const link = settings.link ? sanitizeUrl(settings.link) : null;
+
+  const imgElement = (
+    <img src={src} alt={alt} className={customClasses} loading="lazy" />
+  );
 
   return (
     <div className="pb-widget-image-container text-center" style={style}>
-      <img src={src} alt={alt} className={customClasses} loading="lazy" />
+      {link ? (
+        <a href={link} target="_blank" rel="noopener noreferrer">
+          {imgElement}
+        </a>
+      ) : (
+        imgElement
+      )}
+      {caption && <p className="text-muted text-xs mt-1">{caption}</p>}
     </div>
   );
 };
@@ -60,10 +104,10 @@ export const Button = ({ settings = {} }) => {
   const text = settings.text || 'Cliquez ici';
   const link = sanitizeUrl(settings.link || '#');
   const buttonStyle = settings.buttonStyle || 'btn-primary';
-  const size = settings.size || ''; // btn-lg, btn-sm, etc.
+  const size = settings.size || '';
   const customClasses = settings.classes || '';
   const style = settings.style || {};
-  const iconName = settings.icon; // optionnel
+  const iconName = settings.icon;
 
   const IconComponent = iconName ? Icons[iconName] : null;
 
@@ -113,7 +157,7 @@ export const Card = ({ settings = {} }) => {
  * Widget Alerte
  */
 export const Alert = ({ settings = {} }) => {
-  const type = settings.type || 'alert-info'; // alert-success, alert-warning, etc.
+  const type = settings.type || 'alert-info';
   const content = settings.content || 'Ceci est une alerte informative.';
   const customClasses = settings.classes || '';
   const style = settings.style || {};
@@ -133,7 +177,6 @@ export const Video = ({ settings = {} }) => {
   const customClasses = settings.classes || '';
   const style = settings.style || {};
 
-  // Permet de convertir les liens youtube standards en embeds si besoin
   let embedUrl = url;
   if (url.includes('youtube.com/watch?v=')) {
     const videoId = url.split('v=')[1]?.split('&')[0];
@@ -147,10 +190,421 @@ export const Video = ({ settings = {} }) => {
     <div className={`ratio ratio-16x9 ${customClasses}`} style={style}>
       <iframe 
         src={sanitizeUrl(embedUrl)} 
-        title="Widget Vidéo" 
+        title={settings.title || "Widget Vidéo"} 
         allowFullScreen
         className="rounded"
       ></iframe>
+    </div>
+  );
+};
+
+/**
+ * Widget Séparateur (Divider)
+ */
+export const Divider = ({ settings = {} }) => {
+  const styleType = settings.styleType || 'solid';
+  const thickness = settings.thickness || '1px';
+  const color = settings.color || '#e2e8f0';
+  const margin = settings.margin || '2rem 0';
+  const hasIcon = settings.hasIcon || false;
+  const iconName = settings.icon || 'BookOpen';
+  const IconComponent = hasIcon && Icons[iconName] ? Icons[iconName] : null;
+
+  if (hasIcon && IconComponent) {
+    return (
+      <div className="d-flex align-items-center my-4" style={{ margin }}>
+        <div style={{ flex: 1, height: thickness, backgroundColor: color, borderTop: `${thickness} ${styleType} ${color}` }}></div>
+        <div className="px-3 text-muted">
+          <IconComponent size={18} />
+        </div>
+        <div style={{ flex: 1, height: thickness, backgroundColor: color, borderTop: `${thickness} ${styleType} ${color}` }}></div>
+      </div>
+    );
+  }
+
+  return (
+    <hr 
+      style={{
+        border: 'none',
+        borderTop: `${thickness} ${styleType} ${color}`,
+        margin,
+        opacity: 1
+      }}
+    />
+  );
+};
+
+/**
+ * Widget Liste (List)
+ */
+export const List = ({ settings = {} }) => {
+  const listType = settings.listType || 'unordered';
+  const items = Array.isArray(settings.items) ? settings.items : ['Élément 1', 'Élément 2'];
+  const customClasses = settings.classes || '';
+  const style = settings.style || {};
+
+  if (listType === 'ordered') {
+    return (
+      <ol className={`pb-widget-list ${customClasses}`} style={style}>
+        {items.map((it, idx) => (
+          <li key={idx} className="mb-1.5">{it}</li>
+        ))}
+      </ol>
+    );
+  }
+
+  if (listType === 'check') {
+    return (
+      <ul className={`list-unstyled pb-widget-list ${customClasses}`} style={style}>
+        {items.map((it, idx) => (
+          <li key={idx} className="d-flex align-items-start gap-2 mb-2">
+            <span className="badge bg-success-subtle text-success p-1 rounded-circle mt-0.5">
+              <Check size={14} />
+            </span>
+            <span>{it}</span>
+          </li>
+        ))}
+      </ul>
+    );
+  }
+
+  return (
+    <ul className={`pb-widget-list ${customClasses}`} style={style}>
+      {items.map((it, idx) => (
+        <li key={idx} className="mb-1.5">{it}</li>
+      ))}
+    </ul>
+  );
+};
+
+/**
+ * =========================================================================
+ * MODULES MÉTIER DU SITE ANJOU ÉDITION
+ * =========================================================================
+ */
+
+/**
+ * Widget Vidéos Populaires
+ */
+export const PopularVideos = ({ settings = {}, isEditing = false }) => {
+  const title = settings.title || 'Vidéos Populaires';
+  const layout = settings.layout || 'list'; // 'list' ou 'grid'
+  const videos = Array.isArray(settings.videos) && settings.videos.length > 0 ? settings.videos : [
+    { id: 'v1', title: 'Histoire des Châteaux de la Loire', duration: '14:20' },
+    { id: 'v2', title: 'La Loire sauvage en Anjou', duration: '08:45' }
+  ];
+  const customClasses = settings.classes || '';
+  const style = settings.style || {};
+
+  const handleVideoClick = (vidId, e) => {
+    // Non-interactive in builder mode to prevent navigation while selecting
+  };
+
+  if (layout === 'grid') {
+    return (
+      <div className={`popular-videos-grid-widget ${customClasses}`} style={style}>
+        <div className="section-title mb-3">
+          <h3 className="d-flex align-items-center gap-2">
+            <PlayCircle size={22} className="text-primary" /> {title}
+          </h3>
+        </div>
+        <div className="row g-3">
+          {videos.map((vid) => (
+            <div key={vid.id || vid.title} className="col-12 col-md-6 col-lg-4">
+              <div 
+                className="card h-100 shadow-sm border-0 video-card-item cursor-pointer"
+                onClick={(e) => handleVideoClick(vid.id, e)}
+              >
+                <div 
+                  className="bg-slate-800 text-white d-flex align-items-center justify-content-center position-relative rounded-top"
+                  style={{ height: '140px' }}
+                >
+                  <div className="mini-thumb bg-primary rounded-circle p-2 shadow">
+                    <Play size={24} color="white" fill="white" />
+                  </div>
+                  {vid.duration && (
+                    <span 
+                      className="position-absolute bottom-0 end-0 m-2 px-2 py-0.5 bg-black bg-opacity-75 text-white rounded text-xs"
+                      style={{ fontSize: '11px' }}
+                    >
+                      {vid.duration}
+                    </span>
+                  )}
+                </div>
+                <div className="card-body p-3">
+                  <h5 className="card-title text-sm font-bold mb-1">{vid.title}</h5>
+                  {vid.description && <p className="card-text text-xs text-muted">{vid.description}</p>}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Sidebar list style (default)
+  return (
+    <div className={`card widget ${customClasses}`} style={style}>
+      <h2 className="widget-title">
+        <PlayCircle size={20} /> {title}
+      </h2>
+      <div className="video-mini-list">
+        {videos.map((vid) => (
+          <button 
+            key={vid.id || vid.title} 
+            type="button"
+            className="video-mini-item"
+            onClick={(e) => handleVideoClick(vid.id, e)}
+            aria-label={`Lire la vidéo : ${vid.title}`}
+          >
+            <div className="mini-thumb">
+              <Play size={20} color="white" fill="white" />
+            </div>
+            <div className="mini-info">
+              <h4>{vid.title}</h4>
+              {vid.duration && <span>{vid.duration}</span>}
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Widget Actualités (NewsList)
+ */
+export const NewsList = ({ settings = {}, isEditing = false }) => {
+  const title = settings.title || 'Actualités 2026';
+  const news = Array.isArray(settings.news) && settings.news.length > 0 ? settings.news : [
+    { id: 'n1', title: 'Salon du Livre de Saumur', description: 'Retrouvez l\'équipe d\'Anjou Édition au stand C12 les 14 et 15 octobre 2026.' }
+  ];
+  const customClasses = settings.classes || '';
+  const style = settings.style || {};
+
+  return (
+    <div className={`card widget ${customClasses}`} style={style}>
+      <h2 className="widget-title">
+        <Info size={20} /> {title}
+      </h2>
+      <ul className="news-list">
+        {news.map((item, idx) => (
+          <li key={item.id || idx}>
+            <strong>{item.title}</strong>
+            <p>{item.description}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
+/**
+ * Widget Poésies et Fables Phares (FeaturedPoems)
+ */
+export const FeaturedPoems = ({ settings = {}, isEditing = false }) => {
+  const title = settings.title || 'Poésies et Fables Phares';
+  const poems = Array.isArray(settings.poems) && settings.poems.length > 0 ? settings.poems : [
+    {
+      id: 'p1',
+      tag: 'FABLE',
+      title: 'Ma pomme',
+      excerpt: '"Une belle pomme rouge, au sommet d\'un pommier, se prélassait au soleil du matin printanier..."',
+      readMoreText: 'Lire la fable'
+    },
+    {
+      id: 'p2',
+      tag: 'POÉSIE',
+      title: 'Rappel d\'Anjou',
+      excerpt: '"Doux pays de la Loire où mon enfance a fui, sous un ciel argenté que la brume caresse..."',
+      readMoreText: 'Lire la poésie'
+    }
+  ];
+  const customClasses = settings.classes || '';
+  const style = settings.style || {};
+
+  return (
+    <div className={`featured-poems-widget ${customClasses}`} style={style}>
+      {title && (
+        <div className="section-title mb-3">
+          <h3>{title}</h3>
+        </div>
+      )}
+      <div className="featured-poems">
+        {poems.map((poem, idx) => (
+          <button 
+            key={poem.id || idx} 
+            type="button" 
+            className="poem-card" 
+            aria-label={`Lire : ${poem.title}`}
+          >
+            {poem.tag && <span>{poem.tag}</span>}
+            <h4>{poem.title}</h4>
+            <p>{poem.excerpt}</p>
+            <span className="read-more">{poem.readMoreText || 'Lire'}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Widget Flipbooks à la une ou Lecteur intégré (FlipbookFeatured)
+ */
+export const FlipbookFeatured = ({ settings = {}, isEditing = false }) => {
+  const title = settings.title || 'À la une : Flipbooks Interactifs';
+  const mode = settings.mode || 'grid'; // 'reader' ou 'grid'
+  const items = Array.isArray(settings.items) && settings.items.length > 0 ? settings.items : flipbooksData;
+  const selectedBookId = settings.selectedBookId || '3322';
+  const customClasses = settings.classes || '';
+  const style = settings.style || {};
+
+  if (mode === 'reader') {
+    const activeBook = items.find(b => b.id === selectedBookId) || items[0] || flipbooksData[0];
+    return (
+      <div className={`home-flipbook-section ${customClasses}`} style={style}>
+        {title && (
+          <div className="section-title mb-3">
+            <h3>{title}</h3>
+          </div>
+        )}
+        <div className="home-flipbook-reader-wrapper">
+          <PdfFlipbookReader book={activeBook} />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`featured-flipbooks-widget ${customClasses}`} style={style}>
+      {title && (
+        <div className="section-title mb-3">
+          <h3>{title}</h3>
+        </div>
+      )}
+      <div className="featured-grid">
+        {items.map((fb) => (
+          <div key={fb.id} className="featured-card">
+            <div className="featured-card-icon">
+              <BookOpen size={36} color="var(--primary)" />
+            </div>
+            <h4>{fb.title}</h4>
+            <p>{fb.description}</p>
+            <button type="button" className="btn-card" aria-label={`Feuilleter l'ouvrage : ${fb.title}`}>
+              {fb.buttonText || "Feuilleter l'ouvrage"} <ChevronRight size={16} />
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Widget Galerie Photos
+ */
+export const PhotoGallery = ({ settings = {}, isEditing = false }) => {
+  const title = settings.title || 'Galerie Photo d\'Anjou';
+  const subtitle = settings.subtitle || 'Cliquez sur une photographie pour l\'agrandir en haute définition.';
+  const layout = settings.layout || 'grid';
+  const images = Array.isArray(settings.images) && settings.images.length > 0 ? settings.images : [];
+  const customClasses = settings.classes || '';
+  const style = settings.style || {};
+
+  if (layout === 'sidebar') {
+    return (
+      <div className={`card widget ${customClasses}`} style={style}>
+        <h2 className="widget-title">
+          <ImageIcon size={20} /> {title}
+        </h2>
+        <div className="gallery-grid">
+          {images.slice(0, 4).map((img) => (
+            <div 
+              key={img.id || img.url} 
+              className="gallery-item" 
+              style={{ backgroundImage: `url('${sanitizeUrl(img.url)}')` }}
+              title={img.title}
+              aria-label={`Voir l'image : ${img.title}`}
+            ></div>
+          ))}
+        </div>
+        <button type="button" className="widget-footer-btn">
+          Voir toutes les photos
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`photo-gallery-widget ${customClasses}`} style={style}>
+      {title && (
+        <div className="mb-3">
+          <h2 className="view-title text-xl font-bold">{title}</h2>
+          {subtitle && <p className="view-description text-muted text-sm">{subtitle}</p>}
+        </div>
+      )}
+      <div className="full-gallery-grid">
+        {images.map((img) => (
+          <div key={img.id || img.url} className="full-gallery-item">
+            <div className="gallery-img-wrapper">
+              <img src={sanitizeUrl(img.url)} alt={img.title || 'Photo Anjou'} loading="lazy" />
+              <div className="gallery-item-overlay">
+                <h4>{img.title}</h4>
+                {img.description && <p>{img.description}</p>}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Widget Chaîne YouTube
+ */
+export const YoutubeChannel = ({ settings = {}, isEditing = false }) => {
+  const title = settings.title || 'Chaîne YouTube';
+  const subtitle = settings.subtitle || 'Conférence Anjou 2026 - Extrait';
+  const customClasses = settings.classes || '';
+  const style = settings.style || {};
+
+  return (
+    <div className={`card widget ${customClasses}`} style={style}>
+      <h2 className="widget-title">
+        <YoutubeIcon size={20} color="currentColor" /> {title}
+      </h2>
+      <div 
+        className="video-placeholder d-flex align-items-center justify-content-center cursor-pointer" 
+        style={{ background: '#fee2e2', height: '140px', borderRadius: '8px' }}
+      >
+        <YoutubeIcon size={40} color="#ef4444" fill="#ef4444" />
+      </div>
+      <p style={{ fontSize: '0.85rem', fontWeight: 600, textAlign: 'center', marginTop: '0.75rem' }}>
+        {subtitle}
+      </p>
+    </div>
+  );
+};
+
+/**
+ * Widget Formulaire de Contact
+ */
+export const ContactFormWidget = ({ settings = {}, isEditing = false }) => {
+  const title = settings.title || '';
+  const customClasses = settings.classes || '';
+  const style = settings.style || {};
+
+  return (
+    <div className={`contact-widget-container ${customClasses}`} style={style}>
+      {title && (
+        <div className="section-title mb-3">
+          <h3>{title}</h3>
+        </div>
+      )}
+      <ContactForm setView={() => {}} />
     </div>
   );
 };
