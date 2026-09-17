@@ -146,13 +146,14 @@ export const pageService = {
 
       try {
         const docRef = await addDoc(collection(db, collectionName), creationData);
+        const savedId = (docRef && docRef.id) ? docRef.id : ('local_' + Date.now());
         
         // Ajouter en local
         const localItems = getLocalItems(collectionName);
-        localItems.unshift({ id: docRef.id, ...creationData });
+        localItems.unshift({ id: savedId, ...creationData });
         saveLocalItems(collectionName, localItems);
         
-        return { id: docRef.id, ...creationData };
+        return { id: savedId, ...creationData };
       } catch (error) {
         console.error(`Erreur Firestore lors de la création dans ${collectionName}, bascule locale.`, error);
         const localId = 'local_' + Date.now();

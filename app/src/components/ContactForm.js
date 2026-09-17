@@ -54,7 +54,10 @@ export const ContactForm = ({ setView }) => {
       
       const offlineMessages = JSON.parse(localStorage.getItem('contact_messages') || '[]');
       offlineMessages.push({
-        ...contactForm,
+        name: trimmedName,
+        email: trimmedEmail.toLowerCase(),
+        subject: trimmedSubject,
+        message: trimmedMessage,
         timestamp: new Date().toISOString()
       });
       localStorage.setItem('contact_messages', JSON.stringify(offlineMessages));

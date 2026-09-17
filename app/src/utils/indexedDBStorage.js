@@ -3,7 +3,10 @@ const STORE_NAME = 'pdfs';
 
 export const initDB = () => {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, 1);
+    if (typeof window === 'undefined' || !('indexedDB' in window) || !window.indexedDB) {
+      return reject(new Error('IndexedDB is not supported or available'));
+    }
+    const request = window.indexedDB.open(DB_NAME, 1);
     request.onupgradeneeded = (e) => {
       const db = e.target.result;
       if (!db.objectStoreNames.contains(STORE_NAME)) {
@@ -38,8 +41,8 @@ export const getPDFFile = async (key) => {
       const transaction = db.transaction([STORE_NAME], 'readonly');
       const store = transaction.objectStore(STORE_NAME);
       const request = store.get(key);
-      request.onsuccess = (e) => resolve(e.target.result);
-      request.onerror = (e) => reject(e.target.error);
+      request.onsuccess = (e) => resolve((e && e.target && e.target.result !== undefined) ? e.target.result : (request && request.result ? request.result : null));
+      request.onerror = (e) => reject((e && e.target && e.target.error) || new Error('Get request failed'));
     });
   } catch (error) {
     console.error("Failed to retrieve PDF from IndexedDB:", error);
