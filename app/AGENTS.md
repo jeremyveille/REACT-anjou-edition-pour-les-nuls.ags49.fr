@@ -25,7 +25,7 @@ Ce document sert de guide et de référence pour tout agent ou développeur trav
     > [!IMPORTANT]
     > **RÈGLE STRICTE** : **NE JAMAIS UTILISER TAILWIND**. Le projet utilise uniquement du Vanilla CSS et Bootstrap 5 pour le Page Builder.
 *   **Bibliothèque d'Icônes** : [lucide-react v1.17.0](https://lucide.dev/)
-*   **Tests** : Jest et [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/) (5 suites de tests, 24 tests unitaires et d'intégration).
+*   **Tests** : Jest et [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/) (11 suites de tests, 53 tests unitaires et d'intégration, 100% de réussite).
 
 ---
 
@@ -56,6 +56,11 @@ Se déplacer dans le dossier : `cd app`
 *   **Droit à l'oubli interactif** : Bouton de purge intégrale du cache local (`localStorage`) dans la politique de confidentialité et la fenêtre de réglages.
 *   **Politique de Confidentialité (`PrivacyPolicy.js`)** : Référence complète aux Articles 15 à 22 du RGPD, contact DPO et recours CNIL.
 
+### 4. Accessibilité & Normes WCAG 2.2 AA / RGAA
+*   Lien d'évitement (`.skip-to-content`) opérationnel avec focus visible pour la navigation clavier.
+*   Prise en compte globale de `prefers-reduced-motion` pour les animations.
+*   Attributs `aria-label` descriptifs sur tous les boutons d'action du Page Builder, du lecteur de Flipbook et du formulaire de contact.
+
 ### 5. Architecture Responsive Unifiée (4 Paliers Standard)
 *   **S — Smartphones / petits écrans** : `@media (max-width: 599px)` (Disposition 1 colonne, contrôles tactiles >= 44px, tiroir mobile, modales fluides).
 *   **M — Tablettes / grands smartphones** : `@media (min-width: 600px) and (max-width: 899px)` (Disposition 1 à 2 colonnes, sidebar off-canvas, espacement équilibré).
@@ -65,5 +70,5 @@ Se déplacer dans le dossier : `cd app`
 
 ---
 
-*Dernière mise à jour du contexte par l'agent : 3 septembre 2026.*
+*Dernière mise à jour du contexte par l'agent : 17 septembre 2026.*
 

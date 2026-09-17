@@ -31,7 +31,7 @@ Ce document sert de guide et de référence pour tout agent ou développeur trav
     > [!IMPORTANT]
     > **RÈGLE STRICTE** : **NE JAMAIS UTILISER TAILWIND**. Le projet repose à 100% sur du Vanilla CSS écrit à la main et sur Bootstrap 5 pour les blocs du Page Builder.
 *   **Bibliothèque d'Icônes** : [lucide-react v1.17.0](https://lucide.dev/)
-*   **Tests** : Jest et [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/) (5 suites de tests complètes et 24 tests unitaires/d'intégration).
+*   **Tests** : Jest et [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/) (11 suites de tests complètes et 53 tests unitaires/d'intégration, 100% de réussite).
 
 ### 2. Page Builder Visuel (page-builder-react)
 *   **Framework Frontend** : [React v18.3.1](https://react.dev/)
@@ -55,8 +55,8 @@ REACT-anjou-edition-pour-les-nuls.ags49.fr/
 │   ├── public/                # Fichiers statiques public
 │   └── src/                   # Code source de l'application principale
 │       ├── components/        # Composants (Dashboard, PdfFlipbookReader, CookieConsentBanner, ContactForm, PrivacyPolicy...)
-│       ├── styles/            # Fichiers CSS (dashboard.css, pdf-reader.css)
-│       ├── utils/             # Utilitaires (sanitize.js, indexedDBStorage.js)
+│       ├── styles/            # Fichiers CSS (dashboard.css, pdf-reader.css, ae-components.css)
+│       ├── utils/             # Utilitaires (sanitize.js, indexedDBStorage.js, moveElement.js, firestoreChunker.js)
 │       ├── services/          # Services d'accès aux données (pageService.js)
 │       ├── App.js             # Composant principal (site public & navigation)
 │       ├── App.test.js        # Tests Jest de l'application
@@ -123,6 +123,11 @@ Se déplacer dans le dossier : `cd page-builder-react`
 *   **Politique de Confidentialité Complète (`PrivacyPolicy.js`)** : Couvre les Articles 15 à 22 du RGPD, le contact DPO/référent, la durée de conservation (3 ans maximum), et les voies de réclamation auprès de la CNIL.
 *   **Consentement explicite sur formulaire** : Case à cocher obligatoire et non pré-cochée sur [ContactForm.js](file:///C:/Users/jerem/REACT-anjou-edition-pour-les-nuls.ags49.fr/app/src/components/ContactForm.js).
 
+### 4. Accessibilité & Respect des Normes (WCAG 2.2 AA / RGAA)
+*   Lien d'évitement (`.skip-to-content`) fonctionnel avec focus visible pour la navigation clavier.
+*   Prise en compte systématique de la préférence utilisateur `prefers-reduced-motion`.
+*   Contrôles d'interface et boutons d'action systématiquement munis d'un `aria-label` descriptif (`BlockRenderer`, `PdfFlipbookReader`, `ContactForm`).
+
 ### 5. Architecture Responsive Unifiée (4 Paliers Standard)
 *   **S — Smartphones / petits écrans** : `@media (max-width: 599px)` (Disposition 1 colonne, contrôles tactiles >= 44px, tiroir mobile, modales fluides).
 *   **M — Tablettes / grands smartphones** : `@media (min-width: 600px) and (max-width: 899px)` (Disposition 1 à 2 colonnes, sidebar off-canvas, espacement équilibré).
@@ -132,5 +137,5 @@ Se déplacer dans le dossier : `cd page-builder-react`
 
 ---
 
-*Dernière mise à jour du contexte par l'agent : 3 septembre 2026.*
+*Dernière mise à jour du contexte par l'agent : 17 septembre 2026.*
 
