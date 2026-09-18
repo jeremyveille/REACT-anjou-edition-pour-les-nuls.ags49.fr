@@ -134,4 +134,44 @@ describe('pageService Security & Workflow tests', () => {
     expect(entry.resourceTitle).toBe('Test Page Audit');
     expect(entry.actorRole).toBe('admin');
   });
+
+  test('getMediaList returns media array and seeds fallback items when empty', async () => {
+    const mediaList = await pageService.getMediaList();
+    expect(Array.isArray(mediaList)).toBe(true);
+    expect(mediaList.length).toBeGreaterThan(0);
+    expect(mediaList[0]).toHaveProperty('id');
+    expect(mediaList[0]).toHaveProperty('url');
+  });
+
+  test('saveMediaItem persists a media item to local storage and returns normalized object', async () => {
+    const item = {
+      id: 'custom_media_1',
+      name: 'Mon Beau Manoir.jpg',
+      url: 'https://images.unsplash.com/photo-12345',
+      type: 'image',
+      size: 204800
+    };
+
+    const saved = await pageService.saveMediaItem(item);
+    expect(saved.id).toBe('custom_media_1');
+    expect(saved.name).toBe('Mon Beau Manoir.jpg');
+
+    const local = JSON.parse(localStorage.getItem('ae_media_library') || '[]');
+    expect(local.some(m => m.id === 'custom_media_1')).toBe(true);
+  });
+
+  test('deleteMediaItem removes a media item from local storage', async () => {
+    const item = {
+      id: 'media_to_delete',
+      name: 'A supprimer.jpg',
+      url: 'https://mock.url/del.jpg'
+    };
+    await pageService.saveMediaItem(item);
+
+    const result = await pageService.deleteMediaItem('media_to_delete');
+    expect(result).toBe(true);
+
+    const local = JSON.parse(localStorage.getItem('ae_media_library') || '[]');
+    expect(local.some(m => m.id === 'media_to_delete')).toBe(false);
+  });
 });

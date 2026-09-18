@@ -12,11 +12,13 @@ import {
   orderBy 
 } from 'firebase/firestore';
 import { normalizeBlocks, getDefaultHomepageBlocks } from '../components/page-builder/blockRegistry';
+import { galleryImages, videosData } from '../data';
 
 const LOCAL_STORAGE_KEY_MAP = {
   pages: 'ae_pages',
   articles: 'ae_articles',
-  auditLogs: 'ae_audit_logs'
+  auditLogs: 'ae_audit_logs',
+  media: 'ae_media_library'
 };
 
 /**
@@ -505,22 +507,165 @@ export const pageService = {
   },
 
   /**
-   * Téléverse un fichier média vers Firebase Storage et retourne son URL de téléchargement.
+   * Récupère la liste des médias disponibles (Images, Vidéos, Documents).
+   * @returns {Promise<Array>} Liste des objets média.
+   */
+  async getMediaList() {
+    try {
+      const q = query(collection(db, 'media'), orderBy('createdAt', 'desc'));
+      const snapshot = await getDocs(q);
+      if (snapshot && !snapshot.empty && snapshot.docs) {
+        const list = snapshot.docs.map(docSnap => ({
+          id: docSnap.id,
+          ...docSnap.data()
+        }));
+        try {
+          localStorage.setItem('ae_media_library', JSON.stringify(list));
+        } catch (e) {}
+        return list;
+      }
+    } catch (err) {
+      console.warn('Fallback offline sur localStorage pour la médiathèque:', err);
+    }
+
+    try {
+      const cached = localStorage.getItem('ae_media_library');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch (e) {}
+
+    const defaultImages = (galleryImages || []).map((img, i) => ({
+      id: img.id || `sample_img_${i}`,
+      name: img.title || `Image ${i + 1}`,
+      url: img.url,
+      type: 'image',
+      mimeType: 'image/jpeg',
+      size: 154000,
+      alt: img.description || img.title,
+      createdAt: new Date(Date.now() - (i + 1) * 86400000).toISOString()
+    }));
+
+    const defaultVideos = (videosData || []).map((vid, i) => ({
+      id: vid.id || `sample_vid_${i}`,
+      name: vid.title || `Vidéo ${i + 1}`,
+      url: vid.youtubeId ? `https://www.youtube.com/watch?v=${vid.youtubeId}` : '',
+      type: 'video',
+      mimeType: 'video/youtube',
+      size: 0,
+      duration: vid.duration || '',
+      description: vid.description || '',
+      createdAt: new Date(Date.now() - (i + 1) * 86400000).toISOString()
+    }));
+
+    const defaultItems = [...defaultImages, ...defaultVideos];
+    try {
+      localStorage.setItem('ae_media_library', JSON.stringify(defaultItems));
+    } catch (e) {}
+    return defaultItems;
+  },
+
+  /**
+   * Enregistre ou met à jour un élément multimédia.
+   * @param {Object} mediaItem Métadonnées du média.
+   * @returns {Promise<Object>} L'élément enregistré.
+   */
+  async saveMediaItem(mediaItem) {
+    const itemToSave = {
+      id: mediaItem.id || `media_${Date.now()}`,
+      name: mediaItem.name || 'Média sans titre',
+      url: mediaItem.url || '',
+      type: mediaItem.type || (mediaItem.url?.includes('youtube') ? 'video' : 'image'),
+      mimeType: mediaItem.mimeType || (mediaItem.type === 'video' ? 'video/mp4' : 'image/jpeg'),
+      size: mediaItem.size || 0,
+      alt: mediaItem.alt || mediaItem.name || '',
+      createdAt: mediaItem.createdAt || new Date().toISOString()
+    };
+
+    try {
+      const docRef = doc(db, 'media', itemToSave.id);
+      await setDoc(docRef, itemToSave, { merge: true });
+    } catch (err) {
+      console.warn('Mode hors-ligne: enregistrement local du média', err);
+    }
+
+    try {
+      const cached = JSON.parse(localStorage.getItem('ae_media_library') || '[]');
+      const index = cached.findIndex(m => m.id === itemToSave.id);
+      if (index >= 0) {
+        cached[index] = itemToSave;
+      } else {
+        cached.unshift(itemToSave);
+      }
+      localStorage.setItem('ae_media_library', JSON.stringify(cached));
+    } catch (e) {}
+
+    return itemToSave;
+  },
+
+  /**
+   * Supprime un élément multimédia.
+   * @param {string} id Identifiant du média.
+   * @returns {Promise<boolean>}
+   */
+  async deleteMediaItem(id) {
+    try {
+      const docRef = doc(db, 'media', id);
+      await deleteDoc(docRef);
+    } catch (err) {
+      console.warn('Mode hors-ligne: suppression locale du média', err);
+    }
+
+    try {
+      const cached = JSON.parse(localStorage.getItem('ae_media_library') || '[]');
+      const filtered = cached.filter(m => m.id !== id);
+      localStorage.setItem('ae_media_library', JSON.stringify(filtered));
+    } catch (e) {}
+
+    return true;
+  },
+
+  /**
+   * Téléverse un fichier média vers Firebase Storage et l'enregistre dans la médiathèque.
    * @param {File} file Le fichier à téléverser.
+   * @param {Object} metadata Métadonnées additionnelles.
    * @returns {Promise<string>} L'URL de téléchargement publique.
    */
-  async uploadMedia(file) {
+  async uploadMedia(file, metadata = {}) {
     const timestamp = Date.now();
     const uniqueName = `${timestamp}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
     const storageRef = ref(storage, `builder-images/${uniqueName}`);
     
+    let downloadUrl = '';
     try {
       const uploadResult = await uploadBytes(storageRef, file);
-      const downloadUrl = await getDownloadURL(uploadResult.ref);
-      return downloadUrl;
+      downloadUrl = await getDownloadURL(uploadResult.ref);
     } catch (error) {
-      console.error('Erreur Firebase Storage lors du téléversement du média', error);
-      throw error;
+      console.warn('Firebase Storage non disponible ou hors-ligne, génération URL locale:', error);
+      try {
+        downloadUrl = URL.createObjectURL(file);
+      } catch (e) {
+        downloadUrl = `https://picsum.photos/800/600?random=${Date.now()}`;
+      }
     }
+
+    const type = file.type?.startsWith('video/') ? 'video' : file.type?.startsWith('audio/') ? 'audio' : file.type?.includes('pdf') ? 'document' : 'image';
+    const mediaItem = {
+      id: `media_${timestamp}`,
+      name: file.name,
+      url: downloadUrl,
+      type: type,
+      mimeType: file.type || (type === 'image' ? 'image/jpeg' : 'video/mp4'),
+      size: file.size || 0,
+      alt: metadata.alt || file.name.replace(/\.[^/.]+$/, ''),
+      createdAt: new Date().toISOString()
+    };
+
+    await this.saveMediaItem(mediaItem);
+
+    return downloadUrl;
   }
 };

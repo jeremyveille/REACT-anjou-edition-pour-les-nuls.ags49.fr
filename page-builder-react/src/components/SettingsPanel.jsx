@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useBuilder } from '../store/builderStore';
 import findElement from '../utils/findElement';
 import { extractYoutubeVideoId } from '../utils/youtubeUtils';
-import { Settings, Trash2, Copy, Sliders, ChevronDown, ChevronRight, PenTool, Palette, ExternalLink } from 'lucide-react';
+import { Settings, Trash2, Copy, Sliders, ChevronDown, ChevronRight, PenTool, Palette, ExternalLink, Image as ImageIcon, Film } from 'lucide-react';
+import { MediaPickerModal } from './MediaPickerModal';
 
 /* ══════════════════════════════════════════════
    Shared field helpers
@@ -133,6 +134,12 @@ export default function SettingsPanel() {
   const element = selectedNode ? selectedNode.element : null;
 
   const [activeTab, setActiveTab] = useState('content'); // 'content', 'style', 'advanced'
+  const [mediaModal, setMediaModal] = useState({
+    isOpen: false,
+    filterType: null,
+    title: '',
+    onSelect: null
+  });
 
   if (!element) {
     return (
@@ -424,6 +431,24 @@ export default function SettingsPanel() {
               <GroupTitle>Image</GroupTitle>
               <Field label="URL de l'image" htmlFor="img-src">
                 <PbInput id="img-src" value={settings.src || ''} onChange={v => set('src', v)} placeholder="https://exemple.com/image.jpg" />
+                <div style={{ marginTop: '6px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setMediaModal({
+                      isOpen: true,
+                      filterType: 'image',
+                      title: 'Sélectionner une image',
+                      onSelect: (m) => {
+                        set('src', m.url);
+                        if (!settings.alt && (m.alt || m.name)) set('alt', m.alt || m.name);
+                      }
+                    })}
+                    className="pb-btn pb-btn-outline"
+                    style={{ fontSize: '0.72rem', padding: '3px 8px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                  >
+                    <ImageIcon size={12} /> Choisir depuis la médiathèque
+                  </button>
+                </div>
               </Field>
               <Field label="Description (alt)" htmlFor="img-alt" hint="Important pour l'accessibilité et le SEO">
                 <PbInput id="img-alt" value={settings.alt || ''} onChange={v => set('alt', v)} placeholder="Description de l'image" />
@@ -481,11 +506,30 @@ export default function SettingsPanel() {
                 />
                 {isInvalid && (
                   <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '4px', marginBottom: 0 }}>
-                    Lien YouTube invalide
+                    Lien YouTube non valide ou format non reconnu
                   </p>
                 )}
-                {watchUrl && (
-                  <div style={{ marginTop: '6px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '6px', flexWrap: 'wrap', gap: '6px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setMediaModal({
+                      isOpen: true,
+                      filterType: 'video',
+                      title: 'Sélectionner une vidéo',
+                      onSelect: (m) => {
+                        const vid = extractYoutubeVideoId(m.url);
+                        set('url', m.url);
+                        set('src', m.url);
+                        if (vid) set('videoId', vid);
+                      }
+                    })}
+                    className="pb-btn pb-btn-outline"
+                    style={{ fontSize: '0.72rem', padding: '3px 8px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                  >
+                    <Film size={12} /> Choisir depuis la médiathèque
+                  </button>
+
+                  {watchUrl && (
                     <a
                       href={watchUrl}
                       target="_blank"
@@ -495,8 +539,8 @@ export default function SettingsPanel() {
                       <ExternalLink size={12} />
                       <span>Ouvrir sur YouTube</span>
                     </a>
-                  </div>
-                )}
+                  )}
+                </div>
               </Field>
               <Field label="Marge du bas" htmlFor="vid-margin">
                 <PbSelect id="vid-margin" value={settings.margin || 'mb-3'} onChange={v => set('margin', v)} options={[
@@ -786,6 +830,18 @@ export default function SettingsPanel() {
         </div> {/* End advanced wrapper */}
 
       </div>
+
+      <MediaPickerModal
+        isOpen={mediaModal.isOpen}
+        filterType={mediaModal.filterType}
+        title={mediaModal.title}
+        onClose={() => setMediaModal(prev => ({ ...prev, isOpen: false }))}
+        onSelect={(media) => {
+          if (typeof mediaModal.onSelect === 'function') {
+            mediaModal.onSelect(media);
+          }
+        }}
+      />
     </div>
   );
 }

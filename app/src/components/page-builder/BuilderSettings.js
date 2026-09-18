@@ -6,11 +6,14 @@ import {
   ArrowUp, 
   ArrowDown, 
   Settings,
-  ExternalLink
+  ExternalLink,
+  Image as ImageIcon,
+  Film
 } from 'lucide-react';
 import { extractYoutubeVideoId } from '../../utils/youtubeUtils';
 import { BLOCK_DEFINITIONS } from './blockRegistry';
 import { flipbooksData } from '../../data';
+import { MediaLibraryModal } from '../MediaLibraryModal';
 
 const COMMON_ICONS = [
   'ArrowRight', 'BookOpen', 'ExternalLink', 'Calendar', 'Heart', 
@@ -23,7 +26,7 @@ const COMMON_ICONS = [
  * Récupère automatiquement l'URL existante, supporte tous les formats YouTube
  * et valide en temps réel sans interrompre la saisie.
  */
-const VideoBlockSettings = ({ block, onChange }) => {
+const VideoBlockSettings = ({ block, onChange, onOpenMediaPicker }) => {
   const { id, settings = {} } = block;
 
   // Récupérer l'URL actuelle sans écraser avec une valeur par défaut
@@ -85,30 +88,48 @@ const VideoBlockSettings = ({ block, onChange }) => {
         />
         {isInvalid && (
           <p id="pb-video-error" className="text-danger mt-1 mb-0 font-medium" style={{ fontSize: '11px', color: '#dc3545' }}>
-            Lien YouTube invalide
+            Lien YouTube non valide ou format non reconnu
           </p>
         )}
       </div>
 
-      {watchUrl && (
-        <div className="pt-1">
+      <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-1">
+        {onOpenMediaPicker && (
+          <button
+            type="button"
+            onClick={onOpenMediaPicker}
+            className="btn btn-outline-primary btn-xs py-1 px-2.5 d-inline-flex align-items-center gap-1.5 rounded"
+            style={{ fontSize: '11px' }}
+          >
+            <Film size={12} /> Choisir depuis la médiathèque
+          </button>
+        )}
+
+        {watchUrl && (
           <a
             href={watchUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs text-primary d-inline-flex align-items-center gap-1 text-decoration-none"
+            className="text-xs text-primary d-inline-flex align-items-center gap-1 text-decoration-none ms-auto"
             style={{ fontSize: '11px' }}
           >
             <ExternalLink size={12} />
             <span>Ouvrir sur YouTube</span>
           </a>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
 
 export const BuilderSettings = ({ block, onChange }) => {
+  const [mediaModal, setMediaModal] = useState({
+    isOpen: false,
+    filterType: null,
+    title: '',
+    onSelect: null
+  });
+
   if (!block) {
     return (
       <div className="text-center text-muted py-5 px-3">
@@ -839,6 +860,26 @@ export const BuilderSettings = ({ block, onChange }) => {
                 onChange={(e) => updateSetting('src', e.target.value)}
                 className="db-input text-xs w-100"
               />
+              <div className="mt-1.5">
+                <button
+                  type="button"
+                  onClick={() => setMediaModal({
+                    isOpen: true,
+                    filterType: 'image',
+                    title: 'Sélectionner une image dans la médiathèque',
+                    onSelect: (media) => {
+                      updateSetting('src', media.url);
+                      if (!settings.alt && (media.alt || media.name)) {
+                        updateSetting('alt', media.alt || media.name);
+                      }
+                    }
+                  })}
+                  className="btn btn-outline-primary btn-xs py-1 px-2.5 d-inline-flex align-items-center gap-1.5 rounded"
+                  style={{ fontSize: '11px' }}
+                >
+                  <ImageIcon size={12} /> Choisir depuis la médiathèque
+                </button>
+              </div>
             </div>
             <div>
               <label className="db-label font-bold text-xs">Téléverser une image locale</label>
@@ -890,6 +931,21 @@ export const BuilderSettings = ({ block, onChange }) => {
           <VideoBlockSettings
             block={block}
             onChange={onChange}
+            onOpenMediaPicker={() => setMediaModal({
+              isOpen: true,
+              filterType: 'video',
+              title: 'Sélectionner une vidéo dans la médiathèque',
+              onSelect: (media) => {
+                const vidUrl = media.url;
+                const newId = extractYoutubeVideoId(vidUrl);
+                onChange(id, {
+                  ...settings,
+                  url: vidUrl,
+                  videoId: newId || settings.videoId || 'dQw4w9WgXcQ',
+                  embedUrl: newId ? `https://www.youtube.com/embed/${newId}` : undefined
+                });
+              }
+            })}
           />
         )}
 
@@ -925,6 +981,23 @@ export const BuilderSettings = ({ block, onChange }) => {
                 placeholder="https://..."
                 className="db-input text-xs w-100"
               />
+              <div className="mt-1.5">
+                <button
+                  type="button"
+                  onClick={() => setMediaModal({
+                    isOpen: true,
+                    filterType: 'image',
+                    title: 'Sélectionner une image pour la carte',
+                    onSelect: (media) => {
+                      updateSetting('image', media.url);
+                    }
+                  })}
+                  className="btn btn-outline-primary btn-xs py-1 px-2.5 d-inline-flex align-items-center gap-1.5 rounded"
+                  style={{ fontSize: '11px' }}
+                >
+                  <ImageIcon size={12} /> Choisir depuis la médiathèque
+                </button>
+              </div>
             </div>
             <div>
               <label className="db-label font-bold text-xs">Texte du bouton</label>
@@ -1250,6 +1323,19 @@ export const BuilderSettings = ({ block, onChange }) => {
         </div>
 
       </div>
+
+      {/* Modale Sélecteur de Médiathèque */}
+      <MediaLibraryModal
+        isOpen={mediaModal.isOpen}
+        filterType={mediaModal.filterType}
+        title={mediaModal.title}
+        onClose={() => setMediaModal(prev => ({ ...prev, isOpen: false }))}
+        onSelect={(media) => {
+          if (typeof mediaModal.onSelect === 'function') {
+            mediaModal.onSelect(media);
+          }
+        }}
+      />
     </div>
   );
 };
