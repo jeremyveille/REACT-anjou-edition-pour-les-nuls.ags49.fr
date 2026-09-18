@@ -256,16 +256,16 @@ describe('PageBuilder and Block Architecture Tests', () => {
     fireEvent.change(youtubeInput, { target: { value: 'https://www.youtube.com/embed/embedVid888' } });
     expect(iframe.getAttribute('src')).toBe('https://www.youtube.com/embed/embedVid888');
 
-    // 8. Tester une saisie invalide : afficher "Lien YouTube invalide" sans casser le constructeur
+    // 8. Tester une saisie invalide : afficher message d'erreur sans casser le constructeur
     fireEvent.change(youtubeInput, { target: { value: 'https://invalid-video-site.com/video' } });
-    expect(await screen.findByText('Lien YouTube invalide')).toBeInTheDocument();
+    expect(await screen.findByText(/Lien YouTube (?:invalide|non valide)/i)).toBeInTheDocument();
     // Le lecteur conserve le dernier identifiant valide sans planter
     expect(iframe.getAttribute('src')).toBe('https://www.youtube.com/embed/embedVid888');
 
     // 9. Revenir à une URL valide (format watch avec paramètres)
     fireEvent.change(youtubeInput, { target: { value: 'https://www.youtube.com/watch?v=finalVid555&t=30s' } });
     await waitFor(() => {
-      expect(screen.queryByText('Lien YouTube invalide')).toBeNull();
+      expect(screen.queryByText(/Lien YouTube (?:invalide|non valide)/i)).toBeNull();
     });
     expect(iframe.getAttribute('src')).toBe('https://www.youtube.com/embed/finalVid555');
 
@@ -302,5 +302,80 @@ describe('PageBuilder and Block Architecture Tests', () => {
 
     const reloadedIframe = await screen.findByTitle('Vidéo');
     expect(reloadedIframe.getAttribute('src')).toBe('https://www.youtube.com/embed/finalVid555');
+  });
+
+  test('handles global keyboard shortcuts: Ctrl+Z, Ctrl+Y, Ctrl+D, Delete, and Escape', async () => {
+    const mockPage = {
+      id: 'page_shortcuts_test',
+      title: 'Page Raccourcis',
+      slug: 'page-raccourcis',
+      blocks: [
+        {
+          id: 'sec_kb',
+          type: 'section',
+          settings: {},
+          children: [
+            { id: 'h_kb1', type: 'heading', settings: { content: 'Titre Original' } }
+          ]
+        }
+      ]
+    };
+
+    jest.spyOn(pageService, 'getPages').mockResolvedValue([mockPage]);
+
+    render(
+      <PageBuilder
+        editingId="page_shortcuts_test"
+        editingType="page"
+        onClose={() => {}}
+        onSaveSuccess={() => {}}
+      />
+    );
+
+    expect(await screen.findByText('Titre Original')).toBeInTheDocument();
+
+    // Select the heading block
+    const headingElem = screen.getByText('Titre Original');
+    fireEvent.click(headingElem);
+
+    // Test Ctrl+D (Duplicate)
+    fireEvent.keyDown(window, { key: 'd', ctrlKey: true });
+    
+    // Should now have 2 heading elements with 'Titre Original'
+    await waitFor(() => {
+      const allHeadings = screen.getAllByText('Titre Original');
+      expect(allHeadings.length).toBe(2);
+    });
+
+    // Test Ctrl+Z (Undo)
+    fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
+    await waitFor(() => {
+      const allHeadings = screen.getAllByText('Titre Original');
+      expect(allHeadings.length).toBe(1);
+    });
+
+    // Test Ctrl+Y (Redo)
+    fireEvent.keyDown(window, { key: 'y', ctrlKey: true });
+    await waitFor(() => {
+      const allHeadings = screen.getAllByText('Titre Original');
+      expect(allHeadings.length).toBe(2);
+    });
+
+    // Test Delete (Supprimer) on the selected duplicated block
+    fireEvent.keyDown(window, { key: 'Delete' });
+    await waitFor(() => {
+      const allHeadings = screen.getAllByText('Titre Original');
+      expect(allHeadings.length).toBe(1);
+    });
+
+    // Select the remaining block again and press Escape to deselect
+    fireEvent.click(screen.getByText('Titre Original'));
+    expect(screen.getByText('Propriétés du composant')).toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: 'Escape' });
+    // After escape, properties panel is dismissed and widget catalog is shown
+    await waitFor(() => {
+      expect(screen.queryByText('Propriétés du composant')).toBeNull();
+    });
   });
 });

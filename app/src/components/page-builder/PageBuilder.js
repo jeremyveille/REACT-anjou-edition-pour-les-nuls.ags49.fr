@@ -15,7 +15,8 @@ import {
   Loader,
   Lock,
   Eye,
-  EyeOff
+  EyeOff,
+  Command
 } from 'lucide-react';
 import { DndContext, DragOverlay, useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
 import moveElementInTree from '../../utils/moveElement';
@@ -178,6 +179,18 @@ export const PageBuilder = ({
     return null;
   }, []);
 
+  // Trouver récursivement le parent d'un bloc par son identifiant
+  const findParentId = useCallback((tree, childId, parent = null) => {
+    for (let node of tree) {
+      if (node.id === childId) return parent ? parent.id : null;
+      if (node.children && node.children.length > 0) {
+        const found = findParentId(node.children, childId, node);
+        if (found !== undefined) return found;
+      }
+    }
+    return undefined;
+  }, []);
+
   const activeBlock = activeBlockId ? findBlockById(blocks, activeBlockId) : null;
 
   // Trouver récursivement une colonne dans l'arbre pour insérer un widget
@@ -322,7 +335,7 @@ export const PageBuilder = ({
   };
 
   // DUPLIQUER UN BLOC
-  const handleDuplicateBlock = (id, parentId) => {
+  const handleDuplicateBlock = useCallback((id, parentId) => {
     const targetBlock = findBlockById(blocks, id);
     if (!targetBlock) return;
 
@@ -356,7 +369,7 @@ export const PageBuilder = ({
     pushBlocksState(normalizeBlocks(nextState));
     setActiveBlockId(duplicated.id);
     setActiveTab('settings');
-  };
+  }, [blocks, findBlockById, pushBlocksState]);
 
   // MODIFIER LES REGLAGES D'UN BLOC
   const handleBlockSettingsChange = (id, newSettings) => {
@@ -414,7 +427,7 @@ export const PageBuilder = ({
   };
 
   // SUPPRIMER UN BLOC
-  const handleRemoveBlock = (id, parentId) => {
+  const handleRemoveBlock = useCallback((id, parentId) => {
     const removeFromTree = (tree) => {
       if (!parentId) {
         return tree.filter(b => b.id !== id);
@@ -435,10 +448,10 @@ export const PageBuilder = ({
       setActiveBlockId(null);
       setActiveTab('widgets');
     }
-  };
+  }, [blocks, pushBlocksState, activeBlockId]);
 
   // SAUVEGARDER ET PUBLIER LA PAGE
-  const handleSavePage = async () => {
+  const handleSavePage = useCallback(async () => {
     if (!pageTitle.trim()) {
       alert(editingType === 'article' ? "Veuillez donner un titre à l'article." : "Veuillez donner un titre à la page.");
       return;
@@ -468,7 +481,68 @@ export const PageBuilder = ({
     } finally {
       setSaving(false);
     }
-  };
+  }, [pageTitle, editingType, blocks, editingId, pageSlug, pageCategory, pageStatus, onSaveSuccess, onClose]);
+
+  // GESTION GLOBALE DES RACCOURCIS CLAVIER (Ctrl+Z, Ctrl+Y, Suppr, Ctrl+D, Escape, Ctrl+S)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      const activeTag = document.activeElement?.tagName?.toLowerCase();
+      const isInput = activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select' || document.activeElement?.isContentEditable;
+
+      // 1. Annuler : Ctrl+Z / Cmd+Z (sans Shift)
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z') {
+        if (!isInput) {
+          e.preventDefault();
+          if (canUndo) undo();
+        }
+      }
+
+      // 2. Rétablir : Ctrl+Y / Cmd+Y ou Ctrl+Shift+Z / Cmd+Shift+Z
+      if (((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') ||
+          ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'z')) {
+        if (!isInput) {
+          e.preventDefault();
+          if (canRedo) redo();
+        }
+      }
+
+      // 3. Dupliquer : Ctrl+D / Cmd+D (si un élément est sélectionné)
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
+        if (!isInput && activeBlockId) {
+          e.preventDefault();
+          const parentId = findParentId(blocks, activeBlockId);
+          handleDuplicateBlock(activeBlockId, parentId);
+        }
+      }
+
+      // 4. Supprimer : Suppr / Delete ou Backspace (si un élément est sélectionné et hors champs texte)
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (!isInput && activeBlockId) {
+          e.preventDefault();
+          const parentId = findParentId(blocks, activeBlockId);
+          handleRemoveBlock(activeBlockId, parentId);
+        }
+      }
+
+      // 5. Désélectionner : Échap / Escape
+      if (e.key === 'Escape') {
+        if (activeBlockId) {
+          e.preventDefault();
+          setActiveBlockId(null);
+          setActiveTab('widgets');
+        }
+      }
+
+      // 6. Sauvegarder : Ctrl+S / Cmd+S
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        handleSavePage();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [canUndo, canRedo, undo, redo, activeBlockId, blocks, findParentId, handleDuplicateBlock, handleRemoveBlock, handleSavePage]);
 
   // ACTIONS UNDO / REDO
   const handleUndo = () => {
@@ -609,8 +683,8 @@ export const PageBuilder = ({
               onClick={handleUndo}
               disabled={!canUndo}
               className="btn btn-link p-1 text-slate-500 hover:text-primary disabled:opacity-30"
-              title="Annuler"
-              aria-label="Annuler la dernière action"
+              title="Annuler (Ctrl+Z)"
+              aria-label="Annuler la dernière action (Ctrl+Z)"
             >
               <Undo size={18} />
             </button>
@@ -619,8 +693,8 @@ export const PageBuilder = ({
               onClick={handleRedo}
               disabled={!canRedo}
               className="btn btn-link p-1 text-slate-500 hover:text-primary disabled:opacity-30"
-              title="Rétablir"
-              aria-label="Rétablir l'action annulée"
+              title="Rétablir (Ctrl+Y)"
+              aria-label="Rétablir l'action annulée (Ctrl+Y)"
             >
               <Redo size={18} />
             </button>
@@ -655,6 +729,16 @@ export const PageBuilder = ({
               <Smartphone size={18} />
             </button>
           </div>
+
+          {/* Badge récapitulatif des raccourcis clavier */}
+          <span 
+            className="badge bg-slate-100 text-slate-600 border text-xxs d-none d-xl-inline-flex align-items-center gap-1 py-1 px-2 rounded-2"
+            title="Raccourcis : Ctrl+Z (Annuler), Ctrl+Y (Rétablir), Suppr (Supprimer), Ctrl+D (Dupliquer), Échap (Désélectionner)"
+            style={{ fontSize: '11px', fontWeight: '500' }}
+          >
+            <Command size={11} />
+            <span>Ctrl+Z / Ctrl+Y / Suppr / Ctrl+D</span>
+          </span>
         </div>
 
         {/* Statut et Actions globales */}

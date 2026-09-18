@@ -123,26 +123,6 @@ export function BuilderProvider({ children }) {
     });
   }, [future, elements, saveToLocalStorage]);
 
-  // Handle Keyboard Shortcuts for Undo/Redo (Ctrl+Z / Ctrl+Y)
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
-        if (e.key.toLowerCase() === 'z') {
-          e.preventDefault();
-          undo();
-        } else if (e.key.toLowerCase() === 'y') {
-          e.preventDefault();
-          redo();
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [undo, redo]);
-
   // Elements operations
   const setElements = useCallback((newElements) => {
     updateElementsAndHistory(sanitizeBuilderData(newElements));
@@ -179,6 +159,60 @@ export function BuilderProvider({ children }) {
     const updatedTree = deleteElementFromTree(elements, id);
     updateElementsAndHistory(updatedTree);
   }, [elements, selectedElementId, updateElementsAndHistory]);
+
+  // Handle Keyboard Shortcuts (Ctrl+Z, Ctrl+Y, Ctrl+Shift+Z, Suppr, Ctrl+D, Escape)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      const activeTag = document.activeElement?.tagName?.toLowerCase();
+      const isInput = activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select' || document.activeElement?.isContentEditable;
+
+      // 1. Undo
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z') {
+        if (!isInput) {
+          e.preventDefault();
+          undo();
+        }
+      }
+
+      // 2. Redo
+      if (((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') ||
+          ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'z')) {
+        if (!isInput) {
+          e.preventDefault();
+          redo();
+        }
+      }
+
+      // 3. Duplicate
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
+        if (!isInput && selectedElementId) {
+          e.preventDefault();
+          duplicateElement(selectedElementId);
+        }
+      }
+
+      // 4. Delete
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (!isInput && selectedElementId) {
+          e.preventDefault();
+          deleteElement(selectedElementId);
+        }
+      }
+
+      // 5. Deselect
+      if (e.key === 'Escape') {
+        if (selectedElementId) {
+          e.preventDefault();
+          setSelectedElementId(null);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [undo, redo, selectedElementId, duplicateElement, deleteElement]);
 
   const moveElement = useCallback((activeId, overId, isNew = false) => {
     const updatedTree = moveElementInTree(elements, activeId, overId, isNew);
