@@ -1,6 +1,7 @@
 import { useDroppable, useDraggable } from '@dnd-kit/core';
 import { useBuilder } from '../store/builderStore';
 import * as Icons from 'lucide-react';
+import { getYoutubeEmbedUrl } from '../utils/youtubeUtils';
 import { Copy, Trash2, GripVertical, Settings, Star } from 'lucide-react';
 
 /* ── Draggable wrapper for existing elements ── */
@@ -325,14 +326,8 @@ export default function ElementRenderer({ element }) {
       }
 
       case 'video': {
-        let embedSrc = settings.src || '';
-        if (embedSrc.includes('youtube.com/watch?v=')) {
-          const vid = embedSrc.split('v=')[1]?.split('&')[0];
-          embedSrc = `https://www.youtube.com/embed/${vid}`;
-        } else if (embedSrc.includes('youtu.be/')) {
-          const vid = embedSrc.split('youtu.be/')[1]?.split('?')[0];
-          embedSrc = `https://www.youtube.com/embed/${vid}`;
-        }
+        const rawSrc = settings.url || settings.src || (settings.videoId ? `https://www.youtube.com/watch?v=${settings.videoId}` : '');
+        const embedSrc = getYoutubeEmbedUrl(rawSrc, '');
         return (
           <div
             className={`${settings.className || 'ratio ratio-16x9 rounded overflow-hidden'} ${settings.margin || 'mb-3'}`}

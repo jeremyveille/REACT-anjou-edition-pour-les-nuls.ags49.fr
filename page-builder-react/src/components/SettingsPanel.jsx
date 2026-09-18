@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useBuilder } from '../store/builderStore';
 import findElement from '../utils/findElement';
-import { Settings, Trash2, Copy, Sliders, ChevronDown, ChevronRight, PenTool, Palette } from 'lucide-react';
+import { extractYoutubeVideoId } from '../utils/youtubeUtils';
+import { Settings, Trash2, Copy, Sliders, ChevronDown, ChevronRight, PenTool, Palette, ExternalLink } from 'lucide-react';
 
 /* ══════════════════════════════════════════════
    Shared field helpers
@@ -455,19 +456,56 @@ export default function SettingsPanel() {
         )}
 
         {/* ── VIDEO ── */}
-        {element.type === 'video' && (
-          <div className="pb-settings-group">
-            <GroupTitle>Vidéo YouTube / Vimeo</GroupTitle>
-            <Field label="URL de la vidéo" htmlFor="vid-src" hint="Formats acceptés : youtube.com/watch?v=… ou youtu.be/…">
-              <PbInput id="vid-src" value={settings.src || ''} onChange={v => set('src', v)} placeholder="https://www.youtube.com/watch?v=..." />
-            </Field>
-            <Field label="Marge du bas" htmlFor="vid-margin">
-              <PbSelect id="vid-margin" value={settings.margin || 'mb-3'} onChange={v => set('margin', v)} options={[
-                ['mb-0', 'Aucune'], ['mb-2', 'Petite'], ['mb-3', 'Normale'], ['mb-5', 'Grande'],
-              ]} />
-            </Field>
-          </div>
-        )}
+        {element.type === 'video' && (() => {
+          const videoVal = settings.url || settings.src || '';
+          const extractedId = extractYoutubeVideoId(videoVal);
+          const isInvalid = Boolean(videoVal.trim() && !extractedId);
+          const watchUrl = extractedId ? `https://www.youtube.com/watch?v=${extractedId}` : null;
+
+          return (
+            <div className="pb-settings-group">
+              <GroupTitle>Vidéo YouTube</GroupTitle>
+              <Field label="Lien YouTube" htmlFor="vid-src">
+                <PbInput 
+                  id="vid-src" 
+                  value={videoVal} 
+                  onChange={v => {
+                    const vid = extractYoutubeVideoId(v);
+                    set('url', v);
+                    set('src', v);
+                    if (vid) {
+                      set('videoId', vid);
+                    }
+                  }} 
+                  placeholder="https://www.youtube.com/watch?v=..." 
+                />
+                {isInvalid && (
+                  <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '4px', marginBottom: 0 }}>
+                    Lien YouTube invalide
+                  </p>
+                )}
+                {watchUrl && (
+                  <div style={{ marginTop: '6px' }}>
+                    <a
+                      href={watchUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ fontSize: '0.75rem', color: '#2563eb', display: 'inline-flex', alignItems: 'center', gap: '4px', textDecoration: 'none' }}
+                    >
+                      <ExternalLink size={12} />
+                      <span>Ouvrir sur YouTube</span>
+                    </a>
+                  </div>
+                )}
+              </Field>
+              <Field label="Marge du bas" htmlFor="vid-margin">
+                <PbSelect id="vid-margin" value={settings.margin || 'mb-3'} onChange={v => set('margin', v)} options={[
+                  ['mb-0', 'Aucune'], ['mb-2', 'Petite'], ['mb-3', 'Normale'], ['mb-5', 'Grande'],
+                ]} />
+              </Field>
+            </div>
+          );
+        })()}
 
         {/* ── BUTTON ── */}
         {element.type === 'button' && (

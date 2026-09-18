@@ -1,4 +1,5 @@
 import { escapeAttr, sanitizeHtml } from './sanitize';
+import { getYoutubeEmbedUrl } from './youtubeUtils';
 
 /**
  * Builds extra inline styles from advanced settings (gradient, box-shadow).
@@ -181,14 +182,8 @@ export default function renderHtml(elements, depth = 0) {
         const margin = s.margin || 'mb-3';
         const classes = [customClass, margin].filter(Boolean).join(' ');
 
-        let embedSrc = s.src || '';
-        if (embedSrc.includes('youtube.com/watch?v=')) {
-          const vid = embedSrc.split('v=')[1]?.split('&')[0];
-          embedSrc = `https://www.youtube.com/embed/${vid}`;
-        } else if (embedSrc.includes('youtu.be/')) {
-          const vid = embedSrc.split('youtu.be/')[1]?.split('?')[0];
-          embedSrc = `https://www.youtube.com/embed/${vid}`;
-        }
+        const rawSrc = s.url || s.src || (s.videoId ? `https://www.youtube.com/watch?v=${s.videoId}` : '');
+        const embedSrc = getYoutubeEmbedUrl(rawSrc, '');
 
         html += `${indent}<div class="${escapeAttr(classes)}">\n`;
         if (embedSrc) {
