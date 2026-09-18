@@ -1,12 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import {
-  ChevronRight,
   BookOpen,
-  Image as ImageIcon,
-  PlayCircle,
   Play,
-  Info,
   Volume2,
   VolumeX,
   X,
@@ -39,25 +35,6 @@ import { PrivacyPolicy } from './components/PrivacyPolicy';
 
 // Lazy load Dashboard to save ~250KB in the public site bundle
 const Dashboard = React.lazy(() => import('./components/Dashboard'));
-
-const Youtube = ({ size = 20, color = "currentColor", fill = "none", ...props }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill={fill}
-    stroke={color}
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className="lucide lucide-youtube"
-    {...props}
-  >
-    <path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17" />
-    <polygon points="10 15 15 12 10 9 10 15" fill={fill !== "none" ? "white" : "none"} />
-  </svg>
-);
 
 const normalizeParentId = (id) => {
   if (!id || id === "null" || id === "") return null;
@@ -828,66 +805,6 @@ function App() {
 
       {/* Layout Main Container */}
       <main id="main-content">
-        {/* Left Sidebar widgets */}
-        <aside className="sidebar left-sidebar">
-          {(() => {
-            const homeCustomPage = customPages.find(p => (p.title || '').toLowerCase().includes('accueil') || p.slug === 'home' || p.slug === 'accueil' || p.slug === '');
-            const customVideosBlock = homeCustomPage?.blocks?.find(b => b.type === 'popularVideos');
-            const customNewsBlock = homeCustomPage?.blocks?.find(b => b.type === 'newsList');
-            const videosToDisplay = customVideosBlock?.settings?.videos || videosData;
-            const videosTitle = customVideosBlock?.settings?.title || 'Vidéos Populaires';
-            const newsToDisplay = customNewsBlock?.settings?.news || [
-              { title: "Salon du Livre de Saumur", description: "Retrouvez l'équipe d'Anjou Édition au stand C12 les 14 et 15 octobre 2026." },
-              { title: "Nouvelle parution fables", description: "Découvrez notre nouvelle édition papier des fables locales de Séraphin." },
-              { title: "Mise à jour portail", description: "Nouveau design épuré, lecteur audio de textes intégré et galerie interactive." }
-            ];
-            const newsTitle = customNewsBlock?.settings?.title || 'Actualités 2026';
-
-            return (
-              <>
-                <div className="card widget">
-                  <h2 className="widget-title">
-                    <PlayCircle size={20} /> {videosTitle}
-                  </h2>
-                  <div className="video-mini-list">
-                    {videosToDisplay.map((vid) => (
-                      <button 
-                        key={vid.id || vid.title} 
-                        type="button"
-                        className="video-mini-item"
-                        onClick={() => handleOpenVideo(vid.id)}
-                        aria-label={`Lire la vidéo : ${vid.title}`}
-                      >
-                        <div className="mini-thumb">
-                          <Play size={20} color="white" fill="white" />
-                        </div>
-                        <div className="mini-info">
-                          <h4>{vid.title}</h4>
-                          {vid.duration && <span>{vid.duration}</span>}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                
-                <div className="card widget">
-                  <h2 className="widget-title">
-                    <Info size={20} /> {newsTitle}
-                  </h2>
-                  <ul className="news-list">
-                    {newsToDisplay.map((item, idx) => (
-                      <li key={item.id || idx}>
-                        <strong>{item.title}</strong>
-                        <p>{item.description}</p>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </>
-            );
-          })()}
-        </aside>
-
         {/* Center Dynamic Content Area */}
         <section className="main-content">
           
@@ -926,55 +843,17 @@ function App() {
                 }
 
                 return (
-                  <>
-                    {/* Principal Flipbook Reader (visible immediately) */}
-                    <div className="home-flipbook-section">
-                      <div className="section-title">
-                        <h3>Lecteur de Flipbook Interactif</h3>
-                      </div>
-                      <div className="home-flipbook-reader-wrapper">
-                        <PdfFlipbookReader 
-                          book={flipbooks.find(f => f.id === activeFlipbookId) || flipbooks[0]} 
-                        />
-                      </div>
-                    </div>
-
+                  /* Principal Flipbook Reader (visible immediately) */
+                  <div className="home-flipbook-section">
                     <div className="section-title">
-                      <h3>À la une : Flipbooks Interactifs</h3>
+                      <h3>Lecteur de Flipbook Interactif</h3>
                     </div>
-                    <div className="featured-grid">
-                      {flipbooks.map((fb) => (
-                        <div key={fb.id} className="featured-card">
-                          <div className="featured-card-icon">
-                            <BookOpen size={36} color="var(--primary)" />
-                          </div>
-                          <h4>{fb.title}</h4>
-                          <p>{fb.description}</p>
-                          <button type="button" onClick={() => handleOpenFlipbook(fb.id)} className="btn-card">
-                            Feuilleter l'ouvrage <ChevronRight size={16} />
-                          </button>
-                        </div>
-                      ))}
+                    <div className="home-flipbook-reader-wrapper">
+                      <PdfFlipbookReader 
+                        book={flipbooks.find(f => f.id === activeFlipbookId) || flipbooks[0]} 
+                      />
                     </div>
-
-                    <div className="section-title">
-                      <h3>Poésies et Fables Phares</h3>
-                    </div>
-                    <div className="featured-poems">
-                      <button type="button" className="poem-card" onClick={() => handleSelectCategory("Ma pomme")} aria-label="Lire la fable Ma pomme">
-                        <span>FABLE</span>
-                        <h4>Ma pomme</h4>
-                        <p>"Une belle pomme rouge, au sommet d'un pommier, se prélassait au soleil du matin printanier..."</p>
-                        <span className="read-more">Lire la fable</span>
-                      </button>
-                      <button type="button" className="poem-card" onClick={() => handleSelectCategory("RAPPEL")} aria-label="Lire la poésie Rappel d'Anjou">
-                        <span>POÉSIE</span>
-                        <h4>Rappel d'Anjou</h4>
-                        <p>"Doux pays de la Loire où mon enfance a fui, sous un ciel argenté que la brume caresse..."</p>
-                        <span className="read-more">Lire la poésie</span>
-                      </button>
-                    </div>
-                  </>
+                  </div>
                 );
               })()}
             </div>
@@ -1294,52 +1173,6 @@ function App() {
           )}
 
         </section>
-
-        {/* Right Sidebar widgets */}
-        <aside className="sidebar right-sidebar">
-          <div className="card widget">
-            <h2 className="widget-title">
-              <ImageIcon size={20} /> Galerie
-            </h2>
-            <div className="gallery-grid">
-              {galleryImages.slice(0, 4).map((img, idx) => (
-                <button 
-                  key={img.id} 
-                  type="button"
-                  className="gallery-item" 
-                  style={{ backgroundImage: `url('${img.url}')` }}
-                  title={img.title}
-                  aria-label={`Voir l'image : ${img.title}`}
-                  onClick={() => {
-                    setView({ type: 'gallery' });
-                    setLightbox({ isOpen: true, currentIndex: idx, zoom: false });
-                  }}
-                ></button>
-              ))}
-            </div>
-            <button type="button" onClick={() => setView({ type: 'gallery' })} className="widget-footer-btn">
-              Voir toutes les photos
-            </button>
-          </div>
-          
-          <div className="card widget">
-            <h2 className="widget-title">
-              <Youtube size={20} /> Chaîne YouTube
-            </h2>
-            <button 
-              type="button"
-              className="video-placeholder" 
-              style={{ background: '#fee2e2' }}
-              onClick={() => handleOpenVideo("vid3")}
-              aria-label="Lire la conférence Anjou 2026"
-            >
-              <Youtube size={40} color="#ef4444" fill="#ef4444" />
-            </button>
-            <p style={{ fontSize: '0.85rem', fontWeight: 600, textAlign: 'center' }}>
-              Conférence Anjou 2026 - Extrait
-            </p>
-          </div>
-        </aside>
       </main>
 
       <PublicFooter setView={setView} />

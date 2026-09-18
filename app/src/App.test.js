@@ -221,4 +221,58 @@ test('navigates to admin dashboard and attempts login', async () => {
   });
 });
 
+test('ensures "Vidéos Populaires", "Actualités 2026", "Galerie" and "Chaîne YouTube" sidebar blocks are not rendered on homepage', () => {
+  render(<App />);
+
+  // Verify that Vidéos Populaires heading is absent from homepage
+  expect(screen.queryByRole('heading', { name: /Vidéos Populaires/i })).not.toBeInTheDocument();
+  expect(screen.queryAllByRole('button', { name: /Lire la vidéo/i }).length).toBe(0);
+
+  // Verify that the News widget heading is absent from homepage
+  expect(screen.queryByRole('heading', { name: /Actualités 2026/i })).not.toBeInTheDocument();
+  expect(screen.queryByText(/Salon du Livre de Saumur/i)).not.toBeInTheDocument();
+  expect(screen.queryByText(/Nouvelle parution fables/i)).not.toBeInTheDocument();
+  expect(screen.queryByText(/Mise à jour portail/i)).not.toBeInTheDocument();
+
+  // Verify that Galerie sidebar widget heading & button are absent from homepage
+  expect(screen.queryByRole('heading', { name: /Galerie/i })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: /Voir toutes les photos/i })).not.toBeInTheDocument();
+
+  // Verify that Chaîne YouTube sidebar widget is absent from homepage
+  expect(screen.queryByRole('heading', { name: /Chaîne YouTube/i })).not.toBeInTheDocument();
+  expect(screen.queryByText(/Conférence Anjou 2026 - Extrait/i)).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: /Lire la conférence Anjou 2026/i })).not.toBeInTheDocument();
+});
+
+test('ensures "À la une : Flipbooks Interactifs" cards and "Feuilleter l\'ouvrage" buttons are not rendered on homepage', () => {
+  render(<App />);
+
+  // Verify that "À la une : Flipbooks Interactifs" heading is absent from homepage
+  expect(screen.queryByRole('heading', { name: /À la une : Flipbooks Interactifs/i })).not.toBeInTheDocument();
+
+  // Verify that "Feuilleter l'ouvrage" buttons are absent from homepage
+  expect(screen.queryAllByRole('button', { name: /Feuilleter l'ouvrage/i }).length).toBe(0);
+});
+
+test('ensures "Poésies et Fables Phares" section and cards are not rendered on homepage', () => {
+  render(<App />);
+
+  // Verify that "Poésies et Fables Phares" heading is absent from homepage
+  expect(screen.queryByRole('heading', { name: /Poésies et Fables Phares/i })).not.toBeInTheDocument();
+
+  // Verify that buttons and links for fable/poem are absent from homepage
+  expect(screen.queryByRole('button', { name: /Lire la fable Ma pomme/i })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: /Lire la poésie Rappel d'Anjou/i })).not.toBeInTheDocument();
+  expect(screen.queryByText(/LIRE LA FABLE/i)).not.toBeInTheDocument();
+  expect(screen.queryByText(/LIRE LA POÉSIE/i)).not.toBeInTheDocument();
+
+  // Verify that the interactive flipbook reader remains present
+  expect(screen.getByRole('heading', { name: /Lecteur de Flipbook Interactif/i })).toBeInTheDocument();
+});
+
+
+
+
+
+
 

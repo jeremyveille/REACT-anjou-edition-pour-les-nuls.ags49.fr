@@ -717,10 +717,8 @@ nav {
 /* --- MAIN PAGE LAYOUT --- */
 main {
   flex: 1;
-  display: grid;
-  grid-template-columns: 320px 1fr 320px;
+  display: block;
   padding: 3rem 5%;
-  gap: 2rem;
   max-width: 1700px;
   margin: 0 auto;
   width: 100%;
@@ -2119,7 +2117,6 @@ canvas {
 /* XL — Grands écrans (1200px et plus) */
 @media (min-width: 1200px) {
   main {
-    grid-template-columns: 320px 1fr 320px;
     padding: 3rem 5%;
     max-width: 1700px;
   }
@@ -2174,12 +2171,7 @@ canvas {
     padding: 0.3rem 0.55rem !important;
   }
   main {
-    grid-template-columns: 280px 1fr;
     padding: 2.5rem 4%;
-    gap: 1.5rem;
-  }
-  .right-sidebar {
-    display: none;
   }
   .featured-grid,
   .featured-poems,
@@ -2226,18 +2218,7 @@ canvas {
     display: flex;
   }
   main {
-    grid-template-columns: 1fr;
     padding: 2rem 4%;
-    gap: 1.5rem;
-  }
-  .left-sidebar {
-    order: 2;
-  }
-  .main-content {
-    order: 1;
-  }
-  .right-sidebar {
-    display: none;
   }
   .featured-grid,
   .featured-poems,
@@ -2385,30 +2366,17 @@ canvas {
 
   /* 2. Main Layout & Margins */
   main {
-    grid-template-columns: minmax(0, 1fr);
     padding: 1.25rem 8px;
-    gap: 1.25rem;
     width: 100%;
     max-width: 100%;
     min-width: 0;
     box-sizing: border-box;
   }
-  .left-sidebar {
-    order: 2;
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-    gap: 1rem;
-  }
   .main-content {
-    order: 1;
     width: 100%;
     max-width: 100%;
     min-width: 0;
     gap: 1.25rem;
-  }
-  .right-sidebar {
-    display: none;
   }
 
   /* 3. Section Titles */
