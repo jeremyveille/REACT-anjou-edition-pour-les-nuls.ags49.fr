@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { pageService } from '../../services/pageService';
 import { 
   Plus, 
   Trash2, 
   ArrowUp, 
   ArrowDown, 
-  Settings
+  Settings,
+  ExternalLink
 } from 'lucide-react';
+import { extractYoutubeVideoId } from '../../utils/youtubeUtils';
 import { BLOCK_DEFINITIONS } from './blockRegistry';
 import { flipbooksData } from '../../data';
 
@@ -15,6 +17,96 @@ const COMMON_ICONS = [
   'FileText', 'Phone', 'MapPin', 'Video', 'Info', 'User', 'HelpCircle', 'Settings',
   'PlayCircle', 'Play', 'Feather', 'Check', 'Search'
 ];
+
+/**
+ * Panneau de réglages pour le composant Vidéo (YouTube).
+ * Récupère automatiquement l'URL existante, supporte tous les formats YouTube
+ * et valide en temps réel sans interrompre la saisie.
+ */
+const VideoBlockSettings = ({ block, onChange }) => {
+  const { id, settings = {} } = block;
+
+  // Récupérer l'URL actuelle sans écraser avec une valeur par défaut
+  const currentUrl = settings.url || (settings.videoId ? `https://www.youtube.com/watch?v=${settings.videoId}` : (settings.src || ''));
+  const [inputValue, setInputValue] = useState(currentUrl);
+
+  // Synchronisation lors de la sélection d'un autre bloc ou modification externe
+  useEffect(() => {
+    const val = settings.url || (settings.videoId ? `https://www.youtube.com/watch?v=${settings.videoId}` : (settings.src || ''));
+    setInputValue(val);
+  }, [id, settings.url, settings.videoId, settings.src]);
+
+  const extractedId = extractYoutubeVideoId(inputValue);
+  const isInputEmpty = !inputValue || inputValue.trim() === '';
+  const isInvalid = !isInputEmpty && !extractedId;
+
+  const handleUrlChange = (e) => {
+    const val = e.target.value;
+    setInputValue(val);
+
+    const newVideoId = extractYoutubeVideoId(val);
+
+    if (newVideoId) {
+      onChange(id, {
+        ...settings,
+        url: val,
+        videoId: newVideoId,
+        embedUrl: `https://www.youtube.com/embed/${newVideoId}`,
+        lastValidVideoId: newVideoId
+      });
+    } else {
+      // URL invalide ou en cours de frappe : on conserve la saisie dans url et on maintient le dernier videoId valide pour ne pas casser le lecteur
+      onChange(id, {
+        ...settings,
+        url: val,
+        videoId: settings.videoId || settings.lastValidVideoId || 'dQw4w9WgXcQ'
+      });
+    }
+  };
+
+  const activeVideoId = extractedId || settings.videoId || settings.lastValidVideoId;
+  const watchUrl = activeVideoId ? `https://www.youtube.com/watch?v=${activeVideoId}` : null;
+
+  return (
+    <div className="space-y-3">
+      <div>
+        <label className="db-label font-bold text-xs" htmlFor="pb-video-url-input">
+          Lien YouTube
+        </label>
+        <input
+          id="pb-video-url-input"
+          type="text"
+          value={inputValue}
+          onChange={handleUrlChange}
+          placeholder="https://www.youtube.com/watch?v=..."
+          className={`db-input text-xs w-100 ${isInvalid ? 'border-danger' : ''}`}
+          aria-invalid={isInvalid}
+          aria-describedby={isInvalid ? 'pb-video-error' : undefined}
+        />
+        {isInvalid && (
+          <p id="pb-video-error" className="text-danger mt-1 mb-0 font-medium" style={{ fontSize: '11px', color: '#dc3545' }}>
+            Lien YouTube invalide
+          </p>
+        )}
+      </div>
+
+      {watchUrl && (
+        <div className="pt-1">
+          <a
+            href={watchUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-primary d-inline-flex align-items-center gap-1 text-decoration-none"
+            style={{ fontSize: '11px' }}
+          >
+            <ExternalLink size={12} />
+            <span>Ouvrir sur YouTube</span>
+          </a>
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const BuilderSettings = ({ block, onChange }) => {
   if (!block) {
@@ -724,6 +816,103 @@ export const BuilderSettings = ({ block, onChange }) => {
                 value={settings.link || ''}
                 onChange={(e) => updateSetting('link', e.target.value)}
                 placeholder="https://..."
+                className="db-input text-xs w-100"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* =========================================================================
+            9b. RÉGLAGES SPÉCIFIQUES : VIDÉO (YOUTUBE)
+           ========================================================================= */}
+        {type === 'video' && (
+          <VideoBlockSettings
+            block={block}
+            onChange={onChange}
+          />
+        )}
+
+        {/* =========================================================================
+            9c. RÉGLAGES SPÉCIFIQUES : CARTE (CARD)
+           ========================================================================= */}
+        {type === 'card' && (
+          <div className="space-y-3">
+            <div>
+              <label className="db-label font-bold text-xs">Titre de la carte</label>
+              <input
+                type="text"
+                value={settings.title || ''}
+                onChange={(e) => updateSetting('title', e.target.value)}
+                className="db-input text-xs w-100"
+              />
+            </div>
+            <div>
+              <label className="db-label font-bold text-xs">Texte / Description</label>
+              <textarea
+                rows={3}
+                value={settings.text || ''}
+                onChange={(e) => updateSetting('text', e.target.value)}
+                className="db-input text-xs w-100"
+              />
+            </div>
+            <div>
+              <label className="db-label font-bold text-xs">Image d'illustration (URL)</label>
+              <input
+                type="text"
+                value={settings.image || ''}
+                onChange={(e) => updateSetting('image', e.target.value)}
+                placeholder="https://..."
+                className="db-input text-xs w-100"
+              />
+            </div>
+            <div>
+              <label className="db-label font-bold text-xs">Texte du bouton</label>
+              <input
+                type="text"
+                value={settings.buttonText || ''}
+                onChange={(e) => updateSetting('buttonText', e.target.value)}
+                placeholder="Découvrir"
+                className="db-input text-xs w-100"
+              />
+            </div>
+            <div>
+              <label className="db-label font-bold text-xs">Lien du bouton</label>
+              <input
+                type="text"
+                value={settings.buttonLink || ''}
+                onChange={(e) => updateSetting('buttonLink', e.target.value)}
+                placeholder="# ou https://..."
+                className="db-input text-xs w-100"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* =========================================================================
+            9d. RÉGLAGES SPÉCIFIQUES : ALERTE
+           ========================================================================= */}
+        {type === 'alert' && (
+          <div className="space-y-3">
+            <div>
+              <label className="db-label font-bold text-xs">Type d'alerte</label>
+              <select
+                value={settings.type || 'alert-info'}
+                onChange={(e) => updateSetting('type', e.target.value)}
+                className="db-select text-xs w-100"
+              >
+                <option value="alert-info">Information (Bleu)</option>
+                <option value="alert-success">Succès (Vert)</option>
+                <option value="alert-warning">Avertissement (Jaune)</option>
+                <option value="alert-danger">Erreur / Danger (Rouge)</option>
+                <option value="alert-light">Gris clair (Light)</option>
+              </select>
+            </div>
+            <div>
+              <label className="db-label font-bold text-xs">Message de l'alerte</label>
+              <textarea
+                rows={3}
+                value={settings.content || ''}
+                onChange={(e) => updateSetting('content', e.target.value)}
                 className="db-input text-xs w-100"
               />
             </div>

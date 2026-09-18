@@ -170,4 +170,137 @@ describe('PageBuilder and Block Architecture Tests', () => {
     const deleteBtns = screen.getAllByRole('button', { name: /Supprimer le bloc/i });
     fireEvent.click(deleteBtns[deleteBtns.length - 1]);
   });
+
+  test('Video component property editing, validation, real-time update and persistence', async () => {
+    window.alert = jest.fn();
+    const saveSpy = jest.spyOn(pageService, 'savePage').mockResolvedValue({ id: 'page_video_test' });
+
+    const initialVideoPage = {
+      id: 'page_video_test',
+      title: 'Page Vidéo Démo',
+      slug: 'page-video-demo',
+      category: 'Patrimoine',
+      status: 'draft',
+      blocks: [
+        {
+          id: 'sec_video_1',
+          type: 'section',
+          settings: { classes: 'py-4' },
+          children: [
+            {
+              id: 'col_video_1',
+              type: 'column',
+              settings: {},
+              children: [
+                {
+                  id: 'vid_block_1',
+                  type: 'video',
+                  settings: {
+                    url: 'https://www.youtube.com/watch?v=initial1234',
+                    videoId: 'initial1234',
+                    classes: 'my-custom-video-class'
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    };
+
+    jest.spyOn(pageService, 'getPages').mockResolvedValue([initialVideoPage]);
+
+    const { rerender } = render(
+      <PageBuilder
+        editingId="page_video_test"
+        editingType="page"
+        onClose={() => {}}
+        onSaveSuccess={() => {}}
+      />
+    );
+
+    // 1. Attendre le chargement
+    expect(await screen.findByDisplayValue('Page Vidéo Démo')).toBeInTheDocument();
+
+    // 2. Vérifier que la vidéo initiale est rendue avec son URL iframe embed
+    const iframe = await screen.findByTitle('Vidéo');
+    expect(iframe).toBeInTheDocument();
+    expect(iframe.getAttribute('src')).toBe('https://www.youtube.com/embed/initial1234');
+
+    // 3. Sélectionner le bloc Vidéo en cliquant dessus
+    const videoBlockWrapper = iframe.closest('.pb-editor-wrapper');
+    fireEvent.click(videoBlockWrapper);
+
+    // 4. Vérifier que le panneau Propriétés affiche le label "Lien YouTube" avec l'URL existante
+    const youtubeInput = await screen.findByLabelText(/Lien YouTube/i);
+    expect(youtubeInput).toBeInTheDocument();
+    expect(youtubeInput.value).toBe('https://www.youtube.com/watch?v=initial1234');
+
+    // Vérifier également la présence du lien "Ouvrir sur YouTube"
+    const openLink = screen.getByRole('link', { name: /Ouvrir sur YouTube/i });
+    expect(openLink).toBeInTheDocument();
+    expect(openLink.getAttribute('href')).toBe('https://www.youtube.com/watch?v=initial1234');
+
+    // 5. Remplacer l'URL par un lien format youtu.be
+    fireEvent.change(youtubeInput, { target: { value: 'https://youtu.be/nouvelle123' } });
+    expect(youtubeInput.value).toBe('https://youtu.be/nouvelle123');
+
+    // Vérifier la mise à jour immédiate de l'iframe dans le constructeur sans recharger
+    expect(iframe.getAttribute('src')).toBe('https://www.youtube.com/embed/nouvelle123');
+
+    // 6. Tester un lien format YouTube Shorts
+    fireEvent.change(youtubeInput, { target: { value: 'https://youtube.com/shorts/shortVid999' } });
+    expect(iframe.getAttribute('src')).toBe('https://www.youtube.com/embed/shortVid999');
+
+    // 7. Tester un lien format YouTube Embed
+    fireEvent.change(youtubeInput, { target: { value: 'https://www.youtube.com/embed/embedVid888' } });
+    expect(iframe.getAttribute('src')).toBe('https://www.youtube.com/embed/embedVid888');
+
+    // 8. Tester une saisie invalide : afficher "Lien YouTube invalide" sans casser le constructeur
+    fireEvent.change(youtubeInput, { target: { value: 'https://invalid-video-site.com/video' } });
+    expect(await screen.findByText('Lien YouTube invalide')).toBeInTheDocument();
+    // Le lecteur conserve le dernier identifiant valide sans planter
+    expect(iframe.getAttribute('src')).toBe('https://www.youtube.com/embed/embedVid888');
+
+    // 9. Revenir à une URL valide (format watch avec paramètres)
+    fireEvent.change(youtubeInput, { target: { value: 'https://www.youtube.com/watch?v=finalVid555&t=30s' } });
+    await waitFor(() => {
+      expect(screen.queryByText('Lien YouTube invalide')).toBeNull();
+    });
+    expect(iframe.getAttribute('src')).toBe('https://www.youtube.com/embed/finalVid555');
+
+    // 10. Sauvegarder la page
+    const saveBtn = screen.getByRole('button', { name: /Mettre à jour|Publier/i });
+    fireEvent.click(saveBtn);
+
+    await waitFor(() => {
+      expect(saveSpy).toHaveBeenCalledTimes(1);
+    });
+
+    const savedPayload = saveSpy.mock.calls[0][0];
+    const savedVideoBlock = savedPayload.blocks[0].children[0].children[0];
+    expect(savedVideoBlock.type).toBe('video');
+    expect(savedVideoBlock.settings.url).toBe('https://www.youtube.com/watch?v=finalVid555&t=30s');
+    expect(savedVideoBlock.settings.videoId).toBe('finalVid555');
+    expect(savedVideoBlock.settings.classes).toBe('my-custom-video-class');
+
+    // 11. Vérifier la persistance après rechargement
+    const persistedPage = {
+      ...initialVideoPage,
+      blocks: savedPayload.blocks
+    };
+    jest.spyOn(pageService, 'getPages').mockResolvedValue([persistedPage]);
+
+    rerender(
+      <PageBuilder
+        editingId="page_video_test"
+        editingType="page"
+        onClose={() => {}}
+        onSaveSuccess={() => {}}
+      />
+    );
+
+    const reloadedIframe = await screen.findByTitle('Vidéo');
+    expect(reloadedIframe.getAttribute('src')).toBe('https://www.youtube.com/embed/finalVid555');
+  });
 });
