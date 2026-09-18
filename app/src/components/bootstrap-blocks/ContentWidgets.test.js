@@ -62,11 +62,32 @@ describe('ContentWidgets component tests', () => {
     expect(screen.getByText('Description de la carte')).toBeInTheDocument();
   });
 
-  test('renders Video iframe with converted embed URL', () => {
-    render(<Video settings={{ url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' }} />);
-    const iframe = screen.getByTitle('Widget Vidéo');
+  test('renders Video iframe with converted embed URL for multiple YouTube formats', () => {
+    // 1. watch?v= format
+    const { rerender } = render(<Video settings={{ url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' }} />);
+    let iframe = screen.getByTitle(/Lecteur vidéo YouTube|Widget Vidéo/i);
     expect(iframe).toBeInTheDocument();
-    expect(iframe.getAttribute('src')).toContain('https://www.youtube.com/embed/dQw4w9WgXcQ');
+    expect(iframe.getAttribute('src')).toBe('https://www.youtube.com/embed/dQw4w9WgXcQ');
+
+    // 2. youtu.be format
+    rerender(<Video settings={{ url: 'https://youtu.be/abc12345678' }} />);
+    iframe = screen.getByTitle(/Lecteur vidéo YouTube|Widget Vidéo/i);
+    expect(iframe.getAttribute('src')).toBe('https://www.youtube.com/embed/abc12345678');
+
+    // 3. shorts format
+    rerender(<Video settings={{ url: 'https://youtube.com/shorts/xyz98765432' }} />);
+    iframe = screen.getByTitle(/Lecteur vidéo YouTube|Widget Vidéo/i);
+    expect(iframe.getAttribute('src')).toBe('https://www.youtube.com/embed/xyz98765432');
+
+    // 4. embed format
+    rerender(<Video settings={{ url: 'https://www.youtube.com/embed/def11223344' }} />);
+    iframe = screen.getByTitle(/Lecteur vidéo YouTube|Widget Vidéo/i);
+    expect(iframe.getAttribute('src')).toBe('https://www.youtube.com/embed/def11223344');
+
+    // 5. videoId fallback
+    rerender(<Video settings={{ videoId: 'leg12345678' }} />);
+    iframe = screen.getByTitle(/Lecteur vidéo YouTube|Widget Vidéo/i);
+    expect(iframe.getAttribute('src')).toBe('https://www.youtube.com/embed/leg12345678');
   });
 
   test('renders Divider with custom thickness and style', () => {

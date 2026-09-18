@@ -10,6 +10,7 @@ import {
   Check
 } from 'lucide-react';
 import { sanitizeHtml, sanitizeUrl } from '../../utils/sanitize';
+import { getYoutubeEmbedUrl } from '../../utils/youtubeUtils';
 import PdfFlipbookReader from '../PdfFlipbookReader';
 import { ContactForm } from '../ContactForm';
 import { flipbooksData } from '../../data';
@@ -173,26 +174,20 @@ export const Alert = ({ settings = {} }) => {
  * Widget Vidéo
  */
 export const Video = ({ settings = {} }) => {
-  const url = settings.url || 'https://www.youtube.com/embed/dQw4w9WgXcQ';
-  const customClasses = settings.classes || '';
+  const input = settings.url || (settings.videoId ? `https://www.youtube.com/watch?v=${settings.videoId}` : (settings.src || ''));
+  const fallbackEmbed = settings.videoId ? `https://www.youtube.com/embed/${settings.videoId}` : (settings.lastValidVideoId ? `https://www.youtube.com/embed/${settings.lastValidVideoId}` : 'https://www.youtube.com/embed/dQw4w9WgXcQ');
+  const embedUrl = getYoutubeEmbedUrl(input, fallbackEmbed);
+  const customClasses = settings.classes || settings.className || '';
   const style = settings.style || {};
-
-  let embedUrl = url;
-  if (url.includes('youtube.com/watch?v=')) {
-    const videoId = url.split('v=')[1]?.split('&')[0];
-    embedUrl = `https://www.youtube.com/embed/${videoId}`;
-  } else if (url.includes('youtu.be/')) {
-    const videoId = url.split('youtu.be/')[1]?.split('?')[0];
-    embedUrl = `https://www.youtube.com/embed/${videoId}`;
-  }
 
   return (
     <div className={`ratio ratio-16x9 ${customClasses}`} style={style}>
       <iframe 
         src={sanitizeUrl(embedUrl)} 
-        title={settings.title || "Widget Vidéo"} 
+        title={settings.title || "Lecteur vidéo YouTube"} 
         allowFullScreen
         className="rounded"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
       ></iframe>
     </div>
   );

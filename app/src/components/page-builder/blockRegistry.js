@@ -18,6 +18,7 @@ import {
   Mail
 } from 'lucide-react';
 import { flipbooksData, videosData, galleryImages } from '../../data';
+import { extractYoutubeVideoId } from '../../utils/youtubeUtils';
 
 const YoutubeIcon = ({ size = 20, color = "currentColor", fill = "none" }) => (
   <svg
@@ -152,6 +153,7 @@ export const BLOCK_DEFINITIONS = {
     hasChildren: false,
     defaultSettings: {
       url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      videoId: 'dQw4w9WgXcQ',
       title: 'Vidéo',
       classes: '',
       style: {}
@@ -441,6 +443,23 @@ export const normalizeBlocks = (blocksList) => {
       ...JSON.parse(JSON.stringify(definition.defaultSettings || {})),
       ...(block.settings || {})
     };
+
+    // Rétrocompatibilité et préservation intégrale des blocs vidéo
+    if (type === 'video') {
+      const rawUrl = block.settings?.url || block.settings?.src || settings.url || '';
+      const extractedId = extractYoutubeVideoId(rawUrl);
+      const rawId = block.settings?.videoId || settings.videoId || extractedId;
+      
+      if (rawUrl) {
+        settings.url = rawUrl;
+      } else if (rawId) {
+        settings.url = `https://www.youtube.com/watch?v=${rawId}`;
+      }
+      
+      if (rawId) {
+        settings.videoId = rawId;
+      }
+    }
 
     const normalized = {
       id,
