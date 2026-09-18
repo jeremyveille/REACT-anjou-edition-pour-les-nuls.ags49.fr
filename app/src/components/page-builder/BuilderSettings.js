@@ -316,6 +316,27 @@ export const BuilderSettings = ({ block, onChange }) => {
                   </div>
                 </div>
               ))}
+
+              <div className="pt-1 text-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const currentVideos = Array.isArray(settings.videos) ? [...settings.videos] : [];
+                    currentVideos.push({
+                      id: `vid_${Date.now()}`,
+                      title: 'Nouvelle Vidéo',
+                      duration: '10:00',
+                      youtubeId: 'dQw4w9WgXcQ',
+                      description: 'Description de la vidéo'
+                    });
+                    updateSetting('videos', currentVideos);
+                  }}
+                  className="btn btn-outline-primary btn-xs py-1 px-3 d-inline-flex align-items-center gap-1.5 rounded w-100 justify-content-center"
+                  style={{ fontSize: '11px' }}
+                >
+                  <Plus size={12} /> Ajouter une vidéo à la suite
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -438,6 +459,25 @@ export const BuilderSettings = ({ block, onChange }) => {
                   </div>
                 </div>
               ))}
+
+              <div className="pt-1 text-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const currentNews = Array.isArray(settings.news) ? [...settings.news] : [];
+                    currentNews.push({
+                      id: `news_${Date.now()}`,
+                      title: 'Nouvelle actualité',
+                      description: 'Description de la brève...'
+                    });
+                    updateSetting('news', currentNews);
+                  }}
+                  className="btn btn-outline-primary btn-xs py-1 px-3 d-inline-flex align-items-center gap-1.5 rounded w-100 justify-content-center"
+                  style={{ fontSize: '11px' }}
+                >
+                  <Plus size={12} /> Ajouter une actualité à la suite
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -577,6 +617,27 @@ export const BuilderSettings = ({ block, onChange }) => {
                   </div>
                 </div>
               ))}
+
+              <div className="pt-1 text-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const cur = Array.isArray(settings.poems) ? [...settings.poems] : [];
+                    cur.push({
+                      id: `poem_${Date.now()}`,
+                      tag: 'POÉSIE',
+                      title: 'Nouveau Poème',
+                      excerpt: 'Extrait des premiers vers...',
+                      readMoreText: 'Lire la poésie'
+                    });
+                    updateSetting('poems', cur);
+                  }}
+                  className="btn btn-outline-primary btn-xs py-1 px-3 d-inline-flex align-items-center gap-1.5 rounded w-100 justify-content-center"
+                  style={{ fontSize: '11px' }}
+                >
+                  <Plus size={12} /> Ajouter un texte à la suite
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -1086,6 +1147,21 @@ export const BuilderSettings = ({ block, onChange }) => {
                   </button>
                 </div>
               ))}
+
+              <div className="pt-1 text-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const cur = Array.isArray(settings.items) ? [...settings.items] : [];
+                    cur.push(`Nouvel élément ${cur.length + 1}`);
+                    updateSetting('items', cur);
+                  }}
+                  className="btn btn-outline-primary btn-xs py-1 px-3 d-inline-flex align-items-center gap-1.5 rounded w-100 justify-content-center"
+                  style={{ fontSize: '11px' }}
+                >
+                  <Plus size={12} /> Ajouter un élément à la suite
+                </button>
+              </div>
             </div>
           </div>
         )}

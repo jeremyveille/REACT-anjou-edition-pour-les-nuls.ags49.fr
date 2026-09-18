@@ -139,7 +139,7 @@ function App() {
       try {
         const pages = await pageService.getPages();
         if (isMounted) {
-          setCustomPages(pages);
+          setCustomPages(Array.isArray(pages) ? pages : []);
         }
       } catch (err) {
         if (isMounted) {
@@ -835,7 +835,7 @@ function App() {
               </div>
 
               {(() => {
-                const homeCustomPage = customPages.find(p => (p.title || '').toLowerCase().includes('accueil') || p.slug === 'home' || p.slug === 'accueil' || p.slug === '');
+                const homeCustomPage = Array.isArray(customPages) ? customPages.find(p => (p?.title || '').toLowerCase().includes('accueil') || p?.slug === 'home' || p?.slug === 'accueil' || p?.slug === '') : null;
                 if (homeCustomPage?.blocks && homeCustomPage.blocks.length > 0) {
                   return homeCustomPage.blocks.map((block) => (
                     <BlockRenderer key={block.id} block={block} isEditing={false} />
