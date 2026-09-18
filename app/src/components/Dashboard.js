@@ -1232,21 +1232,21 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
     if (!newPageTitle.trim()) return;
     const newPage = {
       title: newPageTitle,
-      author: userName,
+      author: userName || "Jeremy Veille",
       date: new Date().toISOString().split('T')[0],
-      status: "Brouillon",
+      status: "draft",
       category: newPageCategory
     };
 
     try {
-      const docRef = await addDoc(collection(db, "pages"), newPage);
-      setPagesList([...pagesList, { id: docRef.id, ...newPage }]);
+      const saved = await pageService.savePage(newPage, null, 'pages');
+      setPagesList([saved, ...pagesList]);
       setNewPageTitle("");
-      setNotification(`Page "${newPage.title}" ajoutée avec succès.`);
+      setNotification(`Page "${newPage.title}" ajoutée avec succès (statut: ${saved.status}).`);
     } catch (err) {
       console.error("Error adding page:", err);
-      // fallback local state
-      setPagesList([...pagesList, { id: String(Date.now()), ...newPage }]);
+      const localSaved = { id: String(Date.now()), ...newPage };
+      setPagesList([localSaved, ...pagesList]);
       setNewPageTitle("");
       setNotification(`Page "${newPage.title}" ajoutée localement.`);
     }
@@ -1259,17 +1259,19 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
       title: newArticleTitle,
       views: 0,
       date: new Date().toISOString().split('T')[0],
+      status: "draft",
       category: newArticleCategory
     };
 
     try {
-      const docRef = await addDoc(collection(db, "articles"), newArt);
-      setArticlesList([...articlesList, { id: docRef.id, ...newArt }]);
+      const saved = await pageService.savePage(newArt, null, 'articles');
+      setArticlesList([saved, ...articlesList]);
       setNewArticleTitle("");
-      setNotification(`Nouvel article "${newArt.title}" créé.`);
+      setNotification(`Nouvel article "${newArt.title}" créé avec succès.`);
     } catch (err) {
       console.error("Error adding article:", err);
-      setArticlesList([...articlesList, { id: String(Date.now()), ...newArt }]);
+      const localSaved = { id: String(Date.now()), ...newArt };
+      setArticlesList([localSaved, ...articlesList]);
       setNewArticleTitle("");
       setNotification(`Article "${newArt.title}" créé localement.`);
     }
@@ -1278,7 +1280,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
   // Delete handlers
   const handleDeletePage = async (id) => {
     try {
-      await deleteDoc(doc(db, "pages", id));
+      await pageService.deletePage(id, 'pages');
       setPagesList(pagesList.filter(p => p.id !== id));
       setNotification("Page supprimée avec succès.");
     } catch (err) {
@@ -1289,12 +1291,34 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
 
   const handleDeleteArticle = async (id) => {
     try {
-      await deleteDoc(doc(db, "articles", id));
+      await pageService.deletePage(id, 'articles');
       setArticlesList(articlesList.filter(a => a.id !== id));
       setNotification("Article supprimé avec succès.");
     } catch (err) {
       console.error("Error deleting article:", err);
       setArticlesList(articlesList.filter(a => a.id !== id));
+    }
+  };
+
+  const handleDeduplicate = async (collectionName = 'pages') => {
+    try {
+      setNotification(`Analyse et déduplication des ${collectionName} en cours...`);
+      const result = await pageService.deduplicateItems(collectionName);
+      if (collectionName === 'pages') {
+        const refreshed = await pageService.getPages('pages');
+        setPagesList(refreshed);
+      } else {
+        const refreshed = await pageService.getPages('articles');
+        setArticlesList(refreshed);
+      }
+      if (result.removedIds && result.removedIds.length > 0) {
+        setNotification(`${result.removedIds.length} doublon(s) supprimé(s) avec succès.`);
+      } else {
+        setNotification(`Aucun doublon détecté dans ${collectionName}. Base saine.`);
+      }
+    } catch (err) {
+      console.error("Deduplication error:", err);
+      setNotification("Erreur lors de la déduplication.");
     }
   };
 
@@ -2804,61 +2828,85 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                     <div className="ae-grid-3cols-responsive">
                       <div className="lg:col-span-2 space-y-6">
                         <div className="db-panel-card">
-                          <h4 className="db-title">
-                            <FileText className="ae-icon-md-blue" />
-                            Pages existantes sur le site de publication
-                          </h4>
+                          <div className="ae-flex-between-center mb-4">
+                            <h4 className="db-title mb-0">
+                              <FileText className="ae-icon-md-blue" />
+                              Pages existantes sur le site de publication
+                            </h4>
+                            <button
+                              onClick={() => handleDeduplicate('pages')}
+                              className="ae-btn-secondary-sm d-flex align-items-center gap-1.5"
+                              title="Détecter et nettoyer automatiquement les pages en double"
+                              style={{ padding: '4px 10px', fontSize: '11px', borderRadius: '6px' }}
+                            >
+                              <Sparkles size={14} className="text-amber-500" />
+                              Nettoyer les doublons
+                            </button>
+                          </div>
                           <div className="overflow-x-auto">
                             <table className="db-table">
                               <thead>
                                 <tr>
-                                  <th>Titre de la page</th>
-                                  <th>Auteur</th>
-                                  <th className="hidden md:table-cell">Catégorie</th>
-                                  <th>Statut</th>
+                                  <th className="db-th-title">Titre de la page</th>
+                                  <th className="db-th-author">Auteur</th>
+                                  <th className="db-th-category">Catégorie</th>
+                                  <th className="db-th-status">Statut</th>
                                   <th className="text-right">Actions</th>
                                 </tr>
                               </thead>
                               <tbody>
-                                {displayedPages.map((p) => (
-                                  <tr key={p.id}>
-                                    <td className="font-semibold">
-                                      {p.title}
-                                      <span className="block text-[10px] text-slate-400 mt-0.5 md:hidden">
-                                        Catégorie: {p.category || "Outils"}
-                                      </span>
-                                    </td>
-                                    <td className="ae-text-muted">{p.author}</td>
-                                    <td className="hidden md:table-cell">
-                                      <span className="bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 px-2.5 py-0.5 rounded-full text-xs font-semibold">
-                                        {p.category || "Outils"}
-                                      </span>
-                                    </td>
-                                    <td>
-                                      <span className={`px-2 py-0.5 rounded text-xs font-bold ${
-                                        p.status === "Publié" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
-                                      }`}>
-                                        {p.status}
-                                      </span>
-                                    </td>
-                                    <td className="text-right">
-                                       <button
-                                         onClick={() => handleLoadPageToBuilder(p)}
-                                         className="ae-btn-icon-blue-action"
-                                         title="Éditer avec le constructeur"
-                                       >
-                                         <Edit3 className="ae-icon-md" />
-                                       </button>
-                                      <button
-                                        onClick={() => handleDeletePage(p.id)}
-                                        className="ae-btn-icon-danger-hover"
-                                        title="Supprimer la page"
-                                      >
-                                        <Trash2 className="ae-icon-md" />
-                                      </button>
-                                    </td>
-                                  </tr>
-                                ))}
+                                {displayedPages.map((p) => {
+                                  const normStatus = (p.status || '').toLowerCase().trim();
+                                  let badgeClass = 'ae-badge-draft';
+                                  let badgeLabel = 'Brouillon';
+                                  if (normStatus === 'published' || normStatus === 'publié' || normStatus === 'publie') {
+                                    badgeClass = 'ae-badge-published';
+                                    badgeLabel = 'Publié';
+                                  } else if (normStatus === 'approved' || normStatus === 'approuvé' || normStatus === 'approuve') {
+                                    badgeClass = 'ae-badge-approved';
+                                    badgeLabel = 'Approuvé';
+                                  } else if (normStatus === 'pending_review' || normStatus === 'en attente' || normStatus === 'pending') {
+                                    badgeClass = 'ae-badge-pending';
+                                    badgeLabel = 'En attente';
+                                  }
+
+                                  return (
+                                    <tr key={p.id}>
+                                      <td className="db-td-title">
+                                        <span className="db-page-title-text">{p.title}</span>
+                                      </td>
+                                      <td className="ae-text-muted">{p.author || "Jeremy Veille"}</td>
+                                      <td className="db-td-category">
+                                        <span className="ae-category-pill">
+                                          {p.category || "Outils"}
+                                        </span>
+                                      </td>
+                                      <td>
+                                        <span className={`ae-status-badge ${badgeClass}`}>
+                                          {badgeLabel}
+                                        </span>
+                                      </td>
+                                      <td className="text-right">
+                                         <button
+                                           onClick={() => handleLoadPageToBuilder(p)}
+                                           className="ae-btn-icon-blue-action"
+                                           title="Éditer avec le constructeur"
+                                           aria-label={`Éditer la page ${p.title}`}
+                                         >
+                                           <Edit3 className="ae-icon-md" />
+                                         </button>
+                                        <button
+                                          onClick={() => handleDeletePage(p.id)}
+                                          className="ae-btn-icon-danger-hover"
+                                          title="Supprimer la page"
+                                          aria-label={`Supprimer la page ${p.title}`}
+                                        >
+                                          <Trash2 className="ae-icon-md" />
+                                        </button>
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
                                 {displayedPages.length === 0 && (
                                   <tr>
                                     <td colSpan="5" className="text-center py-6 text-slate-400 italic">
@@ -2920,10 +2968,21 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                     <div className="ae-grid-3cols-responsive">
                       <div className="lg:col-span-2 space-y-6">
                         <div className="db-panel-card">
-                          <h4 className="db-title">
-                            <Newspaper className="ae-icon-md-blue" />
-                            Articles récents
-                          </h4>
+                          <div className="ae-flex-between-center mb-4">
+                            <h4 className="db-title mb-0">
+                              <Newspaper className="ae-icon-md-blue" />
+                              Articles récents
+                            </h4>
+                            <button
+                              onClick={() => handleDeduplicate('articles')}
+                              className="ae-btn-secondary-sm d-flex align-items-center gap-1.5"
+                              title="Détecter et nettoyer automatiquement les articles en double"
+                              style={{ padding: '4px 10px', fontSize: '11px', borderRadius: '6px' }}
+                            >
+                              <Sparkles size={14} className="text-amber-500" />
+                              Nettoyer les doublons
+                            </button>
+                          </div>
                           <div className="space-y-3">
                             {displayedArticles.map(a => (
                               <div key={a.id} className="ae-list-card-interactive">
@@ -2939,6 +2998,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                                     onClick={() => handleLoadArticleToBuilder(a)}
                                     className="ae-action-btn-blue"
                                     title="Éditer avec le constructeur"
+                                    aria-label={`Éditer l'article ${a.title}`}
                                   >
                                     <Edit3 className="ae-icon-md" />
                                   </button>
@@ -2946,6 +3006,7 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                                     onClick={() => handleDeleteArticle(a.id)}
                                     className="ae-btn-danger-ghost"
                                     title="Supprimer l'article"
+                                    aria-label={`Supprimer l'article ${a.title}`}
                                   >
                                     <Trash2 className="ae-icon-md" />
                                   </button>
