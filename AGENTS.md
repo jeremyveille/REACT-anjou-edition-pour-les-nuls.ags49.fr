@@ -31,7 +31,7 @@ Ce document sert de guide et de référence pour tout agent ou développeur trav
     > [!IMPORTANT]
     > **RÈGLE STRICTE** : **NE JAMAIS UTILISER TAILWIND**. Le projet repose à 100% sur du Vanilla CSS écrit à la main et sur Bootstrap 5 pour les blocs du Page Builder.
 *   **Bibliothèque d'Icônes** : [lucide-react v1.17.0](https://lucide.dev/)
-*   **Tests** : Jest et [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/) (11 suites de tests complètes et 53 tests unitaires/d'intégration, 100% de réussite).
+*   **Tests** : Jest et [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/) (15 suites de tests complètes et 115 tests unitaires/d'intégration, 100% de réussite).
 
 ### 2. Page Builder Visuel (page-builder-react)
 *   **Framework Frontend** : [React v18.3.1](https://react.dev/)
@@ -47,20 +47,24 @@ Ce document sert de guide et de référence pour tout agent ou développeur trav
 
 ```
 REACT-anjou-edition-pour-les-nuls.ags49.fr/
+├── .github/workflows/         # Pipelines CI/CD automatisés
+│   ├── ci.yml                 # Validation continue (Jest & Build) sur PRs et branches
+│   └── deploy.yml             # Déploiement continu automatisé sur Firebase Hosting
 ├── AGENTS.md                  # Ce document de contexte à la racine
 ├── app/                       # Application React principale (Site public & Admin)
 │   ├── .firebaserc            # Configuration du projet Firebase par défaut
 │   ├── firebase.json          # Configuration du déploiement Firebase Hosting
 │   ├── package.json           # Dépendances npm et scripts de build/test de l'app
-│   ├── public/                # Fichiers statiques public
+│   ├── public/                # Fichiers statiques public (service-worker.js, manifest.json...)
 │   └── src/                   # Code source de l'application principale
 │       ├── components/        # Composants (Dashboard, PdfFlipbookReader, CookieConsentBanner, ContactForm, PrivacyPolicy...)
 │       ├── styles/            # Fichiers CSS (dashboard.css, pdf-reader.css, ae-components.css)
-│       ├── utils/             # Utilitaires (sanitize.js, indexedDBStorage.js, moveElement.js, firestoreChunker.js)
+│       ├── utils/             # Utilitaires (imageOptimizer.js, sanitize.js, indexedDBStorage.js, moveElement.js...)
 │       ├── services/          # Services d'accès aux données (pageService.js)
+│       ├── serviceWorkerRegistration.js # Enregistrement PWA offline-first
 │       ├── App.js             # Composant principal (site public & navigation)
 │       ├── App.test.js        # Tests Jest de l'application
-│       ├── data.js            # Données locales de secours (fallback)
+│       ├── data.js            # Données locales de secours & catalogue de textes
 │       └── firebase.js        # Configuration & connexion Firebase
 │
 └── page-builder-react/        # Application Page Builder Visuel
@@ -106,29 +110,30 @@ Se déplacer dans le dossier : `cd page-builder-react`
 
 ## 📌 Conventions de Code & Fonctionnalités Clés
 
-### 1. Sécurité & Protection XSS (`sanitize.js`)
+### 1. Déploiement Continu & Qualité Automatisée (CI/CD GitHub Actions)
+*   **Pipeline de Déploiement (`.github/workflows/deploy.yml`)** : Exécute automatiquement `npm ci`, `CI=true npm test` et `npm run build` avant de déployer l'application sur Firebase Hosting (`react-anjou-edition`).
+*   **Pipeline de Validation (`.github/workflows/ci.yml`)** : Valide chaque Pull Request et branche pour garantir l'intégrité du code (0 erreurs, 0 régressions de tests).
+
+### 2. PWA (Progressive Web App) & Lecture 100% Hors-Ligne
+*   **Service Worker & Enregistrement (`serviceWorkerRegistration.js` & `public/service-worker.js`)** : Stratégie de mise en cache multi-niveaux (Cache-First pour les flipbooks PDF, Stale-While-Revalidate pour les médias et assets statiques, fallback SPA offline sur `index.html`).
+*   **Catalogue Littéraire Accessible Hors-Ligne** : L'ensemble des textes, poésies, fables et guides littéraires sont instantanément disponibles sans connexion Internet.
+
+### 3. Optimisation des Médias & Miniatures WebP (`imageOptimizer.js`)
+*   **Génération et Conversion WebP** : Module centralisé [app/src/utils/imageOptimizer.js](file:///C:/Users/jerem/REACT-anjou-edition-pour-les-nuls.ags49.fr/app/src/utils/imageOptimizer.js) assurant la génération dynamique de miniatures WebP légères (`400x300` / `75% qualité`) et de jeux de sources réactifs (`srcset`).
+*   **Composant `<OptimizedImage />`** : Intègre nativement la balise `<picture>` avec sources WebP, lazy-loading (`loading="lazy"`), décodage asynchrone (`decoding="async"`) et fallback transparent pour réduire drastiquement le temps de premier affichage mobile (FCP).
+
+### 4. Sécurité & Protection XSS (`sanitize.js`)
 *   Le module [app/src/utils/sanitize.js](file:///C:/Users/jerem/REACT-anjou-edition-pour-les-nuls.ags49.fr/app/src/utils/sanitize.js) protège l'ensemble de l'application contre les attaques XSS stockées et injectées.
 *   Validation et neutralisation systématique des protocoles dangereux (`javascript:`, `data:`, `vbscript:`).
 *   Épuration stricte des balises `<script>` et gestionnaires d'événements inline (`onerror`, `onload`, `onclick`).
-*   Intégré dans le moteur de rendu Bootstrap (`ContentWidgets.js`) et dans le gestionnaire de menus du Dashboard.
 
-### 2. Gestion Hybride & Résilience Hors-Ligne (Offline-First)
-*   Architecture défensive avec vérification systématique de l'état des snapshots Firestore (`snap && !snap.empty && snap.docs`).
-*   Fallback transparent sur le `localStorage` de l'utilisateur (`ae_menus`, `ae_flipbooks`, `ae_pages`, `ae_articles`, `contact_messages`).
-*   Préservation intégrale des données locales en mode déconnecté.
-
-### 3. Conformité RGPD (GDPR) & Gestion des Données
+### 5. Conformité RGPD (GDPR) & Gestion des Données
 *   **Bannière de Consentement (`CookieConsentBanner.js`)** : Présente sur le site public avec options « Tout accepter », « Paramétrer » et « Continuer avec le strict minimum ».
 *   **Droit à l'oubli interactif** : Outil intégré dans la bannière et la page de confidentialité permettant à l'utilisateur d'effacer instantanément ses données locales (`localStorage`).
 *   **Politique de Confidentialité Complète (`PrivacyPolicy.js`)** : Couvre les Articles 15 à 22 du RGPD, le contact DPO/référent, la durée de conservation (3 ans maximum), et les voies de réclamation auprès de la CNIL.
 *   **Consentement explicite sur formulaire** : Case à cocher obligatoire et non pré-cochée sur [ContactForm.js](file:///C:/Users/jerem/REACT-anjou-edition-pour-les-nuls.ags49.fr/app/src/components/ContactForm.js).
 
-### 4. Accessibilité & Respect des Normes (WCAG 2.2 AA / RGAA)
-*   Lien d'évitement (`.skip-to-content`) fonctionnel avec focus visible pour la navigation clavier.
-*   Prise en compte systématique de la préférence utilisateur `prefers-reduced-motion`.
-*   Contrôles d'interface et boutons d'action systématiquement munis d'un `aria-label` descriptif (`BlockRenderer`, `PdfFlipbookReader`, `ContactForm`).
-
-### 5. Architecture Responsive Unifiée (4 Paliers Standard)
+### 6. Architecture Responsive Unifiée (4 Paliers Standard)
 *   **S — Smartphones / petits écrans** : `@media (max-width: 599px)` (Disposition 1 colonne, contrôles tactiles >= 44px, tiroir mobile, modales fluides).
 *   **M — Tablettes / grands smartphones** : `@media (min-width: 600px) and (max-width: 899px)` (Disposition 1 à 2 colonnes, sidebar off-canvas, espacement équilibré).
 *   **L — Ordinateurs portables / petits desktops** : `@media (min-width: 900px) and (max-width: 1199px)` (Disposition 2 colonnes avec sidebar fixe, tables aérées).
@@ -137,5 +142,5 @@ Se déplacer dans le dossier : `cd page-builder-react`
 
 ---
 
-*Dernière mise à jour du contexte par l'agent : 17 septembre 2026.*
+*Dernière mise à jour du contexte par l'agent : 19 septembre 2026.*
 
