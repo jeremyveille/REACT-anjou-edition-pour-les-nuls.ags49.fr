@@ -1,0 +1,52 @@
+name: Déploiement Continu - Firebase Hosting
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-firebase-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test_build_and_deploy:
+    name: Test, Build & Déploiement Firebase
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: 📥 Récupération du dépôt
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Configuration de Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: 'app/package-lock.json'
+
+      - name: 📦 Installation des dépendances (app/)
+        working-directory: app
+        run: npm ci
+
+      - name: 🧪 Exécution des tests automatisés (Jest)
+        working-directory: app
+        env:
+          CI: "true"
+        run: npm test
+
+      - name: 🏗️ Compilation de production (React Build)
+        working-directory: app
+        run: npm run build
+
+      - name: 🚀 Déploiement sur Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_REACT_ANJOU_EDITION }}'
+          projectId: react-anjou-edition
+          channelId: live
+          entryPoint: app
