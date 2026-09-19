@@ -11,8 +11,32 @@ import {
   query, 
   orderBy 
 } from 'firebase/firestore';
+import { galleryImages, videosData, flipbooksData } from '../data';
 import { normalizeBlocks, getDefaultHomepageBlocks } from '../components/page-builder/blockRegistry';
-import { galleryImages, videosData } from '../data';
+
+/**
+ * Récupère la liste synchronisée des flipbooks (LocalStorage d'abord, fallback sur les données initiales).
+ */
+export const getLocalFlipbooksSync = () => {
+  try {
+    const local = localStorage.getItem('ae_flipbooks');
+    if (local) {
+      const parsed = JSON.parse(local);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.map((fb) => ({
+          ...fb,
+          pdfFile: fb.pdfFile || (fb.id === '3322' ? 'guide_historique_anjou.pdf' : fb.id === '4455' ? 'secrets_vignoble_angevin.pdf' : 'Seraphin-le-marin.pdf')
+        }));
+      }
+    }
+  } catch (e) {
+    console.warn("Erreur lors de la lecture des flipbooks locaux", e);
+  }
+  return flipbooksData.map((fb) => ({
+    ...fb,
+    pdfFile: fb.pdfFile || (fb.id === '3322' ? 'guide_historique_anjou.pdf' : fb.id === '4455' ? 'secrets_vignoble_angevin.pdf' : 'Seraphin-le-marin.pdf')
+  }));
+};
 
 const LOCAL_STORAGE_KEY_MAP = {
   pages: 'ae_pages',
@@ -667,5 +691,12 @@ export const pageService = {
     await this.saveMediaItem(mediaItem);
 
     return downloadUrl;
+  },
+
+  /**
+   * Récupère la liste synchronisée des flipbooks.
+   */
+  getLocalFlipbooksSync() {
+    return getLocalFlipbooksSync();
   }
 };

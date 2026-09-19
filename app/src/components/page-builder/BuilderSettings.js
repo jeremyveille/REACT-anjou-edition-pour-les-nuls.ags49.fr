@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { pageService } from '../../services/pageService';
+import { pageService, getLocalFlipbooksSync } from '../../services/pageService';
 import { 
   Plus, 
   Trash2, 
@@ -12,7 +12,6 @@ import {
 } from 'lucide-react';
 import { extractYoutubeVideoId } from '../../utils/youtubeUtils';
 import { BLOCK_DEFINITIONS } from './blockRegistry';
-import { flipbooksData } from '../../data';
 import { MediaLibraryModal } from '../MediaLibraryModal';
 
 const COMMON_ICONS = [
@@ -698,7 +697,7 @@ export const BuilderSettings = ({ block, onChange }) => {
                   onChange={(e) => updateSetting('selectedBookId', e.target.value)}
                   className="db-select text-xs w-100"
                 >
-                  {flipbooksData.map(fb => (
+                  {getLocalFlipbooksSync().map(fb => (
                     <option key={fb.id} value={fb.id}>{fb.title} ({fb.id})</option>
                   ))}
                 </select>

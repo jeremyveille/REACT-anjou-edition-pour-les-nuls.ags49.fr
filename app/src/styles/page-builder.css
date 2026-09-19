@@ -442,4 +442,66 @@
   }
 }
 
+/* ==========================================================================
+   CONTENT SELECTOR & CONFIRMATION MODAL STYLES
+   ========================================================================== */
 
+.pb-content-selector-dropdown {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+  animation: pbDropdownFadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dark-mode .pb-content-selector-dropdown {
+  background-color: #1e293b;
+  border-color: #334155;
+  color: #f8fafc;
+}
+
+@keyframes pbDropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hover-bg-slate:hover {
+  background-color: #f1f5f9 !important;
+}
+
+.dark-mode .hover-bg-slate:hover {
+  background-color: #334155 !important;
+}
+
+.pb-modal-overlay {
+  animation: pbModalFadeIn 0.2s ease-out;
+}
+
+@keyframes pbModalFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.pb-modal-card {
+  animation: pbModalScaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes pbModalScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

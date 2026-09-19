@@ -262,8 +262,16 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
   const [lastFocusedField, setLastFocusedField] = useState(null);
 
   // Page Builder
-  const [builderEditingId, setBuilderEditingId] = useState(null);
-  const [builderEditingType, setBuilderEditingType] = useState(null); // "page" or "article"
+  const [builderEditingId, setBuilderEditingId] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('pageId') || params.get('articleId') || params.get('id') || null;
+  });
+  const [builderEditingType, setBuilderEditingType] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('articleId')) return 'article';
+    if (params.get('pageId')) return 'page';
+    return params.get('type') || null;
+  });
 
   // Médiathèque
   const [mediaList, setMediaList] = useState(() => {
@@ -2626,6 +2634,9 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
 
                 <button
                   onClick={() => {
+                    const homePage = (pagesList || []).find(p => p.isHome === true || p.isHomePage === true || p.is_home === true || p.slug === 'accueil' || p.slug === 'home' || p.slug === '/' || (p.title || '').toLowerCase().includes('accueil')) || (pagesList && pagesList[0]);
+                    setBuilderEditingId(homePage ? homePage.id : null);
+                    setBuilderEditingType('page');
                     setActiveSection("Constructeur de Page");
                     setSidebarOpen(false);
                   }}

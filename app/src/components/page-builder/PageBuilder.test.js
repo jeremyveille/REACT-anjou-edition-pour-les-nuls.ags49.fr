@@ -1,6 +1,6 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import PageBuilder from './PageBuilder';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
+import PageBuilder, { findHomePage, isHomePage } from './PageBuilder';
 import { pageService } from '../../services/pageService';
 import { normalizeBlocks, cloneBlock, createBlock, getDefaultHomepageBlocks } from './blockRegistry';
 
@@ -14,6 +14,49 @@ describe('PageBuilder and Block Architecture Tests', () => {
   beforeEach(() => {
     localStorage.clear();
     jest.clearAllMocks();
+    window.history.pushState(null, '', '/ae-dashboard/builder');
+  });
+
+  test('isHomePage and findHomePage identify the home page accurately with correct priority', () => {
+    // 1. Priority 1: explicitly defined as home
+    const pagesWithExplicit = [
+      { id: 'p1', title: 'Autre page', slug: 'autre' },
+      { id: 'p2', title: 'Page Spéciale', slug: 'special', isHome: true },
+      { id: 'p3', title: 'Accueil', slug: 'accueil' }
+    ];
+    expect(findHomePage(pagesWithExplicit).id).toBe('p2');
+
+    // 2. Priority 2: slug is '/' or 'accueil' or 'home'
+    const pagesWithSlug = [
+      { id: 'p1', title: 'Contact', slug: 'contact' },
+      { id: 'p2', title: 'Bienvenue', slug: 'accueil' },
+      { id: 'p3', title: 'Accueil Ancien', slug: 'old-home' }
+    ];
+    expect(findHomePage(pagesWithSlug).id).toBe('p2');
+
+    // 3. Priority 3: title is 'Accueil' or contains 'accueil'
+    const pagesWithTitle = [
+      { id: 'p1', title: 'À propos', slug: 'a-propos' },
+      { id: 'p2', title: 'Accueil - Anjou Edition', slug: 'home-custom' }
+    ];
+    expect(findHomePage(pagesWithTitle).id).toBe('p2');
+
+    // Fallback if none matches
+    const pagesNone = [
+      { id: 'p1', title: 'Page A', slug: 'page-a' },
+      { id: 'p2', title: 'Page B', slug: 'page-b' }
+    ];
+    expect(findHomePage(pagesNone).id).toBe('p1');
+    expect(findHomePage([])).toBeNull();
+
+    // isHomePage checks
+    expect(isHomePage({ isHome: true })).toBe(true);
+    expect(isHomePage({ isHomePage: true })).toBe(true);
+    expect(isHomePage({ slug: 'accueil' })).toBe(true);
+    expect(isHomePage({ slug: '/' })).toBe(true);
+    expect(isHomePage({ title: 'Accueil' })).toBe(true);
+    expect(isHomePage({ title: 'Accueil - Anjou Edition' })).toBe(true);
+    expect(isHomePage({ title: 'Contact', slug: 'contact' })).toBe(false);
   });
 
   test('blockRegistry creates valid blocks and normalizes missing properties', () => {
@@ -94,7 +137,10 @@ describe('PageBuilder and Block Architecture Tests', () => {
       ]
     };
 
-    jest.spyOn(pageService, 'getPages').mockResolvedValue([mockPage]);
+    jest.spyOn(pageService, 'getPages').mockImplementation((coll) => {
+      if (coll === 'articles') return Promise.resolve([]);
+      return Promise.resolve([mockPage]);
+    });
 
     render(
       <PageBuilder
@@ -142,7 +188,10 @@ describe('PageBuilder and Block Architecture Tests', () => {
         }
       ]
     };
-    jest.spyOn(pageService, 'getPages').mockResolvedValue([mockPage]);
+    jest.spyOn(pageService, 'getPages').mockImplementation((coll) => {
+      if (coll === 'articles') return Promise.resolve([]);
+      return Promise.resolve([mockPage]);
+    });
 
     render(
       <PageBuilder
@@ -208,7 +257,10 @@ describe('PageBuilder and Block Architecture Tests', () => {
       ]
     };
 
-    jest.spyOn(pageService, 'getPages').mockResolvedValue([initialVideoPage]);
+    jest.spyOn(pageService, 'getPages').mockImplementation((coll) => {
+      if (coll === 'articles') return Promise.resolve([]);
+      return Promise.resolve([initialVideoPage]);
+    });
 
     const { rerender } = render(
       <PageBuilder
@@ -270,7 +322,7 @@ describe('PageBuilder and Block Architecture Tests', () => {
     expect(iframe.getAttribute('src')).toBe('https://www.youtube.com/embed/finalVid555');
 
     // 10. Sauvegarder la page
-    const saveBtn = screen.getByRole('button', { name: /Mettre à jour|Publier/i });
+    const saveBtn = screen.getByRole('button', { name: /Enregistrer|Mettre à jour|Publier/i });
     fireEvent.click(saveBtn);
 
     await waitFor(() => {
@@ -289,7 +341,10 @@ describe('PageBuilder and Block Architecture Tests', () => {
       ...initialVideoPage,
       blocks: savedPayload.blocks
     };
-    jest.spyOn(pageService, 'getPages').mockResolvedValue([persistedPage]);
+    jest.spyOn(pageService, 'getPages').mockImplementation((coll) => {
+      if (coll === 'articles') return Promise.resolve([]);
+      return Promise.resolve([persistedPage]);
+    });
 
     rerender(
       <PageBuilder
@@ -321,7 +376,10 @@ describe('PageBuilder and Block Architecture Tests', () => {
       ]
     };
 
-    jest.spyOn(pageService, 'getPages').mockResolvedValue([mockPage]);
+    jest.spyOn(pageService, 'getPages').mockImplementation((coll) => {
+      if (coll === 'articles') return Promise.resolve([]);
+      return Promise.resolve([mockPage]);
+    });
 
     render(
       <PageBuilder
@@ -377,5 +435,393 @@ describe('PageBuilder and Block Architecture Tests', () => {
     await waitFor(() => {
       expect(screen.queryByText('Propriétés du composant')).toBeNull();
     });
+  });
+
+  // =========================================================================
+  // 7 MANDATORY TARGET SELECTION & CONTENT SWITCHING SCENARIOS
+  // =========================================================================
+
+  const samplePages = [
+    {
+      id: 'page_home_real',
+      title: 'Accueil',
+      slug: 'accueil',
+      category: 'Accueil',
+      status: 'published',
+      blocks: [
+        {
+          id: 'sec_home_1',
+          type: 'section',
+          children: [
+            { id: 'h_home_1', type: 'heading', settings: { content: 'Bienvenue sur Accueil Réel' } }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'page_contact_real',
+      title: 'Contact',
+      slug: 'contact',
+      category: 'Contact',
+      status: 'draft',
+      blocks: [
+        {
+          id: 'sec_contact_1',
+          type: 'section',
+          children: [
+            { id: 'h_contact_1', type: 'heading', settings: { content: 'Page de Contact Réelle' } }
+          ]
+        }
+      ]
+    }
+  ];
+
+  const sampleArticles = [
+    {
+      id: 'art_1_real',
+      title: 'Mon Premier Article',
+      slug: 'mon-premier-article',
+      category: 'Histoire',
+      status: 'published',
+      blocks: [
+        {
+          id: 'sec_art_1',
+          type: 'section',
+          children: [
+            { id: 'h_art_1', type: 'heading', settings: { content: 'Contenu Article 1' } }
+          ]
+        }
+      ]
+    }
+  ];
+
+  test('TEST 1: Ouvrir directement le constructeur sélectionne automatiquement Accueil et charge son contenu réel', async () => {
+    jest.spyOn(pageService, 'getPages').mockImplementation((coll) => {
+      if (coll === 'articles') return Promise.resolve(sampleArticles);
+      return Promise.resolve(samplePages);
+    });
+
+    render(<PageBuilder onClose={() => {}} onSaveSuccess={() => {}} />);
+
+    // Attendre le chargement
+    expect(await screen.findByText('Bienvenue sur Accueil Réel')).toBeInTheDocument();
+    
+    // Vérifier l'indication visuelle dans le sélecteur
+    const selectorBtn = screen.getByTestId('content-selector-btn');
+    expect(selectorBtn).toHaveTextContent('Accueil');
+    expect(screen.getByPlaceholderText(/Titre de la page/i)).toHaveValue('Accueil');
+  });
+
+  test('TEST 2: Modifier un texte dans Accueil puis enregistrer modifie uniquement Accueil', async () => {
+    window.alert = jest.fn();
+    const saveSpy = jest.spyOn(pageService, 'savePage').mockResolvedValue({ id: 'page_home_real' });
+    jest.spyOn(pageService, 'getPages').mockImplementation((coll) => {
+      if (coll === 'articles') return Promise.resolve(sampleArticles);
+      return Promise.resolve(samplePages);
+    });
+
+    render(<PageBuilder onClose={() => {}} onSaveSuccess={() => {}} />);
+
+    expect(await screen.findByText('Bienvenue sur Accueil Réel')).toBeInTheDocument();
+
+    // Cliquer sur le titre pour ouvrir les réglages
+    fireEvent.click(screen.getByText('Bienvenue sur Accueil Réel'));
+
+    // Modifier le texte du titre
+    const headingInput = await screen.findByDisplayValue('Bienvenue sur Accueil Réel');
+    fireEvent.change(headingInput, { target: { value: 'Bienvenue en Anjou Modifié' } });
+
+    // Enregistrer
+    const saveBtn = screen.getByRole('button', { name: /Enregistrer|Publier/i });
+    fireEvent.click(saveBtn);
+
+    await waitFor(() => {
+      expect(saveSpy).toHaveBeenCalledTimes(1);
+    });
+
+    // Vérifier que seul l'ID réel de l'accueil ('page_home_real') sur la collection 'pages' a été sauvegardé
+    expect(saveSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Accueil',
+        blocks: expect.arrayContaining([
+          expect.objectContaining({
+            children: expect.arrayContaining([
+              expect.objectContaining({
+                settings: expect.objectContaining({ content: 'Bienvenue en Anjou Modifié' })
+              })
+            ])
+          })
+        ])
+      }),
+      'page_home_real',
+      'pages'
+    );
+  });
+
+  test('TEST 3: Choisir « Contact » dans le sélecteur charge Contact et Accueil n’est plus affichée', async () => {
+    jest.spyOn(pageService, 'getPages').mockImplementation((coll) => {
+      if (coll === 'articles') return Promise.resolve(sampleArticles);
+      return Promise.resolve(samplePages);
+    });
+
+    render(<PageBuilder onClose={() => {}} onSaveSuccess={() => {}} />);
+
+    expect(await screen.findByText('Bienvenue sur Accueil Réel')).toBeInTheDocument();
+
+    // Ouvrir le sélecteur de contenu
+    const selectorBtn = screen.getByTestId('content-selector-btn');
+    fireEvent.click(selectorBtn);
+
+    // Cliquer sur "Contact" dans la liste
+    const contactOption = await screen.findByRole('option', { name: /Contact/i });
+    fireEvent.click(contactOption);
+
+    // Le contenu de Contact doit maintenant être visible
+    expect(await screen.findByText('Page de Contact Réelle')).toBeInTheDocument();
+    // Le contenu d'Accueil ne doit plus être affiché
+    expect(screen.queryByText('Bienvenue sur Accueil Réel')).toBeNull();
+    // Le sélecteur doit afficher "Contact"
+    expect(screen.getByTestId('content-selector-btn')).toHaveTextContent('Contact');
+  });
+
+  test('TEST 4: Modifier Contact puis publier modifie uniquement Contact', async () => {
+    window.alert = jest.fn();
+    const saveSpy = jest.spyOn(pageService, 'savePage').mockResolvedValue({ id: 'page_contact_real' });
+    jest.spyOn(pageService, 'getPages').mockImplementation((coll) => {
+      if (coll === 'articles') return Promise.resolve(sampleArticles);
+      return Promise.resolve(samplePages);
+    });
+
+    render(<PageBuilder onClose={() => {}} onSaveSuccess={() => {}} />);
+
+    // Basculer vers Contact
+    expect(await screen.findByText('Bienvenue sur Accueil Réel')).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('content-selector-btn'));
+    fireEvent.click(await screen.findByRole('option', { name: /Contact/i }));
+
+    expect(await screen.findByText('Page de Contact Réelle')).toBeInTheDocument();
+
+    // Modifier le titre de page Contact
+    const titleInput = screen.getByPlaceholderText(/Titre de la page/i);
+    fireEvent.change(titleInput, { target: { value: 'Contactez-nous' } });
+
+    // Modifier le statut à publié
+    const statusSelect = screen.getByLabelText(/Statut de publication/i);
+    fireEvent.change(statusSelect, { target: { value: 'published' } });
+
+    // Sauvegarder
+    const saveBtn = screen.getByRole('button', { name: /Enregistrer|Publier/i });
+    fireEvent.click(saveBtn);
+
+    await waitFor(() => {
+      expect(saveSpy).toHaveBeenCalledTimes(1);
+    });
+
+    // Seule la page Contact ('page_contact_real') est modifiée
+    expect(saveSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Contactez-nous',
+        status: 'published'
+      }),
+      'page_contact_real',
+      'pages'
+    );
+  });
+
+  test('TEST 5: Recharger le constructeur sans paramètre sélectionne de nouveau Accueil par défaut', async () => {
+    jest.spyOn(pageService, 'getPages').mockImplementation((coll) => {
+      if (coll === 'articles') return Promise.resolve(sampleArticles);
+      return Promise.resolve(samplePages);
+    });
+
+    window.history.pushState(null, '', '/ae-dashboard/builder');
+
+    const { unmount } = render(<PageBuilder onClose={() => {}} onSaveSuccess={() => {}} />);
+    expect(await screen.findByText('Bienvenue sur Accueil Réel')).toBeInTheDocument();
+
+    unmount();
+
+    // Nouveau montage sans paramètre
+    render(<PageBuilder onClose={() => {}} onSaveSuccess={() => {}} />);
+    expect(await screen.findByText('Bienvenue sur Accueil Réel')).toBeInTheDocument();
+    expect(screen.getByTestId('content-selector-btn')).toHaveTextContent('Accueil');
+  });
+
+  test('TEST 6: Modifier Accueil sans sauvegarder puis sélectionner Contact affiche une confirmation avec 3 choix', async () => {
+    window.alert = jest.fn();
+    const saveSpy = jest.spyOn(pageService, 'savePage').mockResolvedValue({ id: 'page_home_real' });
+    jest.spyOn(pageService, 'getPages').mockImplementation((coll) => {
+      if (coll === 'articles') return Promise.resolve(sampleArticles);
+      return Promise.resolve(samplePages);
+    });
+
+    render(<PageBuilder onClose={() => {}} onSaveSuccess={() => {}} />);
+
+    expect(await screen.findByText('Bienvenue sur Accueil Réel')).toBeInTheDocument();
+
+    // 1. Modifier le titre d'Accueil sans enregistrer
+    const titleInput = screen.getByPlaceholderText(/Titre de la page/i);
+    fireEvent.change(titleInput, { target: { value: 'Accueil Modifié Sans Sauvegarder' } });
+
+    // 2. Tenter de sélectionner Contact
+    fireEvent.click(screen.getByTestId('content-selector-btn'));
+    fireEvent.click(await screen.findByRole('option', { name: /Contact/i }));
+
+    // 3. Vérifier que la modale d'avertissement apparaît
+    const modal = await screen.findByTestId('unsaved-changes-modal');
+    expect(modal).toBeInTheDocument();
+    expect(modal).toHaveTextContent(/Modifications non enregistrées/i);
+    expect(modal).toHaveTextContent(/Des modifications de la page/i);
+
+    // Vérifier la présence des 3 boutons dans la modale
+    const cancelBtn = within(modal).getByRole('button', { name: /^Annuler$/i });
+    const discardBtn = within(modal).getByRole('button', { name: /Continuer sans enregistrer/i });
+    const saveAndContBtn = within(modal).getByRole('button', { name: /Enregistrer et continuer/i });
+
+    expect(cancelBtn).toBeInTheDocument();
+    expect(discardBtn).toBeInTheDocument();
+    expect(saveAndContBtn).toBeInTheDocument();
+
+    // Test bouton Annuler : la modale disparaît et Accueil reste affiché
+    fireEvent.click(cancelBtn);
+    await waitFor(() => {
+      expect(screen.queryByTestId('unsaved-changes-modal')).toBeNull();
+    });
+    expect(screen.getByPlaceholderText(/Titre de la page/i)).toHaveValue('Accueil Modifié Sans Sauvegarder');
+
+    // Tenter à nouveau et cliquer "Continuer sans enregistrer"
+    fireEvent.click(screen.getByTestId('content-selector-btn'));
+    fireEvent.click(await screen.findByRole('option', { name: /Contact/i }));
+    const modalSecond = await screen.findByTestId('unsaved-changes-modal');
+    fireEvent.click(within(modalSecond).getByRole('button', { name: /Continuer sans enregistrer/i }));
+
+    // Contact doit maintenant être chargé
+    expect(await screen.findByText('Page de Contact Réelle')).toBeInTheDocument();
+    expect(screen.getByTestId('content-selector-btn')).toHaveTextContent('Contact');
+  });
+
+  test('TEST 7: Ouvrir une URL contenant explicitement un pageId charge la page demandée à la place d’Accueil', async () => {
+    jest.spyOn(pageService, 'getPages').mockImplementation((coll) => {
+      if (coll === 'articles') return Promise.resolve(sampleArticles);
+      return Promise.resolve(samplePages);
+    });
+
+    window.history.pushState(null, '', '/ae-dashboard/builder?pageId=page_contact_real');
+
+    render(<PageBuilder onClose={() => {}} onSaveSuccess={() => {}} />);
+
+    // La page Contact doit être chargée automatiquement
+    expect(await screen.findByText('Page de Contact Réelle')).toBeInTheDocument();
+    expect(screen.getByTestId('content-selector-btn')).toHaveTextContent('Contact');
+    expect(screen.queryByText('Bienvenue sur Accueil Réel')).toBeNull();
+  });
+
+  test('TEST 8: Hydratation en mémoire de la page d’accueil legacy/vide avec le Lecteur de Flipbook Interactif', async () => {
+    const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const legacyHomePage = {
+      id: 'page_home_legacy',
+      title: 'Accueil',
+      slug: 'accueil',
+      category: 'Accueil',
+      status: 'published',
+      blocks: [] // Empty blocks representing legacy document
+    };
+
+    jest.spyOn(pageService, 'getPages').mockImplementation((coll) => {
+      if (coll === 'articles') return Promise.resolve([]);
+      return Promise.resolve([legacyHomePage]);
+    });
+
+    render(<PageBuilder onClose={() => {}} onSaveSuccess={() => {}} />);
+
+    // 1. Attendre que le canvas se charge
+    const titleInput = await screen.findByPlaceholderText(/Titre de la page/i);
+    expect(titleInput).toHaveValue('Accueil');
+
+    // 2. Vérifier que le Lecteur de Flipbook Interactif est rendu fidèlement sur le canevas
+    expect(await screen.findByText('Lecteur de Flipbook Interactif')).toBeInTheDocument();
+
+    // 3. Vérifier la présence des logs de diagnostic
+    expect(logSpy).toHaveBeenCalledWith('[PageBuilder] Home page resolved:', 'page_home_legacy');
+    expect(logSpy).toHaveBeenCalledWith('[PageBuilder] Homepage legacy content hydrated');
+    expect(logSpy).toHaveBeenCalledWith('[PageBuilder] Flipbook selected:', expect.any(String));
+
+    logSpy.mockRestore();
+  });
+
+  test('TEST 9: Modification des réglages du bloc Flipbook dans le constructeur', async () => {
+    window.alert = jest.fn();
+    const saveSpy = jest.spyOn(pageService, 'savePage').mockResolvedValue({ id: 'page_home_legacy' });
+    const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+
+    const legacyHomePage = {
+      id: 'page_home_legacy',
+      title: 'Accueil',
+      slug: 'accueil',
+      category: 'Accueil',
+      status: 'published',
+      blocks: []
+    };
+
+    jest.spyOn(pageService, 'getPages').mockImplementation((coll) => {
+      if (coll === 'articles') return Promise.resolve([]);
+      return Promise.resolve([legacyHomePage]);
+    });
+
+    render(<PageBuilder onClose={() => {}} onSaveSuccess={() => {}} />);
+
+    // 1. Sélectionner le bloc Flipbook
+    const flipbookTitle = await screen.findByText('Lecteur de Flipbook Interactif');
+    fireEvent.click(flipbookTitle);
+
+    // 2. Vérifier les réglages dans le panneau latéral
+    const titleInput = await screen.findByDisplayValue('Lecteur de Flipbook Interactif');
+    expect(titleInput).toBeInTheDocument();
+
+    // 3. Modifier le titre
+    fireEvent.change(titleInput, { target: { value: 'Grand Flipbook Historique 2026' } });
+    expect(await screen.findByText('Grand Flipbook Historique 2026')).toBeInTheDocument();
+
+    // 4. Modifier le flipbook sélectionné
+    const bookSelect = screen.getByDisplayValue(/Guide Historique de l'Anjou/i);
+    expect(bookSelect).toBeInTheDocument();
+    fireEvent.change(bookSelect, { target: { value: '4455' } });
+
+    // 5. Sauvegarder
+    const saveBtn = screen.getByRole('button', { name: /Enregistrer|Publier/i });
+    fireEvent.click(saveBtn);
+
+    await waitFor(() => {
+      expect(saveSpy).toHaveBeenCalledTimes(1);
+    });
+
+    expect(saveSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Accueil',
+        blocks: expect.arrayContaining([
+          expect.objectContaining({
+            type: 'section',
+            children: expect.arrayContaining([
+              expect.objectContaining({
+                type: 'container',
+                children: expect.arrayContaining([
+                  expect.objectContaining({
+                    type: 'flipbookFeatured',
+                    settings: expect.objectContaining({
+                      title: 'Grand Flipbook Historique 2026',
+                      selectedBookId: '4455'
+                    })
+                  })
+                ])
+              })
+            ])
+          })
+        ])
+      }),
+      'page_home_legacy',
+      'pages'
+    );
+
+    logSpy.mockRestore();
   });
 });

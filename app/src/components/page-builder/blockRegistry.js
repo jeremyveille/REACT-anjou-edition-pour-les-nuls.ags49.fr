@@ -497,25 +497,36 @@ export const cloneBlock = (block) => {
 /**
  * Génère la structure complète de blocs pour la page d'accueil par défaut.
  * Cela permet de rendre TOUS les éléments de la page d'accueil immédiatement
- * éditables dans le constructeur !
+ * éditables dans le constructeur et fidèles au site public !
  */
-export const getDefaultHomepageBlocks = () => {
+export const getDefaultHomepageBlocks = (activeBookId = null) => {
+  let selectedId = activeBookId;
+  if (!selectedId) {
+    try {
+      const local = localStorage.getItem('ae_flipbooks');
+      if (local) {
+        const parsed = JSON.parse(local);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          selectedId = parsed[0]?.id;
+        }
+      }
+    } catch (e) {}
+  }
+  if (!selectedId && Array.isArray(flipbooksData) && flipbooksData.length > 0) {
+    selectedId = flipbooksData[0].id;
+  }
+
   const homeFlipbookSection = createBlock('section', {
     classes: 'py-4 home-flipbook-section bg-white',
     style: { paddingTop: '1.5rem', paddingBottom: '1.5rem' }
   });
   const homeFlipbookContainer = createBlock('container', { fluid: false });
-  const homeFlipbookHeading = createBlock('heading', {
-    content: 'Lecteur de Flipbook Interactif',
-    level: 'h3',
-    classes: 'section-title mb-3'
-  });
   const homeFlipbookReader = createBlock('flipbookFeatured', {
     title: 'Lecteur de Flipbook Interactif',
     mode: 'reader',
-    selectedBookId: '3322'
+    selectedBookId: selectedId || '3322'
   });
-  homeFlipbookContainer.children.push(homeFlipbookHeading, homeFlipbookReader);
+  homeFlipbookContainer.children.push(homeFlipbookReader);
   homeFlipbookSection.children.push(homeFlipbookContainer);
 
   return [homeFlipbookSection];
