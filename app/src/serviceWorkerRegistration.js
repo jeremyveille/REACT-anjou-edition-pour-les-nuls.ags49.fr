@@ -7,23 +7,36 @@ const isLocalhost = Boolean(
 );
 
 export function register(config) {
-  if ('serviceWorker' in navigator) {
-    const publicUrl = new URL(process.env.PUBLIC_URL, window.location.href);
-    if (publicUrl.origin !== window.location.origin) {
-      return;
-    }
-
-    window.addEventListener('load', () => {
-      const swUrl = `${process.env.PUBLIC_URL}/service-worker.js`;
-
-      if (isLocalhost) {
-        // This is running on localhost. Let's check if a service worker still exists or not.
-        checkValidServiceWorker(swUrl, config);
-      } else {
-        // Is not localhost. Just register service worker
-        registerValidSW(swUrl, config);
+  if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator && navigator.serviceWorker) {
+    if (process.env.NODE_ENV === 'production') {
+      // The URL constructor is available in all browsers that support SW.
+      const publicUrl = new URL(process.env.PUBLIC_URL || '', window.location.href);
+      if (publicUrl.origin !== window.location.origin) {
+        // Our service worker won't work if PUBLIC_URL is on a different origin
+        return;
       }
-    });
+
+      window.addEventListener('load', () => {
+        const swUrl = `${process.env.PUBLIC_URL || ''}/service-worker.js`;
+
+        if (isLocalhost) {
+          // This is running on localhost. Let's check if a service worker still exists or not.
+          checkValidServiceWorker(swUrl, config);
+        } else {
+          // Is not localhost. Just register service worker
+          registerValidSW(swUrl, config);
+        }
+      });
+    } else if (window.location.hostname === 'localhost' || isLocalhost) {
+      // Also allow local testing when explicitly desired
+      const publicUrl = new URL(process.env.PUBLIC_URL || '', window.location.href);
+      if (publicUrl.origin === window.location.origin) {
+        window.addEventListener('load', () => {
+          const swUrl = `${process.env.PUBLIC_URL || ''}/service-worker.js`;
+          checkValidServiceWorker(swUrl, config);
+        });
+      }
+    }
   }
 }
 
@@ -87,10 +100,12 @@ function checkValidServiceWorker(swUrl, config) {
 }
 
 export function unregister() {
-  if ('serviceWorker' in navigator) {
+  if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator && navigator.serviceWorker && navigator.serviceWorker.ready) {
     navigator.serviceWorker.ready
       .then((registration) => {
-        registration.unregister();
+        if (registration && registration.unregister) {
+          registration.unregister();
+        }
       })
       .catch((error) => {
         console.error(error.message);
