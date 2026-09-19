@@ -10,10 +10,12 @@ import {
   Check
 } from 'lucide-react';
 import { sanitizeHtml, sanitizeUrl } from '../../utils/sanitize';
+import { getThumbnailUrl, OptimizedImage } from '../../utils/imageOptimizer';
 import { getYoutubeEmbedUrl } from '../../utils/youtubeUtils';
 import PdfFlipbookReader from '../PdfFlipbookReader';
 import { ContactForm } from '../ContactForm';
 import { flipbooksData } from '../../data';
+import { getLocalFlipbooksSync } from '../../services/pageService';
 
 const YoutubeIcon = ({ size = 20, color = "currentColor", fill = "none" }) => (
   <svg
@@ -73,7 +75,8 @@ export const Text = ({ settings = {} }) => {
  * Widget Image
  */
 export const Image = ({ settings = {} }) => {
-  const src = sanitizeUrl(settings.src || 'https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?q=80&w=600');
+  const rawSrc = settings.src || 'https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?q=80&w=600';
+  const src = sanitizeUrl(rawSrc);
   const alt = settings.alt || 'Illustration';
   const customClasses = settings.classes || 'img-fluid rounded';
   const style = settings.style || {};
@@ -81,7 +84,13 @@ export const Image = ({ settings = {} }) => {
   const link = settings.link ? sanitizeUrl(settings.link) : null;
 
   const imgElement = (
-    <img src={src} alt={alt} className={customClasses} loading="lazy" />
+    <OptimizedImage 
+      src={src} 
+      alt={alt} 
+      className={customClasses} 
+      loading="lazy" 
+      decoding="async"
+    />
   );
 
   return (
@@ -140,7 +149,17 @@ export const Card = ({ settings = {} }) => {
 
   return (
     <div className={`card ${customClasses}`} style={style}>
-      {image && <img src={image} className="card-img-top" alt={title} loading="lazy" />}
+      {image && (
+        <OptimizedImage 
+          src={image} 
+          className="card-img-top" 
+          alt={title} 
+          loading="lazy" 
+          useThumbnail={true} 
+          thumbnailWidth={600} 
+          thumbnailHeight={350} 
+        />
+      )}
       <div className="card-body">
         <h5 className="card-title">{title}</h5>
         <p className="card-text">{text}</p>
@@ -451,17 +470,33 @@ export const FeaturedPoems = ({ settings = {}, isEditing = false }) => {
 export const FlipbookFeatured = ({ settings = {}, isEditing = false }) => {
   const title = settings.title || 'À la une : Flipbooks Interactifs';
   const mode = settings.mode || 'grid'; // 'reader' ou 'grid'
-  const items = Array.isArray(settings.items) && settings.items.length > 0 ? settings.items : flipbooksData;
-  const selectedBookId = settings.selectedBookId || '3322';
+  
+  // Utiliser la liste synchronisée des flipbooks du projet (Firestore / LocalStorage / Fallback)
+  const currentFlipbooks = React.useMemo(() => {
+    if (Array.isArray(settings.items) && settings.items.length > 0) {
+      return settings.items;
+    }
+    return getLocalFlipbooksSync();
+  }, [settings.items]);
+
+  const selectedBookId = settings.selectedBookId;
   const customClasses = settings.classes || '';
   const style = settings.style || {};
 
   if (mode === 'reader') {
-    const activeBook = items.find(b => b.id === selectedBookId) || items[0] || flipbooksData[0];
+    // Trouver le livre demandé ou le premier disponible
+    const activeBook = (selectedBookId && currentFlipbooks.find(b => b.id === selectedBookId)) 
+      || currentFlipbooks[0] 
+      || flipbooksData[0];
+
+    if (process.env.NODE_ENV !== 'production' || window.__AE_DEV_LOGS__) {
+      console.log('[PageBuilder] Flipbook selected:', activeBook?.id);
+    }
+
     return (
       <div className={`home-flipbook-section ${customClasses}`} style={style}>
         {title && (
-          <div className="section-title mb-3">
+          <div className="section-title">
             <h3>{title}</h3>
           </div>
         )}
@@ -480,7 +515,7 @@ export const FlipbookFeatured = ({ settings = {}, isEditing = false }) => {
         </div>
       )}
       <div className="featured-grid">
-        {items.map((fb) => (
+        {currentFlipbooks.map((fb) => (
           <div key={fb.id} className="featured-card">
             <div className="featured-card-icon">
               <BookOpen size={36} color="var(--primary)" />
@@ -515,15 +550,18 @@ export const PhotoGallery = ({ settings = {}, isEditing = false }) => {
           <ImageIcon size={20} /> {title}
         </h2>
         <div className="gallery-grid">
-          {images.slice(0, 4).map((img) => (
-            <div 
-              key={img.id || img.url} 
-              className="gallery-item" 
-              style={{ backgroundImage: `url('${sanitizeUrl(img.url)}')` }}
-              title={img.title}
-              aria-label={`Voir l'image : ${img.title}`}
-            ></div>
-          ))}
+          {images.slice(0, 4).map((img) => {
+            const thumbUrl = getThumbnailUrl(img.thumbnailUrl || img.url, { width: 300, height: 220 });
+            return (
+              <div 
+                key={img.id || img.url} 
+                className="gallery-item" 
+                style={{ backgroundImage: `url('${sanitizeUrl(thumbUrl)}')` }}
+                title={img.title}
+                aria-label={`Voir l'image : ${img.title}`}
+              ></div>
+            );
+          })}
         </div>
         <button type="button" className="widget-footer-btn">
           Voir toutes les photos
@@ -544,7 +582,15 @@ export const PhotoGallery = ({ settings = {}, isEditing = false }) => {
         {images.map((img) => (
           <div key={img.id || img.url} className="full-gallery-item">
             <div className="gallery-img-wrapper">
-              <img src={sanitizeUrl(img.url)} alt={img.title || 'Photo Anjou'} loading="lazy" />
+              <OptimizedImage 
+                src={img.url} 
+                thumbnailSrc={img.thumbnailUrl}
+                alt={img.title || 'Photo Anjou'} 
+                loading="lazy"
+                useThumbnail={true}
+                thumbnailWidth={450}
+                thumbnailHeight={320}
+              />
               <div className="gallery-item-overlay">
                 <h4>{img.title}</h4>
                 {img.description && <p>{img.description}</p>}

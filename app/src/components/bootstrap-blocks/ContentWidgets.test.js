@@ -38,7 +38,7 @@ describe('ContentWidgets component tests', () => {
     render(<Image settings={{ src: 'https://example.com/photo.jpg', alt: 'Château d Angers' }} />);
     const img = screen.getByAltText('Château d Angers');
     expect(img).toBeInTheDocument();
-    expect(img.getAttribute('src')).toBe('https://example.com/photo.jpg');
+    expect(img.getAttribute('src')).toContain('https://example.com/photo.jpg');
   });
 
   test('renders Button with secure link and text', () => {

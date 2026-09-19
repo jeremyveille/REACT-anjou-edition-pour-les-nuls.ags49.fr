@@ -28,10 +28,12 @@ import PdfFlipbookReader from './components/PdfFlipbookReader';
 
 import { pageService } from './services/pageService';
 import { BlockRenderer } from './components/page-builder/BlockRenderer';
+import { getDefaultHomepageBlocks } from './components/page-builder/blockRegistry';
 import { PublicHeader, PublicFooter, CookieConsentBanner } from './components/PublicComponents';
 import { PublicNav } from './components/PublicNav';
 import { ContactForm } from './components/ContactForm';
 import { PrivacyPolicy } from './components/PrivacyPolicy';
+import { OptimizedImage } from './utils/imageOptimizer';
 
 // Lazy load Dashboard to save ~250KB in the public site bundle
 const Dashboard = React.lazy(() => import('./components/Dashboard'));
@@ -835,26 +837,14 @@ function App() {
               </div>
 
               {(() => {
-                const homeCustomPage = Array.isArray(customPages) ? customPages.find(p => (p?.title || '').toLowerCase().includes('accueil') || p?.slug === 'home' || p?.slug === 'accueil' || p?.slug === '') : null;
-                if (homeCustomPage?.blocks && homeCustomPage.blocks.length > 0) {
-                  return homeCustomPage.blocks.map((block) => (
-                    <BlockRenderer key={block.id} block={block} isEditing={false} />
-                  ));
-                }
+                const homeCustomPage = Array.isArray(customPages) ? customPages.find(p => p?.isHome === true || p?.isHomePage === true || p?.is_home === true || (p?.title || '').toLowerCase().includes('accueil') || p?.slug === 'home' || p?.slug === 'accueil' || p?.slug === '') : null;
+                const homeBlocks = (homeCustomPage?.blocks && homeCustomPage.blocks.length > 0)
+                  ? homeCustomPage.blocks
+                  : getDefaultHomepageBlocks(activeFlipbookId);
 
-                return (
-                  /* Principal Flipbook Reader (visible immediately) */
-                  <div className="home-flipbook-section">
-                    <div className="section-title">
-                      <h3>Lecteur de Flipbook Interactif</h3>
-                    </div>
-                    <div className="home-flipbook-reader-wrapper">
-                      <PdfFlipbookReader 
-                        book={flipbooks.find(f => f.id === activeFlipbookId) || flipbooks[0]} 
-                      />
-                    </div>
-                  </div>
-                );
+                return homeBlocks.map((block) => (
+                  <BlockRenderer key={block.id} block={block} isEditing={false} />
+                ));
               })()}
             </div>
           )}
@@ -1138,7 +1128,15 @@ function App() {
                     aria-label={`Agrandir l'image : ${img.title}`}
                   >
                     <div className="gallery-img-wrapper">
-                      <img src={img.url} alt={img.title} loading="lazy" />
+                      <OptimizedImage 
+                        src={img.url} 
+                        thumbnailSrc={img.thumbnailUrl}
+                        alt={img.title} 
+                        loading="lazy" 
+                        useThumbnail={true}
+                        thumbnailWidth={480}
+                        thumbnailHeight={340}
+                      />
                       <div className="gallery-item-overlay">
                         <h4>{img.title}</h4>
                         <p>{img.description}</p>

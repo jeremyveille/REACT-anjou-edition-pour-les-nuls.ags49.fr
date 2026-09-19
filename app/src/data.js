@@ -401,36 +401,43 @@ export const galleryImages = [
     id: "img1",
     title: "Château d'Angers et ses Jardins",
     url: "https://picsum.photos/800/600?random=11",
+    thumbnailUrl: "https://picsum.photos/400/300.webp?random=11",
     description: "Les magnifiques jardins fleuris aménagés dans les anciens fossés de la forteresse médiévale."
   },
   {
     id: "img2",
     title: "Vignobles de Savennières",
     url: "https://picsum.photos/800/600?random=12",
+    thumbnailUrl: "https://picsum.photos/400/300.webp?random=12",
     description: "Les coteaux escarpés de Savennières surplombant la Loire, terroir d'exception du Chenin."
   },
   {
     id: "img3",
     title: "Coucher de soleil sur la Loire",
     url: "https://picsum.photos/800/600?random=13",
+    thumbnailUrl: "https://picsum.photos/400/300.webp?random=13",
     description: "Les reflets dorés du crépuscule sur l'eau calme du fleuve royal près de Saumur."
   },
   {
     id: "img4",
     title: "Manoir en Tuffeau et Ardoise",
     url: "https://picsum.photos/800/600?random=14",
+    thumbnailUrl: "https://picsum.photos/400/300.webp?random=14",
     description: "Demeure traditionnelle angevine associant la clarté du calcaire et le bleu sombre de l'ardoise."
   },
   {
     id: "img5",
     title: "Les Ruelles Historiques d'Angers",
     url: "https://picsum.photos/800/600?random=15",
+    thumbnailUrl: "https://picsum.photos/400/300.webp?random=15",
     description: "Maisons médiévales à colombages et rues pavées dans le quartier de la Doutre."
   },
   {
     id: "img6",
     title: "Abbaye de Fontevraud",
     url: "https://picsum.photos/800/600?random=16",
+    thumbnailUrl: "https://picsum.photos/400/300.webp?random=16",
     description: "La plus grande cité monastique d'Europe, nécropole royale des Plantagenêts."
   }
 ];
+
