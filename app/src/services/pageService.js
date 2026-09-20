@@ -3,6 +3,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { 
   collection, 
   doc, 
+  getDoc,
   getDocs, 
   setDoc, 
   addDoc, 
@@ -276,6 +277,17 @@ export const pageService = {
               blocks: normalizeBlocks(blocks || []) 
             });
           });
+
+          // Assurer la présence des articles de base si collectionName === 'articles'
+          if (collectionName === 'articles') {
+            articlesData.forEach(baseArt => {
+              const exists = items.some(it => it.id === baseArt.id || it.slug === baseArt.slug);
+              if (!exists) {
+                items.push(baseArt);
+              }
+            });
+          }
+
           // Synchroniser le cache local avec les données réelles
           saveLocalItems(collectionName, items);
           return items;
@@ -796,17 +808,33 @@ export const pageService = {
       if (!articles || articles.length === 0) {
         return articlesData[0] || null;
       }
+
+      // 1. Vérifier dans Firestore settings/homepage si db disponible
+      if (db) {
+        try {
+          const snap = await getDoc(doc(db, 'settings', 'homepage'));
+          if (snap && snap.exists && snap.exists()) {
+            const data = snap.data();
+            if (data && data.featuredArticleId) {
+              const matching = articles.find(a => a.id === data.featuredArticleId || a.slug === data.featuredArticleId);
+              if (matching) return matching;
+            }
+          }
+        } catch (err) {}
+      }
       
+      // 2. Vérifier dans localStorage
       const savedFeaturedId = localStorage.getItem('ae_featured_article_id');
       if (savedFeaturedId) {
         const matching = articles.find(a => a.id === savedFeaturedId || a.slug === savedFeaturedId);
         if (matching) return matching;
       }
 
+      // 3. Vérifier un article marqué isFeatured
       const explicitFeatured = articles.find(a => a.isFeatured === true || a.isHomeFeatured === true);
       if (explicitFeatured) return explicitFeatured;
 
-      // Fallback par défaut sur le nouvel article de présentation
+      // 4. Fallback par défaut sur le nouvel article de présentation
       const defaultArticle = articles.find(a => a.slug === 'anjou-edition-maison-edition-ouverte-a-tous' || a.id === 'art_presentation_anjou_edition');
       if (defaultArticle) return defaultArticle;
 

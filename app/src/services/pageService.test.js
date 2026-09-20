@@ -11,6 +11,7 @@ jest.mock('../firebase', () => ({
 jest.mock('firebase/firestore', () => ({
   collection: jest.fn(),
   doc: jest.fn(),
+  getDoc: jest.fn(() => Promise.resolve({ exists: () => false })),
   getDocs: jest.fn(() => Promise.resolve({ empty: true, docs: [] })),
   setDoc: jest.fn(() => Promise.resolve()),
   addDoc: jest.fn((col, data) => Promise.resolve({ id: 'mock_doc_id_123', ...data })),
