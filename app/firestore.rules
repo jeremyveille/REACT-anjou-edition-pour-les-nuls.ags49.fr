@@ -28,26 +28,18 @@ service cloud.firestore {
     }
 
     // Pages du site :
-    // Lecture publique autorisée UNIQUEMENT pour les pages au statut publié.
-    // Les brouillons et pages en attente sont réservés aux utilisateurs connectés.
-    // Écritures et suppressions réservées aux utilisateurs connectés.
     match /pages/{pageId} {
-      allow read: if resource.data.status in ['published', 'Publié'] || isAuthenticated();
-      allow create, update: if isAuthenticated();
-      allow delete: if isAuthenticated();
+      allow read: if true;
+      allow create, update, delete: if isAuthenticated();
     }
 
     // Articles :
-    // Lecture publique autorisée UNIQUEMENT pour les articles publiés.
-    // Écritures et suppressions réservées aux utilisateurs connectés.
     match /articles/{articleId} {
-      allow read: if resource.data.status in ['published', 'Publié'] || isAuthenticated();
-      allow create, update: if isAuthenticated();
-      allow delete: if isAuthenticated();
+      allow read: if true;
+      allow create, update, delete: if isAuthenticated();
     }
 
     // Journal d'audit éditorial (auditLogs) :
-    // Piste d'audit immuable : lecture et création autorisées aux connectés, modification et suppression interdites.
     match /auditLogs/{logId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated();
@@ -58,6 +50,11 @@ service cloud.firestore {
     // Lecture publique autorisée pour l'affichage du portail.
     // Écritures réservées aux utilisateurs connectés.
     match /flipbooks/{docId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+
+    match /flipbooks/{docId}/{allSubcollections=**} {
       allow read: if true;
       allow write: if isAuthenticated();
     }
