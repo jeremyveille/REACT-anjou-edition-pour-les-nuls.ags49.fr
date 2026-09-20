@@ -153,8 +153,10 @@ export const PublicNav = ({
                         className="ae-input-addon-btn"
                         onClick={() => setActiveDropdown(activeDropdown === item.title ? null : item.title)}
                         aria-label={`Ouvrir le menu ${item.title}`}
+                        aria-expanded={activeDropdown === item.title}
+                        aria-haspopup="true"
                       >
-                        <ChevronDown size={13} />
+                        <ChevronDown size={13} aria-hidden="true" />
                       </button>
                     </div>
                     <div className={`dropdown-menu ${activeDropdown === item.title ? 'show' : ''}`} style={{ minWidth: '180px' }}>
@@ -180,13 +182,14 @@ export const PublicNav = ({
           <div className="nav-actions">
             {isPreview && (
               <div className="search-bar-simulated" style={{ display: 'flex', alignItems: 'center', backgroundColor: 'var(--bg-search, #f1f5f9)', borderRadius: '20px', padding: '0.2rem 0.6rem', border: '1px solid var(--border-color, #e2e8f0)', marginRight: '0.5rem' }}>
-                <Search size={13} style={{ color: 'var(--text-muted, #64748b)', marginRight: '0.35rem' }} />
+                <Search size={13} style={{ color: 'var(--text-muted, #64748b)', marginRight: '0.35rem' }} aria-hidden="true" />
                 <input 
                   type="text" 
                   placeholder="Rechercher..." 
                   className="ae-btn-reset-inline-xs" 
                   style={{ outline: 'none', width: '70px', fontSize: '0.75rem', height: '18px', border: 'none', background: 'transparent' }} 
                   disabled 
+                  aria-label="Recherche simulée (aperçu)"
                 />
               </div>
             )}
@@ -195,7 +198,7 @@ export const PublicNav = ({
               className="nav-item contact-btn" 
               onClick={() => { if(!isPreview && setView) { setView({ type: 'contact' }); setMobileMenuOpen(false); } }}
             >
-              Contact <Send size={13} />
+              Contact <Send size={13} aria-hidden="true" />
             </button>
 
             {/* Mobile Hamburger toggle */}
@@ -204,15 +207,17 @@ export const PublicNav = ({
               className="mobile-menu-toggle-btn"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="Menu Mobile"
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-drawer"
             >
-              {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+              {mobileMenuOpen ? <X size={22} aria-hidden="true" /> : <Menu size={22} aria-hidden="true" />}
             </button>
           </div>
         </div>
       </nav>
 
       {/* Mobile Drawer Navigation Menu */}
-      <div className={`mobile-drawer ${mobileMenuOpen ? 'open' : ''}`}>
+      <div id="mobile-drawer" className={`mobile-drawer ${mobileMenuOpen ? 'open' : ''}`} role="dialog" aria-modal="true" aria-label="Menu principal de navigation mobile">
         <div className="mobile-drawer-header">
           <h2>Anjou Édition</h2>
           <button type="button" onClick={() => setMobileMenuOpen(false)} aria-label="Fermer le menu">
