@@ -22,7 +22,7 @@ import {
   galleryImages
 } from './data';
 import { db, auth } from './firebase';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, doc, deleteDoc } from 'firebase/firestore';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import PdfFlipbookReader from './components/PdfFlipbookReader';
 
@@ -90,19 +90,26 @@ function App() {
 
   // Dynamic Flipbooks State
   const [flipbooks, setFlipbooks] = useState(() => {
-    const local = localStorage.getItem("ae_flipbooks");
-    const rawData = local ? JSON.parse(local) : flipbooksData;
-    return rawData.map(fb => ({
+    try {
+      const local = localStorage.getItem("ae_flipbooks");
+      const rawData = local ? JSON.parse(local) : flipbooksData;
+      const filtered = (Array.isArray(rawData) ? rawData : flipbooksData).filter(
+        fb => fb && fb.id !== "3322" && !(fb.title || '').toLowerCase().includes("guide historique")
+      );
+      if (filtered.length > 0) {
+        return filtered.map(fb => ({
+          ...fb,
+          pdfFile: fb.pdfFile || (fb.id === "4455" ? "secrets_vignoble_angevin.pdf" : "Seraphin-le-marin.pdf")
+        }));
+      }
+    } catch (e) {}
+    return flipbooksData.map(fb => ({
       ...fb,
-      pdfFile: fb.pdfFile || (fb.id === "3322" ? "guide_historique_anjou.pdf" : fb.id === "4455" ? "secrets_vignoble_angevin.pdf" : "Seraphin-le-marin.pdf")
+      pdfFile: fb.pdfFile || (fb.id === "4455" ? "secrets_vignoble_angevin.pdf" : "Seraphin-le-marin.pdf")
     }));
   });
 
-  const [activeFlipbookId, setActiveFlipbookId] = useState(() => {
-    const local = localStorage.getItem("ae_flipbooks");
-    const list = local ? JSON.parse(local) : flipbooksData;
-    return list[0]?.id || "3322";
-  });
+
 
   useEffect(() => {
     let isMounted = true;
@@ -110,16 +117,29 @@ function App() {
       try {
         const snap = await getDocs(collection(db, "flipbooks"));
         if (isMounted && snap && !snap.empty && snap.docs) {
-          const list = snap.docs.map(doc => {
-            const data = doc.data() || {};
-            return {
-              id: doc.id,
+          const list = [];
+          for (const docSnap of snap.docs) {
+            const data = docSnap.data() || {};
+            const isGuideHistorique = docSnap.id === "3322" || 
+              (data.title || '').toLowerCase().includes("guide historique") ||
+              (data.pdfFile || '').toLowerCase().includes("guide_historique");
+            
+            if (isGuideHistorique) {
+              try {
+                deleteDoc(doc(db, "flipbooks", docSnap.id));
+              } catch (e) {}
+              continue;
+            }
+
+            list.push({
+              id: docSnap.id,
               ...data,
-              pdfFile: data.pdfFile || (doc.id === "3322" ? "guide_historique_anjou.pdf" : doc.id === "4455" ? "secrets_vignoble_angevin.pdf" : "Seraphin-le-marin.pdf")
-            };
-          });
-          setFlipbooks(list);
-          localStorage.setItem("ae_flipbooks", JSON.stringify(list));
+              pdfFile: data.pdfFile || (docSnap.id === "4455" ? "secrets_vignoble_angevin.pdf" : "Seraphin-le-marin.pdf")
+            });
+          }
+          const finalList = list.length > 0 ? list : flipbooksData;
+          setFlipbooks(finalList);
+          localStorage.setItem("ae_flipbooks", JSON.stringify(finalList));
         }
       } catch (err) {
         if (isMounted) {
@@ -393,7 +413,6 @@ function App() {
   };
 
   const handleOpenFlipbook = (id) => {
-    setActiveFlipbookId(id);
     setView({ type: 'flipbooks', selectedId: id });
     setMobileMenuOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -838,11 +857,39 @@ function App() {
 
               {(() => {
                 const homeCustomPage = Array.isArray(customPages) ? customPages.find(p => p?.isHome === true || p?.isHomePage === true || p?.is_home === true || (p?.title || '').toLowerCase().includes('accueil') || p?.slug === 'home' || p?.slug === 'accueil' || p?.slug === '') : null;
-                const homeBlocks = (homeCustomPage?.blocks && homeCustomPage.blocks.length > 0)
+                const rawBlocks = (homeCustomPage?.blocks && homeCustomPage.blocks.length > 0)
                   ? homeCustomPage.blocks
-                  : getDefaultHomepageBlocks(activeFlipbookId);
+                  : getDefaultHomepageBlocks();
 
-                return homeBlocks.map((block) => (
+                const isExcludedHomeBlock = (b) => {
+                  if (!b) return false;
+                  if (b.type === 'flipbookFeatured' && (b.settings?.mode === 'reader' || (b.settings?.title || '').toLowerCase().includes('lecteur de flipbook') || b.settings?.selectedBookId === '3322')) return true;
+                  if (b.type === 'heading' && (b.settings?.content || '').toLowerCase().includes('bienvenue sur le portail')) return true;
+                  if (b.type === 'text' && (b.settings?.content || '').toLowerCase().includes('explorez le patrimoine')) return true;
+                  return false;
+                };
+
+                const filterTree = (list) => {
+                  if (!Array.isArray(list)) return [];
+                  return list
+                    .filter(b => !isExcludedHomeBlock(b))
+                    .map(b => {
+                      if (Array.isArray(b.children)) {
+                        return { ...b, children: filterTree(b.children) };
+                      }
+                      return b;
+                    })
+                    .filter(b => {
+                      if ((b.type === 'section' || b.type === 'container' || b.type === 'row' || b.type === 'column') && Array.isArray(b.children) && b.children.length === 0) {
+                        return false;
+                      }
+                      return true;
+                    });
+                };
+
+                const filteredBlocks = filterTree(rawBlocks);
+
+                return filteredBlocks.map((block) => (
                   <BlockRenderer key={block.id} block={block} isEditing={false} />
                 ));
               })()}

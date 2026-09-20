@@ -15,9 +15,9 @@ jest.mock('../utils/firestoreChunker', () => ({
 
 describe('PdfFlipbookReader component tests', () => {
   const mockBook = {
-    id: '3322',
-    title: 'Guide Historique de l Anjou',
-    pdfFile: 'guide_historique_anjou.pdf'
+    id: '4455',
+    title: 'Les Secrets du Vignoble Angevin',
+    pdfFile: 'secrets_vignoble_angevin.pdf'
   };
 
   test('renders reader container with accessible region and title', () => {
@@ -28,7 +28,7 @@ describe('PdfFlipbookReader component tests', () => {
     expect(region).toBeInTheDocument();
 
     // Check title
-    expect(screen.getByText('Guide Historique de l Anjou')).toBeInTheDocument();
+    expect(screen.getByText('Les Secrets du Vignoble Angevin')).toBeInTheDocument();
   });
 
   test('renders toolbar with accessible buttons', () => {

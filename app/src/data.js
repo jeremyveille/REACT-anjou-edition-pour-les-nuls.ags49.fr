@@ -346,22 +346,10 @@ Grâce à des modèles prédictifs entraînés sur plus de 15 000 dossiers médi
 
 export const flipbooksData = [
   {
-    id: "3322",
-    title: "Le Guide Historique de l'Anjou",
-    description: "Découvrez l'histoire fascinante de l'Anjou, de l'époque gallo-romaine au siècle dernier. Richement illustré.",
-    pages: [
-      { pageNum: 1, title: "Couverture", content: "Anjou Edition\n\nLE GUIDE HISTORIQUE DE L'ANJOU\n\n- Édition Spéciale -" },
-      { pageNum: 2, title: "Introduction", content: "L'Anjou, ancienne province française, est un territoire chargé d'histoire. Sa position stratégique sur la Loire en a fait le berceau de la dynastie Plantagenêt et un pôle culturel majeur de la Renaissance." },
-      { pageNum: 3, title: "Le Château d'Angers", content: "Érigé par Saint Louis au XIIIe siècle, cette forteresse impressionnante de dix-sept tours abrite la célèbre tapisserie de l'Apocalypse, le plus grand ensemble de tapisseries médiévales conservé au monde." },
-      { pageNum: 4, title: "Le Bon Roi René", content: "Duc d'Anjou, de Lorraine et de Bar, roi de Naples, le Roi René (1409-1480) fut un grand mécène, ami des arts et des lettres, qui marqua durablement la culture et le paysage angevin." },
-      { pageNum: 5, title: "La Douceur Angevine", content: "Célébrée par le poète Joachim du Bellay, cette expression qualifie le climat tempéré de la région ainsi que la douceur de vivre de ses habitants au bord du fleuve." },
-      { pageNum: 6, title: "Conclusion", content: "Visiter l'Anjou, c'est plonger dans un livre d'histoire à ciel ouvert. Fin de ce guide." }
-    ]
-  },
-  {
     id: "4455",
     title: "Les Secrets du Vignoble Angevin",
     description: "Un voyage sensoriel au cœur des cépages emblématiques de la région, du Chenin au Cabernet Franc.",
+    pdfFile: "secrets_vignoble_angevin.pdf",
     pages: [
       { pageNum: 1, title: "Couverture", content: "Anjou Edition\n\nLES SECRETS DU VIGNOBLE ANGEVIN\n\n- Terroirs et Cépages -" },
       { pageNum: 2, title: "Les Terroirs d'Anjou", content: "Le vignoble d'Anjou s'étend sur des sols très variés. On distingue l'Anjou Noir sur roches schisteuses et l'Anjou Blanc sur sols calcaires (tuffeau)." },

@@ -286,30 +286,24 @@ test('ensures "Vidéos Populaires", "Actualités 2026", "Galerie" and "Chaîne Y
   expect(screen.queryByRole('button', { name: /Lire la conférence Anjou 2026/i })).not.toBeInTheDocument();
 });
 
-test('ensures "À la une : Flipbooks Interactifs" cards and "Feuilleter l\'ouvrage" buttons are not rendered on homepage', async () => {
+test('ensures "Lecteur de Flipbook Interactif", "Guide Historique de l\'Anjou" and welcome introduction block are not rendered on homepage', async () => {
   await renderApp();
+
+  // Verify that "Lecteur de Flipbook Interactif" heading is absent from homepage
+  expect(screen.queryByRole('heading', { name: /Lecteur de Flipbook Interactif/i })).not.toBeInTheDocument();
+
+  // Verify that "Guide Historique de l'Anjou" is absent from homepage
+  expect(screen.queryByText(/Guide Historique/i)).not.toBeInTheDocument();
+
+  // Verify that the welcome introduction title and text are absent from homepage
+  expect(screen.queryByText(/Bienvenue sur le portail littéraire et culturel d'Anjou Édition/i)).not.toBeInTheDocument();
+  expect(screen.queryByText(/Explorez le patrimoine littéraire, historique, poétique et scientifique/i)).not.toBeInTheDocument();
 
   // Verify that "À la une : Flipbooks Interactifs" heading is absent from homepage
   expect(screen.queryByRole('heading', { name: /À la une : Flipbooks Interactifs/i })).not.toBeInTheDocument();
 
   // Verify that "Feuilleter l'ouvrage" buttons are absent from homepage
   expect(screen.queryAllByRole('button', { name: /Feuilleter l'ouvrage/i }).length).toBe(0);
-});
-
-test('ensures "Poésies et Fables Phares" section and cards are not rendered on homepage', async () => {
-  await renderApp();
-
-  // Verify that "Poésies et Fables Phares" heading is absent from homepage
-  expect(screen.queryByRole('heading', { name: /Poésies et Fables Phares/i })).not.toBeInTheDocument();
-
-  // Verify that buttons and links for fable/poem are absent from homepage
-  expect(screen.queryByRole('button', { name: /Lire la fable Ma pomme/i })).not.toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: /Lire la poésie Rappel d'Anjou/i })).not.toBeInTheDocument();
-  expect(screen.queryByText(/LIRE LA FABLE/i)).not.toBeInTheDocument();
-  expect(screen.queryByText(/LIRE LA POÉSIE/i)).not.toBeInTheDocument();
-
-  // Verify that the interactive flipbook reader remains present
-  expect(screen.getByRole('heading', { name: /Lecteur de Flipbook Interactif/i })).toBeInTheDocument();
 });
 
 

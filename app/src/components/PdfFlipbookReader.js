@@ -540,7 +540,7 @@ export default function PdfFlipbookReader({ book, onClose }) {
           }
         }
 
-        // 4. Fallback to local public folder file (e.g. guide_historique_anjou.pdf)
+        // 4. Fallback to local public folder file (e.g. secrets_vignoble_angevin.pdf)
         if (!pdfSource && book.pdfFile) {
           pdfSource = book.pdfFile.startsWith("http") ? book.pdfFile : `/${book.pdfFile}`;
           console.log(`Loading PDF for book "${book.title}" from relative path: ${pdfSource}`);

@@ -15,6 +15,55 @@ import { galleryImages, videosData, flipbooksData } from '../data';
 import { normalizeBlocks, getDefaultHomepageBlocks } from '../components/page-builder/blockRegistry';
 
 /**
+ * Purge récursivement les anciens blocs de flipbook reader et le bloc d'introduction de la page d'accueil.
+ */
+export const sanitizeHomePageBlocks = (blocksList) => {
+  if (!Array.isArray(blocksList)) return [];
+  
+  const isExcludedHomeBlock = (block) => {
+    if (!block || typeof block !== 'object') return false;
+    if (block.type === 'flipbookFeatured') {
+      const mode = block.settings?.mode;
+      const title = block.settings?.title || '';
+      const selectedId = block.settings?.selectedBookId;
+      if (mode === 'reader' || title.toLowerCase().includes('lecteur de flipbook') || title.toLowerCase().includes('guide historique') || selectedId === '3322') {
+        return true;
+      }
+    }
+    if (block.type === 'heading') {
+      const content = (block.settings?.content || '').toLowerCase();
+      if (content.includes('bienvenue sur le portail')) return true;
+    }
+    if (block.type === 'text') {
+      const content = (block.settings?.content || '').toLowerCase();
+      if (content.includes('explorez le patrimoine')) return true;
+    }
+    return false;
+  };
+
+  const sanitizeTree = (list) => {
+    return list
+      .filter(block => !isExcludedHomeBlock(block))
+      .map(block => {
+        if (Array.isArray(block.children)) {
+          const filteredChildren = sanitizeTree(block.children);
+          return { ...block, children: filteredChildren };
+        }
+        return block;
+      })
+      .filter(block => {
+        // Supprimer les sections ou conteneurs devenus vides après suppression
+        if ((block.type === 'section' || block.type === 'container' || block.type === 'row' || block.type === 'column') && Array.isArray(block.children) && block.children.length === 0) {
+          return false;
+        }
+        return true;
+      });
+  };
+
+  return sanitizeTree(blocksList);
+};
+
+/**
  * Récupère la liste synchronisée des flipbooks (LocalStorage d'abord, fallback sur les données initiales).
  */
 export const getLocalFlipbooksSync = () => {
@@ -23,10 +72,17 @@ export const getLocalFlipbooksSync = () => {
     if (local) {
       const parsed = JSON.parse(local);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed.map((fb) => ({
-          ...fb,
-          pdfFile: fb.pdfFile || (fb.id === '3322' ? 'guide_historique_anjou.pdf' : fb.id === '4455' ? 'secrets_vignoble_angevin.pdf' : 'Seraphin-le-marin.pdf')
-        }));
+        const filtered = parsed.filter(fb => 
+          fb && fb.id !== '3322' && 
+          !(fb.title || '').toLowerCase().includes('guide historique') &&
+          !(fb.pdfFile || '').toLowerCase().includes('guide_historique')
+        );
+        if (filtered.length > 0) {
+          return filtered.map((fb) => ({
+            ...fb,
+            pdfFile: fb.pdfFile || (fb.id === '4455' ? 'secrets_vignoble_angevin.pdf' : 'Seraphin-le-marin.pdf')
+          }));
+        }
       }
     }
   } catch (e) {
@@ -34,7 +90,7 @@ export const getLocalFlipbooksSync = () => {
   }
   return flipbooksData.map((fb) => ({
     ...fb,
-    pdfFile: fb.pdfFile || (fb.id === '3322' ? 'guide_historique_anjou.pdf' : fb.id === '4455' ? 'secrets_vignoble_angevin.pdf' : 'Seraphin-le-marin.pdf')
+    pdfFile: fb.pdfFile || (fb.id === '4455' ? 'secrets_vignoble_angevin.pdf' : 'Seraphin-le-marin.pdf')
   }));
 };
 
@@ -207,6 +263,9 @@ export const pageService = {
             const data = docSnap.data() || {};
             let blocks = data.blocks;
             const isHome = (data.title || '').toLowerCase().includes('accueil') || data.slug === 'home' || data.slug === 'accueil';
+            if (isHome && collectionName === 'pages') {
+              blocks = sanitizeHomePageBlocks(blocks || []);
+            }
             if ((!blocks || blocks.length === 0) && isHome && collectionName === 'pages') {
               blocks = getDefaultHomepageBlocks();
             }
@@ -226,11 +285,21 @@ export const pageService = {
       // Si la collection Firestore est vide ou non initialisée, retourner un tableau vide sans auto-création en base
       const local = getLocalItems(collectionName);
       if (local && local.length > 0) {
-        return local.map(item => ({
-          ...item,
-          status: normalizeStatus(item.status),
-          blocks: normalizeBlocks(item.blocks || [])
-        }));
+        return local.map(item => {
+          let blocks = item.blocks;
+          const isHome = (item.title || '').toLowerCase().includes('accueil') || item.slug === 'home' || item.slug === 'accueil';
+          if (isHome && collectionName === 'pages') {
+            blocks = sanitizeHomePageBlocks(blocks || []);
+          }
+          if ((!blocks || blocks.length === 0) && isHome && collectionName === 'pages') {
+            blocks = getDefaultHomepageBlocks();
+          }
+          return {
+            ...item,
+            status: normalizeStatus(item.status),
+            blocks: normalizeBlocks(blocks || [])
+          };
+        });
       }
       return [];
     } catch (error) {
@@ -239,6 +308,9 @@ export const pageService = {
       return local.map(item => {
         let blocks = item.blocks;
         const isHome = (item.title || '').toLowerCase().includes('accueil') || item.slug === 'home' || item.slug === 'accueil';
+        if (isHome && collectionName === 'pages') {
+          blocks = sanitizeHomePageBlocks(blocks || []);
+        }
         if ((!blocks || blocks.length === 0) && isHome && collectionName === 'pages') {
           blocks = getDefaultHomepageBlocks();
         }

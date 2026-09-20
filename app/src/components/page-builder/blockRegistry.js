@@ -340,12 +340,12 @@ export const BLOCK_DEFINITIONS = {
     defaultSettings: {
       title: 'À la une : Flipbooks Interactifs',
       mode: 'grid', // 'reader' pour lecteur PDF intégré ou 'grid' pour les cartes
-      selectedBookId: '3322',
+      selectedBookId: flipbooksData[0]?.id || '4455',
       items: flipbooksData.map(fb => ({
         id: fb.id,
         title: fb.title,
         description: fb.description,
-        pdfFile: fb.pdfFile || 'guide_historique_anjou.pdf',
+        pdfFile: fb.pdfFile || 'secrets_vignoble_angevin.pdf',
         buttonText: 'Feuilleter l\'ouvrage'
       })),
       classes: '',
@@ -461,6 +461,20 @@ export const normalizeBlocks = (blocksList) => {
       }
     }
 
+    // Rétrocompatibilité et purge définitive des anciens flipbooks
+    if (type === 'flipbookFeatured') {
+      if (Array.isArray(settings.items)) {
+        settings.items = settings.items.filter(it => 
+          it && it.id !== '3322' && 
+          !(it.title || '').toLowerCase().includes('guide historique') &&
+          !(it.pdfFile || '').toLowerCase().includes('guide_historique')
+        );
+      }
+      if (settings.selectedBookId === '3322' || !settings.selectedBookId) {
+        settings.selectedBookId = flipbooksData[0]?.id || '4455';
+      }
+    }
+
     const normalized = {
       id,
       type,
@@ -496,38 +510,7 @@ export const cloneBlock = (block) => {
 
 /**
  * Génère la structure complète de blocs pour la page d'accueil par défaut.
- * Cela permet de rendre TOUS les éléments de la page d'accueil immédiatement
- * éditables dans le constructeur et fidèles au site public !
  */
-export const getDefaultHomepageBlocks = (activeBookId = null) => {
-  let selectedId = activeBookId;
-  if (!selectedId) {
-    try {
-      const local = localStorage.getItem('ae_flipbooks');
-      if (local) {
-        const parsed = JSON.parse(local);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          selectedId = parsed[0]?.id;
-        }
-      }
-    } catch (e) {}
-  }
-  if (!selectedId && Array.isArray(flipbooksData) && flipbooksData.length > 0) {
-    selectedId = flipbooksData[0].id;
-  }
-
-  const homeFlipbookSection = createBlock('section', {
-    classes: 'py-4 home-flipbook-section bg-white',
-    style: { paddingTop: '1.5rem', paddingBottom: '1.5rem' }
-  });
-  const homeFlipbookContainer = createBlock('container', { fluid: false });
-  const homeFlipbookReader = createBlock('flipbookFeatured', {
-    title: 'Lecteur de Flipbook Interactif',
-    mode: 'reader',
-    selectedBookId: selectedId || '3322'
-  });
-  homeFlipbookContainer.children.push(homeFlipbookReader);
-  homeFlipbookSection.children.push(homeFlipbookContainer);
-
-  return [homeFlipbookSection];
+export const getDefaultHomepageBlocks = () => {
+  return [];
 };

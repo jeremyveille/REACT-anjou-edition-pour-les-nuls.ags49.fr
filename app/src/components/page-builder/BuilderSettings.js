@@ -693,7 +693,7 @@ export const BuilderSettings = ({ block, onChange }) => {
               <div>
                 <label className="db-label font-bold text-xs">Ouvrage à charger dans le lecteur</label>
                 <select
-                  value={settings.selectedBookId || '3322'}
+                  value={settings.selectedBookId || '4455'}
                   onChange={(e) => updateSetting('selectedBookId', e.target.value)}
                   className="db-select text-xs w-100"
                 >

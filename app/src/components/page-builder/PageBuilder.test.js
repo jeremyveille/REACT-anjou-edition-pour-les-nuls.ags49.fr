@@ -93,15 +93,15 @@ describe('PageBuilder and Block Architecture Tests', () => {
     expect(cloned.children[0].settings.content).toBe('Enfant Titre');
   });
 
-  test('getDefaultHomepageBlocks provides all standard editable sections', () => {
+  test('getDefaultHomepageBlocks returns an array for default homepage blocks without welcome or flipbook block', () => {
     const homeBlocks = getDefaultHomepageBlocks();
-    expect(homeBlocks.length).toBeGreaterThanOrEqual(1);
+    expect(Array.isArray(homeBlocks)).toBe(true);
     
-    const hasFlipbook = homeBlocks.some(b => 
+    const hasExcluded = homeBlocks.some(b => 
       b.type === 'flipbookFeatured' || 
-      (b.children && b.children.some(c => c.type === 'flipbookFeatured' || (c.children && c.children.some(d => d.type === 'flipbookFeatured'))))
+      (b.settings?.content && (b.settings.content.includes('Bienvenue sur le portail') || b.settings.content.includes('Explorez le patrimoine')))
     );
-    expect(hasFlipbook).toBe(true);
+    expect(hasExcluded).toBe(false);
   });
 
   test('renders PageBuilder with default canvas and allows block selection and property modification', async () => {
@@ -716,7 +716,7 @@ describe('PageBuilder and Block Architecture Tests', () => {
     expect(screen.queryByText('Bienvenue sur Accueil Réel')).toBeNull();
   });
 
-  test('TEST 8: Hydratation en mémoire de la page d’accueil legacy/vide avec le Lecteur de Flipbook Interactif', async () => {
+  test('TEST 8: Hydratation en mémoire de la page d’accueil legacy/vide sans bloc d\'introduction ni lecteur de flipbook', async () => {
     const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const legacyHomePage = {
       id: 'page_home_legacy',
@@ -738,54 +738,75 @@ describe('PageBuilder and Block Architecture Tests', () => {
     const titleInput = await screen.findByPlaceholderText(/Titre de la page/i);
     expect(titleInput).toHaveValue('Accueil');
 
-    // 2. Vérifier que le Lecteur de Flipbook Interactif est rendu fidèlement sur le canevas
-    expect(await screen.findByText('Lecteur de Flipbook Interactif')).toBeInTheDocument();
+    // 2. Vérifier qu'aucun bloc d'introduction ni lecteur de flipbook n'apparaît
+    expect(screen.queryByText(/Bienvenue sur le portail littéraire et culturel d'Anjou Édition/i)).toBeNull();
+    expect(screen.queryByText(/Explorez le patrimoine/i)).toBeNull();
+    expect(screen.queryByText('Lecteur de Flipbook Interactif')).toBeNull();
 
     // 3. Vérifier la présence des logs de diagnostic
     expect(logSpy).toHaveBeenCalledWith('[PageBuilder] Home page resolved:', 'page_home_legacy');
-    expect(logSpy).toHaveBeenCalledWith('[PageBuilder] Homepage legacy content hydrated');
-    expect(logSpy).toHaveBeenCalledWith('[PageBuilder] Flipbook selected:', expect.any(String));
 
     logSpy.mockRestore();
   });
 
   test('TEST 9: Modification des réglages du bloc Flipbook dans le constructeur', async () => {
     window.alert = jest.fn();
-    const saveSpy = jest.spyOn(pageService, 'savePage').mockResolvedValue({ id: 'page_home_legacy' });
-    const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const saveSpy = jest.spyOn(pageService, 'savePage').mockResolvedValue({ id: 'page_custom_flipbook' });
 
-    const legacyHomePage = {
-      id: 'page_home_legacy',
-      title: 'Accueil',
-      slug: 'accueil',
-      category: 'Accueil',
+    const flipbookPage = {
+      id: 'page_custom_flipbook',
+      title: 'Ouvrages',
+      slug: 'ouvrages',
+      category: 'Outils',
       status: 'published',
-      blocks: []
+      blocks: [
+        {
+          id: 'sec_fb',
+          type: 'section',
+          settings: { classes: 'py-4' },
+          children: [
+            {
+              id: 'cnt_fb',
+              type: 'container',
+              children: [
+                {
+                  id: 'fb_feat',
+                  type: 'flipbookFeatured',
+                  settings: {
+                    title: 'Sélection de Flipbooks',
+                    mode: 'reader',
+                    selectedBookId: '4455'
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
     };
 
     jest.spyOn(pageService, 'getPages').mockImplementation((coll) => {
       if (coll === 'articles') return Promise.resolve([]);
-      return Promise.resolve([legacyHomePage]);
+      return Promise.resolve([flipbookPage]);
     });
 
     render(<PageBuilder onClose={() => {}} onSaveSuccess={() => {}} />);
 
     // 1. Sélectionner le bloc Flipbook
-    const flipbookTitle = await screen.findByText('Lecteur de Flipbook Interactif');
+    const flipbookTitle = await screen.findByText('Sélection de Flipbooks');
     fireEvent.click(flipbookTitle);
 
     // 2. Vérifier les réglages dans le panneau latéral
-    const titleInput = await screen.findByDisplayValue('Lecteur de Flipbook Interactif');
+    const titleInput = await screen.findByDisplayValue('Sélection de Flipbooks');
     expect(titleInput).toBeInTheDocument();
 
     // 3. Modifier le titre
-    fireEvent.change(titleInput, { target: { value: 'Grand Flipbook Historique 2026' } });
-    expect(await screen.findByText('Grand Flipbook Historique 2026')).toBeInTheDocument();
+    fireEvent.change(titleInput, { target: { value: 'Grand Flipbook Vignoble 2026' } });
+    expect(await screen.findByText('Grand Flipbook Vignoble 2026')).toBeInTheDocument();
 
-    // 4. Modifier le flipbook sélectionné
-    const bookSelect = screen.getByDisplayValue(/Guide Historique de l'Anjou/i);
+    // 4. Vérifier le flipbook sélectionné dans la liste déroulante
+    const bookSelect = screen.getByDisplayValue(/Les Secrets du Vignoble Angevin/i);
     expect(bookSelect).toBeInTheDocument();
-    fireEvent.change(bookSelect, { target: { value: '4455' } });
 
     // 5. Sauvegarder
     const saveBtn = screen.getByRole('button', { name: /Enregistrer|Publier/i });
@@ -797,7 +818,7 @@ describe('PageBuilder and Block Architecture Tests', () => {
 
     expect(saveSpy).toHaveBeenCalledWith(
       expect.objectContaining({
-        title: 'Accueil',
+        title: 'Ouvrages',
         blocks: expect.arrayContaining([
           expect.objectContaining({
             type: 'section',
@@ -808,7 +829,7 @@ describe('PageBuilder and Block Architecture Tests', () => {
                   expect.objectContaining({
                     type: 'flipbookFeatured',
                     settings: expect.objectContaining({
-                      title: 'Grand Flipbook Historique 2026',
+                      title: 'Grand Flipbook Vignoble 2026',
                       selectedBookId: '4455'
                     })
                   })
@@ -818,10 +839,8 @@ describe('PageBuilder and Block Architecture Tests', () => {
           })
         ])
       }),
-      'page_home_legacy',
+      'page_custom_flipbook',
       'pages'
     );
-
-    logSpy.mockRestore();
   });
 });
