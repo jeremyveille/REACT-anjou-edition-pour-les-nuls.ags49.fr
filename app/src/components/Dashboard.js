@@ -5466,15 +5466,17 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
 
             {/* Notification Toast */}
             {notification && (
-              <div className="ae-toast">
-                <span className="ae-toast-indicator"></span>
+              <div className="ae-toast" role="status" aria-live="polite">
+                <span className="ae-toast-indicator" aria-hidden="true"></span>
                 <span className="ae-toast-message">{notification}</span>
                 <button 
+                  type="button"
                   onClick={() => setNotification(null)}
                   className="ae-toast-close"
                   title="Fermer la notification"
+                  aria-label="Fermer la notification"
                 >
-                  <X className="ae-icon-size-sm" />
+                  <X className="ae-icon-size-sm" aria-hidden="true" />
                 </button>
               </div>
             )}

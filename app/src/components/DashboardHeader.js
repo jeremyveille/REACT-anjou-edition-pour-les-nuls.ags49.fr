@@ -36,12 +36,14 @@ export default function DashboardHeader({
       {/* LEFT: Toggle & Title */}
       <div className="topbar-left" style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
         <button
+          type="button"
           onClick={() => setSidebarOpen(!sidebarOpen)}
           className="ae-icon-button"
-          aria-label="Toggle navigation menu"
+          aria-label="Afficher ou masquer le menu latéral"
+          aria-expanded={sidebarOpen}
           style={{ color: 'white', background: 'rgba(255,255,255,0.1)', flexShrink: 0 }}
         >
-          <Menu size={20} />
+          <Menu size={20} aria-hidden="true" />
         </button>
         <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
           <h2 className="topbar-title" style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
