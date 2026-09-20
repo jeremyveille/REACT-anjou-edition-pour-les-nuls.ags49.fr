@@ -429,3 +429,262 @@ export const galleryImages = [
   }
 ];
 
+export const articlesData = [
+  {
+    id: "art_presentation_anjou_edition",
+    title: "Anjou Édition : une maison d’édition ouverte à tous",
+    slug: "anjou-edition-maison-edition-ouverte-a-tous",
+    metaTitle: "Anjou Édition — Une maison d’édition ouverte à tous",
+    metaDescription: "Découvrez Anjou Édition, une maison d’édition ouverte aux auteurs, lecteurs, passionnés et curieux, avec une volonté simple : rendre l’édition et la culture accessibles à tous.",
+    hook: "Parce qu’il n’est pas nécessaire d’être un expert pour écrire, lire, découvrir, apprendre ou partager.\n\nAnjou Édition est une maison d’édition qui souhaite rendre la culture et l’édition accessibles à chacun.\nAuteurs débutants ou confirmés, lecteurs passionnés, curieux, associations, créateurs et porteurs de projets : chacun doit pouvoir trouver sa place.",
+    excerpt: "Anjou Édition souhaite rendre l’édition, la culture et la transmission accessibles à tous. Découvrez notre vision d’une maison d’édition simple, humaine et ouverte aux auteurs comme aux lecteurs.",
+    image: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=1200",
+    thumbnailUrl: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=600",
+    category: "Maison d'édition",
+    author: "Anjou Édition",
+    date: "2026-09-20",
+    readTime: "4 min de lecture",
+    status: "published",
+    isFeatured: true,
+    views: 142,
+    content: `## Bienvenue chez Anjou Édition
+
+Anjou Édition est née d’une volonté simple : rendre l’édition plus accessible, plus humaine et plus proche de tous.
+
+Nous pensons que les idées, les histoires, les connaissances et les passions méritent d’être partagées.
+
+Il n’est pas nécessaire d’être écrivain professionnel, historien, chercheur ou spécialiste pour avoir quelque chose d’intéressant à transmettre.
+
+**Tout le monde peut avoir une histoire à raconter.**
+
+---
+
+## Pourquoi « pour les nuls » ?
+
+L’expression **« pour les nuls »** reflète avant tout notre volonté de rendre les contenus accessibles.
+
+Cela signifie :
+* expliquer simplement ;
+* éviter les termes inutilement compliqués ;
+* permettre de découvrir un sujet à son rythme ;
+* donner envie d’apprendre ;
+* ne pas réserver la connaissance à quelques spécialistes.
+
+Chez Anjou Édition, il n’y a pas besoin d’être expert pour commencer.
+
+La curiosité suffit.
+
+---
+
+## Une maison d’édition ouverte à tous
+
+Anjou Édition souhaite accueillir des profils très différents.
+
+### Vous aimez écrire ?
+
+Vous avez :
+* un manuscrit ;
+* une histoire ;
+* des souvenirs ;
+* un témoignage ;
+* un projet historique ;
+* un livre consacré au patrimoine ;
+* un récit local ;
+* un projet pédagogique ;
+* une idée originale ?
+
+Votre projet mérite d’être étudié.
+
+### Vous aimez lire ?
+
+Découvrez progressivement les ouvrages, publications, articles et contenus proposés par Anjou Édition.
+
+### Vous souhaitez transmettre ?
+
+Associations, passionnés, chercheurs amateurs, historiens locaux, enseignants, collectivités ou simples curieux peuvent également participer à cette aventure éditoriale.`,
+    blocks: [
+      {
+        id: "sec_hero",
+        type: "section",
+        settings: { classes: "py-4", style: { backgroundColor: "#ffffff" } },
+        children: [
+          {
+            id: "cont_hero",
+            type: "container",
+            settings: { fluid: false },
+            children: [
+              {
+                id: "h_welcome",
+                type: "heading",
+                settings: { content: "Bienvenue chez Anjou Édition", level: "h2", classes: "mb-3 text-dark", style: { color: "#1e293b" } }
+              },
+              {
+                id: "txt_welcome_1",
+                type: "text",
+                settings: {
+                  content: "<p>Anjou Édition est née d’une volonté simple : rendre l’édition plus accessible, plus humaine et plus proche de tous.</p><p>Nous pensons que les idées, les histoires, les connaissances et les passions méritent d’être partagées.</p><p>Il n’est pas nécessaire d’être écrivain professionnel, historien, chercheur ou spécialiste pour avoir quelque chose d’intéressant à transmettre.</p><p><strong>Tout le monde peut avoir une histoire à raconter.</strong></p>",
+                  classes: "mb-4"
+                }
+              },
+              {
+                id: "div_1",
+                type: "divider",
+                settings: { styleType: "solid", thickness: "1px", color: "#e2e8f0", margin: "2rem 0" }
+              },
+              {
+                id: "h_why_nuls",
+                type: "heading",
+                settings: { content: "Pourquoi « pour les nuls » ?", level: "h2", classes: "mb-3 text-dark", style: { color: "#1e293b" } }
+              },
+              {
+                id: "txt_why_nuls_1",
+                type: "text",
+                settings: {
+                  content: "<p>L’expression <strong>« pour les nuls »</strong> reflète avant tout notre volonté de rendre les contenus accessibles.</p><p>Cela signifie :</p>",
+                  classes: "mb-2"
+                }
+              },
+              {
+                id: "list_why_nuls",
+                type: "list",
+                settings: {
+                  listType: "unordered",
+                  items: [
+                    "expliquer simplement ;",
+                    "éviter les termes inutilement compliqués ;",
+                    "permettre de découvrir un sujet à son rythme ;",
+                    "donner envie d’apprendre ;",
+                    "ne pas réserver la connaissance à quelques spécialistes."
+                  ],
+                  classes: "mb-3"
+                }
+              },
+              {
+                id: "txt_why_nuls_2",
+                type: "text",
+                settings: {
+                  content: "<p>Chez Anjou Édition, il n’y a pas besoin d’être expert pour commencer.<br /><strong>La curiosité suffit.</strong></p>",
+                  classes: "mb-4"
+                }
+              },
+              {
+                id: "div_2",
+                type: "divider",
+                settings: { styleType: "solid", thickness: "1px", color: "#e2e8f0", margin: "2rem 0" }
+              },
+              {
+                id: "h_open_to_all",
+                type: "heading",
+                settings: { content: "Une maison d’édition ouverte à tous", level: "h2", classes: "mb-3 text-dark", style: { color: "#1e293b" } }
+              },
+              {
+                id: "txt_open_intro",
+                type: "text",
+                settings: {
+                  content: "<p>Anjou Édition souhaite accueillir des profils très différents.</p>",
+                  classes: "mb-3"
+                }
+              },
+              {
+                id: "h_you_write",
+                type: "heading",
+                settings: { content: "Vous aimez écrire ?", level: "h3", classes: "mb-2 text-dark", style: { color: "#004b7a" } }
+              },
+              {
+                id: "list_you_write",
+                type: "list",
+                settings: {
+                  listType: "unordered",
+                  items: [
+                    "un manuscrit ;",
+                    "une histoire ;",
+                    "des souvenirs ;",
+                    "un témoignage ;",
+                    "un projet historique ;",
+                    "un livre consacré au patrimoine ;",
+                    "un récit local ;",
+                    "un projet pédagogique ;",
+                    "une idée originale ?"
+                  ],
+                  classes: "mb-2"
+                }
+              },
+              {
+                id: "txt_write_conclusion",
+                type: "text",
+                settings: {
+                  content: "<p><strong>Votre projet mérite d’être étudié.</strong></p>",
+                  classes: "mb-4"
+                }
+              },
+              {
+                id: "h_you_read",
+                type: "heading",
+                settings: { content: "Vous aimez lire ?", level: "h3", classes: "mb-2 text-dark", style: { color: "#004b7a" } }
+              },
+              {
+                id: "txt_you_read",
+                type: "text",
+                settings: {
+                  content: "<p>Découvrez progressivement les ouvrages, publications, articles et contenus proposés par Anjou Édition.</p>",
+                  classes: "mb-4"
+                }
+              },
+              {
+                id: "h_you_transmit",
+                type: "heading",
+                settings: { content: "Vous souhaitez transmettre ?", level: "h3", classes: "mb-2 text-dark", style: { color: "#004b7a" } }
+              },
+              {
+                id: "txt_you_transmit",
+                type: "text",
+                settings: {
+                  content: "<p>Associations, passionnés, chercheurs amateurs, historiens locaux, enseignants, collectivités ou simples curieux peuvent également participer à cette aventure éditoriale.</p>",
+                  classes: "mb-4"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    id: "art_poesie_joachim_du_bellay",
+    title: "Joachim du Bellay et la douceur angevine",
+    slug: "joachim-du-bellay-douceur-angevine",
+    metaTitle: "Joachim du Bellay — La douceur angevine | Anjou Édition",
+    metaDescription: "Retour sur la vie et les œuvres de Joachim du Bellay, poète emblématique de Liré et chantre de la douceur angevine.",
+    hook: "« Heureux qui, comme Ulysse, a fait un beau voyage... »\nDécouvrez comment le poète de Liré a immortalisé l’Anjou et sa douceur.",
+    excerpt: "Figure majeure de la Pléiade, Joachim du Bellay a célébré les bords de Loire et son petit Liré avec une sensibilité intemporelle.",
+    image: "https://images.unsplash.com/photo-1455390582262-044cdead277a?q=80&w=1200",
+    thumbnailUrl: "https://images.unsplash.com/photo-1455390582262-044cdead277a?q=80&w=600",
+    category: "Poésies",
+    author: "Anjou Édition",
+    date: "2026-09-18",
+    readTime: "3 min de lecture",
+    status: "published",
+    isFeatured: false,
+    views: 89,
+    content: `## Le poète de Liré et des bords de Loire
+
+Né vers 1522 au château de la Turmelière, près de Liré, Joachim du Bellay est l’une des figures de proue de la poésie française de la Renaissance.
+
+Cofondateur de la Pléiade aux côtés de Pierre de Ronsard, il a signé en 1549 la *Défense et illustration de la langue française*, plaidoyer fondateur pour l'élévation de la langue française au rang des grandes langues poétiques de l'Antiquité.
+
+---
+
+## Les Regrets et l'attachement à l'Anjou
+
+C'est lors de son séjour à Rome (1553-1557) que du Bellay compose *Les Regrets*, son recueil le plus célèbre. Loin de sa terre natale, le poète exprime sa nostalgie vibrante :
+
+> « Quand reverrai-je, hélas, de mon petit village  
+> Fumer la cheminée, et en quelle saison  
+> Reverrai-je le clos de ma pauvre maison,  
+> Qui m'est une province, et beaucoup davantage ? »
+
+À travers ses vers, il immortalise la fameuse « douceur angevine », devenue l'emblème d'un art de vivre et d'une sensibilité propres à notre région.`
+  }
+];
+
+
