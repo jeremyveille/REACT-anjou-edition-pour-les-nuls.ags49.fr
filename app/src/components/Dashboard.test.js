@@ -12,6 +12,21 @@ jest.mock('../firebase', () => ({
   auth: { currentUser: { uid: 'admin-123' } }
 }));
 
+jest.mock('firebase/firestore', () => ({
+  getFirestore: jest.fn(() => ({})),
+  collection: jest.fn(),
+  getDocs: jest.fn(() => Promise.resolve({ empty: true, docs: [] })),
+  doc: jest.fn(),
+  getDoc: jest.fn(() => Promise.resolve({ exists: () => false, data: () => ({}) })),
+  addDoc: jest.fn(() => Promise.resolve({ id: 'mock_doc' })),
+  setDoc: jest.fn(() => Promise.resolve()),
+  deleteDoc: jest.fn(() => Promise.resolve()),
+  query: jest.fn(),
+  orderBy: jest.fn(),
+  where: jest.fn(),
+  limit: jest.fn()
+}));
+
 
 describe('Dashboard Menu Builder Tests', () => {
   beforeEach(() => {
@@ -143,3 +158,74 @@ describe('Dashboard Menu Builder Tests', () => {
     });
   });
 });
+
+describe('Dashboard Articles Management Tests', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    window.history.pushState(null, '', '/ae-dashboard');
+  });
+
+  test('renders articles list and displays featured article badge', async () => {
+    render(<Dashboard onBackToSite={() => {}} />);
+
+    // Click on Articles tab in sidebar
+    const articlesTabBtn = screen.getByRole('button', { name: /Articles/i });
+    fireEvent.click(articlesTabBtn);
+
+    // Verify header and articles
+    expect(await screen.findByText(/Articles du portail/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Anjou Édition : une maison d[’']édition ouverte à tous/i)).toBeInTheDocument();
+
+    // Verify featured article badge
+    expect(screen.getByText(/Article Principal \(Accueil\)/i)).toBeInTheDocument();
+  });
+
+  test('allows opening the edit article modal and modifying article data', async () => {
+    render(<Dashboard onBackToSite={() => {}} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Articles/i }));
+    expect(await screen.findByText(/Anjou Édition : une maison d[’']édition ouverte à tous/i)).toBeInTheDocument();
+
+    // Click Edit on the presentation article
+    const editBtn = screen.getByRole('button', { name: /Modifier l['’]article Anjou Édition/i });
+    fireEvent.click(editBtn);
+
+    // Modal should be visible
+    expect(await screen.findByText(/Modifier l['’]article/i)).toBeInTheDocument();
+    expect(screen.getByDisplayValue(/Anjou Édition : une maison d[’']édition ouverte à tous/i)).toBeInTheDocument();
+    expect(screen.getByText(/Afficher cet article sur la page d[’']accueil/i)).toBeInTheDocument();
+
+    // Change title
+    const titleInput = screen.getByDisplayValue(/Anjou Édition : une maison d[’']édition ouverte à tous/i);
+    fireEvent.change(titleInput, { target: { value: "Anjou Édition : Titre Modifié" } });
+
+    // Click save
+    const saveBtn = screen.getByRole('button', { name: /Enregistrer l['’]article/i });
+    fireEvent.click(saveBtn);
+
+    // Modal should close and updated title should be displayed
+    await waitFor(() => {
+      expect(screen.queryByText(/Modifier l['’]article/i)).not.toBeInTheDocument();
+    });
+    expect(await screen.findByRole('heading', { level: 5, name: /Anjou Édition : Titre Modifié/i })).toBeInTheDocument();
+  });
+
+  test('allows switching the featured article and persists choice in localStorage', async () => {
+    render(<Dashboard onBackToSite={() => {}} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Articles/i }));
+    await screen.findByText(/Articles du portail/i);
+
+    // Look for "Mettre à la une" buttons for non-featured articles
+    const makeFeaturedBtns = await screen.findAllByRole('button', { name: /Mettre à la une/i });
+    expect(makeFeaturedBtns.length).toBeGreaterThan(0);
+
+    // Click the first "Mettre à la une" button
+    fireEvent.click(makeFeaturedBtns[0]);
+
+    await waitFor(() => {
+      expect(localStorage.getItem('ae_featured_article_id')).toBeTruthy();
+    });
+  });
+});
+

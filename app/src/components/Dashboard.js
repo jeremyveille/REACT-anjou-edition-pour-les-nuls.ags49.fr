@@ -6,7 +6,7 @@ import {
   Settings, Users, Layers, MessageSquare, Plus, 
   Trash2, ShieldCheck, Sparkles, BookOpen,
   LayoutDashboard, Megaphone, FolderOpen, LogOut, X,
-  Copy, Edit3, Eye, UploadCloud, Menu,
+  Copy, Edit3, Eye, UploadCloud, Menu, Star,
   ChevronUp, ChevronDown, ChevronLeft, ChevronRight, GripVertical
 } from "lucide-react";
 import { db, storage } from "../firebase";
@@ -24,7 +24,7 @@ import {
   getDoc 
 } from "firebase/firestore";
 import { GoogleGenAI } from "@google/genai";
-import { flipbooksData, textsData } from "../data";
+import { flipbooksData, textsData, articlesData } from "../data";
 import { PageBuilder } from "./page-builder/PageBuilder";
 import { pageService } from "../services/pageService";
 import '../styles/page-builder.css';
@@ -223,6 +223,12 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
 
   const [articlesList, setArticlesList] = useState([]);
   const [newArticleTitle, setNewArticleTitle] = useState("");
+  const [featuredArticleId, setFeaturedArticleId] = useState(() => {
+    return localStorage.getItem('ae_featured_article_id') || 'art_presentation_anjou_edition';
+  });
+  const [showEditArticleModal, setShowEditArticleModal] = useState(false);
+  const [editingArticle, setEditingArticle] = useState(null);
+  const [isSavingArticle, setIsSavingArticle] = useState(false);
 
   const [messagesList, setMessagesList] = useState([]);
 
@@ -421,12 +427,14 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
   const fetchArticles = async () => {
     try {
       const list = await pageService.getPages('articles');
-      setArticlesList(list);
+      setArticlesList(list && list.length > 0 ? list : articlesData);
+      const feat = await pageService.getFeaturedArticle();
+      if (feat) {
+        setFeaturedArticleId(feat.id);
+      }
     } catch (e) {
       console.error("Articles error:", e);
-      setArticlesList([
-        { id: "1", title: "Les secrets de l'écriture romanesque pour les Nuls", views: 245, date: "2026-05-30" }
-      ]);
+      setArticlesList(articlesData);
     }
   };
 
@@ -1295,10 +1303,15 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
     if (!newArticleTitle.trim()) return;
     const newArt = {
       title: newArticleTitle,
+      slug: newArticleTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+      excerpt: "",
+      content: "",
+      image: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=600",
       views: 0,
       date: new Date().toISOString().split('T')[0],
-      status: "draft",
-      category: newArticleCategory
+      status: "published",
+      category: newArticleCategory,
+      isFeatured: false
     };
 
     try {
@@ -1312,6 +1325,71 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
       setArticlesList([localSaved, ...articlesList]);
       setNewArticleTitle("");
       setNotification(`Article "${newArt.title}" créé localement.`);
+    }
+  };
+
+  const handleSetFeaturedArticle = async (articleId) => {
+    try {
+      await pageService.setFeaturedArticle(articleId);
+      setFeaturedArticleId(articleId);
+      setArticlesList(prev => prev.map(a => ({
+        ...a,
+        isFeatured: a.id === articleId
+      })));
+      setNotification("Article principal défini avec succès pour la page d'accueil.");
+    } catch (e) {
+      console.error("Erreur sélection article principal:", e);
+    }
+  };
+
+  const handleOpenEditArticle = (article) => {
+    setEditingArticle({
+      id: article.id,
+      title: article.title || "",
+      slug: article.slug || "",
+      image: article.image || "",
+      excerpt: article.excerpt || "",
+      content: article.content || "",
+      category: article.category || "Outils",
+      status: article.status || "published",
+      isFeatured: article.id === featuredArticleId || article.isFeatured === true
+    });
+    setShowEditArticleModal(true);
+  };
+
+  const handleSaveEditArticle = async (e) => {
+    e.preventDefault();
+    if (!editingArticle || !editingArticle.title.trim()) return;
+
+    setIsSavingArticle(true);
+    try {
+      const payload = {
+        title: editingArticle.title,
+        slug: editingArticle.slug || editingArticle.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+        image: editingArticle.image,
+        excerpt: editingArticle.excerpt,
+        content: editingArticle.content,
+        category: editingArticle.category,
+        status: editingArticle.status,
+        isFeatured: editingArticle.isFeatured
+      };
+
+      const saved = await pageService.savePage(payload, editingArticle.id, 'articles');
+      
+      if (editingArticle.isFeatured) {
+        await pageService.setFeaturedArticle(editingArticle.id);
+        setFeaturedArticleId(editingArticle.id);
+      }
+
+      setArticlesList(prev => prev.map(a => a.id === editingArticle.id ? { ...a, ...payload, ...saved } : (editingArticle.isFeatured ? { ...a, isFeatured: false } : a)));
+      setShowEditArticleModal(false);
+      setEditingArticle(null);
+      setNotification(`Article "${payload.title}" mis à jour avec succès.`);
+    } catch (err) {
+      console.error("Erreur sauvegarde article:", err);
+      alert("Erreur lors de l'enregistrement de l'article.");
+    } finally {
+      setIsSavingArticle(false);
     }
   };
 
@@ -3012,48 +3090,97 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                           <div className="ae-flex-between-center mb-4">
                             <h4 className="db-title mb-0">
                               <Newspaper className="ae-icon-md-blue" />
-                              Articles récents
+                              Articles du portail
                             </h4>
-                            <button
-                              onClick={() => handleDeduplicate('articles')}
-                              className="ae-btn-secondary-sm d-flex align-items-center gap-1.5"
-                              title="Détecter et nettoyer automatiquement les articles en double"
-                              style={{ padding: '4px 10px', fontSize: '11px', borderRadius: '6px' }}
-                            >
-                              <Sparkles size={14} className="text-amber-500" />
-                              Nettoyer les doublons
-                            </button>
+                            <div className="d-flex align-items-center gap-2">
+                              <button
+                                onClick={() => handleDeduplicate('articles')}
+                                className="ae-btn-secondary-sm d-flex align-items-center gap-1.5"
+                                title="Détecter et nettoyer automatiquement les articles en double"
+                                style={{ padding: '4px 10px', fontSize: '11px', borderRadius: '6px' }}
+                              >
+                                <Sparkles size={14} className="text-amber-500" />
+                                Nettoyer les doublons
+                              </button>
+                            </div>
                           </div>
+
                           <div className="space-y-3">
-                            {displayedArticles.map(a => (
-                              <div key={a.id} className="ae-list-card-interactive">
-                                <div>
-                                  <h5 className="ae-text-heading-dark">{a.title}</h5>
-                                  <p className="ae-meta-muted-sm">
-                                    Date: {a.date} | {a.views || 0} lectures | Catégorie: <span className="ae-text-subtitle-semibold">{a.category || "Outils"}</span>
-                                  </p>
+                            {displayedArticles.map(a => {
+                              const isCurrentlyFeatured = (a.id === featuredArticleId) || (a.isFeatured === true);
+                              return (
+                                <div key={a.id} className="ae-list-card-interactive" style={{ borderLeft: isCurrentlyFeatured ? '4px solid #f59e0b' : '4px solid transparent' }}>
+                                  <div style={{ flex: 1 }}>
+                                    <div className="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                                      <h5 className="ae-text-heading-dark mb-0">{a.title}</h5>
+                                      {isCurrentlyFeatured && (
+                                        <span className="badge bg-warning-subtle text-amber-800 font-bold px-2 py-0.5 rounded d-inline-flex align-items-center gap-1 text-xs" style={{ border: '1px solid #fcd34d' }}>
+                                          <Star size={12} fill="#d97706" color="#d97706" /> Article Principal (Accueil)
+                                        </span>
+                                      )}
+                                      <span className="text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-medium">
+                                        {a.status === 'published' ? 'Publié' : a.status === 'approved' ? 'Approuvé' : a.status === 'pending_review' ? 'En attente' : 'Brouillon'}
+                                      </span>
+                                    </div>
+                                    <p className="ae-meta-muted-sm mb-1">
+                                      Slug: <code style={{ fontSize: '11px', color: '#64748b' }}>{a.slug || a.id}</code> | Catégorie: <span className="ae-text-subtitle-semibold">{a.category || "Outils"}</span> | Date: {a.date || '2026-09-20'}
+                                    </p>
+                                    {a.excerpt && (
+                                      <p className="text-xs text-slate-500 italic mb-0 line-clamp-2" style={{ maxWidth: '650px' }}>
+                                        "{a.excerpt}"
+                                      </p>
+                                    )}
+                                  </div>
+
+                                  <div className="ae-flex-row-gap-md" style={{ alignItems: 'center' }}>
+                                    {!isCurrentlyFeatured ? (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleSetFeaturedArticle(a.id)}
+                                        className="ae-btn-secondary-sm d-flex align-items-center gap-1 text-xs"
+                                        title="Afficher cet article en priorité sur la page d'accueil"
+                                        style={{ padding: '5px 9px', borderRadius: '6px' }}
+                                      >
+                                        <Star size={13} />
+                                        <span>Mettre à la une</span>
+                                      </button>
+                                    ) : (
+                                      <span className="text-xs text-amber-600 font-bold d-flex align-items-center gap-1" style={{ padding: '4px 6px' }}>
+                                        <Star size={13} fill="#d97706" color="#d97706" /> En avant
+                                      </span>
+                                    )}
+
+                                    <button
+                                      type="button"
+                                      onClick={() => handleOpenEditArticle(a)}
+                                      className="ae-action-btn-blue"
+                                      title="Modifier tous les champs de l'article"
+                                      aria-label={`Modifier l'article ${a.title}`}
+                                    >
+                                      <Edit3 className="ae-icon-md" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleLoadArticleToBuilder(a)}
+                                      className="ae-action-btn-blue"
+                                      title="Éditer avec le constructeur visuel"
+                                      aria-label={`Éditer visuellement l'article ${a.title}`}
+                                    >
+                                      <Layers className="ae-icon-md" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDeleteArticle(a.id)}
+                                      className="ae-btn-danger-ghost"
+                                      title="Supprimer l'article"
+                                      aria-label={`Supprimer l'article ${a.title}`}
+                                    >
+                                      <Trash2 className="ae-icon-md" />
+                                    </button>
+                                  </div>
                                 </div>
-                                <div className="ae-flex-row-gap-md">
-                                  <span className="text-xs bg-badge bg-blue-50 text-blue-600 px-2 py-1 rounded font-bold">Livre d'or</span>
-                                  <button
-                                    onClick={() => handleLoadArticleToBuilder(a)}
-                                    className="ae-action-btn-blue"
-                                    title="Éditer avec le constructeur"
-                                    aria-label={`Éditer l'article ${a.title}`}
-                                  >
-                                    <Edit3 className="ae-icon-md" />
-                                  </button>
-                                  <button
-                                    onClick={() => handleDeleteArticle(a.id)}
-                                    className="ae-btn-danger-ghost"
-                                    title="Supprimer l'article"
-                                    aria-label={`Supprimer l'article ${a.title}`}
-                                  >
-                                    <Trash2 className="ae-icon-md" />
-                                  </button>
-                                </div>
-                              </div>
-                            ))}
+                              );
+                            })}
                             {displayedArticles.length === 0 && (
                               <div className="text-center py-6 text-slate-400 italic">
                                 Aucun article trouvé.
@@ -5460,6 +5587,156 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                       </button>
                     </div>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* 11. Edit Article Modal */}
+            {showEditArticleModal && editingArticle && (
+              <div className="ae-modal-overlay" onClick={() => { setShowEditArticleModal(false); setEditingArticle(null); }}>
+                <div className="ae-modal-container max-w-2xl" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '750px', width: '90%' }}>
+                  <div className="ae-modal-header">
+                    <h3 className="ae-modal-title">
+                      <Edit3 className="ae-icon-md text-blue-600" /> Modifier l'article : {editingArticle.title}
+                    </h3>
+                    <button 
+                      type="button"
+                      onClick={() => { setShowEditArticleModal(false); setEditingArticle(null); }} 
+                      className="ae-modal-close-btn"
+                      aria-label="Fermer la boîte de dialogue"
+                    >
+                      <X className="ae-icon-md" />
+                    </button>
+                  </div>
+                  
+                  <form onSubmit={handleSaveEditArticle} className="ae-modal-body space-y-4">
+                    <div>
+                      <label className="ae-modal-label">Titre de l'article <span className="ae-text-danger">*</span></label>
+                      <input 
+                        type="text" 
+                        required 
+                        value={editingArticle.title} 
+                        onChange={(e) => setEditingArticle({ ...editingArticle, title: e.target.value })} 
+                        className="db-input w-full"
+                        placeholder="Titre de l'article"
+                      />
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                      <div>
+                        <label className="ae-modal-label">Identifiant URL (Slug)</label>
+                        <input 
+                          type="text" 
+                          value={editingArticle.slug} 
+                          onChange={(e) => setEditingArticle({ ...editingArticle, slug: e.target.value })} 
+                          className="db-input w-full"
+                          placeholder="slug-de-l-article"
+                        />
+                      </div>
+                      <div>
+                        <label className="ae-modal-label">Catégorie</label>
+                        <select 
+                          value={editingArticle.category} 
+                          onChange={(e) => setEditingArticle({ ...editingArticle, category: e.target.value })} 
+                          className="db-select w-full"
+                        >
+                          <option value="Maison d'édition">Maison d'édition</option>
+                          <option value="Présentation">Présentation</option>
+                          <option value="Outils">Outils</option>
+                          <option value="Poésies">Poésies</option>
+                          <option value="Nouvelles">Nouvelles</option>
+                          <option value="Romans">Romans</option>
+                          <option value="Contes et légendes">Contes et légendes</option>
+                          <option value="Essais">Essais</option>
+                          <option value="Sciences">Sciences</option>
+                          <option value="Cursus scolaire">Cursus scolaire</option>
+                          <option value="Art">Art</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                      <div>
+                        <label className="ae-modal-label">Image principale (URL)</label>
+                        <input 
+                          type="url" 
+                          value={editingArticle.image} 
+                          onChange={(e) => setEditingArticle({ ...editingArticle, image: e.target.value })} 
+                          className="db-input w-full"
+                          placeholder="https://..."
+                        />
+                      </div>
+                      <div>
+                        <label className="ae-modal-label">Statut de publication</label>
+                        <select 
+                          value={editingArticle.status} 
+                          onChange={(e) => setEditingArticle({ ...editingArticle, status: e.target.value })} 
+                          className="db-select w-full"
+                        >
+                          <option value="published">Publié (En ligne)</option>
+                          <option value="approved">Approuvé</option>
+                          <option value="pending_review">En attente de relecture</option>
+                          <option value="draft">Brouillon (Non visible)</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="ae-modal-label">Extrait court (Affiché sur les cartes et l'accueil)</label>
+                      <textarea 
+                        rows={2} 
+                        value={editingArticle.excerpt} 
+                        onChange={(e) => setEditingArticle({ ...editingArticle, excerpt: e.target.value })} 
+                        className="db-textarea w-full"
+                        placeholder="Court résumé de l'article..."
+                      />
+                    </div>
+
+                    <div>
+                      <label className="ae-modal-label">Contenu complet de l'article</label>
+                      <textarea 
+                        rows={8} 
+                        value={editingArticle.content} 
+                        onChange={(e) => setEditingArticle({ ...editingArticle, content: e.target.value })} 
+                        className="db-textarea w-full"
+                        placeholder="Contenu complet avec titres (##), listes (*), etc."
+                      />
+                    </div>
+
+                    {/* Option claire de sélection comme article principal pour la page d'accueil */}
+                    <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '10px', padding: '1rem', marginTop: '0.5rem' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', fontWeight: 'bold', color: '#1e3a8a', fontSize: '0.95rem' }}>
+                        <input 
+                          type="checkbox"
+                          checked={editingArticle.isFeatured}
+                          onChange={(e) => setEditingArticle({ ...editingArticle, isFeatured: e.target.checked })}
+                          style={{ width: '18px', height: '18px', accentColor: '#1e3a8a' }}
+                        />
+                        <span>Afficher cet article sur la page d’accueil (Définir comme article principal)</span>
+                      </label>
+                      <p style={{ margin: '0.35rem 0 0 2rem', fontSize: '0.8rem', color: '#475569' }}>
+                        Cet article apparaîtra en priorité dans l'encart « À la une » et sera lié au bouton principal du Hero de la page d'accueil.
+                      </p>
+                    </div>
+
+                    <div className="ae-modal-footer font-sans">
+                      <button 
+                        type="button" 
+                        onClick={() => { setShowEditArticleModal(false); setEditingArticle(null); }} 
+                        className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-4 py-2 rounded-lg cursor-pointer text-sm border-none"
+                        disabled={isSavingArticle}
+                      >
+                        Annuler
+                      </button>
+                      <button 
+                        type="submit" 
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded-lg cursor-pointer text-sm border-none d-flex align-items-center gap-1.5"
+                        disabled={isSavingArticle}
+                      >
+                        {isSavingArticle ? "Enregistrement..." : "Enregistrer l'article"}
+                      </button>
+                    </div>
+                  </form>
                 </div>
               </div>
             )}
