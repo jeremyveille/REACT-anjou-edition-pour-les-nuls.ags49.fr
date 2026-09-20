@@ -129,14 +129,26 @@ const ROUTE_MAP = {
 export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setFlipbooks: propSetFlipbooks }) {
   // Local fallback state if props are not provided
   const [localFlipbooks, setLocalFlipbooks] = useState(() => {
-    const local = localStorage.getItem("ae_flipbooks");
-    const parsed = local ? JSON.parse(local) : flipbooksData;
-    return parsed.map((fb, idx) => ({
-      ...fb,
-      category: fb.category || (idx === 0 ? "Sciences" : idx === 1 ? "Outils" : "Poésies"),
-      date: fb.date || (fb.id === "3322" ? "08/06/2026 à 14h30" : fb.id === "4455" ? "14/04/2026 à 20h02" : "15/06/2026 à 10h51"),
-      pdfFile: fb.pdfFile || (fb.id === "3322" ? "guide_historique_anjou.pdf" : fb.id === "4455" ? "secrets_vignoble_angevin.pdf" : "Seraphin-le-marin.pdf")
-    }));
+    try {
+      const local = localStorage.getItem("ae_flipbooks");
+      const parsed = local ? JSON.parse(local) : flipbooksData;
+      const filtered = (Array.isArray(parsed) ? parsed : flipbooksData).filter(
+        fb => fb && fb.id !== "3322" && !(fb.title || '').toLowerCase().includes("guide historique")
+      );
+      return filtered.map((fb, idx) => ({
+        ...fb,
+        category: fb.category || (idx === 0 ? "Sciences" : idx === 1 ? "Outils" : "Poésies"),
+        date: fb.date || "14/04/2026 à 20h02",
+        pdfFile: fb.pdfFile || (fb.id === "4455" ? "secrets_vignoble_angevin.pdf" : "Seraphin-le-marin.pdf")
+      }));
+    } catch (e) {
+      return flipbooksData.map((fb) => ({
+        ...fb,
+        category: "Sciences",
+        date: "14/04/2026 à 20h02",
+        pdfFile: fb.pdfFile || "secrets_vignoble_angevin.pdf"
+      }));
+    }
   });
 
   const flipbooks = propFlipbooks || localFlipbooks;
@@ -832,8 +844,8 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
         const defaults = flipbooksData.map((fb, idx) => ({
           ...fb,
           category: fb.category || (idx === 0 ? "Sciences" : "Outils"),
-          date: fb.date || (fb.id === "3322" ? "08/06/2026 à 14h30" : "14/04/2026 à 20h02"),
-          pdfFile: fb.pdfFile || (fb.id === "3322" ? "guide_historique_anjou.pdf" : "secrets_vignoble_angevin.pdf")
+          date: fb.date || "14/04/2026 à 20h02",
+          pdfFile: fb.pdfFile || "secrets_vignoble_angevin.pdf"
         }));
         for (const fb of defaults) {
           try {
@@ -843,32 +855,50 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
         setFlipbooks(defaults);
         localStorage.setItem("ae_flipbooks", JSON.stringify(defaults));
       } else {
-        const list = snap.docs.map((doc, idx) => {
-          const data = doc.data() || {};
-          return {
-            id: doc.id,
+        const list = [];
+        for (let idx = 0; idx < snap.docs.length; idx++) {
+          const docSnap = snap.docs[idx];
+          const data = docSnap.data() || {};
+          const isGuideHistorique = docSnap.id === "3322" || 
+            (data.title || '').toLowerCase().includes("guide historique") ||
+            (data.pdfFile || '').toLowerCase().includes("guide_historique");
+
+          if (isGuideHistorique) {
+            try {
+              deleteDoc(doc(db, "flipbooks", docSnap.id));
+            } catch (err) {}
+            continue;
+          }
+
+          list.push({
+            id: docSnap.id,
             ...data,
             category: data.category || (idx === 0 ? "Sciences" : idx === 1 ? "Outils" : "Poésies"),
-            date: data.date || "08/06/2026 à 14h30",
-            pdfFile: data.pdfFile || "guide_historique_anjou.pdf"
-          };
-        });
-        setFlipbooks(list);
-        localStorage.setItem("ae_flipbooks", JSON.stringify(list));
+            date: data.date || "14/04/2026 à 20h02",
+            pdfFile: data.pdfFile || "secrets_vignoble_angevin.pdf"
+          });
+        }
+        const finalList = list.length > 0 ? list : flipbooksData;
+        setFlipbooks(finalList);
+        localStorage.setItem("ae_flipbooks", JSON.stringify(finalList));
       }
     } catch (e) {
       console.error("Flipbooks fetch error:", e);
       const local = localStorage.getItem("ae_flipbooks");
       if (local) {
         try {
-          setFlipbooks(JSON.parse(local));
+          const parsed = JSON.parse(local);
+          const filtered = (Array.isArray(parsed) ? parsed : []).filter(
+            fb => fb && fb.id !== "3322" && !(fb.title || '').toLowerCase().includes("guide historique")
+          );
+          setFlipbooks(filtered.length > 0 ? filtered : flipbooksData);
         } catch (err) {}
       } else {
         const defaults = flipbooksData.map((fb, idx) => ({
           ...fb,
           category: idx === 0 ? "Sciences" : "Outils",
-          date: fb.id === "3322" ? "08/06/2026 à 14h30" : "14/04/2026 à 20h02",
-          pdfFile: fb.id === "3322" ? "guide_historique_anjou.pdf" : "secrets_vignoble_angevin.pdf"
+          date: "14/04/2026 à 20h02",
+          pdfFile: fb.pdfFile || "secrets_vignoble_angevin.pdf"
         }));
         setFlipbooks(defaults);
       }
@@ -3366,11 +3396,11 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
                                         setNotification(`Téléchargement du PDF pour : ${fb.title}`); 
                                       }}
                                     >
-                                      {fb.pdfFile || (fb.id === "3322" ? "guide_historique_anjou.pdf" : "secrets_vignoble_angevin.pdf")}
+                                      {fb.pdfFile || "secrets_vignoble_angevin.pdf"}
                                     </a>
                                   </td>
                                   <td className="ae-table-cell-muted-desktop">
-                                    {fb.date || (fb.id === "3322" ? "08/06/2026 à 14h30" : "14/04/2026 à 20h02")}
+                                    {fb.date || "14/04/2026 à 20h02"}
                                   </td>
                                   <td className="text-right">
                                     <div className="ae-actions-right">
