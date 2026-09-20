@@ -189,9 +189,13 @@ export const BuilderCanvas = ({
                 <div 
                   className="builder-public-preview__empty cursor-pointer p-5 text-center border-dashed rounded-lg bg-slate-50"
                   onClick={() => onAddChild(null, 'section')}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onAddChild(null, 'section'); } }}
+                  role="button"
+                  tabIndex="0"
+                  aria-label="Canevas vide. Cliquez ou appuyez sur Entrée pour ajouter une première section."
                 >
                   <div className="pb-canvas-empty-icon bg-blue-50 dark:bg-slate-800 text-primary rounded-circle d-inline-flex p-3 mb-3">
-                    <Plus size={32} />
+                    <Plus size={32} aria-hidden="true" />
                   </div>
                   <h5 className="font-bold text-slate-800 dark:text-slate-100">Votre canevas est vide</h5>
                   <p className="text-sm text-slate-500 max-w-sm mt-1 mb-4 mx-auto">
@@ -200,6 +204,7 @@ export const BuilderCanvas = ({
                   <button
                     type="button"
                     className="btn btn-primary btn-sm px-4 py-2 rounded font-bold"
+                    aria-label="Ajouter une section au canevas"
                   >
                     Ajouter une Section
                   </button>
