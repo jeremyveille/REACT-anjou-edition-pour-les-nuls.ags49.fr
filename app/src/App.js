@@ -13,13 +13,21 @@ import {
   Lock,
   Eye,
   EyeOff,
-  AlertCircle
+  AlertCircle,
+  Sparkles,
+  Users,
+  Compass,
+  Feather,
+  ChevronRight,
+  Send,
+  Image as ImageIcon
 } from 'lucide-react';
 import {
   textsData,
   flipbooksData,
   videosData,
-  galleryImages
+  galleryImages,
+  articlesData
 } from './data';
 import { db, auth } from './firebase';
 import { collection, getDocs, doc, deleteDoc } from 'firebase/firestore';
@@ -57,12 +65,40 @@ function App() {
   const [loginError, setLoginError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   
+  const [articles, setArticles] = useState(() => {
+    try {
+      const local = localStorage.getItem('ae_articles');
+      if (local) {
+        const parsed = JSON.parse(local);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {}
+    return articlesData;
+  });
+
+  const [featuredArticle, setFeaturedArticle] = useState(() => {
+    const savedId = localStorage.getItem('ae_featured_article_id');
+    if (savedId) {
+      const matched = articlesData.find(a => a.id === savedId || a.slug === savedId);
+      if (matched) return matched;
+    }
+    const feat = articlesData.find(a => a.isFeatured === true);
+    return feat || articlesData[0];
+  });
+
   // Navigation View State
-  // { type: 'home' } | { type: 'text', data: {...}, categoryName: '...' } | { type: 'flipbooks', selectedId: '...' } | { type: 'videos', selectedId: '...' } | { type: 'gallery' } | { type: 'contact' } | { type: 'preview', pageId: '...' }
+  // { type: 'home' } | { type: 'article', article: {...} } | { type: 'text', data: {...}, categoryName: '...' } | { type: 'flipbooks', selectedId: '...' } | { type: 'videos', selectedId: '...' } | { type: 'gallery' } | { type: 'contact' } | { type: 'preview', pageId: '...' }
   const [view, setView] = useState(() => {
     const path = window.location.pathname;
     if (path.startsWith('/ae-dashboard')) {
       return { type: 'dashboard' };
+    }
+    if (path.startsWith('/articles/')) {
+      const slug = path.replace('/articles/', '').replace(/\/$/, '');
+      const found = articlesData.find(a => a.slug === slug || a.id === slug);
+      if (found) {
+        return { type: 'article', article: found };
+      }
     }
     const params = new URLSearchParams(window.location.search);
     if (params.get('preview') === 'true') {
@@ -77,13 +113,54 @@ function App() {
       const path = window.location.pathname;
       if (path.startsWith('/ae-dashboard')) {
         setView({ type: 'dashboard' });
+      } else if (path.startsWith('/articles/')) {
+        const slug = path.replace('/articles/', '').replace(/\/$/, '');
+        const currentArticles = articles.length > 0 ? articles : articlesData;
+        const found = currentArticles.find(a => a.slug === slug || a.id === slug) || articlesData[0];
+        setView({ type: 'article', article: found });
       } else {
         setView({ type: 'home' });
       }
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
+  }, [articles]);
+
+  // Load articles & featured article from Firestore / local
+  useEffect(() => {
+    let isMounted = true;
+    const loadArticles = async () => {
+      try {
+        const fetched = await pageService.getPages('articles');
+        if (isMounted && Array.isArray(fetched) && fetched.length > 0) {
+          setArticles(fetched);
+          const feat = await pageService.getFeaturedArticle();
+          if (isMounted && feat) {
+            setFeaturedArticle(feat);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load articles", err);
+      }
+    };
+    loadArticles();
+    return () => {
+      isMounted = false;
+    };
   }, []);
+
+  const handleOpenArticle = (article) => {
+    const art = article || featuredArticle || articlesData[0];
+    setView({ type: 'article', article: art });
+    setMobileMenuOpen(false);
+    window.history.pushState({}, '', `/articles/${art.slug || art.id}`);
+    if (art.metaTitle) {
+      document.title = art.metaTitle;
+    } else {
+      document.title = `${art.title} — Anjou Édition`;
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   // Lightbox State for Gallery
   const [lightbox, setLightbox] = useState({ isOpen: false, currentIndex: 0, zoom: false });
@@ -622,15 +699,28 @@ function App() {
         } else if (item.url === "/ae-dashboard") {
           setView({ type: 'dashboard' });
           window.history.pushState({}, '', '/ae-dashboard');
-        } else {
-          // Vérifier si l'URL correspond à une page dynamique (ex: /pages/mon-slug ou mon-slug)
-          const cleanSlug = item.url.replace('/pages/', '').replace('/', '');
-          const customPage = customPages.find(p => p.slug === cleanSlug || p.slug === item.url);
-          if (customPage) {
-            setView({ type: 'custom-page', page: customPage });
+        } else if (item.url.startsWith("/articles/")) {
+          const articleSlug = item.url.replace('/articles/', '').replace('/', '');
+          const targetArticle = articles.find(a => a.slug === articleSlug || a.id === articleSlug);
+          if (targetArticle) {
+            handleOpenArticle(targetArticle);
           } else {
-            // Si URL inconnue, essayer de charger le titre
-            handleSelectCategory(item.title);
+            setView({ type: 'home' });
+          }
+        } else {
+          // Vérifier si l'URL correspond à un article ou une page dynamique
+          const cleanSlug = item.url.replace('/pages/', '').replace('/articles/', '').replace('/', '');
+          const targetArticle = articles.find(a => a.slug === cleanSlug || a.id === cleanSlug);
+          if (targetArticle) {
+            handleOpenArticle(targetArticle);
+          } else {
+            const customPage = customPages.find(p => p.slug === cleanSlug || p.slug === item.url);
+            if (customPage) {
+              setView({ type: 'custom-page', page: customPage });
+            } else {
+              // Si URL inconnue, essayer de charger le titre
+              handleSelectCategory(item.title);
+            }
           }
         }
       }
@@ -846,6 +936,193 @@ function App() {
             </div>
           )}
           
+          {/* VIEW: ARTICLE FULL READER */}
+          {view.type === 'article' && view.article && (
+            <div className="article-view-container fade-in">
+              <button 
+                type="button" 
+                onClick={() => { setView({ type: 'home' }); window.history.pushState({}, '', '/'); }} 
+                className="btn-back"
+              >
+                <ArrowLeft size={16} /> Retour à l'accueil
+              </button>
+
+              <article className="article-card-main" aria-labelledby="article-main-title">
+                <header className="article-header-meta">
+                  <div className="article-meta-details">
+                    <span className="article-category-badge">{view.article.category || "Maison d'édition"}</span>
+                    {view.article.date && <span>Publié le {view.article.date}</span>}
+                    {view.article.author && <span>• Par {view.article.author}</span>}
+                    {view.article.readTime && <span>• {view.article.readTime}</span>}
+                  </div>
+
+                  {/* Accessible Reader controls & Text-To-Speech */}
+                  <div className="reader-controls" role="toolbar" aria-label="Contrôles de lecture et d'accessibilité">
+                    <button 
+                      type="button"
+                      className={`control-btn ${isPlayingAudio ? 'active' : ''}`}
+                      onClick={() => handleToggleSpeech(view.article.content || view.article.excerpt || view.article.title)}
+                      title={isPlayingAudio ? "Arrêter la lecture audio" : "Écouter l'article complet"}
+                      aria-label={isPlayingAudio ? "Arrêter la lecture audio par synthèse vocale" : "Écouter l'article par synthèse vocale"}
+                    >
+                      {isPlayingAudio ? <VolumeX size={18} aria-hidden="true" /> : <Volume2 size={18} aria-hidden="true" />}
+                      <span>{isPlayingAudio ? "Muet" : "Écouter l'article"}</span>
+                    </button>
+
+                    <div className="speech-rate-selector" role="group" aria-label="Vitesse de lecture vocale">
+                      {[0.8, 1.0, 1.2, 1.5].map(rate => (
+                        <button
+                          key={rate}
+                          type="button"
+                          className={speechRate === rate ? 'active' : ''}
+                          onClick={() => {
+                            setSpeechRate(rate);
+                            localStorage.setItem('ae_speech_rate', rate.toString());
+                          }}
+                          aria-label={`Vitesse de lecture ${rate}x`}
+                          aria-pressed={speechRate === rate}
+                        >
+                          {rate}x
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="font-sizer" role="group" aria-label="Taille de police du texte">
+                      <button 
+                        type="button"
+                        className={fontSize === 'small' ? 'active' : ''} 
+                        onClick={() => setFontSize('small')}
+                        aria-label="Taille de texte petite"
+                        aria-pressed={fontSize === 'small'}
+                      >
+                        A-
+                      </button>
+                      <button 
+                        type="button"
+                        className={fontSize === 'medium' ? 'active' : ''} 
+                        onClick={() => setFontSize('medium')}
+                        aria-label="Taille de texte normale"
+                        aria-pressed={fontSize === 'medium'}
+                      >
+                        A
+                      </button>
+                      <button 
+                        type="button"
+                        className={fontSize === 'large' ? 'active' : ''} 
+                        onClick={() => setFontSize('large')}
+                        aria-label="Taille de texte grande"
+                        aria-pressed={fontSize === 'large'}
+                      >
+                        A+
+                      </button>
+                    </div>
+                  </div>
+                </header>
+
+                <h1 id="article-main-title" className="article-page-title">
+                  {view.article.title}
+                </h1>
+
+                {view.article.image && (
+                  <div className="article-featured-image-box">
+                    <OptimizedImage 
+                      src={view.article.image} 
+                      thumbnailSrc={view.article.thumbnailUrl}
+                      alt={view.article.title} 
+                      loading="lazy"
+                      useThumbnail={false}
+                    />
+                  </div>
+                )}
+
+                {/* Accroche / Lead paragraph */}
+                {(view.article.hook || view.article.excerpt) && (
+                  <div className="article-lead-paragraph">
+                    {view.article.hook ? (
+                      view.article.hook.split('\n\n').map((p, pIdx) => <p key={pIdx} className={pIdx > 0 ? "mt-2" : ""}>{p}</p>)
+                    ) : (
+                      <p>{view.article.excerpt}</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Article Body Content */}
+                <div className={`article-content-body font-${fontSize}`}>
+                  {(() => {
+                    if (view.article.content) {
+                      const sections = view.article.content.split('\n\n');
+                      return sections.map((sec, idx) => {
+                        const trimmed = sec.trim();
+                        if (!trimmed) return null;
+                        if (trimmed === '---') {
+                          return <hr key={idx} />;
+                        }
+                        if (trimmed.startsWith('## ')) {
+                          return <h2 key={idx}>{trimmed.replace('## ', '')}</h2>;
+                        }
+                        if (trimmed.startsWith('### ')) {
+                          return <h3 key={idx}>{trimmed.replace('### ', '')}</h3>;
+                        }
+                        if (trimmed.startsWith('* ') || trimmed.startsWith('- ')) {
+                          const items = trimmed.split('\n').map(l => l.replace(/^(\*\s*|-\s*)/, '').trim()).filter(Boolean);
+                          return (
+                            <ul key={idx}>
+                              {items.map((it, i) => (
+                                <li key={i}>{it}</li>
+                              ))}
+                            </ul>
+                          );
+                        }
+                        
+                        const parts = trimmed.split(/(\*\*.*?\*\*)/g);
+                        return (
+                          <p key={idx}>
+                            {parts.map((part, pIdx) => {
+                              if (part.startsWith('**') && part.endsWith('**')) {
+                                return <strong key={pIdx}>{part.slice(2, -2)}</strong>;
+                              }
+                              return part;
+                            })}
+                          </p>
+                        );
+                      });
+                    }
+                    if (view.article.blocks && view.article.blocks.length > 0) {
+                      return view.article.blocks.map(block => (
+                        <BlockRenderer key={block.id} block={block} isEditing={false} />
+                      ));
+                    }
+                    return null;
+                  })()}
+                </div>
+
+                {/* Bottom Call to Actions */}
+                <div className="article-footer-cta-box">
+                  <h3 className="article-footer-cta-title">Vous avez une histoire, un manuscrit ou une idée ?</h3>
+                  <p className="article-footer-cta-desc">
+                    Chez Anjou Édition, nous étudions chaque projet avec bienveillance et simplicité. Écrivez-nous pour nous présenter votre projet littéraire ou patrimonial.
+                  </p>
+                  <div className="article-footer-cta-buttons">
+                    <button 
+                      type="button" 
+                      onClick={() => setView({ type: 'contact' })} 
+                      className="btn-hero-primary"
+                    >
+                      <Send size={18} /> Proposer votre projet
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={() => setView({ type: 'flipbooks' })} 
+                      className="btn-hero-secondary"
+                    >
+                      <BookOpen size={18} /> Découvrir nos publications
+                    </button>
+                  </div>
+                </div>
+              </article>
+            </div>
+          )}
+
           {/* VIEW: HOME */}
           {view.type === 'home' && (
             <div className="home-view fade-in">
@@ -855,6 +1132,222 @@ function App() {
                 <button type="button" onClick={() => setView({ type: 'flipbooks' })}>Voir les Flipbooks</button>
               </div>
 
+              {/* 1. Hero de la page d'accueil */}
+              <section className="home-hero-wrapper" aria-labelledby="home-hero-heading">
+                <div className="home-hero-badge">
+                  <Sparkles size={16} aria-hidden="true" />
+                  <span>Maison d'édition accessible & humaine</span>
+                </div>
+                <h1 id="home-hero-heading" className="home-hero-title">
+                  Anjou Édition, la maison d’édition ouverte à tous
+                </h1>
+                <p className="home-hero-subtitle">
+                  Des livres, des histoires, des connaissances et des projets accessibles à chacun.
+                </p>
+                <p className="home-hero-secondary">
+                  Que vous soyez auteur, lecteur, passionné ou simplement curieux, Anjou Édition vous invite à découvrir, apprendre, partager et transmettre.
+                </p>
+                <div className="home-hero-actions">
+                  <button 
+                    type="button" 
+                    onClick={() => handleOpenArticle(featuredArticle)} 
+                    className="btn-hero-primary"
+                    aria-label="Découvrir Anjou Édition et notre vision"
+                  >
+                    <BookOpen size={18} aria-hidden="true" />
+                    Découvrir Anjou Édition
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => setView({ type: 'flipbooks' })} 
+                    className="btn-hero-secondary"
+                    aria-label="Découvrir nos publications et livres à feuilleter"
+                  >
+                    <Sparkles size={18} aria-hidden="true" />
+                    Découvrir nos publications
+                  </button>
+                </div>
+              </section>
+
+              {/* 2. Article mis en avant (Featured Article Section) */}
+              {featuredArticle && (
+                <section className="home-featured-article-container" aria-labelledby="featured-article-heading">
+                  <div className="section-heading-wrapper">
+                    <h2 id="featured-article-heading" className="section-heading-title">
+                      <Sparkles size={20} className="text-secondary" aria-hidden="true" />
+                      À la une de notre maison d'édition
+                    </h2>
+                  </div>
+                  <div 
+                    className="featured-article-card"
+                    onClick={() => handleOpenArticle(featuredArticle)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleOpenArticle(featuredArticle); }}
+                    aria-label={`Lire l'article : ${featuredArticle.title}`}
+                  >
+                    <div className="featured-article-media">
+                      <OptimizedImage 
+                        src={featuredArticle.image || featuredArticle.thumbnailUrl || "https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=1200"} 
+                        thumbnailSrc={featuredArticle.thumbnailUrl}
+                        alt={featuredArticle.title} 
+                        loading="lazy"
+                        useThumbnail={true}
+                        thumbnailWidth={600}
+                        thumbnailHeight={350}
+                      />
+                    </div>
+                    <div className="featured-article-body">
+                      <div>
+                        <div className="featured-article-meta">
+                          <span className="featured-tag">{featuredArticle.category || "Maison d'édition"}</span>
+                          {featuredArticle.date && <span className="featured-meta-date">{featuredArticle.date}</span>}
+                          {featuredArticle.readTime && <span className="featured-meta-date">• {featuredArticle.readTime}</span>}
+                        </div>
+                        <h3 className="featured-article-title">{featuredArticle.title}</h3>
+                        <p className="featured-article-excerpt">
+                          {featuredArticle.excerpt || "Anjou Édition souhaite rendre l’édition, la culture et la transmission accessibles à tous. Découvrez notre vision d’une maison d’édition simple, humaine et ouverte aux auteurs comme aux lecteurs."}
+                        </p>
+                      </div>
+                      <span className="featured-article-action">
+                        Lire l’article <ArrowRight size={16} aria-hidden="true" />
+                      </span>
+                    </div>
+                  </div>
+                </section>
+              )}
+
+              {/* 3. Notre vocation éditoriale (Accueillir - Expliquer - Guider) */}
+              <section className="home-pillars-wrapper" aria-labelledby="pillars-heading">
+                <div className="section-heading-wrapper">
+                  <h2 id="pillars-heading" className="section-heading-title">
+                    <Compass size={20} className="text-secondary" aria-hidden="true" />
+                    Notre engagement : l'édition pour tous
+                  </h2>
+                </div>
+                <div className="home-pillars-grid">
+                  <div className="pillar-card">
+                    <div className="pillar-icon-box">
+                      <Users size={26} aria-hidden="true" />
+                    </div>
+                    <h3 className="pillar-title">Accueillir</h3>
+                    <p className="pillar-desc">
+                      Une maison d’édition humaine, chaleureuse et bienveillante. Du débutant au passionné, chacun trouve sa place sans distinction ni barrière à l'entrée.
+                    </p>
+                  </div>
+                  <div className="pillar-card">
+                    <div className="pillar-icon-box">
+                      <Sparkles size={26} aria-hidden="true" />
+                    </div>
+                    <h3 className="pillar-title">Expliquer</h3>
+                    <p className="pillar-desc">
+                      L’esprit « pour les nuls » : rendre le savoir, l’écriture et le patrimoine clairs et vivants. Zéro jargon inutile, la curiosité suffit pour commencer.
+                    </p>
+                  </div>
+                  <div className="pillar-card">
+                    <div className="pillar-icon-box">
+                      <Feather size={26} aria-hidden="true" />
+                    </div>
+                    <h3 className="pillar-title">Guider & Transmettre</h3>
+                    <p className="pillar-desc">
+                      Nous étudions vos manuscrits, récits de vie, souvenirs, histoires locales et projets culturels pour donner vie à vos créations et les partager au plus grand nombre.
+                    </p>
+                  </div>
+                </div>
+              </section>
+
+              {/* 4. Raccourcis d'accès aux rubriques réelles (Guider) */}
+              <section className="home-shortcuts-wrapper" aria-labelledby="shortcuts-heading">
+                <div className="section-heading-wrapper">
+                  <h2 id="shortcuts-heading" className="section-heading-title">
+                    <BookOpen size={20} className="text-secondary" aria-hidden="true" />
+                    Explorer le catalogue & nos espaces
+                  </h2>
+                </div>
+                <div className="home-shortcuts-grid">
+                  <div 
+                    className="portal-shortcut-card"
+                    onClick={() => setView({ type: 'flipbooks' })}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setView({ type: 'flipbooks' }); }}
+                    aria-label="Découvrir nos livres et flipbooks interactifs"
+                  >
+                    <div className="portal-shortcut-icon">
+                      <BookOpen size={22} aria-hidden="true" />
+                    </div>
+                    <h3 className="portal-shortcut-title">Nos Flipbooks</h3>
+                    <p className="portal-shortcut-desc">Feuilletez nos ouvrages et publications numériques enrichies.</p>
+                    <span className="portal-shortcut-link">Découvrir les livres <ChevronRight size={14} /></span>
+                  </div>
+
+                  <div 
+                    className="portal-shortcut-card"
+                    onClick={() => handleSelectCategory("RAPPEL")}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleSelectCategory("RAPPEL"); }}
+                    aria-label="Lire les poésies, fables et nouvelles"
+                  >
+                    <div className="portal-shortcut-icon">
+                      <Feather size={22} aria-hidden="true" />
+                    </div>
+                    <h3 className="portal-shortcut-title">Textes & Poésies</h3>
+                    <p className="portal-shortcut-desc">Lisez et écoutez nos poésies, fables et contes avec synthèse vocale.</p>
+                    <span className="portal-shortcut-link">Lire les textes <ChevronRight size={14} /></span>
+                  </div>
+
+                  <div 
+                    className="portal-shortcut-card"
+                    onClick={() => setView({ type: 'gallery' })}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setView({ type: 'gallery' }); }}
+                    aria-label="Consulter la galerie photo de l'Anjou"
+                  >
+                    <div className="portal-shortcut-icon">
+                      <ImageIcon size={22} aria-hidden="true" />
+                    </div>
+                    <h3 className="portal-shortcut-title">Photos d'Anjou</h3>
+                    <p className="portal-shortcut-desc">Explorez les photographies haute définition des paysages d'Anjou.</p>
+                    <span className="portal-shortcut-link">Explorer les photos <ChevronRight size={14} /></span>
+                  </div>
+
+                  <div 
+                    className="portal-shortcut-card"
+                    onClick={() => setView({ type: 'videos' })}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setView({ type: 'videos' }); }}
+                    aria-label="Regarder les vidéos et conférences"
+                  >
+                    <div className="portal-shortcut-icon">
+                      <Play size={22} aria-hidden="true" />
+                    </div>
+                    <h3 className="portal-shortcut-title">Vidéos & Conférences</h3>
+                    <p className="portal-shortcut-desc">Vidéos sur le patrimoine littéraire, historique et la Loire.</p>
+                    <span className="portal-shortcut-link">Regarder <ChevronRight size={14} /></span>
+                  </div>
+
+                  <div 
+                    className="portal-shortcut-card"
+                    onClick={() => setView({ type: 'contact' })}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setView({ type: 'contact' }); }}
+                    aria-label="Proposer votre projet ou contacter la maison d'édition"
+                  >
+                    <div className="portal-shortcut-icon">
+                      <Send size={22} aria-hidden="true" />
+                    </div>
+                    <h3 className="portal-shortcut-title">Proposer un projet</h3>
+                    <p className="portal-shortcut-desc">Auteur, association ou passionné : soumettez votre manuscrit ou idée.</p>
+                    <span className="portal-shortcut-link">Nous contacter <ChevronRight size={14} /></span>
+                  </div>
+                </div>
+              </section>
+
+              {/* 5. Blocs personnalisés du PageBuilder si présents */}
               {(() => {
                 const homeCustomPage = Array.isArray(customPages) ? customPages.find(p => p?.isHome === true || p?.isHomePage === true || p?.is_home === true || (p?.title || '').toLowerCase().includes('accueil') || p?.slug === 'home' || p?.slug === 'accueil' || p?.slug === '') : null;
                 const rawBlocks = (homeCustomPage?.blocks && homeCustomPage.blocks.length > 0)

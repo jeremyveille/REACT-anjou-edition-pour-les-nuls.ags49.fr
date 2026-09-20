@@ -23,7 +23,9 @@ jest.mock('./services/pageService', () => ({
     getPages: jest.fn(() => Promise.resolve([])),
     savePage: jest.fn(() => Promise.resolve({ id: 'mock_page' })),
     deletePage: jest.fn(() => Promise.resolve()),
-    uploadMedia: jest.fn(() => Promise.resolve('https://mock.url/img.jpg'))
+    uploadMedia: jest.fn(() => Promise.resolve('https://mock.url/img.jpg')),
+    getFeaturedArticle: jest.fn(() => Promise.resolve(null)),
+    setFeaturedArticle: jest.fn(() => Promise.resolve(true))
   }
 }));
 
@@ -36,7 +38,11 @@ jest.mock('firebase/firestore', () => ({
   getDoc: jest.fn(() => Promise.resolve({ exists: () => false, data: () => ({}) })),
   addDoc: jest.fn(() => Promise.resolve({ id: 'mock_doc' })),
   setDoc: jest.fn(() => Promise.resolve()),
-  deleteDoc: jest.fn(() => Promise.resolve())
+  deleteDoc: jest.fn(() => Promise.resolve()),
+  query: jest.fn(),
+  orderBy: jest.fn(),
+  where: jest.fn(),
+  limit: jest.fn()
 }));
 
 // Mock SpeechSynthesis if it doesn't exist
@@ -305,6 +311,69 @@ test('ensures "Lecteur de Flipbook Interactif", "Guide Historique de l\'Anjou" a
   // Verify that "Feuilleter l'ouvrage" buttons are absent from homepage
   expect(screen.queryAllByRole('button', { name: /Feuilleter l'ouvrage/i }).length).toBe(0);
 });
+
+describe('Anjou Édition Presentation Article & Homepage Integration', () => {
+  test('renders homepage with new positioning hero, 3 pillars and featured article card', async () => {
+    await renderApp();
+
+    // Verify Hero title and positioning
+    expect(screen.getByRole('heading', { level: 1, name: /Anjou Édition, la maison d['’]édition ouverte à tous/i })).toBeInTheDocument();
+    expect(screen.getByText(/Des livres, des histoires, des connaissances et des projets accessibles à chacun/i)).toBeInTheDocument();
+
+    // Verify 3 pillars: Accueillir, Expliquer, Guider
+    expect(screen.getByRole('heading', { name: /Accueillir/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Expliquer/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Guider/i })).toBeInTheDocument();
+
+    // Verify featured article card on homepage
+    expect(screen.getByRole('heading', { level: 3, name: /Anjou Édition : une maison d['’]édition ouverte à tous/i })).toBeInTheDocument();
+    expect(screen.getByText(/rendre l['’]édition, la culture et la transmission accessibles à tous/i)).toBeInTheDocument();
+  });
+
+  test('clicking featured article card or hero CTA navigates to full article reader view', async () => {
+    await renderApp();
+
+    // Find and click the Hero primary CTA "Découvrir Anjou Édition"
+    const heroCta = screen.getByRole('button', { name: /Découvrir Anjou Édition/i });
+    expect(heroCta).toBeInTheDocument();
+    fireEvent.click(heroCta);
+
+    // Verify article reader view is rendered
+    expect(await screen.findByRole('heading', { level: 1, name: /Anjou Édition : une maison d['’]édition ouverte à tous/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: /Bienvenue chez Anjou Édition/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: /Pourquoi « pour les nuls » \?/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: /Une maison d['’]édition ouverte à tous/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 3, name: /Vous aimez écrire \?/i })).toBeInTheDocument();
+
+    // Verify article tools: speech synthesis button, font size buttons, back button
+    expect(screen.getByRole('button', { name: /Écouter l['’]article par synthèse vocale/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Taille de texte normale/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Taille de texte grande/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Retour à l['’]accueil/i })).toBeInTheDocument();
+
+    // Verify footer CTA buttons
+    expect(screen.getByRole('button', { name: /Découvrir nos publications/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Proposer votre projet/i })).toBeInTheDocument();
+  });
+
+  test('clicking back button returns to homepage', async () => {
+    await renderApp();
+
+    // Open article via featured article card
+    const readBtn = screen.getByRole('button', { name: /Lire l['’]article/i });
+    fireEvent.click(readBtn);
+
+    expect(await screen.findByRole('heading', { level: 1, name: /Anjou Édition : une maison d['’]édition ouverte à tous/i })).toBeInTheDocument();
+
+    // Click back button
+    const backBtn = screen.getByRole('button', { name: /Retour à l['’]accueil/i });
+    fireEvent.click(backBtn);
+
+    // Should return to homepage
+    expect(await screen.findByRole('heading', { level: 1, name: /Anjou Édition, la maison d['’]édition ouverte à tous/i })).toBeInTheDocument();
+  });
+});
+
 
 
 
