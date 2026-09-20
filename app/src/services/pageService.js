@@ -11,7 +11,7 @@ import {
   query, 
   orderBy 
 } from 'firebase/firestore';
-import { galleryImages, videosData, flipbooksData } from '../data';
+import { galleryImages, videosData, flipbooksData, articlesData } from '../data';
 import { normalizeBlocks, getDefaultHomepageBlocks } from '../components/page-builder/blockRegistry';
 
 /**
@@ -270,8 +270,8 @@ export const pageService = {
               blocks = getDefaultHomepageBlocks();
             }
             items.push({ 
+              ...data,
               id: docSnap.id, 
-              ...data, 
               status: normalizeStatus(data.status),
               blocks: normalizeBlocks(blocks || []) 
             });
@@ -282,7 +282,7 @@ export const pageService = {
         }
       }
 
-      // Si la collection Firestore est vide ou non initialisée, retourner un tableau vide sans auto-création en base
+      // Si la collection Firestore est vide ou non initialisée, retourner un tableau local ou défauts
       const local = getLocalItems(collectionName);
       if (local && local.length > 0) {
         return local.map(item => {
@@ -301,25 +301,38 @@ export const pageService = {
           };
         });
       }
+
+      // Fallback par défaut pour les articles
+      if (collectionName === 'articles') {
+        saveLocalItems('articles', articlesData);
+        return articlesData;
+      }
+
       return [];
     } catch (error) {
       console.warn(`Firestore indisponible ou restreint, récupération des ${collectionName} locaux...`, error);
       const local = getLocalItems(collectionName);
-      return local.map(item => {
-        let blocks = item.blocks;
-        const isHome = (item.title || '').toLowerCase().includes('accueil') || item.slug === 'home' || item.slug === 'accueil';
-        if (isHome && collectionName === 'pages') {
-          blocks = sanitizeHomePageBlocks(blocks || []);
-        }
-        if ((!blocks || blocks.length === 0) && isHome && collectionName === 'pages') {
-          blocks = getDefaultHomepageBlocks();
-        }
-        return {
-          ...item,
-          status: normalizeStatus(item.status),
-          blocks: normalizeBlocks(blocks || [])
-        };
-      });
+      if (local && local.length > 0) {
+        return local.map(item => {
+          let blocks = item.blocks;
+          const isHome = (item.title || '').toLowerCase().includes('accueil') || item.slug === 'home' || item.slug === 'accueil';
+          if (isHome && collectionName === 'pages') {
+            blocks = sanitizeHomePageBlocks(blocks || []);
+          }
+          if ((!blocks || blocks.length === 0) && isHome && collectionName === 'pages') {
+            blocks = getDefaultHomepageBlocks();
+          }
+          return {
+            ...item,
+            status: normalizeStatus(item.status),
+            blocks: normalizeBlocks(blocks || [])
+          };
+        });
+      }
+      if (collectionName === 'articles') {
+        return articlesData;
+      }
+      return [];
     }
   },
 
@@ -348,6 +361,7 @@ export const pageService = {
     const currentVersion = Number(pageData.version) || 1;
 
     const normalizedData = {
+      ...pageData,
       title: pageData.title || 'Sans titre',
       slug: pageData.slug || (pageData.title ? pageData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'sans-titre'),
       category: pageData.category || 'Outils',
@@ -770,5 +784,61 @@ export const pageService = {
    */
   getLocalFlipbooksSync() {
     return getLocalFlipbooksSync();
+  },
+
+  /**
+   * Récupère l'article mis en avant pour la page d'accueil.
+   * Priorité : ID enregistré dans localStorage / Firestore > article avec isFeatured > premier article par défaut.
+   */
+  async getFeaturedArticle() {
+    try {
+      const articles = await this.getPages('articles');
+      if (!articles || articles.length === 0) {
+        return articlesData[0] || null;
+      }
+      
+      const savedFeaturedId = localStorage.getItem('ae_featured_article_id');
+      if (savedFeaturedId) {
+        const matching = articles.find(a => a.id === savedFeaturedId || a.slug === savedFeaturedId);
+        if (matching) return matching;
+      }
+
+      const explicitFeatured = articles.find(a => a.isFeatured === true || a.isHomeFeatured === true);
+      if (explicitFeatured) return explicitFeatured;
+
+      // Fallback par défaut sur le nouvel article de présentation
+      const defaultArticle = articles.find(a => a.slug === 'anjou-edition-maison-edition-ouverte-a-tous' || a.id === 'art_presentation_anjou_edition');
+      if (defaultArticle) return defaultArticle;
+
+      return articles[0];
+    } catch (e) {
+      return articlesData[0] || null;
+    }
+  },
+
+  /**
+   * Définit quel article est mis en avant sur la page d'accueil et persiste le choix.
+   */
+  async setFeaturedArticle(articleId) {
+    try {
+      localStorage.setItem('ae_featured_article_id', articleId);
+      const articles = await this.getPages('articles');
+      const updated = articles.map(a => ({
+        ...a,
+        isFeatured: a.id === articleId
+      }));
+      saveLocalItems('articles', updated);
+
+      if (db) {
+        try {
+          const docRef = doc(db, 'settings', 'homepage');
+          await setDoc(docRef, { featuredArticleId: articleId, updatedAt: new Date().toISOString() }, { merge: true });
+        } catch (err) {}
+      }
+      return true;
+    } catch (e) {
+      console.error("Erreur lors de la mise en avant de l'article:", e);
+      return false;
+    }
   }
 };
