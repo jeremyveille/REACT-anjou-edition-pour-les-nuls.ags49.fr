@@ -31,7 +31,7 @@ Ce document sert de guide et de référence pour tout agent ou développeur trav
     > [!IMPORTANT]
     > **RÈGLE STRICTE** : **NE JAMAIS UTILISER TAILWIND**. Le projet repose à 100% sur du Vanilla CSS écrit à la main et sur Bootstrap 5 pour les blocs du Page Builder.
 *   **Bibliothèque d'Icônes** : [lucide-react v1.17.0](https://lucide.dev/)
-*   **Tests** : Jest et [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/) (15 suites de tests complètes et 115 tests unitaires/d'intégration, 100% de réussite).
+*   **Tests** : Jest et [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/) (15 suites de tests complètes et 114 tests unitaires/d'intégration, 100% de réussite).
 
 ### 2. Page Builder Visuel (page-builder-react)
 *   **Framework Frontend** : [React v18.3.1](https://react.dev/)
@@ -142,5 +142,5 @@ Se déplacer dans le dossier : `cd page-builder-react`
 
 ---
 
-*Dernière mise à jour du contexte par l'agent : 19 septembre 2026.*
+*Dernière mise à jour du contexte par l'agent : 20 septembre 2026.*
 

@@ -25,7 +25,7 @@ Ce document sert de guide et de référence pour tout agent ou développeur trav
     > [!IMPORTANT]
     > **RÈGLE STRICTE** : **NE JAMAIS UTILISER TAILWIND**. Le projet utilise uniquement du Vanilla CSS et Bootstrap 5 pour le Page Builder.
 *   **Bibliothèque d'Icônes** : [lucide-react v1.17.0](https://lucide.dev/)
-*   **Tests** : Jest et [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/) (15 suites de tests, 115 tests unitaires et d'intégration, 100% de réussite).
+*   **Tests** : Jest et [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/) (15 suites de tests, 114 tests unitaires et d'intégration, 100% de réussite).
 
 ---
 
@@ -83,5 +83,5 @@ Se déplacer dans le dossier : `cd app`
 
 ---
 
-*Dernière mise à jour du contexte par l'agent : 19 septembre 2026.*
+*Dernière mise à jour du contexte par l'agent : 20 septembre 2026.*
 
