@@ -687,4 +687,168 @@ C'est lors de son séjour à Rome (1553-1557) que du Bellay compose *Les Regrets
   }
 ];
 
+/**
+ * Génère l'arborescence complète par défaut des menus à partir du catalogue des catégories
+ * @returns {Array<Object>}
+ */
+export const generateDefaultMenus = () => {
+  const menus = [
+    {
+      id: "m1",
+      title: "Accueil",
+      label: "Accueil",
+      icon: "Home",
+      url: "/",
+      slug: "/",
+      shortcode: "",
+      status: "Actif",
+      enabled: true,
+      isActive: true,
+      type: "internal",
+      parentId: null,
+      order: 1,
+      description: "Lien vers la page d'accueil."
+    }
+  ];
+
+  let orderCounter = 2;
+
+  categoriesData.forEach((cat, catIdx) => {
+    const catId = `m_cat_${catIdx + 1}`;
+    menus.push({
+      id: catId,
+      title: cat.name,
+      label: cat.name,
+      icon: "Layers",
+      url: "",
+      slug: "",
+      shortcode: "",
+      status: "Actif",
+      enabled: true,
+      isActive: true,
+      type: "category",
+      parentId: null,
+      order: orderCounter++,
+      description: `Catégorie ${cat.name}`
+    });
+
+    if (Array.isArray(cat.items)) {
+      cat.items.forEach((sub, subIdx) => {
+        const subId = `${catId}_sub_${subIdx + 1}`;
+        const hasSubItems = Array.isArray(sub.items) && sub.items.length > 0;
+        
+        menus.push({
+          id: subId,
+          title: sub.name,
+          label: sub.name,
+          icon: "Layers",
+          url: hasSubItems ? "" : `poesie/${sub.name.toLowerCase().replace(/\s+/g, '-')}`,
+          slug: hasSubItems ? "" : `poesie/${sub.name.toLowerCase().replace(/\s+/g, '-')}`,
+          shortcode: hasSubItems ? "" : sub.name,
+          status: "Actif",
+          enabled: true,
+          isActive: true,
+          type: hasSubItems ? "category" : "shortcode",
+          parentId: catId,
+          order: subIdx + 1,
+          description: sub.name
+        });
+
+        if (hasSubItems) {
+          sub.items.forEach((child, childIdx) => {
+            const childId = `${subId}_item_${childIdx + 1}`;
+            menus.push({
+              id: childId,
+              title: child.name,
+              label: child.name,
+              icon: "Layers",
+              url: `poesie/${child.name.toLowerCase().replace(/\s+/g, '-')}`,
+              slug: `poesie/${child.name.toLowerCase().replace(/\s+/g, '-')}`,
+              shortcode: child.name,
+              status: "Actif",
+              enabled: true,
+              isActive: true,
+              type: "shortcode",
+              parentId: subId,
+              order: childIdx + 1,
+              description: child.name
+            });
+          });
+        }
+      });
+    }
+  });
+
+  // Éléments système supplémentaires
+  menus.push(
+    {
+      id: "m_flipbooks",
+      title: "Flipbooks",
+      label: "Flipbooks",
+      icon: "Layers",
+      url: "",
+      slug: "",
+      shortcode: "show_flipbooks",
+      status: "Actif",
+      enabled: true,
+      isActive: true,
+      type: "shortcode",
+      parentId: null,
+      order: orderCounter++,
+      description: "Ouvre la section flipbooks."
+    },
+    {
+      id: "m_videos",
+      title: "Vidéos",
+      label: "Vidéos",
+      icon: "Layers",
+      url: "",
+      slug: "",
+      shortcode: "show_videos",
+      status: "Actif",
+      enabled: true,
+      isActive: true,
+      type: "shortcode",
+      parentId: null,
+      order: orderCounter++,
+      description: "Ouvre la section des vidéos."
+    },
+    {
+      id: "m_gallery",
+      title: "Galerie Photos",
+      label: "Galerie Photos",
+      icon: "Layers",
+      url: "",
+      slug: "",
+      shortcode: "show_gallery",
+      status: "Actif",
+      enabled: true,
+      isActive: true,
+      type: "shortcode",
+      parentId: null,
+      order: orderCounter++,
+      description: "Ouvre la galerie photos."
+    },
+    {
+      id: "m_contact",
+      title: "Contact",
+      label: "Contact",
+      icon: "HelpCircle",
+      url: "",
+      slug: "",
+      shortcode: "open_contact_modal",
+      status: "Actif",
+      enabled: true,
+      isActive: true,
+      type: "shortcode",
+      parentId: null,
+      order: orderCounter++,
+      description: "Ouvre le formulaire de contact."
+    }
+  );
+
+  return menus;
+};
+
+
 

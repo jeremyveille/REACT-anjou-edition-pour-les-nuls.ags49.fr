@@ -27,7 +27,8 @@ import {
   flipbooksData,
   videosData,
   galleryImages,
-  articlesData
+  articlesData,
+  generateDefaultMenus
 } from './data';
 import { db, auth } from './firebase';
 import { collection, getDocs, doc, deleteDoc } from 'firebase/firestore';
@@ -108,16 +109,30 @@ function App() {
     return feat || articlesData[0];
   });
 
-  // Navigation View State
-  // { type: 'home' } | { type: 'article', article: {...} } | { type: 'text', data: {...}, categoryName: '...' } | { type: 'flipbooks', selectedId: '...' } | { type: 'videos', selectedId: '...' } | { type: 'gallery' } | { type: 'contact' } | { type: 'preview', pageId: '...' }
-  const [view, setView] = useState(() => {
-    const path = window.location.pathname;
+  // Helper to resolve view state from URL pathname
+  const resolveViewFromPath = (path, currentArticles = articlesData) => {
+    if (!path) return { type: 'home' };
     if (path.startsWith('/ae-dashboard')) {
       return { type: 'dashboard' };
     }
+    if (path === '/flipbooks' || path === '/flipbooks/') {
+      return { type: 'flipbooks' };
+    }
+    if (path === '/videos' || path === '/videos/') {
+      return { type: 'videos' };
+    }
+    if (path === '/gallery' || path === '/gallery/' || path === '/galerie') {
+      return { type: 'gallery' };
+    }
+    if (path === '/contact' || path === '/contact/') {
+      return { type: 'contact' };
+    }
+    if (path === '/privacy' || path === '/politique-de-confidentialite') {
+      return { type: 'privacy' };
+    }
     if (path.startsWith('/articles/')) {
       const slug = path.replace('/articles/', '').replace(/\/$/, '');
-      const found = articlesData.find(a => a.slug === slug || a.id === slug);
+      const found = currentArticles.find(a => a.slug === slug || a.id === slug);
       if (found) {
         return { type: 'article', article: found };
       }
@@ -127,22 +142,18 @@ function App() {
       return { type: 'preview', pageId: params.get('pageId') };
     }
     return { type: 'home' };
+  };
+
+  // Navigation View State
+  const [view, setView] = useState(() => {
+    return resolveViewFromPath(window.location.pathname, articlesData);
   });
 
   // Listen for browser back/forward navigation
   useEffect(() => {
     const handlePopState = () => {
-      const path = window.location.pathname;
-      if (path.startsWith('/ae-dashboard')) {
-        setView({ type: 'dashboard' });
-      } else if (path.startsWith('/articles/')) {
-        const slug = path.replace('/articles/', '').replace(/\/$/, '');
-        const currentArticles = articles.length > 0 ? articles : articlesData;
-        const found = currentArticles.find(a => a.slug === slug || a.id === slug) || articlesData[0];
-        setView({ type: 'article', article: found });
-      } else {
-        setView({ type: 'home' });
-      }
+      const currentArticles = articles.length > 0 ? articles : articlesData;
+      setView(resolveViewFromPath(window.location.pathname, currentArticles));
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
@@ -312,14 +323,7 @@ function App() {
         // Fallback
       }
     }
-    const defaults = [
-      { id: "m1", title: "Accueil", label: "Accueil", icon: "Home", url: "/", slug: "/", shortcode: "", status: "Actif", enabled: true, isActive: true, type: "internal", parentId: null, order: 1, description: "Lien vers la page d'accueil." },
-      { id: "m2", title: "Flipbooks", label: "Flipbooks", icon: "Layers", url: "", slug: "", shortcode: "show_flipbooks", status: "Actif", enabled: true, isActive: true, type: "shortcode", parentId: null, order: 2, description: "Ouvre la section flipbooks." },
-      { id: "m3", title: "Vidéos", label: "Vidéos", icon: "Layers", url: "", slug: "", shortcode: "show_videos", status: "Actif", enabled: true, isActive: true, type: "shortcode", parentId: null, order: 3, description: "Ouvre la section des vidéos." },
-      { id: "m4", title: "Galerie Photos", label: "Galerie Photos", icon: "Layers", url: "", slug: "", shortcode: "show_gallery", status: "Actif", enabled: true, isActive: true, type: "shortcode", parentId: null, order: 4, description: "Ouvre la galerie photos." },
-      { id: "m5", title: "Contact", label: "Contact", icon: "HelpCircle", url: "", slug: "", shortcode: "open_contact_modal", status: "Actif", enabled: true, isActive: true, type: "shortcode", parentId: null, order: 5, description: "Ouvre le formulaire de contact." }
-    ];
-    return defaults;
+    return generateDefaultMenus();
   });
 
   useEffect(() => {
@@ -624,6 +628,7 @@ function App() {
       const ALLOWED_SHORTCODES = {
         'open_contact_modal': () => {
           setView({ type: 'contact' });
+          window.history.pushState({}, '', '/contact');
         },
         'toggle_theme': () => {
           toggleDarkMode();
@@ -640,12 +645,15 @@ function App() {
         },
         'show_flipbooks': () => {
           setView({ type: 'flipbooks' });
+          window.history.pushState({}, '', '/flipbooks');
         },
         'show_videos': () => {
           setView({ type: 'videos' });
+          window.history.pushState({}, '', '/videos');
         },
         'show_gallery': () => {
           setView({ type: 'gallery' });
+          window.history.pushState({}, '', '/gallery');
         },
         'alert_hello': () => {
           alert("Bienvenue sur Anjou Édition !");
@@ -673,6 +681,7 @@ function App() {
 
         if (flipbookId) {
           setView({ type: 'flipbooks', selectedId: flipbookId });
+          window.history.pushState({}, '', '/flipbooks');
           return;
         }
       }
@@ -710,14 +719,19 @@ function App() {
       } else {
         if (item.url === "/" || item.url === "/home" || item.url === "/accueil") {
           setView({ type: 'home' });
+          window.history.pushState({}, '', '/');
         } else if (item.url === "/contact") {
           setView({ type: 'contact' });
+          window.history.pushState({}, '', '/contact');
         } else if (item.url === "/flipbooks") {
           setView({ type: 'flipbooks' });
+          window.history.pushState({}, '', '/flipbooks');
         } else if (item.url === "/videos") {
           setView({ type: 'videos' });
+          window.history.pushState({}, '', '/videos');
         } else if (item.url === "/gallery") {
           setView({ type: 'gallery' });
+          window.history.pushState({}, '', '/gallery');
         } else if (item.url === "/ae-dashboard") {
           setView({ type: 'dashboard' });
           window.history.pushState({}, '', '/ae-dashboard');
@@ -728,6 +742,7 @@ function App() {
             handleOpenArticle(targetArticle);
           } else {
             setView({ type: 'home' });
+            window.history.pushState({}, '', '/');
           }
         } else {
           // Vérifier si l'URL correspond à un article ou une page dynamique

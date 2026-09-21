@@ -29,7 +29,7 @@ import {
   generateAiArticle, 
   generateAiFlipbookPages 
 } from "../services/geminiService";
-import { flipbooksData, textsData, articlesData } from "../data";
+import { flipbooksData, textsData, articlesData, generateDefaultMenus } from "../data";
 import { PageBuilder } from "./page-builder/PageBuilder";
 import { pageService } from "../services/pageService";
 import '../styles/page-builder.css';
@@ -699,13 +699,7 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
   };
 
   const fetchMenus = async () => {
-    const defaults = [
-      { id: "m1", title: "Accueil", label: "Accueil", icon: "Home", url: "/", shortcode: "", status: "Actif", enabled: true, type: "internal-link", parentId: null, order: 1, description: "Lien vers la page d'accueil." },
-      { id: "m2", title: "Flipbooks", label: "Flipbooks", icon: "Layers", url: "", shortcode: "show_flipbooks", status: "Actif", enabled: true, type: "shortcode", parentId: null, order: 2, description: "Ouvre la section flipbooks." },
-      { id: "m3", title: "Vidéos", label: "Vidéos", icon: "Layers", url: "", shortcode: "show_videos", status: "Actif", enabled: true, type: "shortcode", parentId: null, order: 3, description: "Ouvre la section des vidéos." },
-      { id: "m4", title: "Galerie Photos", label: "Galerie Photos", icon: "Layers", url: "", shortcode: "show_gallery", status: "Actif", enabled: true, type: "shortcode", parentId: null, order: 4, description: "Ouvre la galerie photos." },
-      { id: "m5", title: "Contact", label: "Contact", icon: "HelpCircle", url: "", shortcode: "open_contact_modal", status: "Actif", enabled: true, type: "shortcode", parentId: null, order: 5, description: "Ouvre le formulaire de contact." }
-    ];
+    const defaults = generateDefaultMenus();
 
     try {
       const snap = await getDocs(collection(db, "menus"));
@@ -723,8 +717,8 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
         // Enregistrer les défauts au format propre
         const formattedDefaults = defaults.map(d => ({
           ...d,
-          slug: d.url,
-          isActive: d.enabled,
+          slug: d.slug || d.url || "",
+          isActive: d.isActive !== undefined ? d.isActive : (d.enabled !== undefined ? d.enabled : (d.status === "Actif")),
           createdAt: new Date(),
           updatedAt: new Date()
         }));
