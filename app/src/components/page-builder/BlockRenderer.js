@@ -222,11 +222,11 @@ export const BlockRenderer = ({
         {/* Actions de déplacement (Drag & Drop + Flèches) */}
         <DragHandle id={id} />
         
-        {parentBlock && siblingCount > 1 && (
+        {siblingCount > 1 && (
           <>
             <button 
               type="button" 
-              onClick={(e) => { e.stopPropagation(); onMoveBlock(id, parentBlock.id, 'up'); }}
+              onClick={(e) => { e.stopPropagation(); onMoveBlock(id, parentBlock ? parentBlock.id : null, 'up'); }}
               disabled={indexInParent === 0}
               className="pb-control-btn"
               title="Monter"
@@ -236,7 +236,7 @@ export const BlockRenderer = ({
             </button>
             <button 
               type="button" 
-              onClick={(e) => { e.stopPropagation(); onMoveBlock(id, parentBlock.id, 'down'); }}
+              onClick={(e) => { e.stopPropagation(); onMoveBlock(id, parentBlock ? parentBlock.id : null, 'down'); }}
               disabled={indexInParent === siblingCount - 1}
               className="pb-control-btn"
               title="Descendre"
