@@ -2,6 +2,7 @@ import { useDroppable, useDraggable } from '@dnd-kit/core';
 import { useBuilder } from '../store/builderStore';
 import * as Icons from 'lucide-react';
 import { getYoutubeEmbedUrl } from '../utils/youtubeUtils';
+import { sanitizeHtml } from '../utils/sanitize';
 import { Copy, Trash2, GripVertical, Settings, Star } from 'lucide-react';
 
 /* ── Draggable wrapper for existing elements ── */
@@ -301,7 +302,7 @@ export default function ElementRenderer({ element }) {
             onInput={handleTextChange}
             onBlur={handleTextBlur}
             onClick={handleSelect}
-            dangerouslySetInnerHTML={{ __html: settings.content || '' }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(settings.content || '') }}
             aria-label="Texte éditable"
           />
         );
@@ -423,7 +424,7 @@ export default function ElementRenderer({ element }) {
             role="alert"
             onClick={handleSelect}
           >
-            <div dangerouslySetInnerHTML={{ __html: settings.content || '' }} />
+            <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(settings.content || '') }} />
             {settings.dismissible && <button type="button" className="btn-close" aria-label="Fermer" />}
           </div>
         );
