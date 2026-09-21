@@ -48,8 +48,7 @@ Ce document sert de guide et de référence pour tout agent ou développeur trav
 ```
 REACT-anjou-edition-pour-les-nuls.ags49.fr/
 ├── .github/workflows/         # Pipelines CI/CD automatisés
-│   ├── ci.yml                 # Validation continue (Jest & Build) sur PRs et branches
-│   └── deploy.yml             # Déploiement continu automatisé sur Firebase Hosting
+│   └── ci.yml                 # Validation continue (Jest & Build) sur PRs et branches
 ├── AGENTS.md                  # Ce document de contexte à la racine
 ├── app/                       # Application React principale (Site public & Admin)
 │   ├── .firebaserc            # Configuration du projet Firebase par défaut
@@ -110,9 +109,9 @@ Se déplacer dans le dossier : `cd page-builder-react`
 
 ## 📌 Conventions de Code & Fonctionnalités Clés
 
-### 1. Déploiement Continu & Qualité Automatisée (CI/CD GitHub Actions)
-*   **Pipeline de Déploiement (`.github/workflows/deploy.yml`)** : Exécute automatiquement `npm ci`, `CI=true npm test` et `npm run build` avant de déployer l'application sur Firebase Hosting (`react-anjou-edition`).
-*   **Pipeline de Validation (`.github/workflows/ci.yml`)** : Valide chaque Pull Request et branche pour garantir l'intégrité du code (0 erreurs, 0 régressions de tests).
+### 1. Intégration Continue & Qualité Automatisée (CI GitHub Actions)
+*   **Pipeline de Validation (`.github/workflows/ci.yml`)** : Valide chaque Pull Request et branche pour garantir l'intégrité du code (0 erreurs, 0 régressions de tests Jest, compilation réussie).
+*   **Déploiement Firebase Hosting** : Effectué à la demande via la CLI Firebase (`firebase deploy --only hosting`).
 
 ### 2. PWA (Progressive Web App) & Lecture 100% Hors-Ligne
 *   **Service Worker & Enregistrement (`serviceWorkerRegistration.js` & `public/service-worker.js`)** : Stratégie de mise en cache multi-niveaux (Cache-First pour les flipbooks PDF, Stale-While-Revalidate pour les médias et assets statiques, fallback SPA offline sur `index.html`).

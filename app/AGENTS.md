@@ -44,9 +44,9 @@ Se déplacer dans le dossier : `cd app`
 
 ## 📌 Architecture, Sécurité & Conformité
 
-### 1. Déploiement Continu (CI/CD GitHub Actions)
-*   `.github/workflows/deploy.yml` automatise la validation `CI=true npm test` et `npm run build` puis le déploiement sur Firebase Hosting.
-*   `.github/workflows/ci.yml` valide chaque Pull Request et branche.
+### 1. Intégration Continue (CI GitHub Actions)
+*   `.github/workflows/ci.yml` valide chaque Pull Request et branche pour garantir l'intégrité du code (`CI=true npm test` et `npm run build`).
+*   Le déploiement sur Firebase Hosting s'effectue manuellement à la demande via `firebase deploy --only hosting`.
 
 ### 2. PWA (Progressive Web App) & Lecture 100% Hors-Ligne
 *   Enregistrement du service worker (`serviceWorkerRegistration.js` & `public/service-worker.js`).
