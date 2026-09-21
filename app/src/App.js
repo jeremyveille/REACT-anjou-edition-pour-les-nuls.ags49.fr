@@ -42,9 +42,31 @@ import { PublicNav } from './components/PublicNav';
 import { ContactForm } from './components/ContactForm';
 import { PrivacyPolicy } from './components/PrivacyPolicy';
 import { OptimizedImage } from './utils/imageOptimizer';
+import { ErrorBoundary } from './components/ErrorBoundary';
+
+// Resilient dynamic import with retry on chunk loading failure
+const lazyWithRetry = (componentImport) =>
+  React.lazy(async () => {
+    const pageHasBeenRefreshed = JSON.parse(
+      window.sessionStorage.getItem('ae_chunk_retry') || 'false'
+    );
+
+    try {
+      const component = await componentImport();
+      window.sessionStorage.setItem('ae_chunk_retry', 'false');
+      return component;
+    } catch (error) {
+      if (!pageHasBeenRefreshed) {
+        window.sessionStorage.setItem('ae_chunk_retry', 'true');
+        window.location.reload();
+        return;
+      }
+      throw error;
+    }
+  });
 
 // Lazy load Dashboard to save ~250KB in the public site bundle
-const Dashboard = React.lazy(() => import('./components/Dashboard'));
+const Dashboard = lazyWithRetry(() => import('./components/Dashboard'));
 
 const normalizeParentId = (id) => {
   if (!id || id === "null" || id === "") return null;
@@ -830,9 +852,11 @@ function App() {
     
     return (
       <div className="min-h-screen">
-        <React.Suspense fallback={<div className="ae-empty-state-container">Chargement de l'administration...</div>}>
-          <Dashboard onBackToSite={handleBackToSite} flipbooks={flipbooks} setFlipbooks={setFlipbooks} />
-        </React.Suspense>
+        <ErrorBoundary>
+          <React.Suspense fallback={<div className="ae-empty-state-container">Chargement de l'administration...</div>}>
+            <Dashboard onBackToSite={handleBackToSite} flipbooks={flipbooks} setFlipbooks={setFlipbooks} />
+          </React.Suspense>
+        </ErrorBoundary>
       </div>
     );
   }
