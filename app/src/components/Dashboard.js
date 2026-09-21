@@ -23,7 +23,12 @@ import {
   setDoc,
   getDoc 
 } from "firebase/firestore";
-import { GoogleGenAI } from "@google/genai";
+import { 
+  isGeminiConfigured, 
+  saveGeminiApiKey, 
+  generateAiArticle, 
+  generateAiFlipbookPages 
+} from "../services/geminiService";
 import { flipbooksData, textsData, articlesData } from "../data";
 import { PageBuilder } from "./page-builder/PageBuilder";
 import { pageService } from "../services/pageService";
@@ -367,9 +372,7 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
   const [isInitializing, setIsInitializing] = useState(true);
 
   const getGeminiClient = () => {
-    const key = geminiApiKey || process.env.REACT_APP_GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || "";
-    if (!key) return null;
-    return new GoogleGenAI({ apiKey: key });
+    return isGeminiConfigured(geminiApiKey) ? { apiKey: geminiApiKey } : null;
   };
 
   // Fetch all databases on load
@@ -1151,32 +1154,13 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
     const cleanDesc = newFlipbookDesc.trim();
 
     const fetchPagesWithGemini = async () => {
-      const client = getGeminiClient();
-      if (useGeminiForPages && client) {
-        try {
-          const prompt = `Génère un tableau JSON contenant exactement 5 pages pour un flipbook interactif sur le sujet : "${cleanTitle}". La description est : "${cleanDesc}".
-Le fichier d'origine s'appelle : "${fileName}".
-Chaque page doit avoir une propriété 'pageNum' (nombre de 1 à 5), 'title' (titre de la page court) et 'content' (contenu textuel en français sur le sujet d'environ 3 ou 4 phrases, sans sauts de ligne ni markdown).
-La réponse doit être uniquement un tableau JSON valide respectant précisément cette structure, sans balise de code markdown. Exemple:
-[
-  {"pageNum": 1, "title": "Couverture", "content": "Titre du livre..."},
-  {"pageNum": 2, "title": "Introduction", "content": "..."}
-]`;
-
-          const response = await client.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: prompt,
-          });
-
-          const responseText = response.text || "";
-          const cleanText = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
-          const parsed = JSON.parse(cleanText);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            return parsed;
-          }
-        } catch (err) {
-          console.error("Gemini failed to generate flipbook pages:", err);
-        }
+      if (useGeminiForPages && isGeminiConfigured(geminiApiKey)) {
+        return await generateAiFlipbookPages({
+          title: cleanTitle,
+          description: cleanDesc,
+          fileName: fileName,
+          apiKey: geminiApiKey
+        });
       }
       return null;
     };
@@ -1462,13 +1446,12 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
 
   const handleSaveGeminiKey = (e) => {
     e.preventDefault();
-    localStorage.setItem("gemini_api_key", geminiApiKey);
+    saveGeminiApiKey(geminiApiKey);
     setNotification("Clé API Gemini configurée avec succès.");
   };
 
   const handleGenerateArticle = async () => {
-    const aiClient = getGeminiClient();
-    if (!aiClient) {
+    if (!isGeminiConfigured(geminiApiKey)) {
       setNotification("Clé API Gemini non disponible.");
       return;
     }
@@ -1476,13 +1459,12 @@ La réponse doit être uniquement un tableau JSON valide respectant précisémen
     setAiLoading(true);
     setAiResult("");
     try {
-      const prompt = `Rédige un court article littéraire ou historique sur le sujet suivant lié à l'Anjou : "${aiTopic}". Le style doit être "${aiStyle}". Écris l'article en français, avec environ 3 paragraphes et un titre captivant au début.`;
-      const response = await aiClient.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: prompt,
+      const text = await generateAiArticle({
+        topic: aiTopic,
+        style: aiStyle,
+        apiKey: geminiApiKey
       });
 
-      const text = response.text || "";
       setAiResult(text);
       setNotification("Article rédigé avec succès par l'IA Gemini !");
     } catch (err) {
