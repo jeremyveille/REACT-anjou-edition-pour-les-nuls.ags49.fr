@@ -66,7 +66,12 @@ export function getOptimizedImageUrl(url, options = {}) {
       return sanitized.replace('/upload/', `/upload/${transformStr}/`);
     }
 
-    // 4. Firebase Storage or generic images with query param support
+    // 4. Local static paths (e.g. /anjou-edition-livre.png)
+    if (sanitized.startsWith('/') && !sanitized.includes('://')) {
+      return sanitized;
+    }
+
+    // 5. Firebase Storage or generic images with query param support
     if (width || format === 'webp') {
       const separator = sanitized.includes('?') ? '&' : '?';
       const params = [];
@@ -109,6 +114,7 @@ export function generateSrcSet(url, widths = [320, 480, 640, 800, 1200]) {
   if (!url || typeof url !== 'string') return '';
   const sanitized = sanitizeUrl(url);
   if (!sanitized || sanitized === '#' || sanitized === 'about:blank' || sanitized.startsWith('data:') || sanitized.startsWith('blob:')) return '';
+  if (sanitized.startsWith('/') && !sanitized.endsWith('.webp')) return '';
 
   return widths
     .map(w => {

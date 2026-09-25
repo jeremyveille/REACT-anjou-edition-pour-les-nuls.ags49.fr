@@ -142,6 +142,11 @@ describe('pageService Security & Workflow tests', () => {
     expect(mediaList.length).toBeGreaterThan(0);
     expect(mediaList[0]).toHaveProperty('id');
     expect(mediaList[0]).toHaveProperty('url');
+    expect(mediaList.some(m => m.url === '/anjou-edition-livre.png')).toBe(true);
+
+    const feat = await pageService.getFeaturedArticle();
+    expect(feat).toBeDefined();
+    expect(feat.image).toBe('/anjou-edition-livre.png');
   });
 
   test('saveMediaItem persists a media item to local storage and returns normalized object', async () => {

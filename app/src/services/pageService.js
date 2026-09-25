@@ -708,16 +708,28 @@ export const pageService = {
       }
     } catch (e) {}
 
-    const defaultImages = (galleryImages || []).map((img, i) => ({
-      id: img.id || `sample_img_${i}`,
-      name: img.title || `Image ${i + 1}`,
-      url: img.url,
-      type: 'image',
-      mimeType: 'image/jpeg',
-      size: 154000,
-      alt: img.description || img.title,
-      createdAt: new Date(Date.now() - (i + 1) * 86400000).toISOString()
-    }));
+    const defaultImages = [
+      {
+        id: "media_anjou_edition_livre",
+        name: "Livre Anjou Édition",
+        url: "/anjou-edition-livre.png",
+        type: "image",
+        mimeType: "image/png",
+        size: 87044,
+        alt: "Anjou Édition - Une maison d’édition ouverte à tous",
+        createdAt: new Date().toISOString()
+      },
+      ...(galleryImages || []).map((img, i) => ({
+        id: img.id || `sample_img_${i}`,
+        name: img.title || `Image ${i + 1}`,
+        url: img.url,
+        type: 'image',
+        mimeType: 'image/jpeg',
+        size: 154000,
+        alt: img.description || img.title,
+        createdAt: new Date(Date.now() - (i + 1) * 86400000).toISOString()
+      }))
+    ];
 
     const defaultVideos = (videosData || []).map((vid, i) => ({
       id: vid.id || `sample_vid_${i}`,

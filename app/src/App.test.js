@@ -491,6 +491,25 @@ describe('Dashboard -> Save -> Public Site Live Update Cycle', () => {
     expect(screen.getByTitle(/Lecteur vidéo YouTube|Vidéo/i).getAttribute('src')).toContain('newLoireVid');
     expect(screen.queryByAltText('Château Initial Anjou')).toBeNull();
   });
+
+  it('displays the Anjou Édition book image and completely replaces the old milk and honey image', async () => {
+    render(<App />);
+
+    // 1. Check that the featured article title is rendered
+    expect(await screen.findByText("Anjou Édition : une maison d’édition ouverte à tous")).toBeInTheDocument();
+
+    // 2. Check that the featured article image uses /anjou-edition-livre.png
+    const featuredImg = screen.getByAltText("Anjou Édition : une maison d’édition ouverte à tous");
+    expect(featuredImg).toBeInTheDocument();
+    expect(featuredImg.getAttribute('src')).toContain('anjou-edition-livre.png');
+
+    // 3. Confirm that the old milk and honey book (photo-1544947950-fa07a98d237f) is not in the DOM
+    const allImages = document.querySelectorAll('img');
+    const hasOldImage = Array.from(allImages).some(img => 
+      (img.getAttribute('src') || '').includes('photo-1544947950-fa07a98d237f')
+    );
+    expect(hasOldImage).toBe(false);
+  });
 });
 
 

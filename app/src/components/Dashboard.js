@@ -517,7 +517,7 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
       const snap = await getDocs(collection(db, "medias"));
       if (!snap || snap.empty || !snap.docs) {
         const defaults = [
-          { id: "m1", name: "couverture_luxe.jpg", type: "image/jpeg", size: 1258291, date: "12/05/2026 à 10h12", url: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=600" },
+          { id: "m1", name: "anjou_edition_livre.png", type: "image/png", size: 87044, date: "25/09/2026 à 14h30", url: "/anjou-edition-livre.png" },
           { id: "m2", name: "nouvelle_legende.epub", type: "application/epub+zip", size: 4529124, date: "24/05/2026 à 16h45", url: "#" },
           { id: "m3", name: "poeme_musical.mp3", type: "audio/mpeg", size: 8912048, date: "02/06/2026 à 09h30", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
           { id: "m4", name: "logo_court.png", type: "image/png", size: 104857, date: "08/06/2026 à 11h15", url: "https://images.unsplash.com/photo-1516979187457-637abb4f9353?q=80&w=400" },
@@ -542,7 +542,7 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
         setMediaList(JSON.parse(local));
       } else {
         setMediaList([
-          { id: "m1", name: "couverture_luxe.jpg", type: "image/jpeg", size: 1258291, date: "12/05/2026 à 10h12", url: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=600" },
+          { id: "m1", name: "anjou_edition_livre.png", type: "image/png", size: 87044, date: "25/09/2026 à 14h30", url: "/anjou-edition-livre.png" },
           { id: "m2", name: "nouvelle_legende.epub", type: "application/epub+zip", size: 4529124, date: "24/05/2026 à 16h45", url: "#" },
           { id: "m3", name: "poeme_musical.mp3", type: "audio/mpeg", size: 8912048, date: "02/06/2026 à 09h30", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" }
         ]);
@@ -558,7 +558,7 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
           { id: "g1", title: "Château d'Angers", category: "Châteaux", url: "https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?q=80&w=600", description: "L'impressionnante forteresse médiévale d'Angers et ses 17 tours de schiste et de tuffeau.", date: "12/05/2026" },
           { id: "g2", title: "Bords de Loire", category: "Loire", url: "https://images.unsplash.com/photo-1516979187457-637abb4f9353?q=80&w=600", description: "Coucher de soleil poétique sur le plus long fleuve sauvage de France en Maine-et-Loire.", date: "20/05/2026" },
           { id: "g3", title: "Vignobles de Savennières", category: "Vignobles", url: "https://images.unsplash.com/photo-1512820790803-83ca734da794?q=80&w=600", description: "Les célèbres coteaux de Chenin blanc surplombant la Loire sous la douceur angevine.", date: "01/06/2026" },
-          { id: "g4", title: "Abbaye de Fontevraud", category: "Châteaux", url: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=600", description: "La plus grande cité monastique héritée du Moyen Âge, nécropole des Plantagenêt.", date: "10/06/2026" }
+          { id: "g4", title: "Abbaye de Fontevraud", category: "Châteaux", url: "https://picsum.photos/800/600?random=16", description: "La plus grande cité monastique héritée du Moyen Âge, nécropole des Plantagenêt.", date: "10/06/2026" }
         ];
         for (const g of defaults) {
           try {
@@ -1294,7 +1294,7 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
       slug: newArticleTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
       excerpt: "",
       content: "",
-      image: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=600",
+      image: "/anjou-edition-livre.png",
       views: 0,
       date: new Date().toISOString().split('T')[0],
       status: "published",

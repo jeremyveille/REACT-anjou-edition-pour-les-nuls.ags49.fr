@@ -1257,8 +1257,8 @@ function App() {
                   >
                     <div className="featured-article-media">
                       <OptimizedImage 
-                        src={featuredArticle.image || featuredArticle.thumbnailUrl || "https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=1200"} 
-                        thumbnailSrc={featuredArticle.thumbnailUrl}
+                        src={featuredArticle.image || featuredArticle.thumbnailUrl || "/anjou-edition-livre.png"} 
+                        thumbnailSrc={featuredArticle.thumbnailUrl || "/anjou-edition-livre.png"}
                         alt={featuredArticle.title} 
                         loading="lazy"
                         useThumbnail={true}

@@ -12,7 +12,7 @@ export default function InfoCard({ onLearnMore }) {
       {/* Upper image with custom literary focus */}
       <div style={{ position: 'relative', height: '200px' }}>
         <img
-          src="https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=600&auto=format&fit=crop"
+          src="/anjou-edition-livre.png"
           alt="Anjou Edition - Livres"
           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           referrerPolicy="no-referrer"
