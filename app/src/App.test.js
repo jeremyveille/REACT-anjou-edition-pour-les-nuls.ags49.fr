@@ -374,6 +374,125 @@ describe('Anjou Édition Presentation Article & Homepage Integration', () => {
   });
 });
 
+describe('Dashboard -> Save -> Public Site Live Update Cycle', () => {
+  test('modifying home page image and YouTube video in dashboard immediately reflects on public home page without code modification', async () => {
+    const defaultHome = {
+      id: 'page_home_default',
+      isHome: true,
+      title: 'Accueil',
+      slug: 'accueil',
+      category: 'Accueil',
+      status: 'published',
+      blocks: [
+        {
+          id: 'sec_home_1',
+          type: 'section',
+          children: [
+            {
+              id: 'row_home_1',
+              type: 'row',
+              children: [
+                {
+                  id: 'col_home_1',
+                  type: 'column',
+                  children: [
+                    {
+                      id: 'img_test_live',
+                      type: 'image',
+                      settings: {
+                        src: 'https://images.unsplash.com/photo-initial-chateau.jpg',
+                        alt: 'Château Initial Anjou'
+                      }
+                    },
+                    {
+                      id: 'vid_test_live',
+                      type: 'video',
+                      settings: {
+                        url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+                        videoId: 'dQw4w9WgXcQ'
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    };
+
+    let currentPages = [defaultHome];
+
+    const { pageService } = require('./services/pageService');
+    pageService.getPages.mockImplementation(async (type) => {
+      if (type === 'articles') return [];
+      return currentPages;
+    });
+
+    await renderApp();
+
+    // 1. Initial image and video are rendered on the public home page
+    expect(await screen.findByAltText('Château Initial Anjou')).toBeInTheDocument();
+    expect(screen.getByTitle(/Lecteur vidéo YouTube|Vidéo/i).getAttribute('src')).toContain('dQw4w9WgXcQ');
+
+    // 2. Admin saves new image & new video via Dashboard/PageBuilder
+    const updatedHome = {
+      ...defaultHome,
+      blocks: [
+        {
+          id: 'sec_home_1',
+          type: 'section',
+          children: [
+            {
+              id: 'row_home_1',
+              type: 'row',
+              children: [
+                {
+                  id: 'col_home_1',
+                  type: 'column',
+                  children: [
+                    {
+                      id: 'img_test_live',
+                      type: 'image',
+                      settings: {
+                        src: 'https://images.unsplash.com/photo-nouveau-saumur-hd.jpg',
+                        alt: 'Nouveau Château de Saumur 2026'
+                      }
+                    },
+                    {
+                      id: 'vid_test_live',
+                      type: 'video',
+                      settings: {
+                        url: 'https://www.youtube.com/watch?v=newLoireVid',
+                        videoId: 'newLoireVid'
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    };
+
+    currentPages = [updatedHome];
+
+    // 3. Dispatch content update event (emitted by pageService.savePage)
+    await act(async () => {
+      window.dispatchEvent(new CustomEvent('ae_content_updated', {
+        detail: { id: 'page_home_default', type: 'page', item: updatedHome }
+      }));
+    });
+
+    // 4. Verify public page reflects the new image and new YouTube video immediately
+    expect(await screen.findByAltText('Nouveau Château de Saumur 2026')).toBeInTheDocument();
+    expect(screen.getByAltText('Nouveau Château de Saumur 2026').getAttribute('src')).toContain('photo-nouveau-saumur-hd.jpg');
+    expect(screen.getByTitle(/Lecteur vidéo YouTube|Vidéo/i).getAttribute('src')).toContain('newLoireVid');
+    expect(screen.queryByAltText('Château Initial Anjou')).toBeNull();
+  });
+});
+
 
 
 

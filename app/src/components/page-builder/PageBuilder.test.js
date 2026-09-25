@@ -843,4 +843,147 @@ describe('PageBuilder and Block Architecture Tests', () => {
       'pages'
     );
   });
+
+  test('TEST 10: Visual Image and Video Replacement, Media Library modal interaction, and saving', async () => {
+    window.alert = jest.fn();
+    const saveSpy = jest.spyOn(pageService, 'savePage').mockResolvedValue({ id: 'page_media_test' });
+
+    const mediaTestPage = {
+      id: 'page_media_test',
+      title: 'Page Médias Anjou',
+      slug: 'page-medias-anjou',
+      category: 'Accueil',
+      status: 'draft',
+      blocks: [
+        {
+          id: 'sec_media_1',
+          type: 'section',
+          children: [
+            {
+              id: 'col_media_1',
+              type: 'column',
+              children: [
+                {
+                  id: 'img_test_1',
+                  type: 'image',
+                  settings: {
+                    src: 'https://images.unsplash.com/photo-old.jpg',
+                    alt: 'Ancienne image'
+                  }
+                },
+                {
+                  id: 'vid_test_1',
+                  type: 'video',
+                  settings: {
+                    url: 'https://www.youtube.com/watch?v=oldVid123',
+                    videoId: 'oldVid123'
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    };
+
+    jest.spyOn(pageService, 'getPages').mockImplementation((coll) => {
+      if (coll === 'articles') return Promise.resolve([]);
+      return Promise.resolve([mediaTestPage]);
+    });
+
+    render(<PageBuilder onClose={() => {}} onSaveSuccess={() => {}} />);
+
+    // 1. Vérifier le chargement des médias existants
+    const imgElement = await screen.findByAltText('Ancienne image');
+    expect(imgElement).toBeInTheDocument();
+    expect(imgElement.getAttribute('src')).toContain('photo-old.jpg');
+
+    // 2. Cliquer sur l'image pour la sélectionner et ouvrir les réglages
+    fireEvent.click(imgElement);
+
+    // 3. Modifier la source de l'image
+    const srcInput = await screen.findByDisplayValue('https://images.unsplash.com/photo-old.jpg');
+    fireEvent.change(srcInput, { target: { value: 'https://images.unsplash.com/photo-chateau-saumur-hd.jpg' } });
+    
+    const altInput = screen.getByDisplayValue('Ancienne image');
+    fireEvent.change(altInput, { target: { value: 'Château de Saumur HD' } });
+
+    // Vérifier la mise à jour immédiate sur le canevas et le panneau de prévisualisation
+    const updatedImgs = await screen.findAllByAltText('Château de Saumur HD');
+    expect(updatedImgs.length).toBeGreaterThanOrEqual(1);
+
+    // 4. Sélectionner le bloc vidéo
+    const videoIframe = screen.getByTitle('Vidéo');
+    fireEvent.click(videoIframe);
+
+    const ytInput = await screen.findByLabelText(/Lien YouTube/i);
+    fireEvent.change(ytInput, { target: { value: 'https://www.youtube.com/watch?v=newLoireVid' } });
+
+    // 5. Enregistrer les modifications
+    const saveBtn = screen.getByRole('button', { name: /Enregistrer|Publier/i });
+    fireEvent.click(saveBtn);
+
+    await waitFor(() => {
+      expect(saveSpy).toHaveBeenCalledTimes(1);
+    });
+
+    const payload = saveSpy.mock.calls[0][0];
+    const savedImg = payload.blocks[0].children[0].children[0];
+    const savedVid = payload.blocks[0].children[0].children[1];
+
+    expect(savedImg.settings.src).toBe('https://images.unsplash.com/photo-chateau-saumur-hd.jpg');
+    expect(savedImg.settings.alt).toBe('Château de Saumur HD');
+    expect(savedVid.settings.videoId).toBe('newLoireVid');
+  });
+
+  test('TEST 11: Bouton Annuler rétablit l’état initial du canevas et des médias', async () => {
+    window.confirm = jest.fn(() => true);
+
+    const testRevertPage = {
+      id: 'page_revert_test',
+      title: 'Page Rétablissement',
+      slug: 'page-retablissement',
+      category: 'Accueil',
+      status: 'draft',
+      blocks: [
+        {
+          id: 'sec_rev_1',
+          type: 'section',
+          children: [
+            {
+              id: 'h_rev_1',
+              type: 'heading',
+              settings: { content: 'Titre Initial Inchangeable' }
+            }
+          ]
+        }
+      ]
+    };
+
+    jest.spyOn(pageService, 'getPages').mockImplementation((coll) => {
+      if (coll === 'articles') return Promise.resolve([]);
+      return Promise.resolve([testRevertPage]);
+    });
+
+    render(<PageBuilder onClose={() => {}} onSaveSuccess={() => {}} />);
+
+    expect(await screen.findByText('Titre Initial Inchangeable')).toBeInTheDocument();
+
+    // Modifier le titre
+    fireEvent.click(screen.getByText('Titre Initial Inchangeable'));
+    const input = await screen.findByDisplayValue('Titre Initial Inchangeable');
+    fireEvent.change(input, { target: { value: 'Titre Altéré Temporaire' } });
+
+    expect(await screen.findByText('Titre Altéré Temporaire')).toBeInTheDocument();
+
+    // Cliquer sur le bouton "Annuler"
+    const cancelBtn = screen.getByRole('button', { name: /Annuler les modifications non enregistrées/i });
+    fireEvent.click(cancelBtn);
+
+    // Vérifier que le titre initial est restauré
+    await waitFor(() => {
+      expect(screen.getByText('Titre Initial Inchangeable')).toBeInTheDocument();
+      expect(screen.queryByText('Titre Altéré Temporaire')).toBeNull();
+    });
+  });
 });

@@ -229,3 +229,165 @@ describe('Dashboard Articles Management Tests', () => {
   });
 });
 
+describe('Dashboard Media Library & Edit Image Tests', () => {
+  const mockMedia = [
+    { 
+      id: "m1", 
+      name: "chateau_angers.jpg", 
+      type: "image/jpeg", 
+      size: 1048576, 
+      date: "12/05/2026 à 10h12", 
+      url: "https://images.unsplash.com/photo-chateau.jpg",
+      alt: "Château d'Angers"
+    },
+    { 
+      id: "m2", 
+      name: "musique_loire.mp3", 
+      type: "audio/mpeg", 
+      size: 2097152, 
+      date: "14/05/2026 à 14h00", 
+      url: "https://example.com/audio.mp3" 
+    }
+  ];
+
+  beforeEach(() => {
+    localStorage.clear();
+    localStorage.setItem("ae_medias", JSON.stringify(mockMedia));
+    window.history.pushState(null, '', '/ae-dashboard');
+    if (!global.URL.createObjectURL) {
+      global.URL.createObjectURL = jest.fn(() => 'blob:mock-preview-url');
+    }
+    if (!global.URL.revokeObjectURL) {
+      global.URL.revokeObjectURL = jest.fn();
+    }
+  });
+
+  test('renders media cards with action buttons in order: Aperçu -> Copier -> Modifier -> Supprimer', async () => {
+    render(<Dashboard onBackToSite={() => {}} />);
+
+    // Navigate to Médiathèque
+    const mediaTabBtn = screen.getByRole('button', { name: /Médiathèque/i });
+    fireEvent.click(mediaTabBtn);
+
+    expect(await screen.findByText(/Médiathèque Littéraire/i)).toBeInTheDocument();
+    expect(await screen.findByText("chateau_angers.jpg")).toBeInTheDocument();
+
+    // Verify all 4 action buttons exist
+    const previewBtn = screen.getByRole('button', { name: /Aperçu de chateau_angers.jpg/i });
+    const copyBtn = screen.getByRole('button', { name: /Copier le lien de chateau_angers.jpg/i });
+    const editBtn = screen.getByRole('button', { name: /Modifier l['’]image chateau_angers.jpg/i });
+    const deleteBtn = screen.getByRole('button', { name: /Supprimer chateau_angers.jpg/i });
+
+    expect(previewBtn).toBeInTheDocument();
+    expect(copyBtn).toBeInTheDocument();
+    expect(editBtn).toBeInTheDocument();
+    expect(deleteBtn).toBeInTheDocument();
+  });
+
+  test('opens edit modal, updates image metadata, and saves immediately without reload', async () => {
+    render(<Dashboard onBackToSite={() => {}} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Médiathèque/i }));
+    expect(await screen.findByText("chateau_angers.jpg")).toBeInTheDocument();
+
+    // Click on Edit button
+    const editBtn = screen.getByRole('button', { name: /Modifier l['’]image chateau_angers.jpg/i });
+    fireEvent.click(editBtn);
+
+    // Modal should be open with current details
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByText(/Modifier l['’]image : chateau_angers.jpg/i)).toBeInTheDocument();
+
+    // Modify name input
+    const nameInput = screen.getByPlaceholderText("ex: chateau_angers.jpg");
+    fireEvent.change(nameInput, { target: { value: "chateau_angers_renomme.jpg" } });
+
+    // Modify alt text input
+    const altInput = screen.getByPlaceholderText("ex: Façade du château d'Angers sous le soleil");
+    fireEvent.change(altInput, { target: { value: "Magnifique forteresse du Roi René" } });
+
+    // Submit / Save
+    const saveBtn = screen.getByRole('button', { name: /Enregistrer/i });
+    fireEvent.click(saveBtn);
+
+    // Modal closes
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    // Updated name is visible in the media grid
+    expect(await screen.findByText("chateau_angers_renomme.jpg")).toBeInTheDocument();
+
+    // Verify persistence in localStorage
+    const savedList = JSON.parse(localStorage.getItem("ae_medias"));
+    const updatedItem = savedList.find(m => m.name === "chateau_angers_renomme.jpg");
+    expect(updatedItem).toBeTruthy();
+    expect(updatedItem.name).toBe("chateau_angers_renomme.jpg");
+    expect(updatedItem.alt).toBe("Magnifique forteresse du Roi René");
+  });
+
+  test('allows uploading a replacement image file and previews it before saving', async () => {
+    render(<Dashboard onBackToSite={() => {}} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Médiathèque/i }));
+    expect(await screen.findByText("chateau_angers.jpg")).toBeInTheDocument();
+
+    const editBtn = screen.getByRole('button', { name: /Modifier l['’]image chateau_angers.jpg/i });
+    fireEvent.click(editBtn);
+
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
+
+    // Select a new image file
+    const file = new File(['mock-image-bytes'], 'nouvelle_vue_chateau.png', { type: 'image/png' });
+    const fileInput = document.querySelector('input[type="file"][accept="image/*"]');
+    expect(fileInput).toBeInTheDocument();
+
+    fireEvent.change(fileInput, { target: { files: [file] } });
+
+    // Badge showing new image selected should appear
+    expect(await screen.findByText(/Nouvelle image sélectionnée/i)).toBeInTheDocument();
+    expect(screen.getByText(/nouvelle_vue_chateau.png/i)).toBeInTheDocument();
+
+    // Save
+    const saveBtn = screen.getByRole('button', { name: /Enregistrer/i });
+    fireEvent.click(saveBtn);
+
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    // Name updated to new file name
+    expect(await screen.findByText("nouvelle_vue_chateau.png")).toBeInTheDocument();
+  });
+
+  test('cancels image modification when clicking Annuler', async () => {
+    render(<Dashboard onBackToSite={() => {}} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Médiathèque/i }));
+    expect(await screen.findByText("chateau_angers.jpg")).toBeInTheDocument();
+
+    const editBtn = screen.getByRole('button', { name: /Modifier l['’]image chateau_angers.jpg/i });
+    fireEvent.click(editBtn);
+
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
+
+    // Modify name
+    const nameInput = screen.getByPlaceholderText("ex: chateau_angers.jpg");
+    fireEvent.change(nameInput, { target: { value: "nom_temporaire.jpg" } });
+
+    // Click Annuler
+    const cancelBtn = screen.getByRole('button', { name: /Annuler/i });
+    fireEvent.click(cancelBtn);
+
+    // Modal closes
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    // Original name remains intact
+    expect(screen.getByText("chateau_angers.jpg")).toBeInTheDocument();
+    expect(screen.queryByText("nom_temporaire.jpg")).not.toBeInTheDocument();
+  });
+});
+
+
