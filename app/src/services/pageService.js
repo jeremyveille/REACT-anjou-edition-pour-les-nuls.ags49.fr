@@ -344,6 +344,20 @@ export const pageService = {
       if (collectionName === 'articles') {
         return articlesData;
       }
+      if (collectionName === 'pages') {
+        return [
+          {
+            id: 'page_home_default',
+            title: 'Accueil - Anjou Édition',
+            slug: 'accueil',
+            isHome: true,
+            isHomePage: true,
+            category: 'Accueil',
+            status: 'published',
+            blocks: getDefaultHomepageBlocks()
+          }
+        ];
+      }
       return [];
     }
   },
@@ -421,12 +435,29 @@ export const pageService = {
           details: { status: targetStatus, version: normalizedData.version }
         });
 
+        if (typeof window !== 'undefined') {
+          try {
+            window.dispatchEvent(new CustomEvent('ae_content_updated', {
+              detail: { collectionName, id, data: normalizedData }
+            }));
+          } catch (e) {}
+        }
+
         return { id, ...normalizedData };
       } catch (error) {
         console.error(`Erreur Firestore lors de la mise à jour de ${collectionName}, bascule locale.`, error);
         const localItems = getLocalItems(collectionName);
         const updatedItems = localItems.map(p => p.id === id ? { ...p, ...normalizedData } : p);
         saveLocalItems(collectionName, updatedItems);
+
+        if (typeof window !== 'undefined') {
+          try {
+            window.dispatchEvent(new CustomEvent('ae_content_updated', {
+              detail: { collectionName, id, data: normalizedData }
+            }));
+          } catch (e) {}
+        }
+
         return { id, ...normalizedData, isLocalOnly: true };
       }
     } else {
@@ -461,6 +492,14 @@ export const pageService = {
           details: { status: targetStatus, initialVersion: 1 }
         });
 
+        if (typeof window !== 'undefined') {
+          try {
+            window.dispatchEvent(new CustomEvent('ae_content_updated', {
+              detail: { collectionName, id: savedId, data: creationData }
+            }));
+          } catch (e) {}
+        }
+
         return { id: savedId, ...creationData };
       } catch (error) {
         console.error(`Erreur Firestore lors de la création dans ${collectionName}, bascule locale.`, error);
@@ -468,6 +507,15 @@ export const pageService = {
         const localItems = getLocalItems(collectionName);
         localItems.unshift({ id: localId, ...creationData });
         saveLocalItems(collectionName, localItems);
+
+        if (typeof window !== 'undefined') {
+          try {
+            window.dispatchEvent(new CustomEvent('ae_content_updated', {
+              detail: { collectionName, id: localId, data: creationData }
+            }));
+          } catch (e) {}
+        }
+
         return { id: localId, ...creationData, isLocalOnly: true };
       }
     }
