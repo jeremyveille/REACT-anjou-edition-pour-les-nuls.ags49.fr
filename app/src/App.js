@@ -280,8 +280,30 @@ function App() {
       }
     };
     loadCustomPages();
+
+    // Écouter les mises à jour de contenu émises par le PageBuilder / Dashboard pour synchronisation immédiate
+    const handleContentUpdated = async () => {
+      try {
+        const [pages, fetchedArticles] = await Promise.all([
+          pageService.getPages('pages'),
+          pageService.getPages('articles')
+        ]);
+        if (isMounted && Array.isArray(pages)) {
+          setCustomPages(pages);
+        }
+        if (isMounted && Array.isArray(fetchedArticles) && fetchedArticles.length > 0) {
+          setArticles(fetchedArticles);
+        }
+      } catch (err) {
+        console.error("Erreur de synchronisation du contenu après modification :", err);
+      }
+    };
+
+    window.addEventListener('ae_content_updated', handleContentUpdated);
+
     return () => {
       isMounted = false;
+      window.removeEventListener('ae_content_updated', handleContentUpdated);
     };
   }, []);
 
@@ -773,7 +795,15 @@ function App() {
     // Helper components moved to PublicNav.js
   };
 
-  const handleBackToSite = () => {
+  const handleBackToSite = async () => {
+    try {
+      const [pages, fetchedArticles] = await Promise.all([
+        pageService.getPages('pages'),
+        pageService.getPages('articles')
+      ]);
+      if (Array.isArray(pages)) setCustomPages(pages);
+      if (Array.isArray(fetchedArticles) && fetchedArticles.length > 0) setArticles(fetchedArticles);
+    } catch (e) {}
     setView({ type: 'home' });
     window.history.pushState({}, '', '/');
   };

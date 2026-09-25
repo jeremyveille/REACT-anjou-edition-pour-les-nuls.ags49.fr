@@ -308,6 +308,16 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
   const [mediaProgress, setMediaProgress] = useState(0);
   const [showMediaPreviewModal, setShowMediaPreviewModal] = useState(false);
   const [previewingMedia, setPreviewingMedia] = useState(null);
+  const [showMediaEditModal, setShowMediaEditModal] = useState(false);
+  const [editingMedia, setEditingMedia] = useState(null);
+  const [editMediaName, setEditMediaName] = useState("");
+  const [editMediaAlt, setEditMediaAlt] = useState("");
+  const [editMediaFile, setEditMediaFile] = useState(null);
+  const [editMediaPreviewUrl, setEditMediaPreviewUrl] = useState("");
+  const [editMediaIsSaving, setEditMediaIsSaving] = useState(false);
+  const [editMediaError, setEditMediaError] = useState("");
+  const [editMediaIsDragging, setEditMediaIsDragging] = useState(false);
+  const editFileInputRef = useRef(null);
 
   // Galerie
   const [galleryList, setGalleryList] = useState(() => {
@@ -1599,6 +1609,139 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
     } catch (err) {
       console.error("Delete media error:", err);
       setNotification(`Fichier "${name}" supprimé localement.`);
+    }
+  };
+
+  const handleOpenEditMedia = (media) => {
+    setEditingMedia(media);
+    setEditMediaName(media?.name || "");
+    setEditMediaAlt(media?.alt || media?.name || "");
+    setEditMediaFile(null);
+    setEditMediaPreviewUrl(media?.url || "");
+    setEditMediaError("");
+    setEditMediaIsDragging(false);
+    setShowMediaEditModal(true);
+  };
+
+  const handleCloseEditMedia = () => {
+    if (editMediaIsSaving) return;
+    if (editMediaFile && editMediaPreviewUrl && editMediaPreviewUrl.startsWith("blob:")) {
+      try {
+        URL.revokeObjectURL(editMediaPreviewUrl);
+      } catch (e) {}
+    }
+    setShowMediaEditModal(false);
+    setEditingMedia(null);
+    setEditMediaFile(null);
+    setEditMediaPreviewUrl("");
+    setEditMediaError("");
+    setEditMediaIsDragging(false);
+  };
+
+  const processNewEditImageFile = (file) => {
+    if (!file) return;
+    if (file.type && !file.type.startsWith("image/")) {
+      setEditMediaError("Veuillez sélectionner un fichier image valide (JPG, PNG, WebP, SVG, GIF...).");
+      return;
+    }
+    setEditMediaError("");
+    setEditMediaFile(file);
+    try {
+      const preview = URL.createObjectURL(file);
+      setEditMediaPreviewUrl(preview);
+    } catch (err) {
+      console.warn("Could not create preview object URL:", err);
+    }
+    if (!editMediaName || editMediaName === editingMedia?.name) {
+      setEditMediaName(file.name);
+    }
+  };
+
+  const handleEditMediaFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processNewEditImageFile(file);
+    }
+    e.target.value = '';
+  };
+
+  const handleEditMediaDrop = (e) => {
+    e.preventDefault();
+    setEditMediaIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      processNewEditImageFile(file);
+    }
+  };
+
+  const handleSaveEditedMedia = async (e) => {
+    if (e) e.preventDefault();
+    if (!editingMedia) return;
+
+    setEditMediaIsSaving(true);
+    setEditMediaError("");
+
+    try {
+      let finalUrl = editingMedia.url;
+      let finalSize = editingMedia.size;
+      let finalType = editingMedia.type;
+
+      if (editMediaFile) {
+        finalSize = editMediaFile.size;
+        finalType = editMediaFile.type || "image/jpeg";
+        try {
+          const timestamp = Date.now();
+          const cleanName = editMediaFile.name.replace(/[^a-zA-Z0-9.]/g, '_');
+          const storageRef = ref(storage, `medias/${timestamp}_${cleanName}`);
+          const uploadResult = await uploadBytes(storageRef, editMediaFile);
+          finalUrl = await getDownloadURL(uploadResult.ref);
+        } catch (storageErr) {
+          console.warn("Firebase Storage non accessible, utilisation du blob URL local:", storageErr);
+          try {
+            finalUrl = URL.createObjectURL(editMediaFile);
+          } catch (blobErr) {
+            finalUrl = editMediaPreviewUrl || editingMedia.url;
+          }
+        }
+      }
+
+      const updatedName = editMediaName.trim() || editingMedia.name;
+      const updatedAlt = editMediaAlt.trim() || updatedName;
+
+      const updatedMedia = {
+        ...editingMedia,
+        name: updatedName,
+        alt: updatedAlt,
+        url: finalUrl,
+        size: finalSize,
+        type: finalType,
+        updatedAt: new Date().toISOString(),
+        date: new Date().toLocaleDateString("fr-FR") + " à " + new Date().toLocaleTimeString("fr-FR", { hour: '2-digit', minute: '2-digit' })
+      };
+
+      try {
+        await setDoc(doc(db, "medias", updatedMedia.id), updatedMedia, { merge: true });
+      } catch (firestoreErr) {
+        console.warn("Firestore update error, updated locally:", firestoreErr);
+      }
+
+      const updatedList = mediaList.map(m => m.id === updatedMedia.id ? updatedMedia : m);
+      setMediaList(updatedList);
+      localStorage.setItem("ae_medias", JSON.stringify(updatedList));
+
+      try {
+        const lib = JSON.parse(localStorage.getItem("ae_media_library") || "[]");
+        const updatedLib = lib.map(m => m.id === updatedMedia.id ? { ...m, ...updatedMedia } : m);
+        localStorage.setItem("ae_media_library", JSON.stringify(updatedLib));
+      } catch (err) {}
+
+      setNotification(`L'image "${updatedMedia.name}" a été modifiée avec succès.`);
+      handleCloseEditMedia();
+    } catch (err) {
+      console.error("Erreur lors de la modification de l'image:", err);
+      setEditMediaError("Une erreur est survenue lors de l'enregistrement des modifications.");
+    } finally {
+      setEditMediaIsSaving(false);
     }
   };
 
@@ -3723,7 +3866,8 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
                                     setShowMediaPreviewModal(true);
                                   }}
                                   className="canvas-btn"
-                                  title="Visualiser"
+                                  title="Aperçu"
+                                  aria-label={`Aperçu de ${media.name}`}
                                 >
                                   <Eye className="ae-icon-sm" />
                                 </button>
@@ -3734,13 +3878,23 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
                                   }}
                                   className="canvas-btn"
                                   title="Copier le lien"
+                                  aria-label={`Copier le lien de ${media.name}`}
                                 >
                                   <Copy className="ae-icon-sm" />
+                                </button>
+                                <button
+                                  onClick={() => handleOpenEditMedia(media)}
+                                  className="canvas-btn"
+                                  title="Modifier l'image"
+                                  aria-label={`Modifier l'image ${media.name}`}
+                                >
+                                  <Edit3 className="ae-icon-sm" />
                                 </button>
                                 <button
                                   onClick={() => handleDeleteMedia(media.id, media.name)}
                                   className="canvas-btn canvas-btn-danger"
                                   title="Supprimer"
+                                  aria-label={`Supprimer ${media.name}`}
                                 >
                                   <Trash2 className="ae-icon-sm" />
                                 </button>
@@ -5147,6 +5301,160 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
                       Fermer
                     </button>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* 2b. Media Edit / Replace Modal */}
+            {showMediaEditModal && editingMedia && (
+              <div 
+                className="ae-modal-overlay" 
+                onClick={handleCloseEditMedia}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="media-edit-title"
+              >
+                <div className="ae-modal-container max-w-lg" onClick={(e) => e.stopPropagation()}>
+                  <div className="ae-modal-header">
+                    <h3 id="media-edit-title" className="ae-modal-title truncate pr-6" title={editingMedia.name}>
+                      <Edit3 className="ae-icon-md inline-block mr-2 text-blue-600" /> Modifier l'image : {editingMedia.name}
+                    </h3>
+                    <button 
+                      onClick={handleCloseEditMedia} 
+                      className="ae-modal-close-btn"
+                      disabled={editMediaIsSaving}
+                      aria-label="Fermer la boîte de dialogue"
+                    >
+                      <X className="ae-icon-md" />
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleSaveEditedMedia} className="ae-modal-body space-y-4">
+                    {editMediaError && (
+                      <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-xs font-semibold">
+                        {editMediaError}
+                      </div>
+                    )}
+
+                    {/* Zone d'aperçu avant validation */}
+                    <div>
+                      <label className="ae-modal-label">Aperçu de l'image</label>
+                      <div 
+                        className="rounded-lg border border-slate-200 bg-slate-50 overflow-hidden flex items-center justify-center p-2 relative"
+                        style={{ height: '180px' }}
+                      >
+                        {editMediaPreviewUrl ? (
+                          <img 
+                            src={editMediaPreviewUrl} 
+                            alt={editMediaAlt || editMediaName} 
+                            className="max-h-full max-w-full object-contain rounded"
+                            referrerPolicy="no-referrer"
+                          />
+                        ) : (
+                          <span className="text-slate-400 italic text-xs">Aucun aperçu disponible</span>
+                        )}
+                        {editMediaFile && (
+                          <span 
+                            className="absolute top-2 right-2 bg-blue-600 text-white text-xs px-2.5 py-1 rounded-full font-bold shadow-sm"
+                          >
+                            Nouvelle image sélectionnée
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Zone de remplacement par téléversement de fichier */}
+                    <div>
+                      <label className="ae-modal-label">Remplacer le fichier image</label>
+                      <div
+                        className={`ae-upload-dropzone ${editMediaIsDragging ? 'dragging' : ''}`}
+                        onClick={() => editFileInputRef.current?.click()}
+                        onDragOver={(e) => { e.preventDefault(); setEditMediaIsDragging(true); }}
+                        onDragLeave={() => setEditMediaIsDragging(false)}
+                        onDrop={handleEditMediaDrop}
+                        tabIndex={0}
+                        role="button"
+                        aria-label="Sélectionner ou glisser une nouvelle image"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            editFileInputRef.current?.click();
+                          }
+                        }}
+                      >
+                        <UploadCloud className="ae-icon-size-sm mb-2 text-blue-600" />
+                        <p className="text-sm font-bold text-slate-700 mb-1">
+                          {editMediaFile ? editMediaFile.name : "Cliquez ou glissez une nouvelle image ici"}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {editMediaFile 
+                            ? `Taille : ${(editMediaFile.size / (1024 * 1024)).toFixed(2)} Mo (${editMediaFile.type || 'image'})` 
+                            : "Formats acceptés : JPG, PNG, WebP, SVG, GIF (max 10 Mo)"}
+                        </p>
+                      </div>
+                      <input 
+                        type="file" 
+                        ref={editFileInputRef}
+                        accept="image/*"
+                        onChange={handleEditMediaFileChange}
+                        style={{ display: 'none' }}
+                      />
+                    </div>
+
+                    {/* Champ Nom / Titre */}
+                    <div>
+                      <label className="ae-modal-label">Nom du fichier / Titre</label>
+                      <input 
+                        type="text" 
+                        value={editMediaName}
+                        onChange={(e) => setEditMediaName(e.target.value)}
+                        placeholder="ex: chateau_angers.jpg"
+                        className="db-input w-full"
+                        disabled={editMediaIsSaving}
+                      />
+                    </div>
+
+                    {/* Champ Texte alternatif (Alt) */}
+                    <div>
+                      <label className="ae-modal-label">Texte alternatif (SEO / Accessibilité)</label>
+                      <input 
+                        type="text" 
+                        value={editMediaAlt}
+                        onChange={(e) => setEditMediaAlt(e.target.value)}
+                        placeholder="ex: Façade du château d'Angers sous le soleil"
+                        className="db-input w-full"
+                        disabled={editMediaIsSaving}
+                      />
+                      <p className="text-xxs text-slate-400 mt-1">
+                        Conserve l'identifiant <strong className="font-mono text-slate-600">{editingMedia.id}</strong> pour ne pas casser les intégrations existantes.
+                      </p>
+                    </div>
+
+                    {/* Boutons d'action : Annuler & Enregistrer */}
+                    <div className="ae-modal-footer font-sans">
+                      <button 
+                        type="button" 
+                        onClick={handleCloseEditMedia} 
+                        className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-4 py-2 rounded-lg cursor-pointer transition-colors text-sm border-none"
+                        disabled={editMediaIsSaving}
+                      >
+                        Annuler
+                      </button>
+                      <button 
+                        type="submit" 
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded-lg cursor-pointer transition-colors text-sm border-none flex items-center gap-2"
+                        disabled={editMediaIsSaving}
+                      >
+                        {editMediaIsSaving ? (
+                          <>
+                            <span className="ae-spinner-btn-white inline-block mr-1"></span>
+                            Enregistrement...
+                          </>
+                        ) : (
+                          "Enregistrer"
+                        )}
+                      </button>
+                    </div>
+                  </form>
                 </div>
               </div>
             )}
