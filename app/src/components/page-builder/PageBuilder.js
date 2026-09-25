@@ -21,16 +21,20 @@ import {
   Check,
   FileText,
   Newspaper,
-  AlertTriangle
+  AlertTriangle,
+  RotateCcw,
+  CheckCircle
 } from 'lucide-react';
 import { DndContext, DragOverlay, useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
 import moveElementInTree from '../../utils/moveElement';
+import { extractYoutubeVideoId } from '../../utils/youtubeUtils';
 import { 
   createBlock, 
   normalizeBlocks, 
   cloneBlock, 
   getDefaultHomepageBlocks 
 } from './blockRegistry';
+import { MediaLibraryModal } from '../MediaLibraryModal';
 
 /**
  * Vérifie si un élément correspond à la page Accueil selon l'ordre de priorité défini.
@@ -182,6 +186,27 @@ export const PageBuilder = ({
   const [showPreview, setShowPreview] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  // Notification Toast visuelle de confirmation
+  const [saveToast, setSaveToast] = useState({ show: false, message: '', type: 'success' });
+
+  useEffect(() => {
+    if (saveToast.show) {
+      const timer = setTimeout(() => {
+        setSaveToast(prev => ({ ...prev, show: false }));
+      }, 3500);
+      return () => clearTimeout(timer);
+    }
+  }, [saveToast.show]);
+
+  // État du sélecteur de médiathèque direct pour remplacement sur canevas
+  const [mediaPickerState, setMediaPickerState] = useState({
+    isOpen: false,
+    blockId: null,
+    settingKey: 'src',
+    filterType: 'image',
+    title: 'Sélectionner un média'
+  });
 
   // Charger les pages, articles et déterminer le contenu initial (Accueil par défaut)
   useEffect(() => {
@@ -747,7 +772,7 @@ export const PageBuilder = ({
   }, [blocks, findBlockById, pushBlocksState]);
 
   // MODIFIER LES REGLAGES D'UN BLOC
-  const handleBlockSettingsChange = (id, newSettings) => {
+  const handleBlockSettingsChange = useCallback((id, newSettings) => {
     const updateInTree = (tree) => {
       return tree.map(b => {
         if (b.id === id) {
@@ -760,7 +785,7 @@ export const PageBuilder = ({
       });
     };
     pushBlocksState(updateInTree(blocks));
-  };
+  }, [blocks, pushBlocksState]);
 
   // DEPLACER UN BLOC (MONTER / DESCENDRE)
   const handleMoveBlock = (id, parentId, direction) => {
@@ -825,6 +850,74 @@ export const PageBuilder = ({
     }
   }, [blocks, pushBlocksState, activeBlockId]);
 
+  // GESTION DU REMPLACEMENT DE MÉDIA DIRECT (IMAGE / VIDÉO)
+  const handleOpenMediaPicker = useCallback((block, settingKey = 'src', filterType = null) => {
+    if (!block) return;
+    const detectedFilter = filterType || (block.type === 'video' ? 'video' : 'image');
+    setMediaPickerState({
+      isOpen: true,
+      blockId: block.id,
+      settingKey: settingKey || (detectedFilter === 'video' ? 'url' : 'src'),
+      filterType: detectedFilter,
+      title: detectedFilter === 'video' 
+        ? 'Sélectionner une vidéo dans la médiathèque' 
+        : 'Sélectionner une image dans la médiathèque'
+    });
+    setActiveBlockId(block.id);
+    setActiveTab('settings');
+  }, []);
+
+  const handleMediaPickerSelect = useCallback((media) => {
+    if (mediaPickerState.blockId && media) {
+      const targetBlock = findBlockById(blocks, mediaPickerState.blockId);
+      if (targetBlock) {
+        const isVideo = targetBlock.type === 'video' || mediaPickerState.filterType === 'video';
+        if (isVideo) {
+          const vidUrl = media.url || '';
+          const newId = extractYoutubeVideoId(vidUrl);
+          handleBlockSettingsChange(targetBlock.id, {
+            ...targetBlock.settings,
+            url: vidUrl,
+            videoId: newId || targetBlock.settings.videoId || 'dQw4w9WgXcQ',
+            embedUrl: newId ? `https://www.youtube.com/embed/${newId}` : undefined,
+            lastValidVideoId: newId || targetBlock.settings.lastValidVideoId
+          });
+          setSaveToast({ show: true, message: "Vidéo YouTube mise à jour dans le bloc.", type: 'success' });
+        } else {
+          const key = mediaPickerState.settingKey || 'src';
+          handleBlockSettingsChange(targetBlock.id, {
+            ...targetBlock.settings,
+            [key]: media.url,
+            ...(key === 'src' && !targetBlock.settings.alt ? { alt: media.alt || media.name || '' } : {})
+          });
+          setSaveToast({ show: true, message: "Image mise à jour dans le bloc.", type: 'success' });
+        }
+      }
+    }
+    setMediaPickerState(prev => ({ ...prev, isOpen: false }));
+  }, [blocks, findBlockById, handleBlockSettingsChange, mediaPickerState]);
+
+  // ANNULER LES MODIFICATIONS (RÉTABLIR L'ÉTAT INITIAL)
+  const handleRevertChanges = useCallback(() => {
+    if (!initialContentRef.current) return;
+    if (!hasUnsavedChanges()) {
+      setSaveToast({ show: true, message: "Aucune modification à annuler (état initial déjà actif).", type: 'info' });
+      return;
+    }
+    const confirmRevert = window.confirm("Voulez-vous annuler toutes les modifications non enregistrées et rétablir l'état initial ?");
+    if (confirmRevert) {
+      const init = initialContentRef.current;
+      setPageTitle(init.title || '');
+      setPageSlug(init.slug || '');
+      setPageCategory(init.category || 'Outils');
+      setPageStatus(init.status || 'draft');
+      const restoredBlocks = JSON.parse(init.blocksJson || '[]');
+      clearHistory(restoredBlocks);
+      setActiveBlockId(null);
+      setSaveToast({ show: true, message: "Modifications annulées — contenu initial rétabli.", type: 'info' });
+    }
+  }, [hasUnsavedChanges, clearHistory]);
+
   // SAUVEGARDER ET PUBLIER LA PAGE
   const handleSavePage = useCallback(async () => {
     if (!selectedContent || !selectedContent.id) {
@@ -878,10 +971,19 @@ export const PageBuilder = ({
         status: pageStatus
       }));
 
-      alert(`${selectedContent.type === 'article' ? 'Article' : 'Page'} "${pageTitle}" enregistré avec succès.`);
+      setSaveToast({
+        show: true,
+        message: `${selectedContent.type === 'article' ? 'Article' : 'Page'} "${pageTitle}" enregistré et synchronisé avec succès !`,
+        type: 'success'
+      });
       onSaveSuccess(result);
     } catch (e) {
       console.error("Erreur de sauvegarde", e);
+      setSaveToast({
+        show: true,
+        message: "Une erreur est survenue lors de l'enregistrement.",
+        type: 'error'
+      });
       alert("Une erreur est survenue lors de l'enregistrement.");
     } finally {
       setSaving(false);
@@ -1303,9 +1405,21 @@ export const PageBuilder = ({
 
           <button
             type="button"
+            onClick={handleRevertChanges}
+            disabled={!hasUnsavedChanges()}
+            className="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1.5 py-1.5 px-3 rounded-lg"
+            title="Annuler les modifications et rétablir le contenu initial"
+            aria-label="Annuler les modifications non enregistrées"
+          >
+            <RotateCcw size={15} />
+            Annuler
+          </button>
+
+          <button
+            type="button"
             onClick={handleSavePage}
             disabled={saving || !pageTitle.trim() || blocks.length === 0}
-            className="btn btn-primary btn-sm d-flex align-items-center gap-1.5 py-1.5 px-3 rounded-lg font-bold"
+            className="btn btn-primary btn-sm d-flex align-items-center gap-1.5 py-1.5 px-3 rounded-lg font-bold shadow-sm"
           >
             {saving ? (
               <Loader size={16} className="animate-spin" />
@@ -1316,6 +1430,34 @@ export const PageBuilder = ({
           </button>
         </div>
       </div>
+
+      {/* Save Notification Toast */}
+      {saveToast.show && (
+        <div 
+          className={`pb-save-toast-banner position-fixed bottom-0 end-0 m-4 p-3 rounded-xl shadow-2xl border d-flex align-items-center gap-2.5 z-3 fade-in ${
+            saveToast.type === 'error' ? 'bg-danger text-white' : (saveToast.type === 'info' ? 'bg-slate-800 text-white' : 'bg-success text-white')
+          }`}
+          style={{ zIndex: 9999, maxWidth: '420px', borderRadius: '12px' }}
+          role="status"
+          aria-live="polite"
+        >
+          {saveToast.type === 'error' ? (
+            <AlertTriangle size={20} className="flex-shrink-0" />
+          ) : (
+            <CheckCircle size={20} className="flex-shrink-0" />
+          )}
+          <span className="text-xs font-semibold">{saveToast.message}</span>
+          <button
+            type="button"
+            onClick={() => setSaveToast(prev => ({ ...prev, show: false }))}
+            className="btn btn-link text-white p-0 ms-auto text-decoration-none"
+            style={{ fontSize: '12px' }}
+            aria-label="Fermer la notification"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* Zone principale (Sidebar + Canvas) */}
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
@@ -1347,6 +1489,7 @@ export const PageBuilder = ({
               onMoveBlock={handleMoveBlock}
               onDuplicateBlock={handleDuplicateBlock}
               onAddChild={handleAddChild}
+              onOpenMediaPicker={handleOpenMediaPicker}
               device={device}
               pageSlug={pageSlug}
             />
@@ -1362,6 +1505,15 @@ export const PageBuilder = ({
           ) : null}
         </DragOverlay>
       </DndContext>
+
+      {/* Modale de sélection directe de média pour remplacement sur le canevas */}
+      <MediaLibraryModal
+        isOpen={mediaPickerState.isOpen}
+        filterType={mediaPickerState.filterType}
+        title={mediaPickerState.title}
+        onClose={() => setMediaPickerState(prev => ({ ...prev, isOpen: false }))}
+        onSelect={handleMediaPickerSelect}
+      />
 
       {/* Modale de confirmation pour modifications non enregistrées */}
       {showUnsavedModal && (

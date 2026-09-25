@@ -68,9 +68,25 @@ const VideoBlockSettings = ({ block, onChange, onOpenMediaPicker }) => {
 
   const activeVideoId = extractedId || settings.videoId || settings.lastValidVideoId;
   const watchUrl = activeVideoId ? `https://www.youtube.com/watch?v=${activeVideoId}` : null;
+  const thumbnailUrl = activeVideoId ? `https://img.youtube.com/vi/${activeVideoId}/hqdefault.jpg` : null;
 
   return (
     <div className="space-y-3">
+      {thumbnailUrl && (
+        <div className="pb-media-preview-box mb-2 p-2 border rounded-lg bg-slate-900 text-center position-relative shadow-sm">
+          <img 
+            src={thumbnailUrl} 
+            alt="Aperçu vidéo YouTube" 
+            className="w-100 rounded border border-slate-700" 
+            style={{ maxHeight: '140px', objectFit: 'cover' }} 
+          />
+          <div className="d-flex align-items-center justify-content-between mt-1 text-slate-300" style={{ fontSize: '11px' }}>
+            <span className="font-mono text-truncate">ID: {activeVideoId}</span>
+            <span className="badge bg-primary text-white font-normal" style={{ fontSize: '10px' }}>YouTube</span>
+          </div>
+        </div>
+      )}
+
       <div>
         <label className="db-label font-bold text-xs" htmlFor="pb-video-url-input">
           Lien YouTube
@@ -80,14 +96,14 @@ const VideoBlockSettings = ({ block, onChange, onOpenMediaPicker }) => {
           type="text"
           value={inputValue}
           onChange={handleUrlChange}
-          placeholder="https://www.youtube.com/watch?v=..."
+          placeholder="https://www.youtube.com/watch?v=... ou https://youtu.be/..."
           className={`db-input text-xs w-100 ${isInvalid ? 'border-danger' : ''}`}
           aria-invalid={isInvalid}
           aria-describedby={isInvalid ? 'pb-video-error' : undefined}
         />
         {isInvalid && (
           <p id="pb-video-error" className="text-danger mt-1 mb-0 font-medium" style={{ fontSize: '11px', color: '#dc3545' }}>
-            Lien YouTube non valide ou format non reconnu
+            Lien YouTube non valide ou format non reconnu (watch, youtu.be, embed, shorts)
           </p>
         )}
       </div>
@@ -851,12 +867,28 @@ export const BuilderSettings = ({ block, onChange }) => {
            ========================================================================= */}
         {type === 'image' && (
           <div className="space-y-3">
+            {settings.src && (
+              <div className="pb-media-preview-box mb-2 p-2 border rounded-lg bg-slate-50 text-center shadow-sm">
+                <img 
+                  src={settings.src} 
+                  alt={settings.alt || "Aperçu de l'image"} 
+                  className="img-fluid rounded border"
+                  style={{ maxHeight: '150px', objectFit: 'cover' }}
+                  onError={(e) => { e.target.style.display = 'none'; }}
+                />
+                <div className="mt-1 text-muted text-xs" style={{ fontSize: '11px' }}>
+                  Aperçu de l'image actuelle
+                </div>
+              </div>
+            )}
+
             <div>
               <label className="db-label font-bold text-xs">Source de l'image (URL)</label>
               <input
                 type="text"
                 value={settings.src || ''}
                 onChange={(e) => updateSetting('src', e.target.value)}
+                placeholder="https://... ou data:image/..."
                 className="db-input text-xs w-100"
               />
               <div className="mt-1.5">
@@ -880,36 +912,43 @@ export const BuilderSettings = ({ block, onChange }) => {
                 </button>
               </div>
             </div>
+
             <div>
-              <label className="db-label font-bold text-xs">Téléverser une image locale</label>
+              <label className="db-label font-bold text-xs">Téléverser une nouvelle image</label>
               <input
                 type="file"
                 accept="image/*"
                 onChange={async (e) => {
-                  const file = e.target.files[0];
+                  const file = e.target.files && e.target.files[0];
                   if (file) {
                     try {
                       updateSetting('src', 'Téléversement en cours...');
                       const url = await pageService.uploadMedia(file);
                       updateSetting('src', url);
+                      if (!settings.alt) {
+                        updateSetting('alt', file.name.replace(/\.[^/.]+$/, ''));
+                      }
                     } catch (err) {
                       alert("Échec du téléversement de l'image.");
-                      updateSetting('src', '');
+                      updateSetting('src', settings.src || '');
                     }
                   }
                 }}
                 className="db-input text-xs w-100"
               />
             </div>
+
             <div>
               <label className="db-label font-bold text-xs">Texte alternatif (Accessibilité Alt)</label>
               <input
                 type="text"
                 value={settings.alt || ''}
                 onChange={(e) => updateSetting('alt', e.target.value)}
+                placeholder="Description pour les lecteurs d'écran"
                 className="db-input text-xs w-100"
               />
             </div>
+
             <div>
               <label className="db-label font-bold text-xs">Lien optionnel (Clic sur l'image)</label>
               <input
@@ -953,6 +992,18 @@ export const BuilderSettings = ({ block, onChange }) => {
            ========================================================================= */}
         {type === 'card' && (
           <div className="space-y-3">
+            {settings.image && (
+              <div className="pb-media-preview-box mb-2 p-2 border rounded-lg bg-slate-50 text-center shadow-sm">
+                <img 
+                  src={settings.image} 
+                  alt={settings.title || "Illustration carte"} 
+                  className="img-fluid rounded border"
+                  style={{ maxHeight: '130px', objectFit: 'cover' }}
+                  onError={(e) => { e.target.style.display = 'none'; }}
+                />
+              </div>
+            )}
+
             <div>
               <label className="db-label font-bold text-xs">Titre de la carte</label>
               <input
@@ -980,7 +1031,7 @@ export const BuilderSettings = ({ block, onChange }) => {
                 placeholder="https://..."
                 className="db-input text-xs w-100"
               />
-              <div className="mt-1.5">
+              <div className="d-flex gap-2 mt-1.5 flex-wrap">
                 <button
                   type="button"
                   onClick={() => setMediaModal({
@@ -997,6 +1048,27 @@ export const BuilderSettings = ({ block, onChange }) => {
                   <ImageIcon size={12} /> Choisir depuis la médiathèque
                 </button>
               </div>
+            </div>
+            <div>
+              <label className="db-label font-bold text-xs">Téléverser une image pour la carte</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={async (e) => {
+                  const file = e.target.files && e.target.files[0];
+                  if (file) {
+                    try {
+                      updateSetting('image', 'Téléversement en cours...');
+                      const url = await pageService.uploadMedia(file);
+                      updateSetting('image', url);
+                    } catch (err) {
+                      alert("Échec du téléversement de l'image.");
+                      updateSetting('image', settings.image || '');
+                    }
+                  }
+                }}
+                className="db-input text-xs w-100"
+              />
             </div>
             <div>
               <label className="db-label font-bold text-xs">Texte du bouton</label>
@@ -1243,6 +1315,18 @@ export const BuilderSettings = ({ block, onChange }) => {
            ========================================================================= */}
         {type === 'section' && (
           <div className="space-y-3">
+            {settings.backgroundImage && (
+              <div className="pb-media-preview-box mb-2 p-2 border rounded-lg bg-slate-50 text-center shadow-sm">
+                <img 
+                  src={settings.backgroundImage} 
+                  alt="Fond de section" 
+                  className="img-fluid rounded border"
+                  style={{ maxHeight: '100px', objectFit: 'cover' }}
+                  onError={(e) => { e.target.style.display = 'none'; }}
+                />
+              </div>
+            )}
+
             <div>
               <label className="db-label font-bold text-xs">Image de fond (URL)</label>
               <input
@@ -1252,7 +1336,47 @@ export const BuilderSettings = ({ block, onChange }) => {
                 placeholder="https://ex.com/image.jpg"
                 className="db-input text-xs w-100"
               />
+              <div className="mt-1.5">
+                <button
+                  type="button"
+                  onClick={() => setMediaModal({
+                    isOpen: true,
+                    filterType: 'image',
+                    title: 'Sélectionner une image de fond',
+                    onSelect: (media) => {
+                      updateSetting('backgroundImage', media.url);
+                    }
+                  })}
+                  className="btn btn-outline-primary btn-xs py-1 px-2.5 d-inline-flex align-items-center gap-1.5 rounded"
+                  style={{ fontSize: '11px' }}
+                >
+                  <ImageIcon size={12} /> Choisir depuis la médiathèque
+                </button>
+              </div>
             </div>
+
+            <div>
+              <label className="db-label font-bold text-xs">Téléverser une image de fond</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={async (e) => {
+                  const file = e.target.files && e.target.files[0];
+                  if (file) {
+                    try {
+                      updateSetting('backgroundImage', 'Téléversement en cours...');
+                      const url = await pageService.uploadMedia(file);
+                      updateSetting('backgroundImage', url);
+                    } catch (err) {
+                      alert("Échec du téléversement de l'image.");
+                      updateSetting('backgroundImage', settings.backgroundImage || '');
+                    }
+                  }
+                }}
+                className="db-input text-xs w-100"
+              />
+            </div>
+
             <div>
               <label className="db-label font-bold text-xs">Couleur de fond</label>
               <input
