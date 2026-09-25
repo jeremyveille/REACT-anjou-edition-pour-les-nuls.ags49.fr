@@ -6,7 +6,7 @@ import {
   Settings, Users, Layers, MessageSquare, Plus, 
   Trash2, ShieldCheck, Sparkles, BookOpen,
   LayoutDashboard, Megaphone, FolderOpen, LogOut, X,
-  Copy, Edit3, Eye, UploadCloud, Menu, Star,
+  Copy, Edit3, Eye, UploadCloud, Menu, Star, Check,
   ChevronUp, ChevronDown, ChevronLeft, ChevronRight, GripVertical
 } from "lucide-react";
 import { db, storage } from "../firebase";
@@ -1642,6 +1642,21 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
     setEditMediaError("");
     setEditMediaIsDragging(false);
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape" && showMediaEditModal && !editMediaIsSaving) {
+        handleCloseEditMedia();
+      }
+    };
+    if (showMediaEditModal) {
+      window.addEventListener("keydown", handleKeyDown);
+    }
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showMediaEditModal, editMediaIsSaving]);
 
   const processNewEditImageFile = (file) => {
     if (!file) return;
@@ -5318,17 +5333,21 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
             {/* 2b. Media Edit / Replace Modal */}
             {showMediaEditModal && editingMedia && (
               <div 
-                className="ae-modal-overlay" 
+                className="ae-media-edit-overlay" 
                 onClick={handleCloseEditMedia}
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="media-edit-title"
               >
-                <div className="ae-modal-container max-w-lg" onClick={(e) => e.stopPropagation()}>
-                  <div className="ae-modal-header">
-                    <h3 id="media-edit-title" className="ae-modal-title truncate pr-6" title={editingMedia.name}>
-                      <Edit3 className="ae-icon-md inline-block mr-2 text-blue-600" /> Modifier l'image : {editingMedia.name}
-                    </h3>
+                <div className="ae-media-edit-modal" onClick={(e) => e.stopPropagation()}>
+                  {/* [ En-tête ] */}
+                  <div className="ae-media-edit-header">
+                    <div className="ae-media-edit-title-group">
+                      <Edit3 className="ae-icon-md text-blue-600 flex-shrink-0" />
+                      <h3 id="media-edit-title" className="ae-media-edit-title" title={editingMedia.name}>
+                        Modifier le média : {editingMedia.name}
+                      </h3>
+                    </div>
                     <button 
                       onClick={handleCloseEditMedia} 
                       className="ae-modal-close-btn"
@@ -5339,119 +5358,154 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
                     </button>
                   </div>
 
-                  <form onSubmit={handleSaveEditedMedia} className="ae-modal-body space-y-4">
-                    {editMediaError && (
-                      <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-xs font-semibold">
-                        {editMediaError}
-                      </div>
-                    )}
+                  <form onSubmit={handleSaveEditedMedia} className="ae-media-edit-form">
+                    <div className="ae-media-edit-body">
+                      {editMediaError && (
+                        <div className="ae-media-edit-alert-error" role="alert">
+                          {editMediaError}
+                        </div>
+                      )}
 
-                    {/* Zone d'aperçu avant validation */}
-                    <div>
-                      <label className="ae-modal-label">Aperçu de l'image</label>
-                      <div 
-                        className="rounded-lg border border-slate-200 bg-slate-50 overflow-hidden flex items-center justify-center p-2 relative"
-                        style={{ height: '180px' }}
-                      >
-                        {editMediaPreviewUrl ? (
-                          <img 
-                            src={editMediaPreviewUrl} 
-                            alt={editMediaAlt || editMediaName} 
-                            className="max-h-full max-w-full object-contain rounded"
-                            referrerPolicy="no-referrer"
-                          />
-                        ) : (
-                          <span className="text-slate-400 italic text-xs">Aucun aperçu disponible</span>
-                        )}
-                        {editMediaFile && (
-                          <span 
-                            className="absolute top-2 right-2 bg-blue-600 text-white text-xs px-2.5 py-1 rounded-full font-bold shadow-sm"
-                          >
-                            Nouvelle image sélectionnée
+                      {/* [ Aperçu de l'image ] */}
+                      <div className="ae-media-edit-preview-section">
+                        <label className="ae-modal-label">Aperçu de l'image</label>
+                        <div className="ae-media-edit-preview-box">
+                          {editMediaPreviewUrl ? (
+                            <img 
+                              src={editMediaPreviewUrl} 
+                              alt={editMediaAlt || editMediaName || editingMedia.name} 
+                              className="ae-media-edit-preview-img"
+                              referrerPolicy="no-referrer"
+                            />
+                          ) : (
+                            <div className="ae-media-edit-no-preview">
+                              <Image className="ae-icon-xl text-slate-300" />
+                              <span>Aucun aperçu disponible</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* [ Zone de remplacement de fichier ] */}
+                      <div className="ae-media-edit-upload-section">
+                        <label className="ae-modal-label">Remplacer le fichier image</label>
+                        <div
+                          className={`ae-upload-dropzone ae-media-edit-dropzone ${editMediaIsDragging ? 'dragging' : ''}`}
+                          onClick={() => editFileInputRef.current?.click()}
+                          onDragOver={(e) => { e.preventDefault(); setEditMediaIsDragging(true); }}
+                          onDragLeave={() => setEditMediaIsDragging(false)}
+                          onDrop={handleEditMediaDrop}
+                          tabIndex={0}
+                          role="button"
+                          aria-label="Sélectionner ou glisser une nouvelle image"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              editFileInputRef.current?.click();
+                            }
+                          }}
+                        >
+                          <UploadCloud className="ae-icon-size-sm mb-2 text-blue-600" />
+                          <p className="text-sm font-bold text-slate-700 mb-1">
+                            {editMediaFile ? editMediaFile.name : "Cliquez ou glissez une nouvelle image ici"}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {editMediaFile 
+                              ? `Taille : ${(editMediaFile.size / (1024 * 1024)).toFixed(2)} Mo (${editMediaFile.type || 'image'})` 
+                              : "Formats acceptés : JPG, PNG, WebP, SVG, GIF (max 10 Mo)"}
+                          </p>
+                        </div>
+                        <input 
+                          type="file" 
+                          ref={editFileInputRef}
+                          accept="image/*"
+                          onChange={handleEditMediaFileChange}
+                          style={{ display: 'none' }}
+                        />
+                      </div>
+
+                      {/* [ Informations fichier ] */}
+                      <div className="ae-media-edit-info-card">
+                        <div className="ae-media-edit-info-item">
+                          <span className="ae-media-edit-info-label">Nom du fichier</span>
+                          <span className="ae-media-edit-info-value">{editMediaFile ? editMediaFile.name : editingMedia.name}</span>
+                        </div>
+                        <div className="ae-media-edit-info-item">
+                          <span className="ae-media-edit-info-label">Identifiant unique</span>
+                          <span className="ae-media-edit-info-value font-mono">{editingMedia.id}</span>
+                        </div>
+                        <div className="ae-media-edit-info-item">
+                          <span className="ae-media-edit-info-label">Taille</span>
+                          <span className="ae-media-edit-info-value">
+                            {editMediaFile 
+                              ? `${(editMediaFile.size / (1024 * 1024)).toFixed(2)} Mo (${editMediaFile.size.toLocaleString()} octets)`
+                              : editingMedia.size 
+                                ? `${(editingMedia.size / (1024 * 1024)).toFixed(2)} Mo (${editingMedia.size.toLocaleString()} octets)` 
+                                : 'Non spécifiée'}
                           </span>
+                        </div>
+                        <div className="ae-media-edit-info-item">
+                          <span className="ae-media-edit-info-label">Type MIME</span>
+                          <span className="ae-media-edit-info-value">{editMediaFile ? editMediaFile.type || 'image/jpeg' : editingMedia.type || 'image/jpeg'}</span>
+                        </div>
+                        {editMediaFile && (
+                          <div className="ae-media-edit-badge-new">
+                            <Sparkles className="ae-icon-xs inline-block mr-1 text-blue-600 flex-shrink-0" />
+                            <span>Nouvelle image sélectionnée (remplacera le fichier actuel)</span>
+                          </div>
                         )}
                       </div>
-                    </div>
 
-                    {/* Zone de remplacement par téléversement de fichier */}
-                    <div>
-                      <label className="ae-modal-label">Remplacer le fichier image</label>
-                      <div
-                        className={`ae-upload-dropzone ${editMediaIsDragging ? 'dragging' : ''}`}
-                        onClick={() => editFileInputRef.current?.click()}
-                        onDragOver={(e) => { e.preventDefault(); setEditMediaIsDragging(true); }}
-                        onDragLeave={() => setEditMediaIsDragging(false)}
-                        onDrop={handleEditMediaDrop}
-                        tabIndex={0}
-                        role="button"
-                        aria-label="Sélectionner ou glisser une nouvelle image"
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            editFileInputRef.current?.click();
-                          }
-                        }}
-                      >
-                        <UploadCloud className="ae-icon-size-sm mb-2 text-blue-600" />
-                        <p className="text-sm font-bold text-slate-700 mb-1">
-                          {editMediaFile ? editMediaFile.name : "Cliquez ou glissez une nouvelle image ici"}
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          {editMediaFile 
-                            ? `Taille : ${(editMediaFile.size / (1024 * 1024)).toFixed(2)} Mo (${editMediaFile.type || 'image'})` 
-                            : "Formats acceptés : JPG, PNG, WebP, SVG, GIF (max 10 Mo)"}
-                        </p>
+                      {/* [ Formulaire ] */}
+                      <div className="ae-media-edit-fields">
+                        <div className="ae-media-edit-field-group">
+                          <label htmlFor="edit-media-name-input" className="ae-modal-label">
+                            Nom du fichier / Titre
+                          </label>
+                          <input 
+                            id="edit-media-name-input"
+                            type="text" 
+                            value={editMediaName}
+                            onChange={(e) => setEditMediaName(e.target.value)}
+                            placeholder="ex: chateau_angers.jpg"
+                            className="db-input ae-media-edit-input"
+                            disabled={editMediaIsSaving}
+                          />
+                        </div>
+
+                        <div className="ae-media-edit-field-group">
+                          <label htmlFor="edit-media-alt-input" className="ae-modal-label">
+                            Texte alternatif (SEO / Accessibilité)
+                          </label>
+                          <input 
+                            id="edit-media-alt-input"
+                            type="text" 
+                            value={editMediaAlt}
+                            onChange={(e) => setEditMediaAlt(e.target.value)}
+                            placeholder="ex: Façade du château d'Angers sous le soleil"
+                            className="db-input ae-media-edit-input"
+                            disabled={editMediaIsSaving}
+                          />
+                          <p className="ae-media-edit-help-text">
+                            Conserve l'identifiant <strong className="font-mono text-slate-600">{editingMedia.id}</strong> pour ne pas casser les intégrations existantes.
+                          </p>
+                        </div>
                       </div>
-                      <input 
-                        type="file" 
-                        ref={editFileInputRef}
-                        accept="image/*"
-                        onChange={handleEditMediaFileChange}
-                        style={{ display: 'none' }}
-                      />
                     </div>
 
-                    {/* Champ Nom / Titre */}
-                    <div>
-                      <label className="ae-modal-label">Nom du fichier / Titre</label>
-                      <input 
-                        type="text" 
-                        value={editMediaName}
-                        onChange={(e) => setEditMediaName(e.target.value)}
-                        placeholder="ex: chateau_angers.jpg"
-                        className="db-input w-full"
-                        disabled={editMediaIsSaving}
-                      />
-                    </div>
-
-                    {/* Champ Texte alternatif (Alt) */}
-                    <div>
-                      <label className="ae-modal-label">Texte alternatif (SEO / Accessibilité)</label>
-                      <input 
-                        type="text" 
-                        value={editMediaAlt}
-                        onChange={(e) => setEditMediaAlt(e.target.value)}
-                        placeholder="ex: Façade du château d'Angers sous le soleil"
-                        className="db-input w-full"
-                        disabled={editMediaIsSaving}
-                      />
-                      <p className="text-xxs text-slate-400 mt-1">
-                        Conserve l'identifiant <strong className="font-mono text-slate-600">{editingMedia.id}</strong> pour ne pas casser les intégrations existantes.
-                      </p>
-                    </div>
-
-                    {/* Boutons d'action : Annuler & Enregistrer */}
-                    <div className="ae-modal-footer font-sans">
+                    {/* [ Actions ] - Sticky Footer */}
+                    <div className="ae-media-edit-footer font-sans">
                       <button 
                         type="button" 
                         onClick={handleCloseEditMedia} 
-                        className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-4 py-2 rounded-lg cursor-pointer transition-colors text-sm border-none"
+                        className="ae-media-btn-cancel"
                         disabled={editMediaIsSaving}
                       >
                         Annuler
                       </button>
                       <button 
                         type="submit" 
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded-lg cursor-pointer transition-colors text-sm border-none flex items-center gap-2"
+                        className="ae-media-btn-save"
                         disabled={editMediaIsSaving}
                       >
                         {editMediaIsSaving ? (
@@ -5460,7 +5514,10 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
                             Enregistrement...
                           </>
                         ) : (
-                          "Enregistrer"
+                          <>
+                            <Check className="ae-icon-sm" />
+                            Enregistrer
+                          </>
                         )}
                       </button>
                     </div>
