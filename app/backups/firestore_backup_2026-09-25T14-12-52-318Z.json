@@ -1,0 +1,4336 @@
+{
+  "timestamp": "2026-09-25T14:12:49.569Z",
+  "projectId": "react-anjou-edition",
+  "collections": {
+    "menus": [
+      {
+        "_id": "m1",
+        "order": 1,
+        "createdAt": null,
+        "status": "Inactif",
+        "title": "Accueil",
+        "description": "",
+        "isActive": false,
+        "parentId": null,
+        "slug": "/",
+        "label": "Accueil",
+        "enabled": false,
+        "type": "internal",
+        "icon": "Layers",
+        "shortcode": "",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 671000000
+        },
+        "url": "/"
+      },
+      {
+        "_id": "m1781885717000",
+        "createdAt": null,
+        "type": "internal",
+        "slug": "poesie/rappel",
+        "url": "poesie/rappel",
+        "label": "RAPPEL",
+        "description": "",
+        "icon": "Layers",
+        "enabled": true,
+        "order": 1,
+        "status": "Actif",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 672000000
+        },
+        "parentId": "m2",
+        "shortcode": "",
+        "isActive": true,
+        "title": "RAPPEL"
+      },
+      {
+        "_id": "m1782747052857",
+        "label": "ÉPOPÉE",
+        "description": "",
+        "slug": "poesie/epopee",
+        "type": "internal",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1782747052,
+          "nanoseconds": 857000000
+        },
+        "icon": "Layers",
+        "isActive": true,
+        "url": "poesie/epopee",
+        "parentId": "m2",
+        "order": 2,
+        "title": "ÉPOPÉE",
+        "status": "Actif",
+        "enabled": true,
+        "shortcode": "",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        }
+      },
+      {
+        "_id": "m1782748074853",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1782748074,
+          "nanoseconds": 853000000
+        },
+        "status": "Actif",
+        "url": "poesie/fables",
+        "label": "FABLE",
+        "icon": "Layers",
+        "parentId": "m2",
+        "enabled": true,
+        "isActive": true,
+        "slug": "poesie/fables",
+        "title": "FABLE",
+        "description": "",
+        "shortcode": "",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "type": "internal",
+        "order": 3
+      },
+      {
+        "_id": "m1782749230985",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1782749230,
+          "nanoseconds": 985000000
+        },
+        "enabled": true,
+        "url": "",
+        "icon": "Layers",
+        "label": "Ma pomme",
+        "type": "shortcode",
+        "slug": "",
+        "parentId": "m1782748074853",
+        "isActive": true,
+        "title": "Ma pomme",
+        "order": 1,
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 672000000
+        },
+        "description": "",
+        "shortcode": "2557",
+        "status": "Actif"
+      },
+      {
+        "_id": "m1782810596889",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1782810596,
+          "nanoseconds": 889000000
+        },
+        "label": "Séraphin le marin",
+        "description": "Séraphin le marin des mers et des océans",
+        "order": 2,
+        "type": "shortcode",
+        "enabled": true,
+        "slug": "",
+        "url": "",
+        "title": "Séraphin le marin",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "status": "Actif",
+        "shortcode": "2792",
+        "parentId": "m1782748074853",
+        "isActive": true,
+        "icon": "Layers"
+      },
+      {
+        "_id": "m1786026904466",
+        "enabled": true,
+        "order": 1,
+        "isActive": true,
+        "title": "BANDE DESSINÉE",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1786026904,
+          "nanoseconds": 466000000
+        },
+        "status": "Actif",
+        "parentId": "m1786959075123",
+        "url": "/bande-dessinee",
+        "slug": "/bande-dessinee",
+        "label": "BANDE DESSINÉE",
+        "description": "",
+        "type": "internal",
+        "shortcode": "",
+        "icon": "Layers",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 672000000
+        }
+      },
+      {
+        "_id": "m1786956968124",
+        "order": 3,
+        "enabled": true,
+        "type": "internal",
+        "description": "vous trouverez les nouvelles littéraires",
+        "isActive": true,
+        "slug": "/nouvelles",
+        "url": "/nouvelles",
+        "parentId": null,
+        "title": "NOUVELLES",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "shortcode": "",
+        "icon": "Layers",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1786956968,
+          "nanoseconds": 124000000
+        },
+        "label": "NOUVELLES",
+        "status": "Actif"
+      },
+      {
+        "_id": "m1786957258325",
+        "isActive": true,
+        "parentId": null,
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "shortcode": "",
+        "order": 4,
+        "enabled": true,
+        "url": "/romans",
+        "title": "ROMANS",
+        "slug": "/romans",
+        "status": "Actif",
+        "description": "vous trouverez ici les romans littéraires",
+        "type": "internal",
+        "label": "ROMANS",
+        "icon": "Layers",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1786957258,
+          "nanoseconds": 325000000
+        }
+      },
+      {
+        "_id": "m1786957585099",
+        "shortcode": "",
+        "url": "/contes - legendes",
+        "title": "CONTES et LÉGENDES",
+        "order": 5,
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "description": "vous trouverez ici les contes et legendes littéraires",
+        "status": "Actif",
+        "parentId": null,
+        "isActive": true,
+        "icon": "Layers",
+        "label": "CONTES et LÉGENDES",
+        "type": "internal",
+        "enabled": true,
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1786957585,
+          "nanoseconds": 99000000
+        },
+        "slug": "/contes - legendes"
+      },
+      {
+        "_id": "m1786957934885",
+        "type": "internal",
+        "url": "/essais",
+        "slug": "/essais",
+        "status": "Actif",
+        "order": 6,
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "description": "vous trouverez ici les essais littéraires",
+        "shortcode": "",
+        "icon": "Layers",
+        "title": "ESSAIS",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1786957934,
+          "nanoseconds": 885000000
+        },
+        "parentId": null,
+        "label": "ESSAIS",
+        "isActive": true,
+        "enabled": true
+      },
+      {
+        "_id": "m1786958213702",
+        "type": "internal",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "label": "SCIENCES",
+        "slug": "/sciences",
+        "shortcode": "",
+        "icon": "Layers",
+        "description": "vous trouverez tous textes se rapportant aux sciences",
+        "url": "/sciences",
+        "order": 7,
+        "enabled": true,
+        "status": "Actif",
+        "title": "SCIENCES",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1786958213,
+          "nanoseconds": 702000000
+        },
+        "isActive": true,
+        "parentId": null
+      },
+      {
+        "_id": "m1786958950475",
+        "shortcode": "",
+        "status": "Actif",
+        "icon": "Layers",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "slug": "/cursus-scolaire",
+        "title": "CURSUS SCOLAIRE",
+        "order": 8,
+        "url": "/cursus-scolaire",
+        "type": "internal",
+        "enabled": true,
+        "isActive": true,
+        "description": "vous trouverez ici l'ensemble des écris ayant un rapport avec les études",
+        "parentId": null,
+        "label": "CURSUS SCOLAIRE",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1786958950,
+          "nanoseconds": 475000000
+        }
+      },
+      {
+        "_id": "m1786959075123",
+        "description": "vous trouverez ici tous d'arts",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "type": "internal",
+        "label": "ARTS",
+        "shortcode": "",
+        "slug": "/arts",
+        "status": "Actif",
+        "enabled": true,
+        "icon": "Layers",
+        "order": 9,
+        "parentId": null,
+        "isActive": true,
+        "url": "/arts",
+        "title": "ARTS",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1786959075,
+          "nanoseconds": 123000000
+        }
+      },
+      {
+        "_id": "m1786959586019",
+        "url": "/poesies/odes",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "title": "ODE",
+        "icon": "Layers",
+        "order": 4,
+        "shortcode": "",
+        "type": "internal",
+        "slug": "/poesies/odes",
+        "description": "vous trouverez des poèmes lyriques",
+        "enabled": true,
+        "parentId": "m2",
+        "isActive": true,
+        "label": "ODE",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1786959586,
+          "nanoseconds": 19000000
+        },
+        "status": "Actif"
+      },
+      {
+        "_id": "m1786959974831",
+        "isActive": true,
+        "url": "/poesies/rondeaux",
+        "parentId": "m2",
+        "status": "Actif",
+        "icon": "Layers",
+        "type": "internal",
+        "description": "poème ancien à forme fixe qui comporte des rimes et un refrain",
+        "label": "RONDEAU",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1786959974,
+          "nanoseconds": 831000000
+        },
+        "slug": "/poesies/rondeaux",
+        "shortcode": "",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "enabled": true,
+        "title": "RONDEAU",
+        "order": 5
+      },
+      {
+        "_id": "m1786960217065",
+        "url": "/poésies/sonnets",
+        "enabled": true,
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1786960217,
+          "nanoseconds": 65000000
+        },
+        "isActive": true,
+        "label": "SONNET",
+        "parentId": "m2",
+        "status": "Actif",
+        "icon": "Layers",
+        "description": "un sonnet comporte quatorze vers",
+        "type": "internal",
+        "title": "SONNET",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "shortcode": "",
+        "order": 6,
+        "slug": "/poésies/sonnets"
+      },
+      {
+        "_id": "m1787041505071",
+        "icon": "Layers",
+        "status": "Actif",
+        "description": "histoire courte et réaliste",
+        "url": "/nouvelles/nouvelle-fantastique",
+        "slug": "/nouvelles/nouvelle-fantastique",
+        "shortcode": "",
+        "label": "NOUVELLE FANTASTIQUE",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 672000000
+        },
+        "type": "internal",
+        "enabled": true,
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787041505,
+          "nanoseconds": 71000000
+        },
+        "isActive": true,
+        "parentId": "m1786956968124",
+        "title": "NOUVELLE FANTASTIQUE",
+        "order": 1
+      },
+      {
+        "_id": "m1787041858192",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "type": "internal",
+        "label": "NOUVELLE POLICIÈRE",
+        "slug": "/nouvelles/nouvelle policiere",
+        "shortcode": "",
+        "description": "histoire de fiction courte se concentrant sur la résolution d'une énigme.",
+        "icon": "Layers",
+        "order": 2,
+        "url": "/nouvelles/nouvelle policiere",
+        "enabled": true,
+        "title": "NOUVELLE POLICIÈRE",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787041858,
+          "nanoseconds": 192000000
+        },
+        "status": "Actif",
+        "parentId": "m1786956968124",
+        "isActive": true
+      },
+      {
+        "_id": "m1787042102391",
+        "type": "internal",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "label": "NOUVELLE REALISTE",
+        "slug": "/nouvelles/nouvelle-realiste",
+        "shortcode": "",
+        "description": "un court récit fictif ancré dans la vie de tous les jours.",
+        "enabled": true,
+        "icon": "Layers",
+        "order": 3,
+        "url": "/nouvelles/nouvelle-realiste",
+        "parentId": "m1786956968124",
+        "isActive": true,
+        "title": "NOUVELLE REALISTE",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787042102,
+          "nanoseconds": 391000000
+        },
+        "status": "Actif"
+      },
+      {
+        "_id": "m1787042469724",
+        "shortcode": "",
+        "description": "un court récit ancré dans une réalité rationnelle.",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "label": "NOUVELLE SCIENCE-FICTION",
+        "url": "/nouvelles /nouvelle-science-fiction",
+        "enabled": true,
+        "isActive": true,
+        "status": "Actif",
+        "parentId": "m1786956968124",
+        "slug": "/nouvelles /nouvelle-science-fiction",
+        "type": "internal",
+        "icon": "Layers",
+        "order": 4,
+        "title": "NOUVELLE SCIENCE-FICTION",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787042469,
+          "nanoseconds": 724000000
+        }
+      },
+      {
+        "_id": "m1787042867581",
+        "label": "ROMAN D'AVENTURE",
+        "enabled": true,
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787042867,
+          "nanoseconds": 581000000
+        },
+        "isActive": true,
+        "shortcode": "",
+        "order": 1,
+        "slug": "/romans/roman-aventure",
+        "parentId": "m1786957258325",
+        "title": "ROMAN D'AVENTURE",
+        "status": "Actif",
+        "type": "internal",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 672000000
+        },
+        "icon": "Layers",
+        "url": "/romans/roman-aventure",
+        "description": "nu genre littéraire centré sur l'action dynamique, les rebondissements multiples et le dépaysement."
+      },
+      {
+        "_id": "m1787043134070",
+        "enabled": true,
+        "label": "ROMAN POLICIER",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "shortcode": "",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787043134,
+          "nanoseconds": 70000000
+        },
+        "title": "ROMAN POLICIER",
+        "url": "/romans/roman-policier",
+        "order": 2,
+        "icon": "Layers",
+        "status": "Actif",
+        "type": "internal",
+        "description": "genre littéraire basé sur une enquête menée pour résoudre un crime ou un mystère.",
+        "isActive": true,
+        "slug": "/romans/roman-policier",
+        "parentId": "m1786957258325"
+      },
+      {
+        "_id": "m1787043535670",
+        "type": "internal",
+        "slug": "/romans/roman-noir",
+        "parentId": "m1786957258325",
+        "status": "Actif",
+        "order": 3,
+        "isActive": true,
+        "icon": "Layers",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787043535,
+          "nanoseconds": 670000000
+        },
+        "title": "ROMAN NOIR",
+        "shortcode": "",
+        "url": "/romans/roman-noir",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "description": "genre littéraire issu du roman policier qui met l'accent sur la violence sociale, le pessimisme et la critique politique.",
+        "label": "ROMAN NOIR",
+        "enabled": true
+      },
+      {
+        "_id": "m1787043871767",
+        "type": "internal",
+        "label": "ROMAN SCIENCE-FICTION",
+        "slug": "/romans/roman-science-fiction",
+        "enabled": true,
+        "parentId": "m1786957258325",
+        "isActive": true,
+        "shortcode": "",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "icon": "Layers",
+        "order": 4,
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787043871,
+          "nanoseconds": 767000000
+        },
+        "url": "/romans/roman-science-fiction",
+        "title": "ROMAN SCIENCE-FICTION",
+        "description": "livre qui raconte une histoire imaginaire basée sur les progrès de la science et de la technique.",
+        "status": "Actif"
+      },
+      {
+        "_id": "m1787044288658",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787044288,
+          "nanoseconds": 658000000
+        },
+        "title": "ROMAN SENTIMENTAL",
+        "order": 5,
+        "url": "/romans/roman-sentimental",
+        "status": "Actif",
+        "enabled": true,
+        "description": "genre littéraire centré sur la naissance et l'évolution d'une relation amoureuse.",
+        "icon": "Layers",
+        "label": "ROMAN SENTIMENTAL",
+        "isActive": true,
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "parentId": "m1786957258325",
+        "type": "internal",
+        "slug": "/romans/roman-sentimental",
+        "shortcode": ""
+      },
+      {
+        "_id": "m1787044675650",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 672000000
+        },
+        "shortcode": "",
+        "description": "récit qui se passe dans un monde réel et normal.",
+        "parentId": "m1786957585099",
+        "order": 1,
+        "isActive": true,
+        "title": "CONTE FANTASTIQUE",
+        "slug": "/contes-et-legendes/conte-fantastique",
+        "type": "internal",
+        "label": "CONTE FANTASTIQUE",
+        "url": "/contes-et-legendes/conte-fantastique",
+        "icon": "Layers",
+        "status": "Actif",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787044675,
+          "nanoseconds": 650000000
+        },
+        "enabled": true
+      },
+      {
+        "_id": "m1787045261981",
+        "enabled": true,
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "label": "CONTE FOLKLORIQUE",
+        "url": "/contes-et legendes/ conte-folklorique",
+        "shortcode": "",
+        "description": "récit traditionnel issu de la culture orale d'un peuple ou d'un région.",
+        "type": "internal",
+        "order": 2,
+        "isActive": true,
+        "status": "Actif",
+        "title": "CONTE FOLKLORIQUE",
+        "parentId": "m1786957585099",
+        "slug": "/contes-et legendes/ conte-folklorique",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787045261,
+          "nanoseconds": 981000000
+        },
+        "icon": "Layers"
+      },
+      {
+        "_id": "m1787045455157",
+        "type": "internal",
+        "isActive": true,
+        "label": "CONTE MERVEILLEUX",
+        "parentId": "m1786957585099",
+        "status": "Actif",
+        "slug": "/contes-et-legendes/conte-merveilleux",
+        "enabled": true,
+        "icon": "Layers",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787045455,
+          "nanoseconds": 157000000
+        },
+        "url": "/contes-et-legendes/conte-merveilleux",
+        "order": 3,
+        "shortcode": "",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "title": "CONTE MERVEILLEUX",
+        "description": "court récit de fiction issu de la tradition orale."
+      },
+      {
+        "_id": "m1787045755734",
+        "icon": "Layers",
+        "label": "CONTE POÉTIQUE",
+        "slug": "/contes-et-legendes/conte-poetique",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787045755,
+          "nanoseconds": 734000000
+        },
+        "type": "internal",
+        "status": "Actif",
+        "title": "CONTE POÉTIQUE",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "enabled": true,
+        "shortcode": "",
+        "parentId": "m1786957585099",
+        "isActive": true,
+        "order": 4,
+        "description": "récit imaginaire qui mélange la structure narrative du conte (magie, merveilleux, quête) avec la beauté, le rythme et les images de la poésie.",
+        "url": "/contes-et-legendes/conte-poetique"
+      },
+      {
+        "_id": "m1787045959193",
+        "shortcode": "",
+        "isActive": true,
+        "parentId": "m1786957585099",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "label": "CONTE REASLISTE",
+        "enabled": true,
+        "description": "récit court qui met en scène des personnages ordinaires dans des situations de la vie quotidienne.",
+        "status": "Actif",
+        "slug": "/contes-et-legendes/conte-realiste",
+        "type": "internal",
+        "url": "/contes-et-legendes/conte-realiste",
+        "icon": "Layers",
+        "order": 5,
+        "title": "CONTE REASLISTE",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787045959,
+          "nanoseconds": 193000000
+        }
+      },
+      {
+        "_id": "m1787216316250",
+        "type": "internal",
+        "url": "/essais/anecdote",
+        "enabled": true,
+        "slug": "/essais/anecdote",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 672000000
+        },
+        "label": "ANECDOTE",
+        "icon": "Layers",
+        "shortcode": "",
+        "status": "Actif",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787216316,
+          "nanoseconds": 250000000
+        },
+        "isActive": true,
+        "parentId": "m1786957934885",
+        "order": 1,
+        "description": "récit court et inédit qui rapporte un fait curieux, piquant  ou peu connu.",
+        "title": "ANECDOTE"
+      },
+      {
+        "_id": "m1787216987114",
+        "url": "/essais/description",
+        "description": "passage d'un texte qui présente un lieu, un objet ou un personnage.",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787216987,
+          "nanoseconds": 114000000
+        },
+        "title": "DESCRIPTION",
+        "status": "Actif",
+        "order": 2,
+        "parentId": "m1786957934885",
+        "isActive": true,
+        "icon": "Layers",
+        "shortcode": "",
+        "type": "internal",
+        "enabled": true,
+        "label": "DESCRIPTION",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "slug": "/essais/description"
+      },
+      {
+        "_id": "m1787217228466",
+        "title": "MONOLOGUE",
+        "description": "long discours qu'un personnage ou un narrateur tient seul , sans réplique ni interruption.",
+        "order": 3,
+        "status": "Actif",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787217228,
+          "nanoseconds": 466000000
+        },
+        "enabled": true,
+        "shortcode": "",
+        "icon": "Layers",
+        "isActive": true,
+        "label": "MONOLOGUE",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "parentId": "m1786957934885",
+        "slug": "/essais/monologue",
+        "type": "internal",
+        "url": "/essais/monologue"
+      },
+      {
+        "_id": "m1787217649761",
+        "type": "internal",
+        "url": "/essais/recit",
+        "label": "RECIT",
+        "description": "forme d'écriture ou d'oralité qui consiste à raconter une suite d'évènements, réels ou imaginaires.",
+        "status": "Actif",
+        "slug": "/essais/recit",
+        "isActive": true,
+        "shortcode": "",
+        "parentId": "m1786957934885",
+        "icon": "Layers",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "order": 4,
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787217649,
+          "nanoseconds": 761000000
+        },
+        "title": "RECIT",
+        "enabled": true
+      },
+      {
+        "_id": "m1787217955175",
+        "parentId": "m1786958213702",
+        "isActive": true,
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787217955,
+          "nanoseconds": 175000000
+        },
+        "type": "internal",
+        "label": "SCIENCES HUMAINES",
+        "slug": "/sciences/ sciences-humaines",
+        "url": "/sciences/ sciences-humaines",
+        "status": "Actif",
+        "enabled": true,
+        "icon": "Layers",
+        "order": 1,
+        "title": "SCIENCES HUMAINES",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 672000000
+        },
+        "shortcode": "",
+        "description": "les disciplines qui étudient l'être humain, la pensée, la langage et la société."
+      },
+      {
+        "_id": "m1787218382224",
+        "order": 1,
+        "shortcode": "",
+        "url": "/essais/sciences-humaines/medecine",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 672000000
+        },
+        "enabled": true,
+        "title": "MEDECINE",
+        "type": "internal",
+        "label": "MEDECINE",
+        "parentId": "m1787217955175",
+        "isActive": true,
+        "slug": "/essais/sciences-humaines/medecine",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787218382,
+          "nanoseconds": 224000000
+        },
+        "status": "Actif",
+        "description": "une simple technique de réparation du corps que comme un > noble et humaniste.",
+        "icon": "Layers"
+      },
+      {
+        "_id": "m1787218861790",
+        "label": "SCIENCES DE LA VIE",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787218861,
+          "nanoseconds": 790000000
+        },
+        "status": "Actif",
+        "enabled": true,
+        "description": "les liens entre la littérature et les sciences de la vie explorent comment les textes littéraires intègrent, questionnent ou diffusent les savoirs du vivant.",
+        "isActive": true,
+        "type": "internal",
+        "order": 2,
+        "url": "/sciences/sciences-de-la-vie",
+        "parentId": "m1786958213702",
+        "title": "SCIENCES DE LA VIE",
+        "slug": "/sciences/sciences-de-la-vie",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "shortcode": "",
+        "icon": "Layers"
+      },
+      {
+        "_id": "m1787219257445",
+        "type": "internal",
+        "shortcode": "",
+        "order": 1,
+        "url": "/sciences/sciences-de-la-vie/biologie",
+        "description": "la biologie est la science qui étudie les êtres vivants, les lois de la vie, et les phénomènes propres à la matière organisée.",
+        "slug": "/sciences/sciences-de-la-vie/biologie",
+        "title": "BIOLOGIE",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 672000000
+        },
+        "parentId": "m1787218861790",
+        "isActive": true,
+        "icon": "Layers",
+        "status": "Actif",
+        "label": "BIOLOGIE",
+        "enabled": true,
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787219257,
+          "nanoseconds": 445000000
+        }
+      },
+      {
+        "_id": "m1787306433011",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787306433,
+          "nanoseconds": 11000000
+        },
+        "enabled": true,
+        "url": "/sciences/sciences-de-la-vie/genetique",
+        "label": "GÉNÉTIQUE",
+        "parentId": "m1787218861790",
+        "isActive": true,
+        "description": "la génétique est la science de l'hérédité.",
+        "title": "GÉNÉTIQUE",
+        "order": 2,
+        "icon": "Layers",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "type": "internal",
+        "slug": "/sciences/sciences-de-la-vie/genetique",
+        "shortcode": "",
+        "status": "Actif"
+      },
+      {
+        "_id": "m1787306609431",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787306609,
+          "nanoseconds": 431000000
+        },
+        "label": "IMMUNOLOGIE",
+        "parentId": "m1787218861790",
+        "icon": "Layers",
+        "isActive": true,
+        "slug": "/sciences/sciences-de-la-vie/immunologie",
+        "shortcode": "",
+        "title": "IMMUNOLOGIE",
+        "description": "science qui étudie le système immunitaire.",
+        "status": "Actif",
+        "url": "/sciences/sciences-de-la-vie/immunologie",
+        "type": "internal",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "enabled": true,
+        "order": 3
+      },
+      {
+        "_id": "m1787306935964",
+        "slug": "/sciences/sciences-de-la-vie/physiologie",
+        "label": "PHYSIOLOGIE",
+        "type": "internal",
+        "icon": "Layers",
+        "shortcode": "",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "enabled": true,
+        "parentId": "m1787218861790",
+        "order": 4,
+        "isActive": true,
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787306935,
+          "nanoseconds": 964000000
+        },
+        "title": "PHYSIOLOGIE",
+        "url": "/sciences/sciences-de-la-vie/physiologie",
+        "status": "Actif",
+        "description": "science qui étudie le fonctionnement, les rôles et les actions des parties d'un être viivant."
+      },
+      {
+        "_id": "m1787307063545",
+        "slug": "/sciences/sciences-de-la-vie/sciences-veterinaires",
+        "order": 3,
+        "title": "SCIENCES VÉTÉRINAIRES",
+        "type": "internal",
+        "icon": "Layers",
+        "url": "/sciences/sciences-de-la-vie/sciences-veterinaires",
+        "description": "",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787307063,
+          "nanoseconds": 545000000
+        },
+        "shortcode": "",
+        "label": "SCIENCES VÉTÉRINAIRES",
+        "status": "Actif",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "isActive": true,
+        "enabled": true,
+        "parentId": "m1786958213702"
+      },
+      {
+        "_id": "m1787307681720",
+        "title": "MÉDECINE VÉTÉRINAIRE",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787307681,
+          "nanoseconds": 720000000
+        },
+        "order": 1,
+        "icon": "Layers",
+        "parentId": "m1787307063545",
+        "shortcode": "",
+        "isActive": true,
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 672000000
+        },
+        "url": "/sciences/sciences-veterinaires/medecine-veterinaire/médecine-veterinaire",
+        "description": "la science et l'art dqui visent à préserver la santé des animaux.",
+        "slug": "/sciences/sciences-veterinaires/medecine-veterinaire/médecine-veterinaire",
+        "status": "Actif",
+        "type": "internal",
+        "label": "MÉDECINE VÉTÉRINAIRE",
+        "enabled": true
+      },
+      {
+        "_id": "m1787562606752",
+        "url": "/sciences/sciences-de-la-matiere",
+        "icon": "Layers",
+        "description": "sciences de la matière regroupent l'ensemble des disciplines scientifiques qui étudient la composition, la structure, les propriétés et les transformations de la matière.",
+        "enabled": true,
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "type": "internal",
+        "title": "SCIENCES DE LA MATIÈRE",
+        "order": 4,
+        "shortcode": "",
+        "slug": "/sciences/sciences-de-la-matiere",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787562606,
+          "nanoseconds": 752000000
+        },
+        "status": "Actif",
+        "parentId": "m1786958213702",
+        "label": "SCIENCES DE LA MATIÈRE",
+        "isActive": true
+      },
+      {
+        "_id": "m1787573480783",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787573480,
+          "nanoseconds": 783000000
+        },
+        "enabled": true,
+        "label": "L'abeille Voyageuse",
+        "parentId": "m1787574754356",
+        "isActive": true,
+        "title": "L'abeille Voyageuse",
+        "order": 1,
+        "url": "/arts/banfe-dessinee",
+        "icon": "Layers",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 672000000
+        },
+        "type": "internal",
+        "description": "Une petite abeille curieuse part à la découverte du monde. Au fil de son voyage, elle rencontre de nouveaux amis et apprend l’importance de l’amitié, de l’entraide et de la nature. 🐝🌸",
+        "slug": "/arts/banfe-dessinee",
+        "shortcode": "5664",
+        "status": "Actif"
+      },
+      {
+        "_id": "m1787574754356",
+        "label": "L’AVENTURE et L'ACTION",
+        "description": "Histoires rythmées axées sur le voyage et l'action (ex. : Tintin, Astérix).",
+        "shortcode": "",
+        "enabled": true,
+        "url": "/arts",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 672000000
+        },
+        "isActive": true,
+        "order": 1,
+        "parentId": "m1786026904466",
+        "slug": "/arts",
+        "title": "L’AVENTURE et L'ACTION",
+        "status": "Actif",
+        "type": "internal",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787574754,
+          "nanoseconds": 356000000
+        },
+        "icon": "Layers"
+      },
+      {
+        "_id": "m1787577430624",
+        "shortcode": "",
+        "url": "/arts",
+        "label": "L'HUMOUR",
+        "status": "Actif",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "enabled": true,
+        "title": "L'HUMOUR",
+        "order": 2,
+        "icon": "Layers",
+        "isActive": true,
+        "type": "internal",
+        "description": "Gags en une page ou récits comiques (ex. : Gaston Lagaffe, Titeuf).",
+        "parentId": "m1786026904466",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787577430,
+          "nanoseconds": 624000000
+        },
+        "slug": "/arts"
+      },
+      {
+        "_id": "m1787824530820",
+        "enabled": true,
+        "label": "MATHÉMATIQUES",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787824530,
+          "nanoseconds": 820000000
+        },
+        "status": "Actif",
+        "description": "une expression littérale est un calcul qui contient à la fois des nombres et des lettres qui représentent des nombres inconnus ou variables",
+        "url": "/sciences /sciences-de-la-matiere/mathématiques",
+        "type": "internal",
+        "shortcode": "",
+        "isActive": true,
+        "parentId": "m1787562606752",
+        "slug": "/sciences /sciences-de-la-matiere/mathématiques",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 672000000
+        },
+        "order": 1,
+        "icon": "Layers",
+        "title": "MATHÉMATIQUES"
+      },
+      {
+        "_id": "m1787824820091",
+        "order": 3,
+        "title": "CHIMIE",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "description": "Dans son sens littéraire, la chimie désigne la transformation subtile et mystérieuse de la réalité sous l'effet de l'imagination, d'un sentiment ou d'une influence invisible",
+        "status": "Actif",
+        "parentId": "m1787562606752",
+        "shortcode": "",
+        "isActive": true,
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787824820,
+          "nanoseconds": 91000000
+        },
+        "label": "CHIMIE",
+        "slug": "/sciences /sciences-de-la-matiere/chimie",
+        "type": "internal",
+        "enabled": true,
+        "icon": "Layers",
+        "url": "/sciences /sciences-de-la-matiere/chimie"
+      },
+      {
+        "_id": "m1787825082874",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787825082,
+          "nanoseconds": 874000000
+        },
+        "type": "internal",
+        "url": "/sciences/sciences-de-la-matiere/physique",
+        "slug": "/sciences/sciences-de-la-matiere/physique",
+        "order": 2,
+        "description": "La physique est la science qui étudie les lois générales de la nature, de la matière, de l'espace et du temps",
+        "icon": "Layers",
+        "title": "PHYSIQUE",
+        "enabled": true,
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "status": "Actif",
+        "label": "PHYSIQUE",
+        "parentId": "m1787562606752",
+        "shortcode": "",
+        "isActive": true
+      },
+      {
+        "_id": "m1787907682593",
+        "title": "SCIENCES DE LA TERRE",
+        "shortcode": "",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "description": "sciences de la Terre, ou géosciences, regroupent l'ensemble des disciplines scientifiques qui étudient la planète Terre, sa structure, sa composition et son évolution, de sa formation à nos jours.",
+        "order": 5,
+        "url": "/sciences /sciences-de-la-terre",
+        "status": "Actif",
+        "icon": "Layers",
+        "enabled": true,
+        "label": "SCIENCES DE LA TERRE",
+        "parentId": "m1786958213702",
+        "isActive": true,
+        "slug": "/sciences /sciences-de-la-terre",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787907682,
+          "nanoseconds": 593000000
+        },
+        "type": "internal"
+      },
+      {
+        "_id": "m1787907890934",
+        "isActive": true,
+        "slug": "/sciences/sciences-de-la-matiere/geographie",
+        "parentId": "m1787907682593",
+        "description": "sciences de la Terre, ou géosciences, regroupent l'ensemble des disciplines scientifiques qui étudient la planète Terre, sa structure, sa composition et son évolution, de sa formation à nos jours.",
+        "type": "internal",
+        "order": 1,
+        "enabled": true,
+        "icon": "Layers",
+        "title": "GÉOGRAPHIE",
+        "url": "/sciences/sciences-de-la-matiere/geographie",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787907890,
+          "nanoseconds": 934000000
+        },
+        "shortcode": "",
+        "status": "Actif",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 672000000
+        },
+        "label": "GÉOGRAPHIE"
+      },
+      {
+        "_id": "m1787908112954",
+        "label": "GÉOLOGIE",
+        "url": "/sciences/sciences-de-la-terre/geologie",
+        "shortcode": "",
+        "parentId": "m1787907682593",
+        "isActive": true,
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "order": 2,
+        "type": "internal",
+        "slug": "/sciences/sciences-de-la-terre/geologie",
+        "enabled": true,
+        "description": "géologie est la science qui étudie la Terre, sa composition, sa structure, son histoire et les processus qui l'ont façonnée.",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787908112,
+          "nanoseconds": 954000000
+        },
+        "title": "GÉOLOGIE",
+        "status": "Actif",
+        "icon": "Layers"
+      },
+      {
+        "_id": "m1787908275853",
+        "description": "Dans la littérature, l'eau n'est pas seulement un liquide incolore et inodore : elle devient un symbole puissant de vie, de passage, de pureté ou de destruction",
+        "status": "Actif",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787908275,
+          "nanoseconds": 853000000
+        },
+        "type": "internal",
+        "slug": "/sciences/sciences-de-la-terre/eau",
+        "url": "/sciences/sciences-de-la-terre/eau",
+        "order": 3,
+        "title": "EAU",
+        "icon": "Layers",
+        "isActive": true,
+        "parentId": "m1787907682593",
+        "label": "EAU",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "enabled": true,
+        "shortcode": ""
+      },
+      {
+        "_id": "m1787908543060",
+        "status": "Actif",
+        "description": "En littérature, l'environnement désigne l'ensemble du monde vivant et non-humain qui entoure les personnages, agissant non plus comme un simple décor, mais comme un espace dynamique qui influence l'histoire et l'écriture.",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787908543,
+          "nanoseconds": 60000000
+        },
+        "type": "internal",
+        "slug": "/sciences/sciences-de-la-terre/environnement",
+        "url": "/sciences/sciences-de-la-terre/environnement",
+        "order": 4,
+        "icon": "Layers",
+        "title": "ENVIRONNEMENT",
+        "isActive": true,
+        "parentId": "m1787907682593",
+        "enabled": true,
+        "label": "ENVIRONNEMENT",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "shortcode": ""
+      },
+      {
+        "_id": "m1787908882027",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787908882,
+          "nanoseconds": 27000000
+        },
+        "url": "/sciences/sciences-de-la-terre/ecologie",
+        "status": "Actif",
+        "enabled": true,
+        "label": "ÉCOLOGIE",
+        "icon": "Layers",
+        "description": "En littérature, l'écologie désigne la manière dont les textes représentent la nature, le vivant et les écosystèmes, tout en interrogeant le lien entre l'être humain et son environnement.",
+        "parentId": "m1787907682593",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "type": "internal",
+        "isActive": true,
+        "title": "ÉCOLOGIE",
+        "slug": "/sciences/sciences-de-la-terre/ecologie",
+        "shortcode": "",
+        "order": 5
+      },
+      {
+        "_id": "m1787909260684",
+        "icon": "Layers",
+        "enabled": true,
+        "status": "Actif",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "slug": "/sciences/sciences-de-la-terre/agriculture",
+        "label": "AGRICULTURE",
+        "description": "L'agriculture, au sens littéraire, dépasse sa simple fonction technique et nourricière pour devenir le symbole du lien originel, sacré et poétique entre l'Homme et la Nature. En littérature, elle incarne le cycle de la vie, le travail acharné et la source des premières civilisations.",
+        "shortcode": "",
+        "type": "internal",
+        "isActive": true,
+        "parentId": "m1787907682593",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787909260,
+          "nanoseconds": 684000000
+        },
+        "title": "AGRICULTURE",
+        "url": "/sciences/sciences-de-la-terre/agriculture",
+        "order": 6
+      },
+      {
+        "_id": "m1787909465687",
+        "enabled": true,
+        "title": "AGRO-ALIMENTAIRE",
+        "order": 7,
+        "description": "Le mot agroalimentaire n'a pas de sens spécifiquement littéraire ou poétique ; il s'agit d'un terme technique, économique et scientifique.En français, il désigne l'ensemble des activités industrielles et économiques qui transforment les matières premières agricoles en produits destinés à l'alimentation.",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787909465,
+          "nanoseconds": 687000000
+        },
+        "shortcode": "",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "status": "Actif",
+        "label": "AGRO-ALIMENTAIRE",
+        "url": "/sciences/sciences-de-la-terre/agro-alimentaire",
+        "icon": "Layers",
+        "type": "internal",
+        "isActive": true,
+        "slug": "/sciences/sciences-de-la-terre/agro-alimentaire",
+        "parentId": "m1787907682593"
+      },
+      {
+        "_id": "m1787909693633",
+        "enabled": true,
+        "title": "ARCHITECTURE",
+        "order": 8,
+        "description": "En littérature, architecture désigne la structure intime, l'ossature ou l'agencement rigoureux qui organise les éléments d'une œuvre (comme un roman, un poème ou un essai) de la même manière qu'un bâtiment assemble ses matériaux.",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787909693,
+          "nanoseconds": 633000000
+        },
+        "shortcode": "",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "status": "Actif",
+        "icon": "Layers",
+        "url": "/sciences/sciences-de-la-terre/architecture",
+        "label": "ARCHITECTURE",
+        "type": "internal",
+        "isActive": true,
+        "slug": "/sciences/sciences-de-la-terre/architecture",
+        "parentId": "m1787907682593"
+      },
+      {
+        "_id": "m1787909999271",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "url": "/sciences/sciences-de-la-terre/urbanisme",
+        "enabled": true,
+        "shortcode": "",
+        "icon": "Layers",
+        "type": "internal",
+        "parentId": "m1787907682593",
+        "slug": "/sciences/sciences-de-la-terre/urbanisme",
+        "label": "URBANISME",
+        "isActive": true,
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787909999,
+          "nanoseconds": 271000000
+        },
+        "status": "Actif",
+        "title": "URBANISME",
+        "order": 9,
+        "description": "L'urbanisme, dans la description littéraire, dépasse sa définition technique pour devenir le miroir de l’âme humaine, un théâtre de pierre, d’ombre et de lumière où se jouent les destins collectifs."
+      },
+      {
+        "_id": "m1787910280181",
+        "type": "internal",
+        "slug": "/sciences/sciences-de-la-terre/batiment",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787910280,
+          "nanoseconds": 181000000
+        },
+        "url": "/sciences/sciences-de-la-terre/batiment",
+        "order": 10,
+        "title": "BÂTIMENT",
+        "icon": "Layers",
+        "status": "Actif",
+        "enabled": true,
+        "description": "Un bâtiment désigne, au sens général et littéraire (notamment attesté dans les dictionnaires classiques comme le Littré ou l'Académie française), toute construction immobilière faite de main d'homme servant à loger ou à abriter des personnes, des animaux ou des choses.",
+        "shortcode": "",
+        "label": "BÂTIMENT",
+        "isActive": true,
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "parentId": "m1787907682593"
+      },
+      {
+        "_id": "m1787910508089",
+        "type": "internal",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "order": 11,
+        "url": "/sciences/sciences-de-la-terre/travaux-publics",
+        "slug": "/sciences/sciences-de-la-terre/travaux-publics",
+        "title": "TRAVAUX PUBLICS",
+        "shortcode": "",
+        "description": "En littérature et dans l'usage ancien ou militaire, les « travaux publics » désignent parfois une peine de travaux forcés infligée par la justice ou l'administration.",
+        "icon": "Layers",
+        "label": "TRAVAUX PUBLICS",
+        "enabled": true,
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787910508,
+          "nanoseconds": 89000000
+        },
+        "status": "Actif",
+        "parentId": "m1787907682593",
+        "isActive": true
+      },
+      {
+        "_id": "m1787910713084",
+        "slug": "/sciences/sciences-de-la-terre/matériaux",
+        "order": 12,
+        "title": "MATÉRIAUX",
+        "type": "internal",
+        "isActive": true,
+        "shortcode": "",
+        "icon": "Layers",
+        "parentId": "m1787907682593",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "url": "/sciences/sciences-de-la-terre/matériaux",
+        "label": "MATÉRIAUX",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787910713,
+          "nanoseconds": 84000000
+        },
+        "status": "Actif",
+        "enabled": true,
+        "description": "En littérature, les matériaux désignent l'ensemble des éléments bruts, des faits, des documents, des souvenirs ou des idées que l'écrivain rassemble pour bâtir et élaborer son œuvre."
+      },
+      {
+        "_id": "m1787910957499",
+        "label": "ARTISANAT",
+        "enabled": true,
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1787910957,
+          "nanoseconds": 499000000
+        },
+        "isActive": true,
+        "status": "Actif",
+        "parentId": "m1787907682593",
+        "slug": "/sciences/sciences-de-la-terre/artisanat",
+        "shortcode": "",
+        "type": "internal",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "icon": "Layers",
+        "url": "/sciences/sciences-de-la-terre/artisanat",
+        "description": "L'artisanat désigne, dans une perspective littéraire et culturelle, le mode de création et de production fondé sur le savoir-faire manuel, le dialogue entre la pensée et la matière, et l'indépendance de l'ouvrage face à l'anonymat de la production industrielle.",
+        "order": 13,
+        "title": "ARTISANAT"
+      },
+      {
+        "_id": "m1788252634169",
+        "shortcode": "",
+        "parentId": "m1786958213702",
+        "isActive": true,
+        "icon": "Layers",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "type": "internal",
+        "status": "Actif",
+        "title": "SCIENCES SOCIALES",
+        "description": "Les sciences sociales désignent, dans une perspective littéraire et épistémologique, un ensemble de savoirs et de récits qui, à l'instar de la grande littérature, s'attachent à décrypter l'expérience humaine, les mœurs et les structures de la société",
+        "order": 6,
+        "slug": "/sciences /sciences-sociales",
+        "url": "/sciences /sciences-sociales",
+        "enabled": true,
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1788252634,
+          "nanoseconds": 169000000
+        },
+        "label": "SCIENCES SOCIALES"
+      },
+      {
+        "_id": "m1788252893987",
+        "url": "/sciences/sciences-sociales/ethnologie",
+        "status": "Actif",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 672000000
+        },
+        "title": "ETHNOLOGIE",
+        "shortcode": "",
+        "order": 1,
+        "enabled": true,
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1788252893,
+          "nanoseconds": 987000000
+        },
+        "icon": "Layers",
+        "type": "internal",
+        "parentId": "m1788252634169",
+        "isActive": true,
+        "description": "L'ethnologie est une science humaine qui étudie et compare les caractères culturels, sociaux, les coutumes et les modes de vie des différents groupes humains.",
+        "slug": "/sciences/sciences-sociales/ethnologie",
+        "label": "ETHNOLOGIE"
+      },
+      {
+        "_id": "m1788253197185",
+        "status": "Actif",
+        "url": "/sciences/sciences-sociales/anthropologie",
+        "icon": "Layers",
+        "description": "L'anthropologie est la science qui étudie l'être humain dans ses dimensions biologiques, physiques, culturelles et sociales.",
+        "enabled": true,
+        "title": "ANTHROPOLOGIE",
+        "type": "internal",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "order": 2,
+        "shortcode": "",
+        "slug": "/sciences/sciences-sociales/anthropologie",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1788253197,
+          "nanoseconds": 185000000
+        },
+        "isActive": true,
+        "parentId": "m1788252634169",
+        "label": "ANTHROPOLOGIE"
+      },
+      {
+        "_id": "m1788253397938",
+        "status": "Actif",
+        "url": "/sciences/sciences-sociales/linguistique",
+        "icon": "Layers",
+        "description": "La linguistique n'est pas une discipline littéraire en soi, mais une science humaine qui étudie le langage et les langues. Dans le domaine littéraire, elle sert d'outil d'analyse pour décrypter les textes.",
+        "enabled": true,
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "type": "internal",
+        "title": "LINGUISTIQUE",
+        "order": 3,
+        "slug": "/sciences/sciences-sociales/linguistique",
+        "shortcode": "",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1788253397,
+          "nanoseconds": 938000000
+        },
+        "isActive": true,
+        "parentId": "m1788252634169",
+        "label": "LINGUISTIQUE"
+      },
+      {
+        "_id": "m1788253577728",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "slug": "/sciences/sciences-sociales/sociologie",
+        "type": "internal",
+        "shortcode": "",
+        "icon": "Layers",
+        "status": "Actif",
+        "order": 4,
+        "parentId": "m1788252634169",
+        "title": "SOCIOLOGIE",
+        "description": "La sociologie est la science humaine qui étudie les interactions, les structures et les institutions sociales pour comprendre comment les sociétés humaines fonctionnent et se transforment.",
+        "isActive": true,
+        "enabled": true,
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1788253577,
+          "nanoseconds": 728000000
+        },
+        "label": "SOCIOLOGIE",
+        "url": "/sciences/sciences-sociales/sociologie"
+      },
+      {
+        "_id": "m1788253790549",
+        "description": "En littérature, la psychologie désigne l'ensemble des caractères, des sentiments, des émotions et des motivations qui animent les personnages d'une œuvre.",
+        "icon": "Layers",
+        "parentId": "m1788252634169",
+        "isActive": true,
+        "slug": "/sciences/sciences-sociales/psychologie",
+        "status": "Actif",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1788253790,
+          "nanoseconds": 549000000
+        },
+        "label": "PSYCHOLOGIE",
+        "url": "/sciences/sciences-sociales/psychologie",
+        "type": "internal",
+        "shortcode": "",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "enabled": true,
+        "title": "PSYCHOLOGIE",
+        "order": 5
+      },
+      {
+        "_id": "m1788254042962",
+        "shortcode": "",
+        "description": "La philosophie est étymologiquement « l'amour de la sagesse », venant du grec philein (aimer) et sophia (sagesse, savoir). Sur un plan littéraire et général, c'est une recherche rationnelle de la vérité qui s'interroge sur le sens de l'existence, la morale, la beauté et les grands principes de l'univers.",
+        "icon": "Layers",
+        "status": "Actif",
+        "label": "PHILOSOPHIE",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "type": "internal",
+        "slug": "/sciences/sciences-sociales/philosophie",
+        "isActive": true,
+        "url": "/sciences/sciences-sociales/philosophie",
+        "title": "PHILOSOPHIE",
+        "parentId": "m1788252634169",
+        "order": 6,
+        "enabled": true,
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1788254042,
+          "nanoseconds": 962000000
+        }
+      },
+      {
+        "_id": "m1788254308494",
+        "url": "/sciences/sciences-sociales/education",
+        "icon": "Layers",
+        "shortcode": "",
+        "status": "Actif",
+        "type": "internal",
+        "slug": "/sciences/sciences-sociales/education",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "label": "ÉDUCATION",
+        "parentId": "m1788252634169",
+        "isActive": true,
+        "description": "En littérature, l'éducation désigne l'action d'élever, de former et d'instruire un individu, mais elle prend aussi la forme majeure du roman d'apprentissage (Bildungsroman), un genre où le héros jeune évolue vers l'âge adulte en se confrontant aux grandes épreuves de la vie.",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1788254308,
+          "nanoseconds": 494000000
+        },
+        "title": "ÉDUCATION",
+        "order": 7,
+        "enabled": true
+      },
+      {
+        "_id": "m1788254479132",
+        "description": "En littérature et en langue classique, l'économie désigne le bon ordre, l'agencement harmonieux ou la sage administration des parties d'un tout (comme un ouvrage, un système ou un ménage).",
+        "slug": "/sciences/sciences-sociales/economie",
+        "order": 8,
+        "title": "ÉCONOMIE",
+        "type": "internal",
+        "icon": "Layers",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1788254479,
+          "nanoseconds": 132000000
+        },
+        "label": "ÉCONOMIE",
+        "shortcode": "",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "url": "/sciences/sciences-sociales/economie",
+        "parentId": "m1788252634169",
+        "isActive": true,
+        "enabled": true,
+        "status": "Actif"
+      },
+      {
+        "_id": "m1788254643069",
+        "url": "/sciences/sciences-sociales/politique",
+        "status": "Actif",
+        "icon": "Layers",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1788254643,
+          "nanoseconds": 68000000
+        },
+        "type": "internal",
+        "enabled": true,
+        "description": "La politique désigne, dans son acception noble et littéraire, l'art ou la science de gouverner la cité et d'organiser la vie en société pour le bien commun.",
+        "label": "POLITIQUE",
+        "slug": "/sciences/sciences-sociales/politique",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "shortcode": "",
+        "isActive": true,
+        "title": "POLITIQUE",
+        "parentId": "m1788252634169",
+        "order": 9
+      },
+      {
+        "_id": "m1788254903536",
+        "enabled": true,
+        "label": "SCIENCES OCCULTES",
+        "description": "Les sciences occultes désignent, dans une perspective littéraire et culturelle, un ensemble de doctrines et de pratiques secrètes fondées sur la connaissance des forces mystérieuses ou invisibles de la nature, qui échappent à la science rationnelle et aux dogmes religieux.",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1788254903,
+          "nanoseconds": 536000000
+        },
+        "type": "internal",
+        "order": 7,
+        "url": "/sciences/sciences-occultes",
+        "shortcode": "",
+        "status": "Actif",
+        "isActive": true,
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "title": "SCIENCES OCCULTES",
+        "slug": "/sciences/sciences-occultes",
+        "parentId": "m1786958213702",
+        "icon": "Layers"
+      },
+      {
+        "_id": "m1788255113610",
+        "url": "/sciences/sciences-occultes/astronomie",
+        "shortcode": "",
+        "icon": "Layers",
+        "label": "ASTRONOMIE",
+        "status": "Actif",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 672000000
+        },
+        "type": "internal",
+        "description": "L'astronomie est la science qui a pour objet l'observation, l'étude et l'explication des corps célestes, de leurs mouvements, de leur structure et de leur évolution.",
+        "slug": "/sciences/sciences-occultes/astronomie",
+        "isActive": true,
+        "title": "ASTRONOMIE",
+        "parentId": "m1788254903536",
+        "order": 1,
+        "enabled": true,
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1788255113,
+          "nanoseconds": 610000000
+        }
+      },
+      {
+        "_id": "m1788255268170",
+        "label": "ASTROLOGIE",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1788255268,
+          "nanoseconds": 170000000
+        },
+        "parentId": "m1788254903536",
+        "isActive": true,
+        "enabled": true,
+        "description": "L'astrologie est définie par le Dictionnaire de l'Académie française comme un art divinatoire qui prétend prévoir les destinées humaines en étudiant leur correspondance avec le mouvement des astres.",
+        "status": "Actif",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "title": "ASTROLOGIE",
+        "order": 2,
+        "shortcode": "",
+        "url": "/sciences/sciences-occultes/astrologie",
+        "icon": "Layers",
+        "type": "internal",
+        "slug": "/sciences/sciences-occultes/astrologie"
+      },
+      {
+        "_id": "m1788255679063",
+        "label": "ALCHIMIE",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1788255679,
+          "nanoseconds": 63000000
+        },
+        "parentId": "m1788254903536",
+        "isActive": true,
+        "enabled": true,
+        "description": "Au sens figuré et littéraire, l'alchimie désigne une transformation mystérieuse, subtile et merveilleuse par laquelle des éléments banaux, bruts ou douloureux sont sublimés en une création artistique ou poétique de grande valeur.",
+        "status": "Actif",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "title": "ALCHIMIE",
+        "order": 3,
+        "shortcode": "",
+        "icon": "Layers",
+        "url": "/sciences/sciences-occultes/alchimie",
+        "type": "internal",
+        "slug": "/sciences/sciences-occultes/alchimie"
+      },
+      {
+        "_id": "m1788255847095",
+        "icon": "Layers",
+        "label": "DIVINATION",
+        "slug": "/sciences/sciences-occultes/divination",
+        "type": "internal",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1788255847,
+          "nanoseconds": 95000000
+        },
+        "shortcode": "",
+        "title": "DIVINATION",
+        "parentId": "m1788254903536",
+        "isActive": true,
+        "order": 4,
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "description": "La divination désigne l'art ou la faculté de découvrir ce qui est caché, d'interpréter des signes pour prédire l'avenir ou d'accéder à une connaissance hors d'atteinte par la simple raison.",
+        "enabled": true,
+        "url": "/sciences/sciences-occultes/divination",
+        "status": "Actif"
+      },
+      {
+        "_id": "m1788256079166",
+        "order": 5,
+        "type": "internal",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "slug": "/sciences/sciences-occultes/magie",
+        "status": "Actif",
+        "shortcode": "",
+        "title": "MAGIE",
+        "description": "En littérature, la magie désigne le pouvoir mystérieux et irrationnel qu'exercent les beaux-arts, la poésie, l'éloquence ou les sentiments sur les sens et sur l'âme.",
+        "icon": "Layers",
+        "label": "MAGIE",
+        "url": "/sciences/sciences-occultes/magie",
+        "isActive": true,
+        "enabled": true,
+        "parentId": "m1788254903536",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1788256079,
+          "nanoseconds": 166000000
+        }
+      },
+      {
+        "_id": "m1788256257162",
+        "slug": "/sciences/sciences-occultes/medecine-occulte",
+        "parentId": "m1788254903536",
+        "type": "internal",
+        "enabled": true,
+        "isActive": true,
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1788256257,
+          "nanoseconds": 162000000
+        },
+        "label": "MÉDECINE OCCULTE",
+        "status": "Actif",
+        "icon": "Layers",
+        "description": "La médecine occulte est une pratique de soin fondée sur des forces cachées, la magie naturelle ou des influences cosmiques invisibles, en marge de la science officielle.",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "shortcode": "",
+        "order": 6,
+        "title": "MÉDECINE OCCULTE",
+        "url": "/sciences/sciences-occultes/medecine-occulte"
+      },
+      {
+        "_id": "m1788256527589",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "type": "internal",
+        "parentId": "m1788254903536",
+        "slug": "/sciences/sciences-occultes/psychurgie",
+        "shortcode": "",
+        "isActive": true,
+        "enabled": true,
+        "label": "PSYCHURGIE",
+        "icon": "Layers",
+        "url": "/sciences/sciences-occultes/psychurgie",
+        "status": "Actif",
+        "order": 7,
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1788256527,
+          "nanoseconds": 589000000
+        },
+        "description": "La psychurgie est un terme littéraire, philosophique et ésotérique qui désigne la force, l'action ou la manipulation de l'esprit (ou de l'âme) sur la matière ou sur d'autres psychismes.",
+        "title": "PSYCHURGIE"
+      },
+      {
+        "_id": "m1788427539368",
+        "shortcode": "",
+        "isActive": true,
+        "status": "Actif",
+        "parentId": "m1786958950475",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 672000000
+        },
+        "icon": "Layers",
+        "type": "internal",
+        "title": "MÉMOIRE",
+        "order": 1,
+        "slug": "/cursus-scolaires/memoire",
+        "description": "Un mémoire est un document écrit de recherche scientifique ou professionnelle qu'un étudiant doit rédiger à la fin d'un cycle d'études (généralement en Master) pour obtenir son diplôme.",
+        "url": "/cursus-scolaires/memoire",
+        "enabled": true,
+        "label": "MÉMOIRE",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1788427539,
+          "nanoseconds": 368000000
+        }
+      },
+      {
+        "_id": "m1788427907580",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "shortcode": "",
+        "enabled": true,
+        "icon": "Layers",
+        "type": "internal",
+        "description": "Rédiger une thèse signifie mener un travail de recherche original et approfondi pour obtenir le diplôme de doctorat (le plus haut niveau universitaire, à Bac+8).",
+        "slug": "/cursus-scolaire/these",
+        "label": "THÈSE",
+        "url": "/cursus-scolaire/these",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1788427907,
+          "nanoseconds": 580000000
+        },
+        "status": "Actif",
+        "title": "THÈSE",
+        "order": 2,
+        "parentId": "m1786958950475",
+        "isActive": true
+      },
+      {
+        "_id": "m1788428712529",
+        "type": "internal",
+        "label": "LE RÉCIT AUTOBIOGRAPHIQUE",
+        "slug": "/Bande-Dessinée/recit-autobiographique",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1788428712,
+          "nanoseconds": 529000000
+        },
+        "icon": "Layers",
+        "description": "Une bande dessinée autobiographique est un récit visuel où l'auteur, le narrateur et le personnage principal sont une seule et même personne réelle qui raconte ses propres souvenirs.",
+        "url": "/Bande-Dessinée/recit-autobiographique",
+        "enabled": true,
+        "order": 6,
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "status": "Actif",
+        "title": "LE RÉCIT AUTOBIOGRAPHIQUE",
+        "shortcode": "",
+        "isActive": true,
+        "parentId": "m1786026904466"
+      },
+      {
+        "_id": "m1788428903721",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1788428903,
+          "nanoseconds": 721000000
+        },
+        "title": "LA SCIENCE-FICTION",
+        "url": "/Bande-Dessinée/le-fantastique",
+        "description": "Mondes imaginaires, futurs lointains ou magie (ex. : L'Incal, Thorgal).",
+        "enabled": true,
+        "order": 3,
+        "icon": "Layers",
+        "parentId": "m1786026904466",
+        "slug": "/Bande-Dessinée/le-fantastique",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "status": "Actif",
+        "isActive": true,
+        "label": "LA SCIENCE-FICTION",
+        "type": "internal",
+        "shortcode": ""
+      },
+      {
+        "_id": "m1788429059179",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1788429059,
+          "nanoseconds": 179000000
+        },
+        "status": "Actif",
+        "order": 7,
+        "title": "LE ROMAN GRAPHIQUE",
+        "enabled": true,
+        "url": "/Bande-Dessinee-le-roman-graphique",
+        "type": "internal",
+        "parentId": "m1786026904466",
+        "isActive": true,
+        "slug": "/Bande-Dessinee-le-roman-graphique",
+        "description": "Tranches de vie vécues par l'auteur ou enquêtes journalistiques (ex. : Le Photographe).",
+        "label": "LE ROMAN GRAPHIQUE",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "shortcode": "",
+        "icon": "Layers"
+      },
+      {
+        "_id": "m1788856641990",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1788856641,
+          "nanoseconds": 990000000
+        },
+        "status": "Actif",
+        "order": 4,
+        "title": "LE FANTASTIQUE",
+        "enabled": true,
+        "parentId": "m1786026904466",
+        "type": "internal",
+        "url": "/Bande-Dessinée/le-fantastique",
+        "isActive": true,
+        "slug": "/Bande-Dessinée/le-fantastique",
+        "description": "Le genre fantastique en bande dessinée se définit par l'irruption soudaine d'un élément surnaturel ou inexplicable dans un cadre quotidien et réaliste, créant un doute permanent entre explication rationnelle et folie.",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "label": "LE FANTASTIQUE",
+        "icon": "Layers",
+        "shortcode": ""
+      },
+      {
+        "_id": "m1788857412511",
+        "title": "LE RÉCIT HISTORIQUE",
+        "icon": "Layers",
+        "order": 5,
+        "parentId": "m1786026904466",
+        "isActive": true,
+        "type": "internal",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1788857412,
+          "nanoseconds": 511000000
+        },
+        "slug": "/bande-dessinee/le-recit-historique",
+        "shortcode": "",
+        "url": "/bande-dessinee/le-recit-historique",
+        "enabled": true,
+        "label": "LE RÉCIT HISTORIQUE",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "description": "Le récit historique en bande dessinée mélange rigueur documentaire et narration visuelle pour faire revivre des époques passées, des guerres ou des destins de personnages réels et fictifs.",
+        "status": "Actif"
+      },
+      {
+        "_id": "m1788857760816",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1788857760,
+          "nanoseconds": 816000000
+        },
+        "label": "CHANSON - TEXTE",
+        "status": "Actif",
+        "enabled": true,
+        "description": "La dimension littéraire d'une chanson réside dans la qualité poétique, stylisée et expressive de ses paroles, qui élèvent le texte au-delà d'un simple accompagnement musical",
+        "title": "CHANSON - TEXTE",
+        "url": "/arts/chanson-texte",
+        "order": 2,
+        "icon": "Layers",
+        "isActive": true,
+        "type": "internal",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "parentId": "m1786959075123",
+        "slug": "/arts/chanson-texte",
+        "shortcode": ""
+      },
+      {
+        "_id": "m1788858029389",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1788858029,
+          "nanoseconds": 389000000
+        },
+        "status": "Actif",
+        "label": "MÉLODIE",
+        "enabled": true,
+        "description": "la mélodie correspond à la ligne chantante et à l'inflexion lyrique qui prolonge le souffle du texte. Elle ne se limite pas à la technique musicale, mais représente la voix intérieure et la respiration de l'écriture.",
+        "title": "MÉLODIE",
+        "url": "/arts/chanson-texte/melodie",
+        "order": 1,
+        "icon": "Layers",
+        "isActive": true,
+        "type": "internal",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 672000000
+        },
+        "parentId": "m1788857760816",
+        "slug": "/arts/chanson-texte/melodie",
+        "shortcode": ""
+      },
+      {
+        "_id": "m1788858289172",
+        "type": "internal",
+        "parentId": "m1786959075123",
+        "order": 3,
+        "isActive": true,
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1788858289,
+          "nanoseconds": 172000000
+        },
+        "slug": "/arts/theatre",
+        "title": "THÉÂTRE",
+        "icon": "Layers",
+        "status": "Actif",
+        "enabled": true,
+        "url": "/arts/theatre",
+        "label": "THÉÂTRE",
+        "shortcode": "",
+        "description": "Sur le plan littéraire, le théâtre est un genre d'écriture fondé sur le dialogue et l'action dramatique, conçu pour être incarné par des voix et des corps sur une scène. Contrairement au roman, il se passe le plus souvent de narrateur et livre directement les personnages à leur propre parole.",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        }
+      },
+      {
+        "_id": "m1788858441451",
+        "url": "/arts/theatre/tragedie",
+        "enabled": true,
+        "icon": "Layers",
+        "label": "TRAGÉDIE",
+        "type": "internal",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1788858441,
+          "nanoseconds": 451000000
+        },
+        "slug": "/arts/theatre/tragedie",
+        "parentId": "m1788858289172",
+        "isActive": true,
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 672000000
+        },
+        "title": "TRAGÉDIE",
+        "order": 1,
+        "shortcode": "",
+        "description": "Sur le plan littéraire, le théâtre est un genre d'écriture fondé sur le dialogue et l'action dramatique, conçu pour être incarné par des voix et des corps sur une scène. Contrairement au roman, il se passe le plus souvent de narrateur et livre directement les personnages à leur propre parole.",
+        "status": "Actif"
+      },
+      {
+        "_id": "m1788858670829",
+        "enabled": true,
+        "url": "/arts/theatre/comedie",
+        "icon": "Layers",
+        "label": "COMÉDIE",
+        "type": "internal",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1788858670,
+          "nanoseconds": 829000000
+        },
+        "slug": "/arts/theatre/comedie",
+        "parentId": "m1788858289172",
+        "isActive": true,
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "title": "COMÉDIE",
+        "order": 2,
+        "shortcode": "",
+        "description": "Sur le plan littéraire, la comédie est un genre dramatique destiné à divertir et à faire rire le public tout en dénonçant les travers de la société, et qui se termine traditionnellement par un dénouement heureux.",
+        "status": "Actif"
+      },
+      {
+        "_id": "m1788858989630",
+        "type": "internal",
+        "slug": "/arts/theatre/tragi-comedie",
+        "url": "/arts/theatre/tragi-comedie",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1788858989,
+          "nanoseconds": 630000000
+        },
+        "label": "TRAGI-COMÉDIE",
+        "parentId": "m1788858289172",
+        "isActive": true,
+        "icon": "Layers",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "shortcode": "",
+        "enabled": true,
+        "order": 3,
+        "status": "Actif",
+        "description": "Sur le plan littéraire, la tragi-comédie est un genre dramatique hybride qui met en scène une intrigue sérieuse ou menaçante propre à la tragédie, mais dont le dénouement s'avère heureux comme dans la comédie.",
+        "title": "TRAGI-COMÉDIE"
+      },
+      {
+        "_id": "m1788859192481",
+        "title": "SOTIE",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1788859192,
+          "nanoseconds": 481000000
+        },
+        "order": 4,
+        "isActive": true,
+        "enabled": true,
+        "parentId": "m1788858289172",
+        "description": "Sur le plan littéraire, la sotie est une farce satirique médiévale et de la Renaissance où des personnages déguisés en fous ou en « sots » critiquent ouvertement la société, la religion et le pouvoir sous le couvert d'une apparente déraison.",
+        "url": "/arts/theatre/sotie",
+        "icon": "Layers",
+        "label": "SOTIE",
+        "status": "Actif",
+        "slug": "/arts/theatre/sotie",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "shortcode": "",
+        "type": "internal"
+      },
+      {
+        "_id": "m1788860776783",
+        "type": "internal",
+        "label": "FARCE",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1788860776,
+          "nanoseconds": 783000000
+        },
+        "status": "Actif",
+        "slug": "/arts/theatre/farce",
+        "description": "Sur le plan littéraire, la farce est un court genre dramatique comique d'origine médiévale, caractérisé par un comique grossier, des situations triviales et une critique burlesque de la vie quotidienne et des travers humains.",
+        "isActive": true,
+        "parentId": "m1788858289172",
+        "icon": "Layers",
+        "url": "/arts/theatre/farce",
+        "order": 5,
+        "title": "FARCE",
+        "enabled": true,
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "shortcode": ""
+      },
+      {
+        "_id": "m1788860976004",
+        "isActive": true,
+        "order": 6,
+        "description": "Sur le plan littéraire, la moralité est un genre théâtral allégorique et didactique du Moyen Âge et du XVIe siècle qui met en scène des personnifications de vertus et de vices pour enseigner une leçon chrétienne et morale.",
+        "parentId": "m1788858289172",
+        "status": "Actif",
+        "title": "MORALITÉ",
+        "url": "/arts/theatre/moralite",
+        "enabled": true,
+        "shortcode": "",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "type": "internal",
+        "label": "MORALITÉ",
+        "slug": "/arts/theatre/moralite",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1788860976,
+          "nanoseconds": 4000000
+        },
+        "icon": "Layers"
+      },
+      {
+        "_id": "m1788861174393",
+        "isActive": true,
+        "url": "/arts/theatre/drame",
+        "parentId": "m1788858289172",
+        "icon": "Layers",
+        "status": "Actif",
+        "label": "DRAME",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1788861174,
+          "nanoseconds": 393000000
+        },
+        "type": "internal",
+        "description": "Sur le plan littéraire, le drame est un genre théâtral vaste qui se situe entre la tragédie et la comédie, mettant en scène des passions humaines intimes et des situations graves, souvent ancrées dans la réalité quotidienne.",
+        "slug": "/arts/theatre/drame",
+        "title": "DRAME",
+        "order": 7,
+        "enabled": true,
+        "shortcode": "",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        }
+      },
+      {
+        "_id": "m1788861532538",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "shortcode": "",
+        "url": "/arts/theatre/miracle",
+        "enabled": true,
+        "icon": "Layers",
+        "type": "internal",
+        "parentId": "m1788858289172",
+        "slug": "/arts/theatre/miracle",
+        "label": "MIRACLE",
+        "isActive": true,
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1788861532,
+          "nanoseconds": 538000000
+        },
+        "status": "Actif",
+        "title": "MIRACLE",
+        "order": 8,
+        "description": "Sur le plan littéraire, le miracle est un genre théâtral médiéval (essentiellement aux XIIe et XIIIe siècles) qui met en scène une action humaine aux prises avec le péché ou le malheur, et dont le dénouement est résolu par l'intervention surnaturelle de la Vierge Marie ou d'un saint."
+      },
+      {
+        "_id": "m1788861763731",
+        "slug": "/arts/theatre/mystere",
+        "label": "MYSTÈRE",
+        "parentId": "m1788858289172",
+        "isActive": true,
+        "type": "internal",
+        "shortcode": "",
+        "icon": "Layers",
+        "enabled": true,
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "description": "Sur le plan littéraire, le mystère est un genre dramatique médiéval d'une grande envergure qui met en scène des épisodes sacrés tirés de la Bible ou de l'histoire de la Rédemption.",
+        "order": 9,
+        "title": "MYSTÈRE",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1788861763,
+          "nanoseconds": 731000000
+        },
+        "url": "/arts/theatre/mystere",
+        "status": "Actif"
+      },
+      {
+        "_id": "m1788861937880",
+        "slug": "/arts/theatre/proverbe",
+        "parentId": "m1788858289172",
+        "label": "PROVERBE",
+        "isActive": true,
+        "type": "internal",
+        "shortcode": "",
+        "icon": "Layers",
+        "enabled": true,
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "description": "Sur le plan littéraire, le proverbe (ou proverbe dramatique) est une courte pièce de théâtre ou une saynète qui illustre par une action et des dialogues une maxime, une sentence morale ou un proverbe populaire.",
+        "order": 10,
+        "title": "PROVERBE",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1788861937,
+          "nanoseconds": 880000000
+        },
+        "url": "/arts/theatre/proverbe",
+        "status": "Actif"
+      },
+      {
+        "_id": "m1789463791284",
+        "description": "La description du cinéma en littérature désigne la manière dont les romanciers et écrivains intègrent l'art, les techniques ou l'expérience de la salle de projection dans leurs textes, qu'il s'agisse d'imiter le cadrage de la caméra ou de faire du film un motif narratif.",
+        "icon": "Layers",
+        "parentId": "m1786959075123",
+        "isActive": true,
+        "slug": "/arts/cinema",
+        "status": "Actif",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789463791,
+          "nanoseconds": 284000000
+        },
+        "label": "CINÉMA",
+        "url": "/arts/cinema",
+        "type": "internal",
+        "shortcode": "",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "enabled": true,
+        "title": "CINÉMA",
+        "order": 4
+      },
+      {
+        "_id": "m1789464083414",
+        "description": "La description de script en littérature fait référence à l'insertion de descriptions purement techniques, visuelles ou scénographiques au sein d'un texte littéraire, à la manière des indications de mise en scène d'un scénario.",
+        "icon": "Layers",
+        "parentId": "m1789463791284",
+        "isActive": true,
+        "slug": "/arts/cinema/script",
+        "status": "Actif",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789464083,
+          "nanoseconds": 414000000
+        },
+        "label": "SCRIPT",
+        "url": "/arts/cinema/script",
+        "type": "internal",
+        "shortcode": "",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 672000000
+        },
+        "enabled": true,
+        "title": "SCRIPT",
+        "order": 1
+      },
+      {
+        "_id": "m1789466237150",
+        "shortcode": "",
+        "title": "ÉLÉGIE",
+        "order": 7,
+        "status": "Actif",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "enabled": true,
+        "isActive": true,
+        "parentId": "m2",
+        "description": "Une élégie est un petit poème lyrique ou un genre poétique caractérisé par un ton mélancolique, tendre ou plaintif, qui exprime souvent la douleur, le deuil, l'amour malheureux ou la fuite du temps.",
+        "icon": "Layers",
+        "label": "ÉLÉGIE",
+        "url": "/poesies/elegie",
+        "type": "internal",
+        "slug": "/poesies/elegie",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789466237,
+          "nanoseconds": 150000000
+        }
+      },
+      {
+        "_id": "m1789466864067",
+        "icon": "Layers",
+        "enabled": true,
+        "label": "Une vie à Croire",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789466864,
+          "nanoseconds": 67000000
+        },
+        "slug": "/poesies/elegie/une-vie-a-croire",
+        "url": "/poesies/elegie/une-vie-a-croire",
+        "type": "internal",
+        "status": "Actif",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 672000000
+        },
+        "description": "« Une vie à croire » est un poème lyrique et méditatif qui explore l’espoir, l’amour, l’amitié et les désillusions de l’existence. Grâce à l’anaphore « Qu’il suffisait de croire », l’auteur exprime sa confiance dans la force des sentiments, tout en évoquant les épreuves, le mensonge et la fragilité des liens humains. Le poème s’achève sur un hommage émouvant à un ami, dont l’amour demeure éternel et céleste.",
+        "title": "Une vie à Croire",
+        "shortcode": "2743",
+        "order": 1,
+        "parentId": "m1789466237150",
+        "isActive": true
+      },
+      {
+        "_id": "m1789638072778",
+        "parentId": "m2",
+        "isActive": true,
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789638072,
+          "nanoseconds": 778000000
+        },
+        "label": "LYRIQUE",
+        "shortcode": "",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "url": "/poesies/lyri",
+        "enabled": true,
+        "icon": "Layers",
+        "type": "internal",
+        "description": "Lyrique, car les changements météorologiques traduisent aussi les émotions humaines : inquiétude, tristesse, agitation, puis apaisement et espoir.",
+        "status": "Actif",
+        "title": "LYRIQUE",
+        "slug": "/poesies/lyri",
+        "order": 8
+      },
+      {
+        "_id": "m1789638851978",
+        "type": "internal",
+        "enabled": true,
+        "slug": "/poesies/lyrique /orage",
+        "order": 1,
+        "description": "« Orage » est un poème lyrique et descriptif qui raconte le passage d’une tempête au cours d’une journée de printemps.",
+        "shortcode": "8083",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 672000000
+        },
+        "title": "ORAGE",
+        "icon": "Layers",
+        "status": "Actif",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789638851,
+          "nanoseconds": 978000000
+        },
+        "isActive": true,
+        "parentId": "m1789638072778",
+        "url": "/poesies/lyrique /orage",
+        "label": "ORAGE"
+      },
+      {
+        "_id": "m1789640416560",
+        "slug": "/contes-et-legendes/conte-merveilleux/le-petit-chat-blanc",
+        "order": 1,
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789640416,
+          "nanoseconds": 560000000
+        },
+        "title": "Le Petit Chat Blanc",
+        "type": "internal",
+        "isActive": true,
+        "icon": "Layers",
+        "parentId": "m1787045455157",
+        "label": "Le Petit Chat Blanc",
+        "status": "Actif",
+        "description": "les aventures quotidiennes et imaginaires d’un petit chat curieux, joueur et attendrissant.",
+        "enabled": true,
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 672000000
+        },
+        "url": "/contes-et-legendes/conte-merveilleux/le-petit-chat-blanc",
+        "shortcode": "5427"
+      },
+      {
+        "_id": "m1789813812456",
+        "shortcode": "7267",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "status": "Actif",
+        "order": 2,
+        "title": "Le Dragon et le Héron",
+        "enabled": true,
+        "url": "/contes-et-legendes/conte-merveilleux/le-dragon-et-le-heron",
+        "parentId": "m1787045455157",
+        "type": "internal",
+        "isActive": true,
+        "slug": "/contes-et-legendes/conte-merveilleux/le-dragon-et-le-heron",
+        "description": "Le conte aborde avec douceur des thèmes importants comme la gestion des émotions, la peur de mal faire, la maîtrise de soi, le courage et l’acceptation de ses différences.",
+        "label": "Le Dragon et le Héron",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789813812,
+          "nanoseconds": 456000000
+        },
+        "icon": "Layers"
+      },
+      {
+        "_id": "m1789897414727",
+        "description": "poème en vers courts, composé de quatre quatrains, avec des rimes et un rythme assez libres.",
+        "label": "Trouble Vie",
+        "enabled": true,
+        "url": "/poesies/lyrique /trouble-vie",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789897414,
+          "nanoseconds": 727000000
+        },
+        "shortcode": "4813",
+        "title": "Trouble Vie",
+        "icon": "Layers",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "order": 2,
+        "slug": "/poesies/lyrique /trouble-vie",
+        "parentId": "m1789638072778",
+        "isActive": true,
+        "status": "Actif",
+        "type": "internal"
+      },
+      {
+        "_id": "m1789898094559",
+        "shortcode": "5972",
+        "description": "Le texte peut également être présenté comme une élégie amoureuse, car il constitue une plainte poétique inspirée par la perte d’un être aimé.",
+        "icon": "Layers",
+        "label": "Sombre Jour",
+        "status": "Actif",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "type": "internal",
+        "slug": "/poesies/elegie/sombre-jour",
+        "isActive": true,
+        "url": "/poesies/elegie/sombre-jour",
+        "title": "Sombre Jour",
+        "parentId": "m1789466237150",
+        "order": 2,
+        "enabled": true,
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789898094,
+          "nanoseconds": 559000000
+        }
+      },
+      {
+        "_id": "m1789899055016",
+        "isActive": true,
+        "order": 9,
+        "parentId": "m2",
+        "title": "SYMBOLIQUE",
+        "shortcode": "",
+        "enabled": true,
+        "description": "La description littéraire de la poésie symbolique repose sur le refus du réalisme et de la description scientifique. Au lieu de peindre le monde tel qu'il est, elle cherche à traduire les états d'âme, le mystère et l'invisible à travers un langage évocateur.",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "slug": "/poesies/symbolique",
+        "label": "SYMBOLIQUE",
+        "status": "Actif",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789899055,
+          "nanoseconds": 16000000
+        },
+        "type": "internal",
+        "icon": "Layers",
+        "url": "/poesies/symbolique"
+      },
+      {
+        "_id": "m1789899488162",
+        "slug": "/poesies/symbolique",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789899488,
+          "nanoseconds": 162000000
+        },
+        "description": "Poème en vers libres, composé principalement de tercets",
+        "type": "internal",
+        "label": "Rose",
+        "icon": "Layers",
+        "url": "/poesies/symbolique",
+        "parentId": "m1789899055016",
+        "status": "Actif",
+        "order": 1,
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 672000000
+        },
+        "isActive": true,
+        "shortcode": "1664",
+        "title": "Rose",
+        "enabled": true
+      },
+      {
+        "_id": "m1790069064015",
+        "enabled": true,
+        "description": "Le narrateur exprime une expérience personnelle de transformation, construite autour du passage de la vie à la mort, puis de la mort à une renaissance.",
+        "order": 3,
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "shortcode": "5939",
+        "title": "Résurrection",
+        "status": "Actif",
+        "url": "/poesies/lyrique /resurrection",
+        "label": "Résurrection",
+        "slug": "/poesies/lyrique /resurrection",
+        "isActive": true,
+        "parentId": "m1789638072778",
+        "type": "internal",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790069064,
+          "nanoseconds": 15000000
+        },
+        "icon": "Layers"
+      },
+      {
+        "_id": "m1790069661187",
+        "label": "HUMORISTIQUE",
+        "parentId": "m2",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790069661,
+          "nanoseconds": 187000000
+        },
+        "isActive": true,
+        "enabled": true,
+        "url": "/poesies/humoristique",
+        "slug": "/poesies/humoristique",
+        "order": 10,
+        "title": "HUMORISTIQUE",
+        "type": "internal",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "icon": "Layers",
+        "shortcode": "",
+        "status": "Actif",
+        "description": "La littérature humoristique regroupe les œuvres écrites dont le but principal est de divertir, faire sourire ou faire rire à travers divers registres comiques et stylistiques."
+      },
+      {
+        "_id": "m1790070118947",
+        "order": 1,
+        "title": "Mononucléose",
+        "enabled": true,
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790070118,
+          "nanoseconds": 947000000
+        },
+        "isActive": true,
+        "shortcode": "2512",
+        "slug": "/poesies/humoristique/mononucléose",
+        "label": "Mononucléose",
+        "parentId": "m1790069661187",
+        "status": "Actif",
+        "description": "Le texte repose sur un jeu sonore autour de la terminaison « -ose » : rose, morose, oppose, thrombose, métamorphose, névrose, hypnose, cirrhose et symbiose. Ce procédé crée une musicalité amusante tout en évoquant les difficultés d’une relation amoureuse.",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 672000000
+        },
+        "type": "internal",
+        "icon": "Layers",
+        "url": "/poesies/humoristique/mononucléose"
+      },
+      {
+        "_id": "m1790070943756",
+        "enabled": true,
+        "status": "Actif",
+        "order": 4,
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "title": "Moment",
+        "shortcode": "1201",
+        "slug": "/poesies/lyrique /moment",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790070943,
+          "nanoseconds": 756000000
+        },
+        "parentId": "m1789638072778",
+        "type": "internal",
+        "isActive": true,
+        "description": "Le poème évoque une rencontre discrète entre deux personnes qui se croisent plusieurs fois sans réellement se connaître.",
+        "url": "/poesies/lyrique /moment",
+        "label": "Moment",
+        "icon": "Layers"
+      },
+      {
+        "_id": "m1790242445023",
+        "url": "/poesies/lyrique /acidule-ou-amer",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790242445,
+          "nanoseconds": 23000000
+        },
+        "status": "Actif",
+        "order": 5,
+        "title": "Acidulé ou Amer",
+        "enabled": true,
+        "type": "internal",
+        "parentId": "m1789638072778",
+        "isActive": true,
+        "slug": "/poesies/lyrique /acidule-ou-amer",
+        "description": "Description de sensations physiques et mentales dans un état de conscience incertain.",
+        "label": "Acidulé ou Amer",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "icon": "Layers",
+        "shortcode": "1930"
+      },
+      {
+        "_id": "m1790243085316",
+        "slug": "/poesies/lyrique /acouphene",
+        "order": 6,
+        "title": "Acouphène",
+        "status": "Actif",
+        "type": "internal",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790243085,
+          "nanoseconds": 316000000
+        },
+        "icon": "Layers",
+        "url": "/poesies/lyrique /acouphene",
+        "enabled": true,
+        "description": "Le poète décrit une perception sonore persistante qui devient progressivement plus agaçante et obsédante.",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "label": "Acouphène",
+        "shortcode": "3284",
+        "isActive": true,
+        "parentId": "m1789638072778"
+      },
+      {
+        "_id": "m1790244041186",
+        "enabled": true,
+        "title": "Énergie",
+        "icon": "Layers",
+        "description": "Le poète défend une énergie propre, gratuite et accessible à tous.",
+        "order": 1,
+        "status": "Actif",
+        "slug": "/sciences/sciences-de-la-terre/environnement/energie",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790244041,
+          "nanoseconds": 186000000
+        },
+        "type": "internal",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 672000000
+        },
+        "label": "Énergie",
+        "shortcode": "4034",
+        "isActive": true,
+        "url": "/sciences/sciences-de-la-terre/environnement/energie",
+        "parentId": "m1787908543060"
+      },
+      {
+        "_id": "m1790244584636",
+        "icon": "Layers",
+        "title": "PHILOSOPHIE",
+        "shortcode": "",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "order": 5,
+        "slug": "/essais/philosophie",
+        "type": "internal",
+        "status": "Actif",
+        "enabled": true,
+        "label": "PHILOSOPHIE",
+        "parentId": "m1786957934885",
+        "isActive": true,
+        "url": "/essais/philosophie",
+        "description": "En terme littéraire, la description de la philosophie se définit comme une quête rationnelle et critique de la vérité, exprimée à travers un art d'écrire et des formes narratives ou argumentatives.",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790244584,
+          "nanoseconds": 636000000
+        }
+      },
+      {
+        "_id": "m1790244802172",
+        "type": "internal",
+        "url": "/essais/philosophie/existentialisme",
+        "enabled": true,
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790244802,
+          "nanoseconds": 172000000
+        },
+        "description": "Le texte interroge la réalité de l’existence, ce qui aurait pu être, ce qui devrait exister et la difficulté de concevoir l’avenir.",
+        "slug": "/essais/philosophie/existentialisme",
+        "label": "Existentialisme",
+        "icon": "Layers",
+        "status": "Actif",
+        "isActive": true,
+        "parentId": "m1790244584636",
+        "order": 1,
+        "shortcode": "5987",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 672000000
+        },
+        "title": "Existentialisme"
+      },
+      {
+        "_id": "m2",
+        "status": "Inactif",
+        "url": "/poesies",
+        "order": 2,
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1786957106,
+          "nanoseconds": 92000000
+        },
+        "title": "POÉSIES",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 673000000
+        },
+        "type": "internal",
+        "slug": "/poesies",
+        "shortcode": "",
+        "isActive": false,
+        "parentId": null,
+        "label": "POÉSIES",
+        "enabled": false,
+        "description": "",
+        "icon": "Layers"
+      },
+      {
+        "_id": "m3",
+        "status": "Inactif",
+        "label": "À Propos",
+        "createdAt": null,
+        "shortcode": "",
+        "slug": "/about",
+        "enabled": false,
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "type": "internal",
+        "description": "",
+        "url": "/about",
+        "icon": "Layers",
+        "order": 11,
+        "title": "À Propos",
+        "isActive": false,
+        "parentId": null
+      },
+      {
+        "_id": "m4",
+        "shortcode": "",
+        "url": "/contact",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "parentId": null,
+        "icon": "Layers",
+        "isActive": false,
+        "type": "internal",
+        "title": "Contact",
+        "order": 12,
+        "description": "",
+        "slug": "/contact",
+        "enabled": false,
+        "status": "Inactif",
+        "createdAt": null,
+        "label": "Contact"
+      },
+      {
+        "_id": "m5",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1790245238,
+          "nanoseconds": 674000000
+        },
+        "shortcode": "[PdfFlipbookReader id=\"2792\"]",
+        "parentId": null,
+        "isActive": false,
+        "url": "",
+        "label": "Mentions Légales",
+        "enabled": false,
+        "icon": "Layers",
+        "slug": "",
+        "title": "Mentions Légales",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1782146727,
+          "nanoseconds": 740000000
+        },
+        "status": "Inactif",
+        "order": 10,
+        "type": "shortcode",
+        "description": ""
+      }
+    ],
+    "pages": [
+      {
+        "_id": "page_a_propos",
+        "author": "Sylvie Gautier",
+        "status": "published",
+        "blocks": [
+          {
+            "children": [
+              {
+                "settings": {
+                  "fluid": false
+                },
+                "type": "container",
+                "children": [
+                  {
+                    "id": "heading_about",
+                    "type": "heading",
+                    "settings": {
+                      "content": "À Propos d'Anjou Édition",
+                      "level": "h1",
+                      "alignment": "left"
+                    }
+                  },
+                  {
+                    "settings": {
+                      "content": "<p>Anjou Édition est un portail culturel dédié au patrimoine littéraire, historique, poétique et scientifique de l'Anjou. Nous œuvrons pour la préservation et la diffusion des textes classiques et contemporains de notre belle région fluviale.</p>",
+                      "alignment": "left"
+                    },
+                    "type": "text",
+                    "id": "text_about"
+                  }
+                ],
+                "id": "cont_about"
+              }
+            ],
+            "type": "section",
+            "id": "sec_about",
+            "settings": {
+              "classes": "py-4",
+              "style": {
+                "backgroundColor": "#ffffff"
+              }
+            }
+          }
+        ],
+        "updatedAt": "2026-09-20T14:23:16.429Z",
+        "slug": "a-propos",
+        "title": "À Propos de nous",
+        "version": 1,
+        "category": "Général",
+        "createdAt": "2026-06-01T10:00:00.000Z"
+      },
+      {
+        "_id": "page_collections",
+        "title": "Nos Collections Littéraires",
+        "version": 1,
+        "blocks": [
+          {
+            "id": "sec_coll",
+            "type": "section",
+            "settings": {
+              "style": {
+                "backgroundColor": "#ffffff"
+              },
+              "classes": "py-4"
+            },
+            "children": [
+              {
+                "settings": {
+                  "fluid": false
+                },
+                "type": "container",
+                "children": [
+                  {
+                    "id": "heading_coll",
+                    "settings": {
+                      "alignment": "left",
+                      "level": "h1",
+                      "content": "Nos Collections Littéraires"
+                    },
+                    "type": "heading"
+                  },
+                  {
+                    "type": "text",
+                    "settings": {
+                      "alignment": "left",
+                      "content": "<p>Explorez nos poésies, romans, nouvelles et essais dédiés à l'Anjou, accessibles en lecture directe et en synthèse vocale.</p>"
+                    },
+                    "id": "text_coll"
+                  }
+                ],
+                "id": "cont_coll"
+              }
+            ]
+          }
+        ],
+        "author": "Jeremy Veille",
+        "createdAt": "2026-05-20T10:00:00.000Z",
+        "status": "published",
+        "category": "Littérature",
+        "slug": "nos-collections",
+        "updatedAt": "2026-09-20T14:23:16.429Z"
+      },
+      {
+        "_id": "page_home",
+        "slug": "accueil",
+        "status": "published",
+        "author": "Jeremy Veille",
+        "version": 1,
+        "category": "Général",
+        "isHome": true,
+        "blocks": [],
+        "updatedAt": "2026-09-20T14:23:16.429Z",
+        "createdAt": "2026-05-12T10:00:00.000Z",
+        "title": "Accueil - Anjou Edition"
+      },
+      {
+        "_id": "page_mentions_legales",
+        "author": "Jeremy Veille",
+        "version": 1,
+        "status": "published",
+        "createdAt": "2026-05-15T10:00:00.000Z",
+        "blocks": [],
+        "title": "Mentions Légales",
+        "updatedAt": "2026-09-20T14:23:16.429Z",
+        "slug": "mentions-legales",
+        "category": "Légal"
+      }
+    ],
+    "articles": [
+      {
+        "_id": "art_histoire_chateau_angers",
+        "id": "art_histoire_chateau_angers",
+        "date": "10/05/2026",
+        "author": "Jeremy Veille",
+        "createdAt": "2026-05-10T10:00:00.000Z",
+        "blocks": [
+          {
+            "type": "text",
+            "id": "blk_1",
+            "settings": {
+              "content": "<p>Surplombant fièrement la Maine, le <strong>Château d'Angers</strong> est l'une des forteresses médiévales les plus imposantes de France avec ses dix-sept tours bicolores.</p>"
+            }
+          }
+        ],
+        "summary": "Plongez dans l'histoire fascinante de la forteresse médiévale des Ducs d'Anjou et son chef-d'œuvre textile unique au monde.",
+        "image": "https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?q=80&w=600",
+        "views": 890,
+        "updatedAt": "2026-09-25T14:12:29.372Z",
+        "version": 1,
+        "isFeatured": false,
+        "category": "Histoire",
+        "status": "published",
+        "title": "Le Château d'Angers et la tenture de l'Apocalypse",
+        "slug": "histoire-chateau-angers-forteresse-ducs-anjou"
+      },
+      {
+        "_id": "art_poesie_joachim_du_bellay",
+        "views": 89,
+        "image": "https://images.unsplash.com/photo-1455390582262-044cdead277a?q=80&w=1200",
+        "metaDescription": "Retour sur la vie et les œuvres de Joachim du Bellay, poète emblématique de Liré et chantre de la douceur angevine.",
+        "metaTitle": "Joachim du Bellay — La douceur angevine | Anjou Édition",
+        "id": "art_poesie_joachim_du_bellay",
+        "title": "Joachim du Bellay et la douceur angevine",
+        "author": "Anjou Édition",
+        "slug": "joachim-du-bellay-douceur-angevine",
+        "isFeatured": false,
+        "excerpt": "Figure majeure de la Pléiade, Joachim du Bellay a célébré les bords de Loire et son petit Liré avec une sensibilité intemporelle.",
+        "content": "## Le poète de Liré et des bords de Loire\n\nNé vers 1522 au château de la Turmelière, près de Liré, Joachim du Bellay est l’une des figures de proue de la poésie française de la Renaissance.\n\nCofondateur de la Pléiade aux côtés de Pierre de Ronsard, il a signé en 1549 la *Défense et illustration de la langue française*, plaidoyer fondateur pour l'élévation de la langue française au rang des grandes langues poétiques de l'Antiquité.\n\n---\n\n## Les Regrets et l'attachement à l'Anjou\n\nC'est lors de son séjour à Rome (1553-1557) que du Bellay compose *Les Regrets*, son recueil le plus célèbre. Loin de sa terre natale, le poète exprime sa nostalgie vibrante :\n\n> « Quand reverrai-je, hélas, de mon petit village  \n> Fumer la cheminée, et en quelle saison  \n> Reverrai-je le clos de ma pauvre maison,  \n> Qui m'est une province, et beaucoup davantage ? »\n\nÀ travers ses vers, il immortalise la fameuse « douceur angevine », devenue l'emblème d'un art de vivre et d'une sensibilité propres à notre région.",
+        "thumbnailUrl": "https://images.unsplash.com/photo-1455390582262-044cdead277a?q=80&w=600",
+        "readTime": "3 min de lecture",
+        "status": "published",
+        "category": "Poésies",
+        "updatedAt": "2026-09-18T12:00:00.000Z",
+        "hook": "« Heureux qui, comme Ulysse, a fait un beau voyage... »\nDécouvrez comment le poète de Liré a immortalisé l’Anjou et sa douceur.",
+        "version": 1,
+        "date": "2026-09-18"
+      },
+      {
+        "_id": "art_presentation_anjou_edition",
+        "views": 142,
+        "id": "art_presentation_anjou_edition",
+        "image": "https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=1200",
+        "isFeatured": true,
+        "title": "Anjou Édition : une maison d’édition ouverte à tous",
+        "status": "published",
+        "hook": "Parce qu’il n’est pas nécessaire d’être un expert pour écrire, lire, découvrir, apprendre ou partager.\n\nAnjou Édition est une maison d’édition qui souhaite rendre la culture et l’édition accessibles à chacun.\nAuteurs débutants ou confirmés, lecteurs passionnés, curieux, associations, créateurs et porteurs de projets : chacun doit pouvoir trouver sa place.",
+        "metaTitle": "Anjou Édition — Une maison d’édition ouverte à tous",
+        "date": "2026-09-20",
+        "thumbnailUrl": "https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=600",
+        "metaDescription": "Découvrez Anjou Édition, une maison d’édition ouverte aux auteurs, lecteurs, passionnés et curieux, avec une volonté simple : rendre l’édition et la culture accessibles à tous.",
+        "updatedAt": "2026-09-20T18:00:00.000Z",
+        "version": 1,
+        "excerpt": "Anjou Édition souhaite rendre l’édition, la culture et la transmission accessibles à tous. Découvrez notre vision d’une maison d’édition simple, humaine et ouverte aux auteurs comme aux lecteurs.",
+        "author": "Anjou Édition",
+        "category": "Maison d'édition",
+        "slug": "anjou-edition-maison-edition-ouverte-a-tous",
+        "content": "## Bienvenue chez Anjou Édition\n\nAnjou Édition est née d’une volonté simple : rendre l’édition plus accessible, plus humaine et plus proche de tous.\n\nNous pensons que les idées, les histoires, les connaissances et les passions méritent d’être partagées.\n\nIl n’est pas nécessaire d’être écrivain professionnel, historien, chercheur ou spécialiste pour avoir quelque chose d’intéressant à transmettre.\n\n**Tout le monde peut avoir une histoire à raconter.**\n\n---\n\n## Pourquoi « pour les nuls » ?\n\nL’expression **« pour les nuls »** reflète avant tout notre volonté de rendre les contenus accessibles.\n\nCela signifie :\n* expliquer simplement ;\n* éviter les termes inutilement compliqués ;\n* permettre de découvrir un sujet à son rythme ;\n* donner envie d’apprendre ;\n* ne pas réserver la connaissance à quelques spécialistes.\n\nChez Anjou Édition, il n’y a pas besoin d’être expert pour commencer.\n\nLa curiosité suffit.\n\n---\n\n## Une maison d’édition ouverte à tous\n\nAnjou Édition souhaite accueillir des profils très différents.\n\n### Vous aimez écrire ?\n\nVous avez :\n* un manuscrit ;\n* une histoire ;\n* des souvenirs ;\n* un témoignage ;\n* un projet historique ;\n* un livre consacré au patrimoine ;\n* un récit local ;\n* un projet pédagogique ;\n* une idée originale ?\n\nVotre projet mérite d’être étudié.\n\n### Vous aimez lire ?\n\nDécouvrez progressivement les ouvrages, publications, articles et contenus proposés par Anjou Édition.\n\n### Vous souhaitez transmettre ?\n\nAssociations, passionnés, chercheurs amateurs, historiens locaux, enseignants, collectivités ou simples curieux peuvent également participer à cette aventure éditoriale.",
+        "readTime": "4 min de lecture"
+      },
+      {
+        "_id": "uSScIN4EEYGfi1dOVMF5",
+        "slug": "rappel",
+        "status": "Publié",
+        "blocks": [
+          {
+            "placeholder": "Entrez le titre de la section",
+            "type": "title",
+            "extra": "",
+            "title": "Nouveau Titre",
+            "content": "",
+            "id": "1783009213289vdqgi"
+          },
+          {
+            "id": "block-1783009111611",
+            "type": "text",
+            "placeholder": "Écrivez le texte de votre paragraphe ici...",
+            "title": "Paragraphe de texte",
+            "content": "Rédigez le contenu de votre article ici..."
+          },
+          {
+            "content": "",
+            "type": "image",
+            "extra": "",
+            "title": "Image d'illustration",
+            "id": "17830092724777dhbd",
+            "placeholder": "https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?q=80&w=600"
+          }
+        ],
+        "category": "Poésies",
+        "date": "2026-07-02",
+        "title": "Rappel",
+        "views": 0,
+        "updatedAt": "2026-09-25T14:12:29.692Z"
+      }
+    ],
+    "flipbooks": [
+      {
+        "_id": "1201",
+        "date": "22/09/2026 à 11:53",
+        "pages": [
+          {
+            "pageNum": 1,
+            "content": "MOMENT\n\nAnjou Édition\n\nDocument : Moment.pdf",
+            "title": "Couverture"
+          },
+          {
+            "pageNum": 2,
+            "content": "Cet ouvrage est issu du document 'Moment.pdf'. Le poème évoque une rencontre discrète entre deux personnes qui se croisent plusieurs fois sans réellement se connaître. Il s'inscrit dans la collection d'ouvrages culturels et historiques d'Anjou Édition, visant à promouvoir le patrimoine de notre belle région de la Loire.",
+            "title": "Introduction"
+          },
+          {
+            "title": "Chapitre 1: Histoire locale",
+            "pageNum": 3,
+            "content": "L'Anjou possède un patrimoine historique exceptionnel. Des premiers châteaux en pierre construits par Foulques Nerra au XIe siècle, aux splendides demeures de la Renaissance, chaque village de la région conserve la trace de cette riche histoire fluviale et royale."
+          },
+          {
+            "content": "Façonné par la Loire et ses affluents, le terroir angevin est mondialement réputé pour sa douceur et sa diversité. C'est ici que s'épanouissent des cépages uniques, créant des vins de caractère allant de la fraîcheur du Chenin blanc à la rondeur du Cabernet franc.",
+            "pageNum": 4,
+            "title": "Chapitre 2: Terroirs d'Anjou"
+          },
+          {
+            "pageNum": 5,
+            "content": "En refermant ce flipbook numérique, nous espérons avoir éveillé votre curiosité pour l'Anjou. Ce document témoigne de l'attachement indéfectible d'Anjou Édition à la transmission de nos récits et de nos savoirs.",
+            "title": "Conclusion"
+          }
+        ],
+        "pdfFile": "Moment.pdf",
+        "pdfUrl": null,
+        "category": "Poésies",
+        "description": "Le poème évoque une rencontre discrète entre deux personnes qui se croisent plusieurs fois sans réellement se connaître.",
+        "id": "1201",
+        "hasFirestoreChunks": true,
+        "title": "Moment"
+      },
+      {
+        "_id": "1664",
+        "pages": [
+          {
+            "content": "ROSE\n\nAnjou Édition\n\nDocument : ROSE.pdf",
+            "pageNum": 1,
+            "title": "Couverture"
+          },
+          {
+            "content": "Cet ouvrage est issu du document 'ROSE.pdf'. poème en vers libres, composé principalement de tercets Il s'inscrit dans la collection d'ouvrages culturels et historiques d'Anjou Édition, visant à promouvoir le patrimoine de notre belle région de la Loire.",
+            "title": "Introduction",
+            "pageNum": 2
+          },
+          {
+            "content": "L'Anjou possède un patrimoine historique exceptionnel. Des premiers châteaux en pierre construits par Foulques Nerra au XIe siècle, aux splendides demeures de la Renaissance, chaque village de la région conserve la trace de cette riche histoire fluviale et royale.",
+            "pageNum": 3,
+            "title": "Chapitre 1: Histoire locale"
+          },
+          {
+            "title": "Chapitre 2: Terroirs d'Anjou",
+            "content": "Façonné par la Loire et ses affluents, le terroir angevin est mondialement réputé pour sa douceur et sa diversité. C'est ici que s'épanouissent des cépages uniques, créant des vins de caractère allant de la fraîcheur du Chenin blanc à la rondeur du Cabernet franc.",
+            "pageNum": 4
+          },
+          {
+            "title": "Conclusion",
+            "content": "En refermant ce flipbook numérique, nous espérons avoir éveillé votre curiosité pour l'Anjou. Ce document témoigne de l'attachement indéfectible d'Anjou Édition à la transmission de nos récits et de nos savoirs.",
+            "pageNum": 5
+          }
+        ],
+        "date": "20/09/2026 à 11:59",
+        "hasFirestoreChunks": true,
+        "pdfUrl": null,
+        "category": "Poésies",
+        "id": "1664",
+        "pdfFile": "ROSE.pdf",
+        "title": "Rose",
+        "description": "poème en vers libres, composé principalement de tercets"
+      },
+      {
+        "_id": "1930",
+        "description": "descriptions de sensations physiques et mentales dans un état de conscience incertain.",
+        "category": "Poésies",
+        "pages": [
+          {
+            "pageNum": 1,
+            "content": "ACIDULÉ OU AMER\n\nAnjou Édition\n\nDocument : Acidulé ou amer.pdf",
+            "title": "Couverture"
+          },
+          {
+            "pageNum": 2,
+            "content": "Cet ouvrage est issu du document 'Acidulé ou amer.pdf'. descriptions de sensations physiques et mentales dans un état de conscience incertain. Il s'inscrit dans la collection d'ouvrages culturels et historiques d'Anjou Édition, visant à promouvoir le patrimoine de notre belle région de la Loire.",
+            "title": "Introduction"
+          },
+          {
+            "title": "Chapitre 1: Histoire locale",
+            "pageNum": 3,
+            "content": "L'Anjou possède un patrimoine historique exceptionnel. Des premiers châteaux en pierre construits par Foulques Nerra au XIe siècle, aux splendides demeures de la Renaissance, chaque village de la région conserve la trace de cette riche histoire fluviale et royale."
+          },
+          {
+            "pageNum": 4,
+            "content": "Façonné par la Loire et ses affluents, le terroir angevin est mondialement réputé pour sa douceur et sa diversité. C'est ici que s'épanouissent des cépages uniques, créant des vins de caractère allant de la fraîcheur du Chenin blanc à la rondeur du Cabernet franc.",
+            "title": "Chapitre 2: Terroirs d'Anjou"
+          },
+          {
+            "title": "Conclusion",
+            "content": "En refermant ce flipbook numérique, nous espérons avoir éveillé votre curiosité pour l'Anjou. Ce document témoigne de l'attachement indéfectible d'Anjou Édition à la transmission de nos récits et de nos savoirs.",
+            "pageNum": 5
+          }
+        ],
+        "pdfFile": "Acidulé ou amer.pdf",
+        "hasFirestoreChunks": true,
+        "id": "1930",
+        "date": "24/09/2026 à 11:30",
+        "title": "Acidulé ou Amer",
+        "pdfUrl": null
+      },
+      {
+        "_id": "2512",
+        "category": "Poésies",
+        "hasFirestoreChunks": true,
+        "id": "2512",
+        "pages": [
+          {
+            "content": "MONONUCLÉOSE\n\nAnjou Édition\n\nDocument : Mononucléose..pdf",
+            "pageNum": 1,
+            "title": "Couverture"
+          },
+          {
+            "title": "Introduction",
+            "content": "Cet ouvrage est issu du document 'Mononucléose..pdf'. Le texte repose sur un jeu sonore autour de la terminaison « -ose » : rose, morose, oppose, thrombose, métamorphose, névrose, hypnose, cirrhose et symbiose. Ce procédé crée une musicalité amusante tout en évoquant les difficultés d’une relation amoureuse. Il s'inscrit dans la collection d'ouvrages culturels et historiques d'Anjou Édition, visant à promouvoir le patrimoine de notre belle région de la Loire.",
+            "pageNum": 2
+          },
+          {
+            "title": "Chapitre 1: Histoire locale",
+            "content": "L'Anjou possède un patrimoine historique exceptionnel. Des premiers châteaux en pierre construits par Foulques Nerra au XIe siècle, aux splendides demeures de la Renaissance, chaque village de la région conserve la trace de cette riche histoire fluviale et royale.",
+            "pageNum": 3
+          },
+          {
+            "title": "Chapitre 2: Terroirs d'Anjou",
+            "content": "Façonné par la Loire et ses affluents, le terroir angevin est mondialement réputé pour sa douceur et sa diversité. C'est ici que s'épanouissent des cépages uniques, créant des vins de caractère allant de la fraîcheur du Chenin blanc à la rondeur du Cabernet franc.",
+            "pageNum": 4
+          },
+          {
+            "title": "Conclusion",
+            "pageNum": 5,
+            "content": "En refermant ce flipbook numérique, nous espérons avoir éveillé votre curiosité pour l'Anjou. Ce document témoigne de l'attachement indéfectible d'Anjou Édition à la transmission de nos récits et de nos savoirs."
+          }
+        ],
+        "title": "Mononucléose",
+        "date": "22/09/2026 à 11:41",
+        "pdfUrl": null,
+        "description": "Le texte repose sur un jeu sonore autour de la terminaison « -ose » : rose, morose, oppose, thrombose, métamorphose, névrose, hypnose, cirrhose et symbiose. Ce procédé crée une musicalité amusante tout en évoquant les difficultés d’une relation amoureuse.",
+        "pdfFile": "Mononucléose..pdf"
+      },
+      {
+        "_id": "2557",
+        "description": "un ver habitant une pomme",
+        "pdfUrl": null,
+        "date": "29/06/2026 à 18:04",
+        "id": "2557",
+        "category": "Poésies",
+        "title": "Ma pomme",
+        "hasFirestoreChunks": true,
+        "pdfFile": "MA POMME.pdf",
+        "pages": [
+          {
+            "title": "Couverture",
+            "pageNum": 1,
+            "content": "MA POMME\n\nAnjou Édition\n\nDocument : MA-POMME1.pdf"
+          }
+        ]
+      },
+      {
+        "_id": "2743",
+        "pages": [
+          {
+            "title": "Couverture",
+            "pageNum": 1,
+            "content": "UNE VIE À CROIRE\n\nAnjou Édition\n\nDocument : Une vie à croire.pdf"
+          },
+          {
+            "content": "Cet ouvrage est issu du document 'Une vie à croire.pdf'. Un poème lyrique et méditatif sur l’espoir, l’amour et la confiance en l’autre. À travers la répétition de « Qu’il suffisait de croire », l’auteur évoque les épreuves de la vie, la force des sentiments et le lien céleste qui l’unit à un ami. Il s'inscrit dans la collection d'ouvrages culturels et historiques d'Anjou Édition, visant à promouvoir le patrimoine de notre belle région de la Loire.",
+            "pageNum": 2,
+            "title": "Introduction"
+          },
+          {
+            "title": "Conclusion",
+            "pageNum": 3,
+            "content": "En refermant ce flipbook numérique, nous espérons avoir éveillé votre curiosité pour l'Anjou. Ce document témoigne de l'attachement indéfectible d'Anjou Édition à la transmission de nos récits et de nos savoirs."
+          }
+        ],
+        "id": "2743",
+        "date": "15/09/2026 à 11:46",
+        "pdfFile": "Une vie à croire.pdf",
+        "category": "Poésies",
+        "description": "Un poème lyrique et méditatif sur l’espoir, l’amour et la confiance en l’autre. À travers la répétition de « Qu’il suffisait de croire », l’auteur évoque les épreuves de la vie, la force des sentiments et le lien céleste qui l’unit à un ami.",
+        "title": "Une Vie à Croire",
+        "hasFirestoreChunks": true,
+        "pdfUrl": null
+      },
+      {
+        "_id": "2792",
+        "description": "histoire pour enfants",
+        "date": "16/06/2026 à 12:03",
+        "pages": [
+          {
+            "title": "Couverture",
+            "pageNum": 1,
+            "content": "SÉRAPHIN LE MARIN\n\nAnjou Édition\n\nDocument : Seraphin-le-marin.pdf"
+          }
+        ],
+        "category": "Poésies",
+        "pdfFile": "Séraphin, le marin.pdf",
+        "hasFirestoreChunks": true,
+        "id": "2792",
+        "pdfUrl": null,
+        "title": "séraphin le marin"
+      },
+      {
+        "_id": "3284",
+        "pdfFile": "Acouphène.pdf",
+        "description": "Le poète décrit une perception sonore persistante qui devient progressivement plus agaçante et obsédante.",
+        "pdfUrl": null,
+        "pages": [
+          {
+            "content": "ACOUPHÈNE\n\nAnjou Édition\n\nDocument : Acouphène.pdf",
+            "pageNum": 1,
+            "title": "Couverture"
+          },
+          {
+            "content": "Cet ouvrage est issu du document 'Acouphène.pdf'. Le poète décrit une perception sonore persistante qui devient progressivement plus agaçante et obsédante. Il s'inscrit dans la collection d'ouvrages culturels et historiques d'Anjou Édition, visant à promouvoir le patrimoine de notre belle région de la Loire.",
+            "pageNum": 2,
+            "title": "Introduction"
+          },
+          {
+            "content": "L'Anjou possède un patrimoine historique exceptionnel. Des premiers châteaux en pierre construits par Foulques Nerra au XIe siècle, aux splendides demeures de la Renaissance, chaque village de la région conserve la trace de cette riche histoire fluviale et royale.",
+            "pageNum": 3,
+            "title": "Chapitre 1: Histoire locale"
+          },
+          {
+            "title": "Chapitre 2: Terroirs d'Anjou",
+            "pageNum": 4,
+            "content": "Façonné par la Loire et ses affluents, le terroir angevin est mondialement réputé pour sa douceur et sa diversité. C'est ici que s'épanouissent des cépages uniques, créant des vins de caractère allant de la fraîcheur du Chenin blanc à la rondeur du Cabernet franc."
+          },
+          {
+            "title": "Conclusion",
+            "content": "En refermant ce flipbook numérique, nous espérons avoir éveillé votre curiosité pour l'Anjou. Ce document témoigne de l'attachement indéfectible d'Anjou Édition à la transmission de nos récits et de nos savoirs.",
+            "pageNum": 5
+          }
+        ],
+        "date": "24/09/2026 à 11:42",
+        "id": "3284",
+        "title": "Acouphène",
+        "category": "Poésies",
+        "hasFirestoreChunks": true
+      },
+      {
+        "_id": "4034",
+        "pdfUrl": null,
+        "title": "Energie",
+        "date": "24/09/2026 à 11:57",
+        "id": "4034",
+        "pdfFile": "Énergie.pdf",
+        "category": "Sciences",
+        "description": "Le poète défend une énergie propre, gratuite et accessible à tous.",
+        "pages": [
+          {
+            "content": "ENERGIE\n\nAnjou Édition\n\nDocument : Énergie.pdf",
+            "title": "Couverture",
+            "pageNum": 1
+          },
+          {
+            "content": "Cet ouvrage est issu du document 'Énergie.pdf'. Le poète défend une énergie propre, gratuite et accessible à tous. Il s'inscrit dans la collection d'ouvrages culturels et historiques d'Anjou Édition, visant à promouvoir le patrimoine de notre belle région de la Loire.",
+            "title": "Introduction",
+            "pageNum": 2
+          },
+          {
+            "content": "L'Anjou possède un patrimoine historique exceptionnel. Des premiers châteaux en pierre construits par Foulques Nerra au XIe siècle, aux splendides demeures de la Renaissance, chaque village de la région conserve la trace de cette riche histoire fluviale et royale.",
+            "pageNum": 3,
+            "title": "Chapitre 1: Histoire locale"
+          },
+          {
+            "title": "Chapitre 2: Terroirs d'Anjou",
+            "content": "Façonné par la Loire et ses affluents, le terroir angevin est mondialement réputé pour sa douceur et sa diversité. C'est ici que s'épanouissent des cépages uniques, créant des vins de caractère allant de la fraîcheur du Chenin blanc à la rondeur du Cabernet franc.",
+            "pageNum": 4
+          },
+          {
+            "title": "Conclusion",
+            "content": "En refermant ce flipbook numérique, nous espérons avoir éveillé votre curiosité pour l'Anjou. Ce document témoigne de l'attachement indéfectible d'Anjou Édition à la transmission de nos récits et de nos savoirs.",
+            "pageNum": 5
+          }
+        ],
+        "hasFirestoreChunks": true
+      },
+      {
+        "_id": "4813",
+        "pages": [
+          {
+            "content": "TROUBLE VIE\n\nAnjou Édition\n\nDocument : Trouble-vie.pdf",
+            "pageNum": 1,
+            "title": "Couverture"
+          },
+          {
+            "content": "Cet ouvrage est issu du document 'Trouble-vie.pdf'. poème en vers courts, composé de quatre quatrains, avec des rimes et un rythme assez libres. Il s'inscrit dans la collection d'ouvrages culturels et historiques d'Anjou Édition, visant à promouvoir le patrimoine de notre belle région de la Loire.",
+            "pageNum": 2,
+            "title": "Introduction"
+          },
+          {
+            "pageNum": 3,
+            "content": "L'Anjou possède un patrimoine historique exceptionnel. Des premiers châteaux en pierre construits par Foulques Nerra au XIe siècle, aux splendides demeures de la Renaissance, chaque village de la région conserve la trace de cette riche histoire fluviale et royale.",
+            "title": "Chapitre 1: Histoire locale"
+          },
+          {
+            "pageNum": 4,
+            "content": "Façonné par la Loire et ses affluents, le terroir angevin est mondialement réputé pour sa douceur et sa diversité. C'est ici que s'épanouissent des cépages uniques, créant des vins de caractère allant de la fraîcheur du Chenin blanc à la rondeur du Cabernet franc.",
+            "title": "Chapitre 2: Terroirs d'Anjou"
+          },
+          {
+            "title": "Conclusion",
+            "pageNum": 5,
+            "content": "En refermant ce flipbook numérique, nous espérons avoir éveillé votre curiosité pour l'Anjou. Ce document témoigne de l'attachement indéfectible d'Anjou Édition à la transmission de nos récits et de nos savoirs."
+          }
+        ],
+        "description": "poème en vers courts, composé de quatre quatrains, avec des rimes et un rythme assez libres.",
+        "category": "Poésies",
+        "date": "20/09/2026 à 11:42",
+        "hasFirestoreChunks": true,
+        "id": "4813",
+        "title": "Trouble Vie",
+        "pdfFile": "Trouble-vie.pdf",
+        "pdfUrl": null
+      },
+      {
+        "_id": "5427",
+        "description": "Les aventures quotidiennes et imaginaires d’un petit chat curieux, joueur et attendrissant.",
+        "date": "17/09/2026 à 12:14",
+        "id": "5427",
+        "hasFirestoreChunks": true,
+        "pdfFile": "le petit chat blanc (1).pdf",
+        "title": "Le Petit Chat Blanc",
+        "category": "Contes et légendes",
+        "pdfUrl": null,
+        "pages": [
+          {
+            "content": "LE PETIT CHAT BLANC\n\nAnjou Édition\n\nDocument : le petit chat blanc.pdf",
+            "pageNum": 1,
+            "title": "Couverture"
+          },
+          {
+            "content": "Cet ouvrage est issu du document 'le petit chat blanc.pdf'. Les aventures quotidiennes et imaginaires d’un petit chat curieux, joueur et attendrissant. Il s'inscrit dans la collection d'ouvrages culturels et historiques d'Anjou Édition, visant à promouvoir le patrimoine de notre belle région de la Loire.",
+            "pageNum": 2,
+            "title": "Introduction"
+          },
+          {
+            "content": "L'Anjou possède un patrimoine historique exceptionnel. Des premiers châteaux en pierre construits par Foulques Nerra au XIe siècle, aux splendides demeures de la Renaissance, chaque village de la région conserve la trace de cette riche histoire fluviale et royale.",
+            "title": "Chapitre 1: Histoire locale",
+            "pageNum": 3
+          },
+          {
+            "content": "Façonné par la Loire et ses affluents, le terroir angevin est mondialement réputé pour sa douceur et sa diversité. C'est ici que s'épanouissent des cépages uniques, créant des vins de caractère allant de la fraîcheur du Chenin blanc à la rondeur du Cabernet franc.",
+            "pageNum": 4,
+            "title": "Chapitre 2: Terroirs d'Anjou"
+          },
+          {
+            "title": "Conclusion",
+            "content": "En refermant ce flipbook numérique, nous espérons avoir éveillé votre curiosité pour l'Anjou. Ce document témoigne de l'attachement indéfectible d'Anjou Édition à la transmission de nos récits et de nos savoirs.",
+            "pageNum": 5
+          }
+        ]
+      },
+      {
+        "_id": "5664",
+        "category": "Art",
+        "date": "06/08/2026 à 17:12",
+        "pages": [
+          {
+            "title": "Couverture",
+            "content": "L'ABEILLE VOYAGEUSE\n\nAnjou Édition\n\nDocument : l'Abeille Voyageuse....pdf",
+            "pageNum": 1
+          },
+          {
+            "content": "Cet ouvrage est issu du document 'l'Abeille Voyageuse....pdf'. Une petite abeille curieuse part à la découverte du monde. Au fil de son voyage, elle rencontre de nouveaux amis et apprend l’importance de l’amitié, de l’entraide et de la nature. 🐝🌸 Il s'inscrit dans la collection d'ouvrages culturels et historiques d'Anjou Édition, visant à promouvoir le patrimoine de notre belle région de la Loire.",
+            "pageNum": 2,
+            "title": "Introduction"
+          },
+          {
+            "title": "Chapitre 1: Histoire locale",
+            "content": "L'Anjou possède un patrimoine historique exceptionnel. Des premiers châteaux en pierre construits par Foulques Nerra au XIe siècle, aux splendides demeures de la Renaissance, chaque village de la région conserve la trace de cette riche histoire fluviale et royale.",
+            "pageNum": 3
+          },
+          {
+            "title": "Conclusion",
+            "pageNum": 4,
+            "content": "En refermant ce flipbook numérique, nous espérons avoir éveillé votre curiosité pour l'Anjou. Ce document témoigne de l'attachement indéfectible d'Anjou Édition à la transmission de nos récits et de nos savoirs."
+          }
+        ],
+        "pdfUrl": null,
+        "id": "5664",
+        "title": "L'abeille Voyageuse",
+        "description": "Une petite abeille curieuse part à la découverte du monde. Au fil de son voyage, elle rencontre de nouveaux amis et apprend l’importance de l’amitié, de l’entraide et de la nature. 🐝🌸",
+        "pdfFile": "l'Abeille Voyageuse....pdf"
+      },
+      {
+        "_id": "5939",
+        "date": "22/09/2026 à 11:21",
+        "pdfUrl": null,
+        "title": "Résurrection",
+        "category": "Poésies",
+        "id": "5939",
+        "pdfFile": "résurrection.pdf",
+        "pages": [
+          {
+            "pageNum": 1,
+            "content": "RÉSURRECTION\n\nAnjou Édition\n\nDocument : résurrection.pdf",
+            "title": "Couverture"
+          },
+          {
+            "content": "Cet ouvrage est issu du document 'résurrection.pdf'. Le narrateur exprime une expérience personnelle de transformation, construite autour du passage de la vie à la mort, puis de la mort à une renaissance. Il s'inscrit dans la collection d'ouvrages culturels et historiques d'Anjou Édition, visant à promouvoir le patrimoine de notre belle région de la Loire.",
+            "pageNum": 2,
+            "title": "Introduction"
+          },
+          {
+            "title": "Chapitre 1: Histoire locale",
+            "content": "L'Anjou possède un patrimoine historique exceptionnel. Des premiers châteaux en pierre construits par Foulques Nerra au XIe siècle, aux splendides demeures de la Renaissance, chaque village de la région conserve la trace de cette riche histoire fluviale et royale.",
+            "pageNum": 3
+          },
+          {
+            "title": "Chapitre 2: Terroirs d'Anjou",
+            "pageNum": 4,
+            "content": "Façonné par la Loire et ses affluents, le terroir angevin est mondialement réputé pour sa douceur et sa diversité. C'est ici que s'épanouissent des cépages uniques, créant des vins de caractère allant de la fraîcheur du Chenin blanc à la rondeur du Cabernet franc."
+          },
+          {
+            "pageNum": 5,
+            "title": "Conclusion",
+            "content": "En refermant ce flipbook numérique, nous espérons avoir éveillé votre curiosité pour l'Anjou. Ce document témoigne de l'attachement indéfectible d'Anjou Édition à la transmission de nos récits et de nos savoirs."
+          }
+        ],
+        "description": "Le narrateur exprime une expérience personnelle de transformation, construite autour du passage de la vie à la mort, puis de la mort à une renaissance.",
+        "hasFirestoreChunks": true
+      },
+      {
+        "_id": "5972",
+        "category": "Poésies",
+        "id": "5972",
+        "hasFirestoreChunks": true,
+        "pages": [
+          {
+            "title": "Couverture",
+            "pageNum": 1,
+            "content": "SOMBRE JOUR\n\nAnjou Édition\n\nDocument : Sombre jour.pdf"
+          },
+          {
+            "title": "Introduction",
+            "content": "Cet ouvrage est issu du document 'Sombre jour.pdf'. Le texte peut également être présenté comme une élégie amoureuse, car il constitue une plainte poétique inspirée par la perte d’un être aimé. Il s'inscrit dans la collection d'ouvrages culturels et historiques d'Anjou Édition, visant à promouvoir le patrimoine de notre belle région de la Loire.",
+            "pageNum": 2
+          },
+          {
+            "content": "L'Anjou possède un patrimoine historique exceptionnel. Des premiers châteaux en pierre construits par Foulques Nerra au XIe siècle, aux splendides demeures de la Renaissance, chaque village de la région conserve la trace de cette riche histoire fluviale et royale.",
+            "pageNum": 3,
+            "title": "Chapitre 1: Histoire locale"
+          },
+          {
+            "title": "Chapitre 2: Terroirs d'Anjou",
+            "content": "Façonné par la Loire et ses affluents, le terroir angevin est mondialement réputé pour sa douceur et sa diversité. C'est ici que s'épanouissent des cépages uniques, créant des vins de caractère allant de la fraîcheur du Chenin blanc à la rondeur du Cabernet franc.",
+            "pageNum": 4
+          },
+          {
+            "content": "En refermant ce flipbook numérique, nous espérons avoir éveillé votre curiosité pour l'Anjou. Ce document témoigne de l'attachement indéfectible d'Anjou Édition à la transmission de nos récits et de nos savoirs.",
+            "title": "Conclusion",
+            "pageNum": 5
+          }
+        ],
+        "title": "Sombre Jour",
+        "description": "Le texte peut également être présenté comme une élégie amoureuse, car il constitue une plainte poétique inspirée par la perte d’un être aimé.",
+        "pdfUrl": null,
+        "pdfFile": "Sombre jour.pdf",
+        "date": "20/09/2026 à 11:54"
+      },
+      {
+        "_id": "5987",
+        "description": "Le texte interroge la réalité de l’existence, ce qui aurait pu être, ce qui devrait exister et la difficulté de concevoir l’avenir.",
+        "id": "5987",
+        "date": "24/09/2026 à 12:16",
+        "pdfFile": "Existentialisme.pdf",
+        "title": "Existentialisme",
+        "category": "Essais",
+        "pdfUrl": null,
+        "pages": [
+          {
+            "title": "Couverture",
+            "content": "EXISTENTIALISME\n\nAnjou Édition\n\nDocument : Existentialisme.pdf",
+            "pageNum": 1
+          },
+          {
+            "title": "Introduction",
+            "pageNum": 2,
+            "content": "Cet ouvrage est issu du document 'Existentialisme.pdf'. Le texte interroge la réalité de l’existence, ce qui aurait pu être, ce qui devrait exister et la difficulté de concevoir l’avenir. Il s'inscrit dans la collection d'ouvrages culturels et historiques d'Anjou Édition, visant à promouvoir le patrimoine de notre belle région de la Loire."
+          },
+          {
+            "pageNum": 3,
+            "content": "L'Anjou possède un patrimoine historique exceptionnel. Des premiers châteaux en pierre construits par Foulques Nerra au XIe siècle, aux splendides demeures de la Renaissance, chaque village de la région conserve la trace de cette riche histoire fluviale et royale.",
+            "title": "Chapitre 1: Histoire locale"
+          },
+          {
+            "content": "Façonné par la Loire et ses affluents, le terroir angevin est mondialement réputé pour sa douceur et sa diversité. C'est ici que s'épanouissent des cépages uniques, créant des vins de caractère allant de la fraîcheur du Chenin blanc à la rondeur du Cabernet franc.",
+            "pageNum": 4,
+            "title": "Chapitre 2: Terroirs d'Anjou"
+          },
+          {
+            "title": "Conclusion",
+            "content": "En refermant ce flipbook numérique, nous espérons avoir éveillé votre curiosité pour l'Anjou. Ce document témoigne de l'attachement indéfectible d'Anjou Édition à la transmission de nos récits et de nos savoirs.",
+            "pageNum": 5
+          }
+        ],
+        "hasFirestoreChunks": true
+      },
+      {
+        "_id": "7267",
+        "pages": [
+          {
+            "title": "Couverture",
+            "content": "LE DRAGON ET LE HÉRON\n\nAnjou Édition\n\nDocument : Le Dragon et le Héron.pdf",
+            "pageNum": 1
+          }
+        ],
+        "date": "10/08/2026 à 18:29",
+        "category": "Contes et légendes",
+        "hasFirestoreChunks": true,
+        "pdfFile": "Le Dragon et le Héron.pdf",
+        "description": "Fumégon est un jeune dragon qui doit garder la bouche fermée pour éviter que ses flammes ne brûlent tout autour de lui. Sa rencontre avec Maître Plumegrise, un héron calme et bienveillant, va lui apprendre à apprivoiser sa colère, ses peurs et son feu intérieur. Un conte tendre et drôle sur la maîtrise de soi, le courage et l’acceptation de ses émotions.",
+        "title": "Le Dragon et le Héron",
+        "pdfUrl": null,
+        "id": "7267"
+      },
+      {
+        "_id": "8083",
+        "pages": [
+          {
+            "title": "Couverture",
+            "content": "ORAGE\n\nAnjou Édition\n\nDocument : ORAGE.pdf",
+            "pageNum": 1
+          },
+          {
+            "pageNum": 2,
+            "content": "Cet ouvrage est issu du document 'ORAGE.pdf'. « Orage » est un poème lyrique et descriptif qui raconte le passage d’une tempête au cours d’une journée de printemps. Il s'inscrit dans la collection d'ouvrages culturels et historiques d'Anjou Édition, visant à promouvoir le patrimoine de notre belle région de la Loire.",
+            "title": "Introduction"
+          }
+        ],
+        "date": "17/09/2026 à 11:52",
+        "category": "Poésies",
+        "hasFirestoreChunks": true,
+        "pdfFile": "ORAGE.pdf",
+        "description": "« Orage » est un poème lyrique et descriptif qui raconte le passage d’une tempête au cours d’une journée de printemps.",
+        "title": "Orage",
+        "id": "8083",
+        "pdfUrl": null
+      }
+    ],
+    "gallery": [
+      {
+        "_id": "g1",
+        "date": "12/05/2026",
+        "category": "Châteaux",
+        "title": "Château d'Angers et ses Jardins",
+        "url": "https://picsum.photos/800/600?random=11",
+        "description": "Les magnifiques jardins fleuris aménagés dans les anciens fossés de la forteresse médiévale.",
+        "thumbnailUrl": "https://picsum.photos/400/300.webp?random=11"
+      },
+      {
+        "_id": "g2",
+        "title": "Vignobles de Savennières",
+        "url": "https://picsum.photos/800/600?random=12",
+        "category": "Vignobles",
+        "description": "Les coteaux escarpés de Savennières surplombant la Loire, terroir d'exception du Chenin.",
+        "thumbnailUrl": "https://picsum.photos/400/300.webp?random=12",
+        "date": "20/05/2026"
+      },
+      {
+        "_id": "g3",
+        "description": "Les reflets dorés du crépuscule sur l'eau calme du fleuve royal près de Saumur.",
+        "title": "Coucher de soleil sur la Loire",
+        "date": "01/06/2026",
+        "url": "https://picsum.photos/800/600?random=13",
+        "category": "Loire",
+        "thumbnailUrl": "https://picsum.photos/400/300.webp?random=13"
+      },
+      {
+        "_id": "g4",
+        "thumbnailUrl": "https://picsum.photos/400/300.webp?random=14",
+        "description": "Demeure traditionnelle angevine associant la clarté du calcaire et le bleu sombre de l'ardoise.",
+        "title": "Manoir en Tuffeau et Ardoise",
+        "date": "10/06/2026",
+        "category": "Patrimoine",
+        "url": "https://picsum.photos/800/600?random=14"
+      },
+      {
+        "_id": "g5",
+        "category": "Patrimoine",
+        "title": "Les Ruelles Historiques d'Angers",
+        "url": "https://picsum.photos/800/600?random=15",
+        "thumbnailUrl": "https://picsum.photos/400/300.webp?random=15",
+        "date": "15/06/2026",
+        "description": "Maisons médiévales à colombages et rues pavées dans le quartier de la Doutre."
+      },
+      {
+        "_id": "g6",
+        "thumbnailUrl": "https://picsum.photos/400/300.webp?random=16",
+        "date": "20/06/2026",
+        "description": "La plus grande cité monastique d'Europe, nécropole royale des Plantagenêts.",
+        "title": "Abbaye de Fontevraud",
+        "url": "https://picsum.photos/800/600?random=16",
+        "category": "Châteaux"
+      }
+    ],
+    "videos": [
+      {
+        "_id": "v1",
+        "category": "Châteaux",
+        "duration": "4:15",
+        "youtubeId": "Y1wzszq92f0",
+        "title": "Survol Historique du Château d'Angers",
+        "date": "15/05/2026",
+        "url": "https://www.youtube.com/watch?v=Y1wzszq92f0",
+        "description": "Une vue aérienne spectaculaire de la plus grande forteresse de la vallée de la Loire, avec ses jardins suspendus et ses remparts légendaires."
+      },
+      {
+        "_id": "v1783678668285",
+        "description": "Aventure Tropicale Et Danger Cosmique | D'animation | Film complet en français",
+        "category": "Nature",
+        "youtubeId": "9IUxmxYEG9Q",
+        "date": "10/07/2026",
+        "title": "Aventure Tropicale Et Danger Cosmique",
+        "url": "https://www.youtube.com/watch?v=9IUxmxYEG9Q"
+      },
+      {
+        "_id": "v2",
+        "duration": "6:40",
+        "description": "Découvrez les bancs de sable mouvants, la faune unique et la magie des couchers de soleil sur le dernier grand fleuve sauvage d'Europe.",
+        "category": "Loire",
+        "date": "02/06/2026",
+        "youtubeId": "bO2tOaFf-1I",
+        "title": "La Loire : Fleuve Sauvage et Mystique",
+        "url": "https://www.youtube.com/watch?v=bO2tOaFf-1I"
+      },
+      {
+        "_id": "v3",
+        "youtubeId": "dQw4w9WgXcQ",
+        "title": "Conférence Anjou 2026 - Littérature et Territoires",
+        "date": "20/06/2026",
+        "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        "duration": "45:30",
+        "description": "Enregistrement complet de la table ronde sur le patrimoine littéraire de l'Anjou, animée par des historiens et écrivains locaux.",
+        "category": "Littérature"
+      }
+    ],
+    "medias": [
+      {
+        "_id": "m1",
+        "name": "anjou_edition_livre.png",
+        "date": "25/09/2026 à 14h30",
+        "type": "image/png",
+        "size": 87044,
+        "id": "m1",
+        "url": "/anjou-edition-livre.png"
+      },
+      {
+        "_id": "m1790330129529",
+        "alt": "403eaddc-612f-461a-909c-4e13aa27651f.png",
+        "size": 2641126,
+        "url": "/anjou-edition-livre.png",
+        "type": "image/png",
+        "id": "m1790330129529",
+        "updatedAt": "2026-09-25T13:01:46.942Z",
+        "name": "403eaddc-612f-461a-909c-4e13aa27651f.png",
+        "date": "25/09/2026 à 15:01"
+      },
+      {
+        "_id": "m2",
+        "size": 4529124,
+        "name": "nouvelle_legende.epub",
+        "date": "24/05/2026 à 16h45",
+        "id": "m2",
+        "url": "#",
+        "type": "application/epub+zip"
+      },
+      {
+        "_id": "m3",
+        "size": 8912048,
+        "date": "02/06/2026 à 09h30",
+        "name": "poeme_musical.mp3",
+        "type": "audio/mpeg",
+        "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+        "id": "m3"
+      },
+      {
+        "_id": "m4",
+        "size": 104857,
+        "id": "m4",
+        "name": "logo_court.png",
+        "date": "08/06/2026 à 11h15",
+        "url": "https://images.unsplash.com/photo-1516979187457-637abb4f9353?q=80&w=400",
+        "type": "image/png"
+      },
+      {
+        "_id": "m5",
+        "size": 3452912,
+        "name": "chateau_angers.jpg",
+        "date": "14/06/2026 à 15h20",
+        "type": "image/jpeg",
+        "url": "https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?q=80&w=600",
+        "id": "m5"
+      }
+    ],
+    "news": [
+      {
+        "_id": "n1",
+        "type": "Urgent",
+        "title": "Festival l'Anjou Littéraire 2026",
+        "content": "Le festival aura lieu le 10 Septembre 2026 à Saumur ! Préparez vos manuscrits et venez rencontrer les éditeurs de la région.",
+        "date": "2026-06-08"
+      },
+      {
+        "_id": "n2",
+        "date": "2026-06-01",
+        "title": "Lancement officiel du portail",
+        "content": "Le nouveau site Anjou Édition est en ligne. Les écrivains peuvent s'inscrire pour publier leurs flipbooks numériques.",
+        "type": "Info"
+      },
+      {
+        "_id": "n3",
+        "content": "Nous avons ajouté une recherche par date et par mot-clé pour faciliter la consultation de notre bibliothèque historique.",
+        "type": "Important",
+        "title": "Mise à jour des filtres de recherche",
+        "date": "2026-06-15"
+      }
+    ],
+    "accounts": [
+      {
+        "_id": "u1",
+        "email": "jeremy.veille@hotmail.fr",
+        "id": "u1",
+        "role": "Administrateur",
+        "status": "Actif",
+        "name": "JEREMY VEILLE",
+        "color": "#004b7a"
+      },
+      {
+        "_id": "u2",
+        "id": "u2",
+        "role": "Écrivain",
+        "color": "#336ddc",
+        "status": "Actif",
+        "email": "sylvie.gautier@anjou-lettres.fr",
+        "name": "Sylvie Gautier"
+      },
+      {
+        "_id": "u3",
+        "id": "u3",
+        "name": "Pierre Bougier",
+        "email": "p.bougier@maine-loire.fr",
+        "status": "Inactif",
+        "role": "Éditeur",
+        "color": "#64748b"
+      }
+    ],
+    "settings": [
+      {
+        "_id": "global",
+        "enableComments": true,
+        "contactEmail": "contact@anjou-edition-nuls.fr",
+        "maintenanceMode": false,
+        "siteName": "Anjou Edition – Pour les Nuls"
+      },
+      {
+        "_id": "homepage",
+        "featuredArticleId": "art_presentation_anjou_edition",
+        "updatedAt": "2026-09-20T18:00:00.000Z"
+      }
+    ],
+    "auditLogs": [],
+    "contacts": []
+  }
+}

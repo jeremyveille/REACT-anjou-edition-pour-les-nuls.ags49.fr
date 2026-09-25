@@ -90,7 +90,8 @@ service cloud.firestore {
     }
 
     match /accounts/{docId} {
-      allow read, write: if isAuthenticated();
+      allow read: if true;
+      allow write: if isAuthenticated();
     }
 
     // Règle par défaut : Tout autre accès non explicitement autorisé est strictement refusé (Deny by default).
