@@ -74,7 +74,7 @@ export const Text = ({ settings = {} }) => {
 /**
  * Widget Image
  */
-export const Image = ({ settings = {} }) => {
+export const Image = ({ settings = {}, isEditing = false, onOpenMediaPicker }) => {
   const rawSrc = settings.src || 'https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?q=80&w=600';
   const src = sanitizeUrl(rawSrc);
   const alt = settings.alt || 'Illustration';
@@ -94,7 +94,7 @@ export const Image = ({ settings = {} }) => {
   );
 
   return (
-    <div className="pb-widget-image-container text-center" style={style}>
+    <div className="pb-widget-image-container position-relative text-center" style={style}>
       {link ? (
         <a href={link} target="_blank" rel="noopener noreferrer">
           {imgElement}
@@ -103,6 +103,22 @@ export const Image = ({ settings = {} }) => {
         imgElement
       )}
       {caption && <p className="text-muted text-xs mt-1">{caption}</p>}
+      {isEditing && (
+        <div className="pb-media-action-overlay">
+          <button
+            type="button"
+            className="pb-media-action-overlay-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onOpenMediaPicker) onOpenMediaPicker('src', 'image');
+            }}
+            title="Modifier / Remplacer cette image"
+            aria-label="Modifier ou remplacer cette image"
+          >
+            <ImageIcon size={14} /> Modifier / Remplacer l'image
+          </button>
+        </div>
+      )}
     </div>
   );
 };
@@ -138,7 +154,7 @@ export const Button = ({ settings = {} }) => {
 /**
  * Widget Carte (Card)
  */
-export const Card = ({ settings = {} }) => {
+export const Card = ({ settings = {}, isEditing = false, onOpenMediaPicker }) => {
   const title = settings.title || 'Titre de la carte';
   const text = settings.text || 'Contenu court de la carte pour illustrer un propos.';
   const image = settings.image ? sanitizeUrl(settings.image) : '';
@@ -149,17 +165,35 @@ export const Card = ({ settings = {} }) => {
 
   return (
     <div className={`card ${customClasses}`} style={style}>
-      {image && (
-        <OptimizedImage 
-          src={image} 
-          className="card-img-top" 
-          alt={title} 
-          loading="lazy" 
-          useThumbnail={true} 
-          thumbnailWidth={600} 
-          thumbnailHeight={350} 
-        />
-      )}
+      <div className="position-relative">
+        {image && (
+          <OptimizedImage 
+            src={image} 
+            className="card-img-top" 
+            alt={title} 
+            loading="lazy" 
+            useThumbnail={true} 
+            thumbnailWidth={600} 
+            thumbnailHeight={350} 
+          />
+        )}
+        {isEditing && (
+          <div className="pb-media-action-overlay" style={{ top: '8px', right: '8px', bottom: 'auto', left: 'auto' }}>
+            <button
+              type="button"
+              className="pb-media-action-overlay-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onOpenMediaPicker) onOpenMediaPicker('image', 'image');
+              }}
+              title="Modifier / Remplacer l'image de la carte"
+              aria-label="Modifier ou remplacer l'image de la carte"
+            >
+              <ImageIcon size={13} /> {image ? "Remplacer l'image" : "Ajouter une image"}
+            </button>
+          </div>
+        )}
+      </div>
       <div className="card-body">
         <h5 className="card-title">{title}</h5>
         <p className="card-text">{text}</p>
@@ -192,7 +226,7 @@ export const Alert = ({ settings = {} }) => {
 /**
  * Widget Vidéo
  */
-export const Video = ({ settings = {} }) => {
+export const Video = ({ settings = {}, isEditing = false, onOpenMediaPicker }) => {
   const input = settings.url || (settings.videoId ? `https://www.youtube.com/watch?v=${settings.videoId}` : (settings.src || ''));
   const fallbackEmbed = settings.videoId ? `https://www.youtube.com/embed/${settings.videoId}` : (settings.lastValidVideoId ? `https://www.youtube.com/embed/${settings.lastValidVideoId}` : 'https://www.youtube.com/embed/dQw4w9WgXcQ');
   const embedUrl = getYoutubeEmbedUrl(input, fallbackEmbed);
@@ -200,7 +234,7 @@ export const Video = ({ settings = {} }) => {
   const style = settings.style || {};
 
   return (
-    <div className={`ratio ratio-16x9 ${customClasses}`} style={style}>
+    <div className={`ratio ratio-16x9 position-relative ${customClasses}`} style={style}>
       <iframe 
         src={sanitizeUrl(embedUrl)} 
         title={settings.title || "Lecteur vidéo YouTube"} 
@@ -208,6 +242,22 @@ export const Video = ({ settings = {} }) => {
         className="rounded"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
       ></iframe>
+      {isEditing && (
+        <div className="pb-media-action-overlay">
+          <button
+            type="button"
+            className="pb-media-action-overlay-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onOpenMediaPicker) onOpenMediaPicker('url', 'video');
+            }}
+            title="Modifier l'URL YouTube ou remplacer la vidéo"
+            aria-label="Modifier l'URL YouTube ou remplacer la vidéo"
+          >
+            <Play size={14} fill="white" color="white" /> Modifier / Remplacer la vidéo
+          </button>
+        </div>
+      )}
     </div>
   );
 };

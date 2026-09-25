@@ -18,7 +18,7 @@ import {
   YoutubeChannel,
   ContactFormWidget
 } from '../bootstrap-blocks/ContentWidgets';
-import { Trash2, ArrowUp, ArrowDown, Plus, GripVertical, Copy } from 'lucide-react';
+import { Trash2, ArrowUp, ArrowDown, Plus, GripVertical, Copy, Image as ImageIcon, Film } from 'lucide-react';
 import { useDroppable, useDraggable } from '@dnd-kit/core';
 import { BLOCK_DEFINITIONS } from './blockRegistry';
 
@@ -84,6 +84,7 @@ export const BlockRenderer = ({
   onMoveBlock = () => {},
   onDuplicateBlock = () => {},
   onAddChild = () => {},
+  onOpenMediaPicker = null,
   parentBlock = null,
   indexInParent = 0,
   siblingCount = 0
@@ -120,6 +121,7 @@ export const BlockRenderer = ({
       onMoveBlock={onMoveBlock}
       onDuplicateBlock={onDuplicateBlock}
       onAddChild={onAddChild}
+      onOpenMediaPicker={onOpenMediaPicker}
       parentBlock={block}
       indexInParent={idx}
       siblingCount={children.length}
@@ -247,6 +249,55 @@ export const BlockRenderer = ({
           </>
         )}
 
+        {/* Action directe de modification de média (Image ou Vidéo) */}
+        {type === 'image' && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelectBlock(block);
+              if (onOpenMediaPicker) onOpenMediaPicker(block, 'src', 'image');
+            }}
+            className="pb-control-btn pb-btn-media"
+            title="Modifier / Remplacer l'image"
+            aria-label="Modifier ou remplacer l'image"
+          >
+            <ImageIcon className="ae-icon-tiny" aria-hidden="true" />
+          </button>
+        )}
+
+        {type === 'video' && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelectBlock(block);
+              if (onOpenMediaPicker) onOpenMediaPicker(block, 'url', 'video');
+            }}
+            className="pb-control-btn pb-btn-media"
+            title="Modifier / Remplacer la vidéo"
+            aria-label="Modifier ou remplacer la vidéo"
+          >
+            <Film className="ae-icon-tiny" aria-hidden="true" />
+          </button>
+        )}
+
+        {type === 'card' && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelectBlock(block);
+              if (onOpenMediaPicker) onOpenMediaPicker(block, 'image', 'image');
+            }}
+            className="pb-control-btn pb-btn-media"
+            title="Modifier l'image de la carte"
+            aria-label="Modifier l'image de la carte"
+          >
+            <ImageIcon className="ae-icon-tiny" aria-hidden="true" />
+          </button>
+        )}
+
         {/* Action de duplication */}
         <button 
           type="button" 
@@ -289,7 +340,13 @@ export const BlockRenderer = ({
 
       {/* Rendu effectif du composant */}
       <div className="pb-component-render">
-        <Component settings={settings} isEditing={true}>
+        <Component 
+          settings={settings} 
+          isEditing={true}
+          onOpenMediaPicker={(settingKey, filterType) => {
+            if (onOpenMediaPicker) onOpenMediaPicker(block, settingKey, filterType);
+          }}
+        >
           {renderedChildren}
           {renderEmptyPlaceholder()}
         </Component>

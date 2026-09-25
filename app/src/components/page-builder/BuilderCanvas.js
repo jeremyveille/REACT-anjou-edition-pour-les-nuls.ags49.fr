@@ -16,6 +16,7 @@ export const BuilderCanvas = ({
   onMoveBlock = () => {},
   onDuplicateBlock = () => {},
   onAddChild = () => {},
+  onOpenMediaPicker = null,
   device = 'desktop',
   pageSlug = ''
 }) => {
@@ -165,6 +166,7 @@ export const BuilderCanvas = ({
                       onMoveBlock={onMoveBlock}
                       onDuplicateBlock={onDuplicateBlock}
                       onAddChild={onAddChild}
+                      onOpenMediaPicker={onOpenMediaPicker}
                       parentBlock={null}
                       indexInParent={idx}
                       siblingCount={blocks.length}
