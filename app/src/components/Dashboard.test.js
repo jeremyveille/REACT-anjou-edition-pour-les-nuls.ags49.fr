@@ -296,7 +296,7 @@ describe('Dashboard Media Library & Edit Image Tests', () => {
 
     // Modal should be open with current details
     expect(await screen.findByRole('dialog')).toBeInTheDocument();
-    expect(screen.getByText(/Modifier l['’]image : chateau_angers.jpg/i)).toBeInTheDocument();
+    expect(screen.getByText(/Modifier (le média|l['’]image) : chateau_angers.jpg/i)).toBeInTheDocument();
 
     // Modify name input
     const nameInput = screen.getByPlaceholderText("ex: chateau_angers.jpg");
@@ -346,7 +346,7 @@ describe('Dashboard Media Library & Edit Image Tests', () => {
 
     // Badge showing new image selected should appear
     expect(await screen.findByText(/Nouvelle image sélectionnée/i)).toBeInTheDocument();
-    expect(screen.getByText(/nouvelle_vue_chateau.png/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/nouvelle_vue_chateau.png/i).length).toBeGreaterThan(0);
 
     // Save
     const saveBtn = screen.getByRole('button', { name: /Enregistrer/i });
@@ -387,6 +387,56 @@ describe('Dashboard Media Library & Edit Image Tests', () => {
     // Original name remains intact
     expect(screen.getByText("chateau_angers.jpg")).toBeInTheDocument();
     expect(screen.queryByText("nom_temporaire.jpg")).not.toBeInTheDocument();
+  });
+
+  test('closes edit modal when pressing Escape key', async () => {
+    render(<Dashboard onBackToSite={() => {}} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Médiathèque/i }));
+    expect(await screen.findByText("chateau_angers.jpg")).toBeInTheDocument();
+    const editBtn = screen.getByRole('button', { name: /Modifier l['’]image chateau_angers.jpg/i });
+    fireEvent.click(editBtn);
+
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
+
+    // Press Escape
+    fireEvent.keyDown(window, { key: 'Escape', code: 'Escape' });
+
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+  });
+
+  test('renders file information (Nom, Identifiant, Taille, Type) and accessible inputs with labels', async () => {
+    render(<Dashboard onBackToSite={() => {}} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Médiathèque/i }));
+    expect(await screen.findByText("chateau_angers.jpg")).toBeInTheDocument();
+    const editBtn = screen.getByRole('button', { name: /Modifier l['’]image chateau_angers.jpg/i });
+    fireEvent.click(editBtn);
+
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
+
+    // Check file information card items
+    expect(screen.getByText(/Identifiant unique/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/chateau_angers\.jpg/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Type MIME/i)).toBeInTheDocument();
+    expect(screen.getByText(/image\/jpeg/i)).toBeInTheDocument();
+
+    // Check inputs have proper label links
+    const nameLabel = screen.getByText(/Nom du fichier \/ Titre/i);
+    expect(nameLabel).toHaveAttribute('for', 'edit-media-name-input');
+    const nameInput = document.getElementById('edit-media-name-input');
+    expect(nameInput).toBeInTheDocument();
+
+    const altLabel = screen.getByText(/Texte alternatif \(SEO \/ Accessibilité\)/i);
+    expect(altLabel).toHaveAttribute('for', 'edit-media-alt-input');
+    const altInput = document.getElementById('edit-media-alt-input');
+    expect(altInput).toBeInTheDocument();
+
+    // Close button has accessible aria-label
+    const closeBtn = screen.getByRole('button', { name: /Fermer la boîte de dialogue/i });
+    expect(closeBtn).toBeInTheDocument();
   });
 });
 
