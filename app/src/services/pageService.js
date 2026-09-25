@@ -384,15 +384,31 @@ export const pageService = {
       targetStatus = EDITORIAL_STATUS.PENDING_REVIEW;
     }
 
+    // Assurer que les URLs blob: éphémères sont converties en Data URLs permanents
+    let cleanBlocks = pageData.blocks || [];
+    if (cleanBlocks && cleanBlocks.length > 0) {
+      cleanBlocks = await this.ensurePersistentBlocks(cleanBlocks);
+    }
+    let cleanImage = pageData.image || '';
+    if (typeof cleanImage === 'string' && cleanImage.startsWith('blob:')) {
+      cleanImage = await this.convertBlobToDataUrl(cleanImage);
+    }
+    let cleanThumbnail = pageData.thumbnailUrl || '';
+    if (typeof cleanThumbnail === 'string' && cleanThumbnail.startsWith('blob:')) {
+      cleanThumbnail = await this.convertBlobToDataUrl(cleanThumbnail);
+    }
+
     const currentVersion = Number(pageData.version) || 1;
 
     const normalizedData = {
       ...pageData,
+      image: cleanImage || pageData.image,
+      thumbnailUrl: cleanThumbnail || pageData.thumbnailUrl,
       title: pageData.title || 'Sans titre',
       slug: pageData.slug || (pageData.title ? pageData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'sans-titre'),
       category: pageData.category || 'Outils',
       status: targetStatus,
-      blocks: normalizeBlocks(pageData.blocks || []),
+      blocks: normalizeBlocks(cleanBlocks),
       updatedAt: timestamp,
       updatedBy: email,
       version: id ? (currentVersion + 1) : 1
@@ -751,16 +767,71 @@ export const pageService = {
   },
 
   /**
+   * Convertit une URL blob: éphémère du navigateur en Data URL (Base64) permanent.
+   * Si le blob ne peut pas être lu (ex: session fermée, environnement Node), bascule sur l'image persistante du projet.
+   */
+  async convertBlobToDataUrl(blobUrl) {
+    if (!blobUrl || typeof blobUrl !== 'string') {
+      return '/anjou-edition-livre.png';
+    }
+    if (!blobUrl.startsWith('blob:')) {
+      return blobUrl;
+    }
+    try {
+      if (typeof window !== 'undefined' && typeof fetch !== 'undefined') {
+        const response = await fetch(blobUrl);
+        if (response && typeof response.blob === 'function') {
+          const blob = await response.blob();
+          return await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result || '/anjou-edition-livre.png');
+            reader.onerror = () => resolve('/anjou-edition-livre.png');
+            reader.readAsDataURL(blob);
+          });
+        }
+      }
+    } catch (err) {
+      console.warn('Impossible de convertir le blob URL vers Data URL, fallback persistant:', err);
+    }
+    // Fallback systématique : Ne JAMAIS laisser une URL blob: éphémère
+    return '/anjou-edition-livre.png';
+  },
+
+  /**
+   * Nettoie récursivement tous les blocs pour convertir les URLs blob: en Data URLs persistants.
+   */
+  async ensurePersistentBlocks(blocks = []) {
+    if (!Array.isArray(blocks)) return [];
+    const processed = [];
+    for (const b of blocks) {
+      const cloned = { ...b, settings: { ...(b.settings || {}) } };
+      if (cloned.settings.src && typeof cloned.settings.src === 'string' && cloned.settings.src.startsWith('blob:')) {
+        cloned.settings.src = await this.convertBlobToDataUrl(cloned.settings.src);
+      }
+      if (cloned.children && Array.isArray(cloned.children)) {
+        cloned.children = await this.ensurePersistentBlocks(cloned.children);
+      }
+      processed.push(cloned);
+    }
+    return processed;
+  },
+
+  /**
    * Enregistre ou met à jour un élément multimédia.
    * @param {Object} mediaItem Métadonnées du média.
    * @returns {Promise<Object>} L'élément enregistré.
    */
   async saveMediaItem(mediaItem) {
+    let finalMediaUrl = mediaItem.url || '';
+    if (typeof finalMediaUrl === 'string' && finalMediaUrl.startsWith('blob:')) {
+      finalMediaUrl = await this.convertBlobToDataUrl(finalMediaUrl);
+    }
+
     const itemToSave = {
       id: mediaItem.id || `media_${Date.now()}`,
       name: mediaItem.name || 'Média sans titre',
-      url: mediaItem.url || '',
-      type: mediaItem.type || (mediaItem.url?.includes('youtube') ? 'video' : 'image'),
+      url: finalMediaUrl,
+      type: mediaItem.type || (finalMediaUrl?.includes('youtube') ? 'video' : 'image'),
       mimeType: mediaItem.mimeType || (mediaItem.type === 'video' ? 'video/mp4' : 'image/jpeg'),
       size: mediaItem.size || 0,
       alt: mediaItem.alt || mediaItem.name || '',
@@ -812,37 +883,67 @@ export const pageService = {
 
   /**
    * Téléverse un fichier média vers Firebase Storage et l'enregistre dans la médiathèque.
-   * @param {File} file Le fichier à téléverser.
+   * Si Firebase Storage est indisponible ou hors-ligne, convertit le fichier/blob en Data URL (Base64) permanent.
+   * @param {File|Blob|string} file Le fichier ou l'URL à téléverser.
    * @param {Object} metadata Métadonnées additionnelles.
-   * @returns {Promise<string>} L'URL de téléchargement publique.
+   * @returns {Promise<string>} L'URL de téléchargement publique permanente.
    */
   async uploadMedia(file, metadata = {}) {
     const timestamp = Date.now();
-    const uniqueName = `${timestamp}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
-    const storageRef = ref(storage, `builder-images/${uniqueName}`);
+    const fileName = (typeof file === 'string' ? 'media_upload' : (file?.name || 'media_upload'));
+    const uniqueName = `${timestamp}_${fileName.replace(/[^a-zA-Z0-9.]/g, '_')}`;
     
     let downloadUrl = '';
-    try {
-      const uploadResult = await uploadBytes(storageRef, file);
-      downloadUrl = await getDownloadURL(uploadResult.ref);
-    } catch (error) {
-      console.warn('Firebase Storage non disponible ou hors-ligne, génération URL locale:', error);
+
+    // 1. Essayer Firebase Storage si configuré et disponible
+    if (storage && (file instanceof Blob || (typeof File !== 'undefined' && file instanceof File))) {
       try {
-        downloadUrl = URL.createObjectURL(file);
-      } catch (e) {
-        downloadUrl = `https://picsum.photos/800/600?random=${Date.now()}`;
+        const storageRef = ref(storage, `builder-images/${uniqueName}`);
+        const uploadResult = await uploadBytes(storageRef, file);
+        downloadUrl = await getDownloadURL(uploadResult.ref);
+      } catch (error) {
+        console.warn('Firebase Storage non disponible ou hors-ligne, conversion en Data URL permanent:', error);
       }
     }
 
-    const type = file.type?.startsWith('video/') ? 'video' : file.type?.startsWith('audio/') ? 'audio' : file.type?.includes('pdf') ? 'document' : 'image';
+    // 2. Si Storage indisponible ou si file est un blob: URL / string, convertir en Data URL permanent (Base64)
+    if (!downloadUrl) {
+      try {
+        if (typeof file === 'string') {
+          if (file.startsWith('blob:')) {
+            downloadUrl = await this.convertBlobToDataUrl(file);
+          } else {
+            downloadUrl = file;
+          }
+        } else if (file instanceof Blob || (typeof File !== 'undefined' && file instanceof File)) {
+          downloadUrl = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result || '');
+            reader.onerror = () => resolve('');
+            reader.readAsDataURL(file);
+          });
+        }
+      } catch (e) {
+        console.warn('Erreur lors de la conversion permanente du média:', e);
+      }
+    }
+
+    if (!downloadUrl) {
+      downloadUrl = '/anjou-edition-livre.png';
+    }
+
+    const type = (typeof file === 'object' && file.type?.startsWith('video/')) ? 'video' : 
+                 (typeof file === 'object' && file.type?.startsWith('audio/')) ? 'audio' : 
+                 (typeof file === 'object' && file.type?.includes('pdf')) ? 'document' : 'image';
+
     const mediaItem = {
       id: `media_${timestamp}`,
-      name: file.name,
+      name: fileName,
       url: downloadUrl,
       type: type,
-      mimeType: file.type || (type === 'image' ? 'image/jpeg' : 'video/mp4'),
-      size: file.size || 0,
-      alt: metadata.alt || file.name.replace(/\.[^/.]+$/, ''),
+      mimeType: (typeof file === 'object' ? file.type : null) || (type === 'image' ? 'image/png' : 'video/mp4'),
+      size: (typeof file === 'object' ? file.size : 0) || 0,
+      alt: metadata.alt || fileName.replace(/\.[^/.]+$/, ''),
       createdAt: new Date().toISOString()
     };
 

@@ -1557,12 +1557,17 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
       if (progress >= 100) {
         clearInterval(interval);
         
-        let url = "https://images.unsplash.com/photo-1516979187457-637abb4f9353?q=80&w=600";
+        let url = "/anjou-edition-livre.png";
         if (file.type.startsWith("image/")) {
           try {
-            url = URL.createObjectURL(file);
+            const reader = new FileReader();
+            url = await new Promise((resolve) => {
+              reader.onloadend = () => resolve(reader.result || '/anjou-edition-livre.png');
+              reader.onerror = () => resolve('/anjou-edition-livre.png');
+              reader.readAsDataURL(file);
+            });
           } catch (err) {
-            console.warn("Could not create object URL:", err);
+            console.warn("Could not create data URL:", err);
           }
         } else if (file.type.startsWith("audio/")) {
           url = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
@@ -1696,9 +1701,14 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
           const uploadResult = await uploadBytes(storageRef, editMediaFile);
           finalUrl = await getDownloadURL(uploadResult.ref);
         } catch (storageErr) {
-          console.warn("Firebase Storage non accessible, utilisation du blob URL local:", storageErr);
+          console.warn("Firebase Storage non accessible, utilisation du Data URL local:", storageErr);
           try {
-            finalUrl = URL.createObjectURL(editMediaFile);
+            const reader = new FileReader();
+            finalUrl = await new Promise((resolve) => {
+              reader.onloadend = () => resolve(reader.result || editingMedia.url);
+              reader.onerror = () => resolve(editingMedia.url);
+              reader.readAsDataURL(editMediaFile);
+            });
           } catch (blobErr) {
             finalUrl = editMediaPreviewUrl || editingMedia.url;
           }

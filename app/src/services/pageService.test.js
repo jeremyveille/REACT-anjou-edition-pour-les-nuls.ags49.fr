@@ -180,4 +180,47 @@ describe('pageService Security & Workflow tests', () => {
     const local = JSON.parse(localStorage.getItem('ae_media_library') || '[]');
     expect(local.some(m => m.id === 'media_to_delete')).toBe(false);
   });
+
+  test('uploadMedia converts a File/Blob to a persistent permanent URL and stores it in media library', async () => {
+    const mockFile = new Blob(['fake image content'], { type: 'image/png' });
+    mockFile.name = 'nouvelle_couverture.png';
+
+    const permanentUrl = await pageService.uploadMedia(mockFile, { alt: 'Nouvelle Couverture' });
+    expect(permanentUrl).toBeDefined();
+    expect(permanentUrl.startsWith('blob:')).toBe(false);
+    expect(permanentUrl.startsWith('data:') || permanentUrl.startsWith('http') || permanentUrl.startsWith('/')).toBe(true);
+
+    const mediaList = await pageService.getMediaList();
+    const saved = mediaList.find(m => m.name === 'nouvelle_couverture.png');
+    expect(saved).toBeDefined();
+    expect(saved.url.startsWith('blob:')).toBe(false);
+  });
+
+  test('savePage automatically converts temporary blob: URLs inside blocks to persistent URLs', async () => {
+    const pageWithBlob = {
+      title: 'Page Test Blob Sanitization',
+      status: 'published',
+      blocks: [
+        {
+          id: 'sec_1',
+          type: 'section',
+          children: [
+            {
+              id: 'img_blob_test',
+              type: 'image',
+              settings: {
+                src: 'blob:http://localhost:3000/3046c3da-39c5-4448-9d6e-a4fd80235141',
+                alt: 'Image Test Blob'
+              }
+            }
+          ]
+        }
+      ]
+    };
+
+    const saved = await pageService.savePage(pageWithBlob, 'page_blob_test');
+    expect(saved).toBeDefined();
+    const savedImgBlock = saved.blocks[0].children[0];
+    expect(savedImgBlock.settings.src.startsWith('blob:')).toBe(false);
+  });
 });
