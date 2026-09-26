@@ -16,7 +16,6 @@ import {
   AlertCircle,
   Sparkles,
   Users,
-  Compass,
   Feather,
   ChevronRight,
   Send,
@@ -1203,38 +1202,63 @@ function App() {
 
               {/* 1. Hero de la page d'accueil */}
               <section className="home-hero-wrapper" aria-labelledby="home-hero-heading">
-                <div className="home-hero-badge">
-                  <Sparkles size={16} aria-hidden="true" />
-                  <span>Maison d'édition accessible & humaine</span>
+                {/* Immersive backdrop layer matching reference mockup */}
+                <div className="hero-backdrop-layer" aria-hidden="true">
+                  <img 
+                    src="/hero-book-scene.jpg" 
+                    alt="" 
+                    className="hero-backdrop-img"
+                  />
+                  <div className="hero-backdrop-gradient"></div>
                 </div>
-                <h1 id="home-hero-heading" className="home-hero-title">
-                  Anjou Édition, la maison d’édition ouverte à tous
-                </h1>
-                <p className="home-hero-subtitle">
-                  Des livres, des histoires, des connaissances et des projets accessibles à chacun.
-                </p>
-                <p className="home-hero-secondary">
-                  Que vous soyez auteur, lecteur, passionné ou simplement curieux, Anjou Édition vous invite à découvrir, apprendre, partager et transmettre.
-                </p>
-                <div className="home-hero-actions">
-                  <button 
-                    type="button" 
-                    onClick={() => handleOpenArticle(featuredArticle)} 
-                    className="btn-hero-primary"
-                    aria-label="Découvrir Anjou Édition et notre vision"
-                  >
-                    <BookOpen size={18} aria-hidden="true" />
-                    Découvrir Anjou Édition
-                  </button>
-                  <button 
-                    type="button" 
-                    onClick={() => setView({ type: 'flipbooks' })} 
-                    className="btn-hero-secondary"
-                    aria-label="Découvrir nos publications et livres à feuilleter"
-                  >
-                    <Sparkles size={18} aria-hidden="true" />
-                    Découvrir nos publications
-                  </button>
+
+                <div className="home-hero-content-layer">
+                  <div className="home-hero-badge">
+                    <Sparkles size={15} className="hero-badge-icon" aria-hidden="true" />
+                    <span>MAISON D'ÉDITION ACCESSIBLE & HUMAINE</span>
+                  </div>
+                  
+                  <h1 id="home-hero-heading" className="home-hero-title">
+                    <span className="hero-title-prefix">Anjou Édition,</span>
+                    <span className="hero-title-highlight">la maison d’édition ouverte à tous</span>
+                  </h1>
+                  
+                  <p className="home-hero-subtitle">
+                    Des livres, des histoires, des connaissances et des projets accessibles à chacun.
+                  </p>
+                  
+                  <p className="home-hero-secondary">
+                    Que vous soyez auteur, lecteur, passionné ou simplement curieux, Anjou Édition vous invite à découvrir, apprendre, partager et transmettre.
+                  </p>
+                  
+                  <div className="home-hero-actions">
+                    <button 
+                      type="button" 
+                      onClick={() => handleOpenArticle(featuredArticle)} 
+                      className="btn-hero-primary"
+                      aria-label="Découvrir Anjou Édition et notre vision"
+                    >
+                      <BookOpen size={18} aria-hidden="true" />
+                      Découvrir Anjou Édition
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={() => setView({ type: 'flipbooks' })} 
+                      className="btn-hero-secondary"
+                      aria-label="Découvrir nos publications et livres à feuilleter"
+                    >
+                      <Sparkles size={18} aria-hidden="true" />
+                      Découvrir nos publications
+                    </button>
+                  </div>
+                </div>
+
+                {/* Bottom wave decoration on hero */}
+                <div className="hero-bottom-wave" aria-hidden="true">
+                  <svg viewBox="0 0 1440 90" fill="none" preserveAspectRatio="none">
+                    <path d="M0,45 C320,80 720,85 1100,35 C1260,15 1370,30 1440,50 L1440,90 L0,90 Z" fill="#bae6fd" opacity="0.45" />
+                    <path d="M0,58 C340,92 760,95 1120,48 C1280,28 1380,42 1440,62 L1440,90 L0,90 Z" fill="#ffffff" />
+                  </svg>
                 </div>
               </section>
 
@@ -1242,10 +1266,13 @@ function App() {
               {featuredArticle && (
                 <section className="home-featured-article-container" aria-labelledby="featured-article-heading">
                   <div className="section-heading-wrapper">
-                    <h2 id="featured-article-heading" className="section-heading-title">
-                      <Sparkles size={20} className="text-secondary" aria-hidden="true" />
-                      À la une de notre maison d'édition
-                    </h2>
+                    <div className="section-title-with-line">
+                      <BookOpen size={24} className="text-primary-blue" aria-hidden="true" />
+                      <h2 id="featured-article-heading" className="section-heading-title">
+                        À la une de notre maison d'édition
+                      </h2>
+                      <span className="section-heading-line" aria-hidden="true"></span>
+                    </div>
                   </div>
                   <div 
                     className="featured-article-card"
@@ -1257,11 +1284,11 @@ function App() {
                   >
                     <div className="featured-article-media">
                       <OptimizedImage 
-                        src={featuredArticle.image || featuredArticle.thumbnailUrl || "/anjou-edition-livre.png"} 
-                        thumbnailSrc={featuredArticle.thumbnailUrl || "/anjou-edition-livre.png"}
+                        src={featuredArticle.image || featuredArticle.thumbnailUrl || "/featured-article-book.jpg"} 
+                        thumbnailSrc={featuredArticle.thumbnailUrl || "/featured-article-book.jpg"}
                         alt={featuredArticle.title} 
                         loading="lazy"
-                        useThumbnail={true}
+                        useThumbnail={false}
                         thumbnailWidth={600}
                         thumbnailHeight={350}
                       />
@@ -1269,7 +1296,7 @@ function App() {
                     <div className="featured-article-body">
                       <div>
                         <div className="featured-article-meta">
-                          <span className="featured-tag">{featuredArticle.category || "Maison d'édition"}</span>
+                          <span className="featured-tag">{featuredArticle.category || "MAISON D'ÉDITION"}</span>
                           {featuredArticle.date && <span className="featured-meta-date">{featuredArticle.date}</span>}
                           {featuredArticle.readTime && <span className="featured-meta-date">• {featuredArticle.readTime}</span>}
                         </div>
@@ -1279,7 +1306,7 @@ function App() {
                         </p>
                       </div>
                       <span className="featured-article-action">
-                        Lire l’article <ArrowRight size={16} aria-hidden="true" />
+                        Lire l’article <ArrowRight size={16} aria-hidden="true" className="featured-action-arrow" />
                       </span>
                     </div>
                   </div>
@@ -1289,13 +1316,19 @@ function App() {
               {/* 3. Notre vocation éditoriale (Accueillir - Expliquer - Guider) */}
               <section className="home-pillars-wrapper" aria-labelledby="pillars-heading">
                 <div className="section-heading-wrapper">
-                  <h2 id="pillars-heading" className="section-heading-title">
-                    <Compass size={20} className="text-secondary" aria-hidden="true" />
-                    Notre engagement : l'édition pour tous
-                  </h2>
+                  <div className="section-title-with-line">
+                    <span className="section-heading-icon" aria-hidden="true">💙</span>
+                    <h2 id="pillars-heading" className="section-heading-title">
+                      Notre engagement : l'édition pour tous
+                    </h2>
+                    <span className="section-heading-line" aria-hidden="true"></span>
+                  </div>
                 </div>
                 <div className="home-pillars-grid">
-                  <div className="pillar-card">
+                  <div className="pillar-card pillar-welcome">
+                    <div className="pillar-watermark" aria-hidden="true">
+                      <BookOpen size={130} />
+                    </div>
                     <div className="pillar-icon-box">
                       <Users size={26} aria-hidden="true" />
                     </div>
@@ -1304,7 +1337,10 @@ function App() {
                       Une maison d’édition humaine, chaleureuse et bienveillante. Du débutant au passionné, chacun trouve sa place sans distinction ni barrière à l'entrée.
                     </p>
                   </div>
-                  <div className="pillar-card">
+                  <div className="pillar-card pillar-explain">
+                    <div className="pillar-watermark" aria-hidden="true">
+                      <Feather size={130} />
+                    </div>
                     <div className="pillar-icon-box">
                       <Sparkles size={26} aria-hidden="true" />
                     </div>
@@ -1313,7 +1349,10 @@ function App() {
                       L’esprit « pour les nuls » : rendre le savoir, l’écriture et le patrimoine clairs et vivants. Zéro jargon inutile, la curiosité suffit pour commencer.
                     </p>
                   </div>
-                  <div className="pillar-card">
+                  <div className="pillar-card pillar-guide">
+                    <div className="pillar-watermark" aria-hidden="true">
+                      <Feather size={130} />
+                    </div>
                     <div className="pillar-icon-box">
                       <Feather size={26} aria-hidden="true" />
                     </div>
@@ -1328,93 +1367,122 @@ function App() {
               {/* 4. Raccourcis d'accès aux rubriques réelles (Guider) */}
               <section className="home-shortcuts-wrapper" aria-labelledby="shortcuts-heading">
                 <div className="section-heading-wrapper">
-                  <h2 id="shortcuts-heading" className="section-heading-title">
-                    <BookOpen size={20} className="text-secondary" aria-hidden="true" />
-                    Explorer le catalogue & nos espaces
-                  </h2>
+                  <div className="section-title-with-line">
+                    <BookOpen size={24} className="text-primary-blue" aria-hidden="true" />
+                    <h2 id="shortcuts-heading" className="section-heading-title">
+                      Explorer le catalogue & nos espaces
+                    </h2>
+                    <span className="section-heading-line" aria-hidden="true"></span>
+                  </div>
                 </div>
-                <div className="home-shortcuts-grid">
-                  <div 
-                    className="portal-shortcut-card"
-                    onClick={() => setView({ type: 'flipbooks' })}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setView({ type: 'flipbooks' }); }}
-                    aria-label="Découvrir nos livres et flipbooks interactifs"
-                  >
-                    <div className="portal-shortcut-icon">
-                      <BookOpen size={22} aria-hidden="true" />
+                <div className="home-shortcuts-grid-mockup">
+                  <div className="shortcuts-row-top">
+                    <div 
+                      className="portal-shortcut-card shortcut-flipbooks"
+                      onClick={() => setView({ type: 'flipbooks' })}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setView({ type: 'flipbooks' }); }}
+                      aria-label="Découvrir nos livres et flipbooks interactifs"
+                    >
+                      <div className="portal-shortcut-watermark" aria-hidden="true">
+                        <BookOpen size={90} />
+                      </div>
+                      <div className="portal-shortcut-icon">
+                        <BookOpen size={20} aria-hidden="true" />
+                      </div>
+                      <h3 className="portal-shortcut-title">Nos Flipbooks</h3>
+                      <p className="portal-shortcut-desc">Feuilletez nos ouvrages et publications numériques enrichies.</p>
+                      <span className="portal-shortcut-link">Découvrir les livres <ChevronRight size={14} className="shortcut-chevron" /></span>
                     </div>
-                    <h3 className="portal-shortcut-title">Nos Flipbooks</h3>
-                    <p className="portal-shortcut-desc">Feuilletez nos ouvrages et publications numériques enrichies.</p>
-                    <span className="portal-shortcut-link">Découvrir les livres <ChevronRight size={14} /></span>
+
+                    <div 
+                      className="portal-shortcut-card shortcut-poetry"
+                      onClick={() => handleSelectCategory("RAPPEL")}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleSelectCategory("RAPPEL"); }}
+                      aria-label="Lire les poésies, fables et nouvelles"
+                    >
+                      <div className="portal-shortcut-watermark" aria-hidden="true">
+                        <Feather size={90} />
+                      </div>
+                      <div className="portal-shortcut-icon">
+                        <Feather size={20} aria-hidden="true" />
+                      </div>
+                      <h3 className="portal-shortcut-title">Textes & Poésies</h3>
+                      <p className="portal-shortcut-desc">Lisez et écoutez nos poésies, fables et contes avec synthèse vocale.</p>
+                      <span className="portal-shortcut-link">Lire les textes <ChevronRight size={14} className="shortcut-chevron" /></span>
+                    </div>
+
+                    <div 
+                      className="portal-shortcut-card shortcut-photos"
+                      onClick={() => setView({ type: 'gallery' })}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setView({ type: 'gallery' }); }}
+                      aria-label="Consulter la galerie photo de l'Anjou"
+                    >
+                      <div className="portal-shortcut-watermark" aria-hidden="true">
+                        <ImageIcon size={90} />
+                      </div>
+                      <div className="portal-shortcut-icon">
+                        <ImageIcon size={20} aria-hidden="true" />
+                      </div>
+                      <h3 className="portal-shortcut-title">Photos d'Anjou</h3>
+                      <p className="portal-shortcut-desc">Explorez les photographies haute définition des paysages d'Anjou.</p>
+                      <span className="portal-shortcut-link">Explorer les photos <ChevronRight size={14} className="shortcut-chevron" /></span>
+                    </div>
+
+                    <div 
+                      className="portal-shortcut-card shortcut-videos"
+                      onClick={() => setView({ type: 'videos' })}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setView({ type: 'videos' }); }}
+                      aria-label="Regarder les vidéos et conférences"
+                    >
+                      <div className="portal-shortcut-watermark" aria-hidden="true">
+                        <Play size={90} />
+                      </div>
+                      <div className="portal-shortcut-icon">
+                        <Play size={20} aria-hidden="true" />
+                      </div>
+                      <h3 className="portal-shortcut-title">Vidéos & Conférences</h3>
+                      <p className="portal-shortcut-desc">Vidéos sur le patrimoine littéraire, historique et la Loire.</p>
+                      <span className="portal-shortcut-link">Regarder <ChevronRight size={14} className="shortcut-chevron" /></span>
+                    </div>
                   </div>
 
-                  <div 
-                    className="portal-shortcut-card"
-                    onClick={() => handleSelectCategory("RAPPEL")}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleSelectCategory("RAPPEL"); }}
-                    aria-label="Lire les poésies, fables et nouvelles"
-                  >
-                    <div className="portal-shortcut-icon">
-                      <Feather size={22} aria-hidden="true" />
+                  <div className="shortcuts-row-bottom">
+                    <div 
+                      className="portal-shortcut-card shortcut-project"
+                      onClick={() => setView({ type: 'contact' })}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setView({ type: 'contact' }); }}
+                      aria-label="Proposer votre projet ou contacter la maison d'édition"
+                    >
+                      <div className="portal-shortcut-watermark" aria-hidden="true">
+                        <Send size={90} />
+                      </div>
+                      <div className="portal-shortcut-icon">
+                        <Send size={20} aria-hidden="true" />
+                      </div>
+                      <h3 className="portal-shortcut-title">Proposer un projet</h3>
+                      <p className="portal-shortcut-desc">Auteur, association ou passionné : soumettez votre manuscrit ou idée.</p>
+                      <span className="portal-shortcut-link">Nous contacter <ChevronRight size={14} className="shortcut-chevron" /></span>
                     </div>
-                    <h3 className="portal-shortcut-title">Textes & Poésies</h3>
-                    <p className="portal-shortcut-desc">Lisez et écoutez nos poésies, fables et contes avec synthèse vocale.</p>
-                    <span className="portal-shortcut-link">Lire les textes <ChevronRight size={14} /></span>
-                  </div>
-
-                  <div 
-                    className="portal-shortcut-card"
-                    onClick={() => setView({ type: 'gallery' })}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setView({ type: 'gallery' }); }}
-                    aria-label="Consulter la galerie photo de l'Anjou"
-                  >
-                    <div className="portal-shortcut-icon">
-                      <ImageIcon size={22} aria-hidden="true" />
-                    </div>
-                    <h3 className="portal-shortcut-title">Photos d'Anjou</h3>
-                    <p className="portal-shortcut-desc">Explorez les photographies haute définition des paysages d'Anjou.</p>
-                    <span className="portal-shortcut-link">Explorer les photos <ChevronRight size={14} /></span>
-                  </div>
-
-                  <div 
-                    className="portal-shortcut-card"
-                    onClick={() => setView({ type: 'videos' })}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setView({ type: 'videos' }); }}
-                    aria-label="Regarder les vidéos et conférences"
-                  >
-                    <div className="portal-shortcut-icon">
-                      <Play size={22} aria-hidden="true" />
-                    </div>
-                    <h3 className="portal-shortcut-title">Vidéos & Conférences</h3>
-                    <p className="portal-shortcut-desc">Vidéos sur le patrimoine littéraire, historique et la Loire.</p>
-                    <span className="portal-shortcut-link">Regarder <ChevronRight size={14} /></span>
-                  </div>
-
-                  <div 
-                    className="portal-shortcut-card"
-                    onClick={() => setView({ type: 'contact' })}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setView({ type: 'contact' }); }}
-                    aria-label="Proposer votre projet ou contacter la maison d'édition"
-                  >
-                    <div className="portal-shortcut-icon">
-                      <Send size={22} aria-hidden="true" />
-                    </div>
-                    <h3 className="portal-shortcut-title">Proposer un projet</h3>
-                    <p className="portal-shortcut-desc">Auteur, association ou passionné : soumettez votre manuscrit ou idée.</p>
-                    <span className="portal-shortcut-link">Nous contacter <ChevronRight size={14} /></span>
                   </div>
                 </div>
               </section>
+
+              {/* Transition wave before Heritage section */}
+              <div className="heritage-transition-wave" aria-hidden="true">
+                <svg viewBox="0 0 1440 60" fill="none" preserveAspectRatio="none">
+                  <path d="M0,20 C360,50 1080,0 1440,20 L1440,60 L0,60 Z" fill="#e0f2fe" opacity="0.4" />
+                </svg>
+              </div>
 
               {/* 5. Blocs personnalisés du PageBuilder si présents */}
               {(() => {
