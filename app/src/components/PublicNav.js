@@ -123,12 +123,24 @@ export const PublicNav = ({
             className="nav-logo"
             style={{ border: 'none', background: 'none', cursor: 'pointer' }}
           >
-            Accueil
+            ACCUEIL
           </button>
           
           <div className="nav-links">
-            {getActiveMenuItems().map((item) => {
+            {getActiveMenuItems()
+              .filter((item) => {
+                const t = (item.title || '').trim().toLowerCase();
+                if (t === 'accueil') return false;
+                if (t === 'contact') return false;
+                if (t === 'flipbooks' || t === 'vidéos' || t === 'videos' || t.startsWith('galerie')) return false;
+                if (item.shortcode === 'show_flipbooks' || item.shortcode === 'show_videos' || item.shortcode === 'show_gallery') return false;
+                return true;
+              })
+              .map((item) => {
               const hasChildren = item.children && item.children.length > 0;
+              let displayTitle = item.title || '';
+              if (displayTitle.trim().toUpperCase() === 'ART') displayTitle = 'ARTS';
+              if (displayTitle.trim().toUpperCase() === 'CONTES ET LÉGENDES' || displayTitle.trim().toUpperCase() === 'CONTES ET LEGENDES') displayTitle = 'CONTES et LÉGENDES';
               if (hasChildren) {
                 const isArts = (item.title || item.label || "").trim().toLowerCase().startsWith("art");
                 return (
@@ -143,20 +155,20 @@ export const PublicNav = ({
                             setActiveDropdown(null);
                           }}
                         >
-                          {item.title}
+                          {displayTitle}
                         </button>
                       ) : (
-                        <span className="nav-dropdown-label">{item.title}</span>
+                        <span className="nav-dropdown-label">{displayTitle}</span>
                       )}
                       <button
                         type="button"
                         className="ae-input-addon-btn"
                         onClick={() => setActiveDropdown(activeDropdown === item.title ? null : item.title)}
-                        aria-label={`Ouvrir le menu ${item.title}`}
+                        aria-label={`Ouvrir le menu ${displayTitle}`}
                         aria-expanded={activeDropdown === item.title}
                         aria-haspopup="true"
                       >
-                        <ChevronDown size={13} aria-hidden="true" />
+                        <ChevronDown size={11} aria-hidden="true" />
                       </button>
                     </div>
                     <div className={`dropdown-menu ${activeDropdown === item.title ? 'show' : ''}`} style={{ minWidth: '180px' }}>
@@ -172,7 +184,7 @@ export const PublicNav = ({
                     className="nav-item"
                     onClick={(e) => handleMenuItemClick(item, e)}
                   >
-                    {item.title}
+                    {displayTitle}
                   </button>
                 );
               }
@@ -198,7 +210,7 @@ export const PublicNav = ({
               className="nav-item contact-btn" 
               onClick={() => { if(!isPreview && setView) { setView({ type: 'contact' }); setMobileMenuOpen(false); } }}
             >
-              Contact <Send size={13} aria-hidden="true" />
+              Contact <Send size={11} aria-hidden="true" />
             </button>
 
             {/* Mobile Hamburger toggle */}

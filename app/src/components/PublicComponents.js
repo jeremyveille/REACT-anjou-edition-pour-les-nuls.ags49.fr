@@ -49,7 +49,7 @@ const AnjouEditionLogo = ({ size = 52, className = "" }) => (
   </svg>
 );
 
-export const PublicHeader = ({ darkMode, toggleDarkMode }) => {
+export const PublicHeader = ({ darkMode, toggleDarkMode, headerImage }) => {
   return (
     <header role="banner" className="ae-mockup-header">
       <a 
@@ -62,7 +62,7 @@ export const PublicHeader = ({ darkMode, toggleDarkMode }) => {
       {/* Background panoramic photo of Château d'Angers & Maine */}
       <div className="header-mockup-banner-bg" aria-hidden="true">
         <img 
-          src="/header-angers.jpg" 
+          src={headerImage || "/header-angers-panoramic.jpg"} 
           alt="" 
           className="header-mockup-bg-img"
         />
@@ -72,7 +72,7 @@ export const PublicHeader = ({ darkMode, toggleDarkMode }) => {
       <div className="header-mockup-content">
         <div className="header-mockup-logo-area">
           <div className="header-mockup-logo-icon">
-            <AnjouEditionLogo size={52} />
+            <AnjouEditionLogo size={44} />
           </div>
           <div className="header-mockup-titles">
             <h1>Anjou Édition</h1>
@@ -88,7 +88,7 @@ export const PublicHeader = ({ darkMode, toggleDarkMode }) => {
         title={darkMode ? "Activer le mode clair" : "Activer le mode sombre"}
         aria-label={darkMode ? "Activer le mode clair" : "Activer le mode sombre"}
       >
-        {darkMode ? <Sun size={20} aria-hidden="true" /> : <Moon size={20} aria-hidden="true" />}
+        {darkMode ? <Sun size={15} aria-hidden="true" /> : <Moon size={15} aria-hidden="true" />}
       </button>
     </header>
   );
