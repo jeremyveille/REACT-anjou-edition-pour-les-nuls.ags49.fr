@@ -136,23 +136,29 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
   const [localFlipbooks, setLocalFlipbooks] = useState(() => {
     try {
       const local = localStorage.getItem("ae_flipbooks");
-      const parsed = local ? JSON.parse(local) : flipbooksData;
-      const filtered = (Array.isArray(parsed) ? parsed : flipbooksData).filter(
+      if (local !== null) {
+        const parsed = JSON.parse(local);
+        if (Array.isArray(parsed)) {
+          return parsed.filter(
+            fb => fb && fb.id !== "3322" && !(fb.title || '').toLowerCase().includes("guide historique")
+          ).map((fb, idx) => ({
+            ...fb,
+            category: fb.category || (idx === 0 ? "Sciences" : idx === 1 ? "Outils" : "Poésies"),
+            date: fb.date || "14/04/2026 à 20h02",
+            pdfFile: fb.pdfFile || (fb.id === "4455" ? "secrets_vignoble_angevin.pdf" : "Seraphin-le-marin.pdf")
+          }));
+        }
+      }
+      return flipbooksData.filter(
         fb => fb && fb.id !== "3322" && !(fb.title || '').toLowerCase().includes("guide historique")
-      );
-      return filtered.map((fb, idx) => ({
+      ).map((fb, idx) => ({
         ...fb,
         category: fb.category || (idx === 0 ? "Sciences" : idx === 1 ? "Outils" : "Poésies"),
         date: fb.date || "14/04/2026 à 20h02",
         pdfFile: fb.pdfFile || (fb.id === "4455" ? "secrets_vignoble_angevin.pdf" : "Seraphin-le-marin.pdf")
       }));
     } catch (e) {
-      return flipbooksData.map((fb) => ({
-        ...fb,
-        category: "Sciences",
-        date: "14/04/2026 à 20h02",
-        pdfFile: fb.pdfFile || "secrets_vignoble_angevin.pdf"
-      }));
+      return [];
     }
   });
 
@@ -516,20 +522,15 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
     try {
       const snap = await getDocs(collection(db, "medias"));
       if (!snap || snap.empty || !snap.docs) {
-        const defaults = [
-          { id: "m1", name: "anjou_edition_livre.png", type: "image/png", size: 87044, date: "25/09/2026 à 14h30", url: "/anjou-edition-livre.png" },
-          { id: "m2", name: "nouvelle_legende.epub", type: "application/epub+zip", size: 4529124, date: "24/05/2026 à 16h45", url: "#" },
-          { id: "m3", name: "poeme_musical.mp3", type: "audio/mpeg", size: 8912048, date: "02/06/2026 à 09h30", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
-          { id: "m4", name: "logo_court.png", type: "image/png", size: 104857, date: "08/06/2026 à 11h15", url: "https://images.unsplash.com/photo-1516979187457-637abb4f9353?q=80&w=400" },
-          { id: "m5", name: "chateau_angers.jpg", type: "image/jpeg", size: 3452912, date: "14/06/2026 à 15h20", url: "https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?q=80&w=600" }
-        ];
-        for (const m of defaults) {
+        const local = localStorage.getItem("ae_medias");
+        if (local !== null) {
           try {
-            await setDoc(doc(db, "medias", m.id), m);
+            const parsed = JSON.parse(local);
+            setMediaList(Array.isArray(parsed) ? parsed : []);
+            return;
           } catch (err) {}
         }
-        setMediaList(defaults);
-        localStorage.setItem("ae_medias", JSON.stringify(defaults));
+        setMediaList([]);
       } else {
         const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setMediaList(list);
@@ -538,14 +539,14 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
     } catch (e) {
       console.error("Medias error:", e);
       const local = localStorage.getItem("ae_medias");
-      if (local) {
-        setMediaList(JSON.parse(local));
+      if (local !== null) {
+        try {
+          setMediaList(JSON.parse(local));
+        } catch (err) {
+          setMediaList([]);
+        }
       } else {
-        setMediaList([
-          { id: "m1", name: "anjou_edition_livre.png", type: "image/png", size: 87044, date: "25/09/2026 à 14h30", url: "/anjou-edition-livre.png" },
-          { id: "m2", name: "nouvelle_legende.epub", type: "application/epub+zip", size: 4529124, date: "24/05/2026 à 16h45", url: "#" },
-          { id: "m3", name: "poeme_musical.mp3", type: "audio/mpeg", size: 8912048, date: "02/06/2026 à 09h30", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" }
-        ]);
+        setMediaList([]);
       }
     }
   };
@@ -554,19 +555,15 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
     try {
       const snap = await getDocs(collection(db, "gallery"));
       if (!snap || snap.empty || !snap.docs) {
-        const defaults = [
-          { id: "g1", title: "Château d'Angers", category: "Châteaux", url: "https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?q=80&w=600", description: "L'impressionnante forteresse médiévale d'Angers et ses 17 tours de schiste et de tuffeau.", date: "12/05/2026" },
-          { id: "g2", title: "Bords de Loire", category: "Loire", url: "https://images.unsplash.com/photo-1516979187457-637abb4f9353?q=80&w=600", description: "Coucher de soleil poétique sur le plus long fleuve sauvage de France en Maine-et-Loire.", date: "20/05/2026" },
-          { id: "g3", title: "Vignobles de Savennières", category: "Vignobles", url: "https://images.unsplash.com/photo-1512820790803-83ca734da794?q=80&w=600", description: "Les célèbres coteaux de Chenin blanc surplombant la Loire sous la douceur angevine.", date: "01/06/2026" },
-          { id: "g4", title: "Abbaye de Fontevraud", category: "Châteaux", url: "https://picsum.photos/800/600?random=16", description: "La plus grande cité monastique héritée du Moyen Âge, nécropole des Plantagenêt.", date: "10/06/2026" }
-        ];
-        for (const g of defaults) {
+        const local = localStorage.getItem("ae_gallery");
+        if (local !== null) {
           try {
-            await setDoc(doc(db, "gallery", g.id), g);
+            const parsed = JSON.parse(local);
+            setGalleryList(Array.isArray(parsed) ? parsed : []);
+            return;
           } catch (err) {}
         }
-        setGalleryList(defaults);
-        localStorage.setItem("ae_gallery", JSON.stringify(defaults));
+        setGalleryList([]);
       } else {
         const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setGalleryList(list);
@@ -575,13 +572,14 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
     } catch (e) {
       console.error("Gallery error:", e);
       const local = localStorage.getItem("ae_gallery");
-      if (local) {
-        setGalleryList(JSON.parse(local));
+      if (local !== null) {
+        try {
+          setGalleryList(JSON.parse(local));
+        } catch (err) {
+          setGalleryList([]);
+        }
       } else {
-        setGalleryList([
-          { id: "g1", title: "Château d'Angers", category: "Châteaux", url: "https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?q=80&w=600", description: "L'impressionnante forteresse médiévale d'Angers.", date: "12/05/2026" },
-          { id: "g2", title: "Bords de Loire", category: "Loire", url: "https://images.unsplash.com/photo-1516979187457-637abb4f9353?q=80&w=600", description: "Coucher de soleil poétique sur le plus long fleuve.", date: "20/05/2026" }
-        ]);
+        setGalleryList([]);
       }
     }
   };
@@ -590,17 +588,15 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
     try {
       const snap = await getDocs(collection(db, "videos"));
       if (!snap || snap.empty || !snap.docs) {
-        const defaults = [
-          { id: "v1", title: "Visite guidée du Château d'Angers", url: "https://www.youtube.com/watch?v=kGgY9fG3g80", youtubeId: "kGgY9fG3g80", description: "Découvrez l'histoire de la forteresse des Ducs d'Anjou et la célèbre tenture de l'Apocalypse.", category: "Châteaux", date: "15/05/2026" },
-          { id: "v2", title: "La douceur angevine en images", url: "https://www.youtube.com/watch?v=0kG7R0oK5J0", youtubeId: "0kG7R0oK5J0", description: "Un poème visuel le long de la Loire et à travers les rues historiques d'Angers et de Saumur.", category: "Loire", date: "02/06/2026" }
-        ];
-        for (const v of defaults) {
+        const local = localStorage.getItem("ae_videos");
+        if (local !== null) {
           try {
-            await setDoc(doc(db, "videos", v.id), v);
+            const parsed = JSON.parse(local);
+            setVideoList(Array.isArray(parsed) ? parsed : []);
+            return;
           } catch (err) {}
         }
-        setVideoList(defaults);
-        localStorage.setItem("ae_videos", JSON.stringify(defaults));
+        setVideoList([]);
       } else {
         const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setVideoList(list);
@@ -609,12 +605,14 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
     } catch (e) {
       console.error("Videos error:", e);
       const local = localStorage.getItem("ae_videos");
-      if (local) {
-        setVideoList(JSON.parse(local));
+      if (local !== null) {
+        try {
+          setVideoList(JSON.parse(local));
+        } catch (err) {
+          setVideoList([]);
+        }
       } else {
-        setVideoList([
-          { id: "v1", title: "Visite guidée du Château d'Angers", url: "https://www.youtube.com/watch?v=kGgY9fG3g80", youtubeId: "kGgY9fG3g80", description: "Découvrez l'histoire de la forteresse.", category: "Châteaux", date: "15/05/2026" }
-        ]);
+        setVideoList([]);
       }
     }
   };
@@ -623,18 +621,15 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
     try {
       const snap = await getDocs(collection(db, "news"));
       if (!snap || snap.empty || !snap.docs) {
-        const defaults = [
-          { id: "n1", title: "Festival l'Anjou Littéraire 2026", content: "Le festival aura lieu le 10 Septembre 2026 à Saumur ! Préparez vos manuscrits et venez rencontrer les éditeurs de la région.", type: "Urgent", date: "2026-06-08" },
-          { id: "n2", title: "Lancement officiel du portail", content: "Le nouveau site Anjou Édition est en ligne. Les écrivains peuvent s'inscrire pour publier leurs flipbooks numériques.", type: "Info", date: "2026-06-01" },
-          { id: "n3", title: "Mise à jour des filtres de recherche", content: "Nous avons ajouté une recherche par date et par mot-clé pour faciliter la consultation de notre bibliothèque historique.", type: "Important", date: "2026-06-15" }
-        ];
-        for (const n of defaults) {
+        const local = localStorage.getItem("ae_news");
+        if (local !== null) {
           try {
-            await setDoc(doc(db, "news", n.id), n);
+            const parsed = JSON.parse(local);
+            setNewsList(Array.isArray(parsed) ? parsed : []);
+            return;
           } catch (err) {}
         }
-        setNewsList(defaults);
-        localStorage.setItem("ae_news", JSON.stringify(defaults));
+        setNewsList([]);
       } else {
         const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setNewsList(list);
@@ -643,12 +638,14 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
     } catch (e) {
       console.error("News error:", e);
       const local = localStorage.getItem("ae_news");
-      if (local) {
-        setNewsList(JSON.parse(local));
+      if (local !== null) {
+        try {
+          setNewsList(JSON.parse(local));
+        } catch (err) {
+          setNewsList([]);
+        }
       } else {
-        setNewsList([
-          { id: "n1", title: "Festival l'Anjou Littéraire 2026", content: "Le festival aura lieu le 10 Septembre 2026 !", type: "Urgent", date: "2026-06-08" }
-        ]);
+        setNewsList([]);
       }
     }
   };
@@ -657,18 +654,19 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
     try {
       const snap = await getDocs(collection(db, "accounts"));
       if (!snap || snap.empty || !snap.docs) {
-        const defaults = [
-          { id: "u1", name: "JEREMY VEILLE", email: "jeremy.veille@hotmail.fr", role: "Administrateur", status: "Actif", color: "#004b7a" },
-          { id: "u2", name: "Sylvie Gautier", email: "sylvie.gautier@anjou-lettres.fr", role: "Écrivain", status: "Actif", color: "#336ddc" },
-          { id: "u3", name: "Pierre Bougier", email: "p.bougier@maine-loire.fr", role: "Éditeur", status: "Inactif", color: "#64748b" }
-        ];
-        for (const u of defaults) {
+        const local = localStorage.getItem("ae_accounts");
+        if (local !== null) {
           try {
-            await setDoc(doc(db, "accounts", u.id), u);
+            const parsed = JSON.parse(local);
+            setAccountsList(Array.isArray(parsed) ? parsed : []);
+            return;
           } catch (err) {}
         }
-        setAccountsList(defaults);
-        localStorage.setItem("ae_accounts", JSON.stringify(defaults));
+        const defaultAdmin = [
+          { id: "u1", name: "JEREMY VEILLE", email: "jeremy.veille@hotmail.fr", role: "Administrateur", status: "Actif", color: "#004b7a" }
+        ];
+        setAccountsList(defaultAdmin);
+        localStorage.setItem("ae_accounts", JSON.stringify(defaultAdmin));
       } else {
         const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setAccountsList(list);
@@ -677,12 +675,15 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
     } catch (e) {
       console.error("Accounts error:", e);
       const local = localStorage.getItem("ae_accounts");
-      if (local) {
-        setAccountsList(JSON.parse(local));
+      if (local !== null) {
+        try {
+          setAccountsList(JSON.parse(local));
+        } catch (err) {
+          setAccountsList([]);
+        }
       } else {
         setAccountsList([
-          { id: "u1", name: "JEREMY VEILLE", email: "jeremy.veille@hotmail.fr", role: "Administrateur", status: "Actif", color: "#004b7a" },
-          { id: "u2", name: "Sylvie Gautier", email: "sylvie.gautier@anjou-lettres.fr", role: "Écrivain", status: "Actif", color: "#336ddc" }
+          { id: "u1", name: "JEREMY VEILLE", email: "jeremy.veille@hotmail.fr", role: "Administrateur", status: "Actif", color: "#004b7a" }
         ]);
       }
     }
@@ -847,28 +848,24 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
       const snap = await getDocs(collection(db, "flipbooks"));
       if (!snap || snap.empty || !snap.docs) {
         const local = localStorage.getItem("ae_flipbooks");
-        if (local) {
+        if (local !== null) {
           try {
             const parsed = JSON.parse(local);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-              setFlipbooks(parsed);
+            if (Array.isArray(parsed)) {
+              setFlipbooks(parsed.filter(fb => fb && fb.id !== "3322" && !(fb.title || '').toLowerCase().includes("guide historique")));
               return;
             }
           } catch (err) {}
         }
-        const defaults = flipbooksData.map((fb, idx) => ({
+        const filtered = flipbooksData.filter(
+          fb => fb && fb.id !== "3322" && !(fb.title || '').toLowerCase().includes("guide historique")
+        ).map((fb, idx) => ({
           ...fb,
           category: fb.category || (idx === 0 ? "Sciences" : "Outils"),
           date: fb.date || "14/04/2026 à 20h02",
           pdfFile: fb.pdfFile || "secrets_vignoble_angevin.pdf"
         }));
-        for (const fb of defaults) {
-          try {
-            await setDoc(doc(db, "flipbooks", fb.id), fb);
-          } catch (err) {}
-        }
-        setFlipbooks(defaults);
-        localStorage.setItem("ae_flipbooks", JSON.stringify(defaults));
+        setFlipbooks(filtered);
       } else {
         const list = [];
         for (let idx = 0; idx < snap.docs.length; idx++) {
@@ -893,29 +890,24 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
             pdfFile: data.pdfFile || "secrets_vignoble_angevin.pdf"
           });
         }
-        const finalList = list.length > 0 ? list : flipbooksData;
-        setFlipbooks(finalList);
-        localStorage.setItem("ae_flipbooks", JSON.stringify(finalList));
+        setFlipbooks(list);
+        localStorage.setItem("ae_flipbooks", JSON.stringify(list));
       }
     } catch (e) {
       console.error("Flipbooks fetch error:", e);
       const local = localStorage.getItem("ae_flipbooks");
-      if (local) {
+      if (local !== null) {
         try {
           const parsed = JSON.parse(local);
           const filtered = (Array.isArray(parsed) ? parsed : []).filter(
             fb => fb && fb.id !== "3322" && !(fb.title || '').toLowerCase().includes("guide historique")
           );
-          setFlipbooks(filtered.length > 0 ? filtered : flipbooksData);
-        } catch (err) {}
+          setFlipbooks(filtered);
+        } catch (err) {
+          setFlipbooks([]);
+        }
       } else {
-        const defaults = flipbooksData.map((fb, idx) => ({
-          ...fb,
-          category: idx === 0 ? "Sciences" : "Outils",
-          date: "14/04/2026 à 20h02",
-          pdfFile: fb.pdfFile || "secrets_vignoble_angevin.pdf"
-        }));
-        setFlipbooks(defaults);
+        setFlipbooks([]);
       }
     }
   };
@@ -1183,23 +1175,13 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
           },
           { 
             pageNum: 2, 
-            title: "Introduction", 
-            content: `Cet ouvrage est issu du document '${fileName}'. ${cleanDesc} Il s'inscrit dans la collection d'ouvrages culturels et historiques d'Anjou Édition, visant à promouvoir le patrimoine de notre belle région de la Loire.` 
+            title: "Présentation", 
+            content: `Cet ouvrage est issu du document '${fileName}'.\n\n${cleanDesc}` 
           },
           { 
             pageNum: 3, 
-            title: "Chapitre 1: Histoire locale", 
-            content: `L'Anjou possède un patrimoine historique exceptionnel. Des premiers châteaux en pierre construits par Foulques Nerra au XIe siècle, aux splendides demeures de la Renaissance, chaque village de la région conserve la trace de cette riche histoire fluviale et royale.` 
-          },
-          { 
-            pageNum: 4, 
-            title: "Chapitre 2: Terroirs d'Anjou", 
-            content: `Façonné par la Loire et ses affluents, le terroir angevin est mondialement réputé pour sa douceur et sa diversité. C'est ici que s'épanouissent des cépages uniques, créant des vins de caractère allant de la fraîcheur du Chenin blanc à la rondeur du Cabernet franc.` 
-          },
-          { 
-            pageNum: 5, 
-            title: "Conclusion", 
-            content: "En refermant ce flipbook numérique, nous espérons avoir éveillé votre curiosité pour l'Anjou. Ce document témoigne de l'attachement indéfectible d'Anjou Édition à la transmission de nos récits et de nos savoirs." 
+            title: "Contenu du document", 
+            content: `Consultez le lecteur PDF interactif pour découvrir l'intégralité des pages et illustrations de cette publication.` 
           }
         ];
       }
@@ -1383,6 +1365,8 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
 
   // Delete handlers
   const handleDeletePage = async (id) => {
+    const target = pagesList.find(p => p.id === id);
+    if (!window.confirm(`Supprimer définitivement la page "${target?.title || 'sélectionnée'}" ?`)) return;
     try {
       await pageService.deletePage(id, 'pages');
       setPagesList(pagesList.filter(p => p.id !== id));
@@ -1394,6 +1378,8 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
   };
 
   const handleDeleteArticle = async (id) => {
+    const target = articlesList.find(a => a.id === id);
+    if (!window.confirm(`Supprimer définitivement l'article "${target?.title || 'sélectionné'}" ?`)) return;
     try {
       await pageService.deletePage(id, 'articles');
       setArticlesList(articlesList.filter(a => a.id !== id));
@@ -3396,7 +3382,7 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
                                   type="text"
                                   value={aiTopic}
                                   onChange={(e) => setAiTopic(e.target.value)}
-                                  placeholder="ex: L'histoire du Château d'Angers"
+                                  placeholder="ex: Présentation de notre collection littéraire"
                                   className="db-input"
                                 />
                               </div>
@@ -3408,10 +3394,10 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
                                   onChange={(e) => setAiStyle(e.target.value)}
                                   className="db-select"
                                 >
-                                  <option value="Historique">Historique (Sciences)</option>
-                                  <option value="Poétique">Poétique (Poésies)</option>
+                                  <option value="Éditorial">Éditorial (Maison d'édition)</option>
+                                  <option value="Littéraire">Littéraire (Poésies & Récits)</option>
                                   <option value="Journalistique">Journalistique (Essais)</option>
-                                  <option value="Récit de voyage">Récit de voyage (Contes)</option>
+                                  <option value="Pédagogique">Pédagogique (Guide & Conseils)</option>
                                 </select>
                               </div>
 
