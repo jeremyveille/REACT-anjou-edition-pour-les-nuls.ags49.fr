@@ -18,7 +18,7 @@ import {
   YoutubeChannel,
   ContactFormWidget
 } from '../bootstrap-blocks/ContentWidgets';
-import { Trash2, ArrowUp, ArrowDown, Plus, GripVertical, Copy, Image as ImageIcon, Film } from 'lucide-react';
+import { Trash2, ArrowUp, ArrowDown, Plus, GripVertical, Copy, Image as ImageIcon, Film, Eye, EyeOff } from 'lucide-react';
 import { useDroppable, useDraggable } from '@dnd-kit/core';
 import { BLOCK_DEFINITIONS } from './blockRegistry';
 
@@ -83,6 +83,7 @@ export const BlockRenderer = ({
   onRemoveBlock = () => {},
   onMoveBlock = () => {},
   onDuplicateBlock = () => {},
+  onToggleHideBlock = () => {},
   onAddChild = () => {},
   onOpenMediaPicker = null,
   parentBlock = null,
@@ -105,6 +106,13 @@ export const BlockRenderer = ({
     return null;
   }
 
+  const isHidden = Boolean(settings.hidden || block.hidden);
+
+  // Sur le site public / lecteur final : ne jamais afficher les blocs masqués
+  if (!isEditing && isHidden) {
+    return null;
+  }
+
   const isActive = activeBlockId === id;
   const blockDef = BLOCK_DEFINITIONS[type] || {};
   const displayLabel = blockDef.label || type;
@@ -120,6 +128,7 @@ export const BlockRenderer = ({
       onRemoveBlock={onRemoveBlock}
       onMoveBlock={onMoveBlock}
       onDuplicateBlock={onDuplicateBlock}
+      onToggleHideBlock={onToggleHideBlock}
       onAddChild={onAddChild}
       onOpenMediaPicker={onOpenMediaPicker}
       parentBlock={block}
@@ -210,7 +219,7 @@ export const BlockRenderer = ({
   return (
     <div 
       ref={setNodeRef}
-      className={`ae-pagebuilder-block-wrapper pb-editor-wrapper pb-type-${type} ${isActive ? 'pb-active-block' : ''} ${isOver ? 'ae-drop-active-block' : ''}`}
+      className={`ae-pagebuilder-block-wrapper pb-editor-wrapper pb-type-${type} ${isActive ? 'pb-active-block' : ''} ${isOver ? 'ae-drop-active-block' : ''} ${isHidden ? 'pb-block-hidden' : ''}`}
       onClick={handleWrapperClick}
       data-block-id={id}
     >
@@ -219,7 +228,10 @@ export const BlockRenderer = ({
       
       {/* Barre de contrôle contextuelle */}
       <div className="pb-control-bar">
-        <span className="pb-block-label">{displayLabel}</span>
+        <span className="pb-block-label">
+          {displayLabel}
+          {isHidden && <span className="pb-hidden-badge" title="Ce bloc est masqué sur le site public">Masqué</span>}
+        </span>
         
         {/* Actions de déplacement (Drag & Drop + Flèches) */}
         <DragHandle id={id} />
@@ -297,6 +309,20 @@ export const BlockRenderer = ({
             <ImageIcon className="ae-icon-tiny" aria-hidden="true" />
           </button>
         )}
+
+        {/* Action de masquage / affichage (Visibilité) */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleHideBlock(id, parentBlock ? parentBlock.id : null);
+          }}
+          className={`pb-control-btn ${isHidden ? 'pb-btn-warning' : ''}`}
+          title={isHidden ? "Réafficher ce bloc sur le site public" : "Masquer ce bloc sur le site public"}
+          aria-label={isHidden ? `Réafficher le bloc ${displayLabel}` : `Masquer le bloc ${displayLabel}`}
+        >
+          {isHidden ? <EyeOff className="ae-icon-tiny" aria-hidden="true" /> : <Eye className="ae-icon-tiny" aria-hidden="true" />}
+        </button>
 
         {/* Action de duplication */}
         <button 

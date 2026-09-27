@@ -826,8 +826,43 @@ export const PageBuilder = ({
     pushBlocksState(moveInTree(blocks));
   };
 
+  // MASQUER / RÉAFFICHER UN BLOC (TOGGLE VISIBILITÉ)
+  const handleToggleHideBlock = useCallback((id) => {
+    const toggleInTree = (tree) => {
+      return tree.map(b => {
+        if (b.id === id) {
+          const currentHidden = b.settings?.hidden === true || b.hidden === true;
+          return {
+            ...b,
+            hidden: !currentHidden,
+            settings: {
+              ...(b.settings || {}),
+              hidden: !currentHidden
+            }
+          };
+        }
+        if (b.children) {
+          return { ...b, children: toggleInTree(b.children) };
+        }
+        return b;
+      });
+    };
+    const nextState = toggleInTree(blocks);
+    pushBlocksState(normalizeBlocks(nextState));
+  }, [blocks, pushBlocksState]);
+
   // SUPPRIMER UN BLOC
   const handleRemoveBlock = useCallback((id, parentId) => {
+    let confirmDelete = true;
+    try {
+      if (typeof window !== 'undefined' && typeof window.confirm === 'function') {
+        confirmDelete = window.confirm("Êtes-vous sûr de vouloir supprimer cet élément ?");
+      }
+    } catch (e) {
+      confirmDelete = true;
+    }
+    if (!confirmDelete) return;
+
     const removeFromTree = (tree) => {
       if (!parentId) {
         return tree.filter(b => b.id !== id);
@@ -904,7 +939,14 @@ export const PageBuilder = ({
       setSaveToast({ show: true, message: "Aucune modification à annuler (état initial déjà actif).", type: 'info' });
       return;
     }
-    const confirmRevert = window.confirm("Voulez-vous annuler toutes les modifications non enregistrées et rétablir l'état initial ?");
+    let confirmRevert = true;
+    try {
+      if (typeof window !== 'undefined' && typeof window.confirm === 'function') {
+        confirmRevert = window.confirm("Voulez-vous annuler toutes les modifications non enregistrées et rétablir l'état initial ?");
+      }
+    } catch (e) {
+      confirmRevert = true;
+    }
     if (confirmRevert) {
       const init = initialContentRef.current;
       setPageTitle(init.title || '');
@@ -1488,6 +1530,7 @@ export const PageBuilder = ({
               onRemoveBlock={handleRemoveBlock}
               onMoveBlock={handleMoveBlock}
               onDuplicateBlock={handleDuplicateBlock}
+              onToggleHideBlock={handleToggleHideBlock}
               onAddChild={handleAddChild}
               onOpenMediaPicker={handleOpenMediaPicker}
               device={device}

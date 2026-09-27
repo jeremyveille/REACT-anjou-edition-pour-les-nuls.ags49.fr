@@ -15,6 +15,7 @@ export const BuilderCanvas = ({
   onRemoveBlock = () => {},
   onMoveBlock = () => {},
   onDuplicateBlock = () => {},
+  onToggleHideBlock = () => {},
   onAddChild = () => {},
   onOpenMediaPicker = null,
   device = 'desktop',
@@ -165,6 +166,7 @@ export const BuilderCanvas = ({
                       onRemoveBlock={onRemoveBlock}
                       onMoveBlock={onMoveBlock}
                       onDuplicateBlock={onDuplicateBlock}
+                      onToggleHideBlock={onToggleHideBlock}
                       onAddChild={onAddChild}
                       onOpenMediaPicker={onOpenMediaPicker}
                       parentBlock={null}

@@ -189,6 +189,27 @@ export const BuilderSettings = ({ block, onChange }) => {
         </h6>
       </div>
 
+      {/* Visibilité & Publication du bloc */}
+      <div className="p-2.5 mb-3 bg-slate-50 dark:bg-slate-800 rounded border d-flex align-items-center justify-content-between">
+        <div className="d-flex flex-column">
+          <span className="text-xs font-bold text-slate-700 dark:text-slate-200">Visibilité sur le site public</span>
+          <span className="text-[11px] text-muted">{settings.hidden ? 'Masqué aux visiteurs' : 'Visible publiquement'}</span>
+        </div>
+        <div className="d-flex align-items-center gap-2">
+          <input
+            type="checkbox"
+            id={`chk-vis-${id}`}
+            checked={!settings.hidden}
+            onChange={(e) => updateSetting('hidden', !e.target.checked)}
+            className="cursor-pointer"
+            style={{ width: '16px', height: '16px' }}
+          />
+          <label htmlFor={`chk-vis-${id}`} className="text-xs font-semibold cursor-pointer mb-0">
+            {settings.hidden ? 'Masqué' : 'Actif'}
+          </label>
+        </div>
+      </div>
+
       <div className="space-y-4 max-h-[72vh] overflow-y-auto pr-1" style={{ maxHeight: 'calc(100vh - 220px)', overflowY: 'auto' }}>
         
         {/* =========================================================================
@@ -868,7 +889,7 @@ export const BuilderSettings = ({ block, onChange }) => {
         {type === 'image' && (
           <div className="space-y-3">
             {settings.src && (
-              <div className="pb-media-preview-box mb-2 p-2 border rounded-lg bg-slate-50 text-center shadow-sm">
+              <div className="pb-media-preview-box mb-2 p-2 border rounded-lg bg-slate-50 text-center shadow-sm position-relative">
                 <img 
                   src={settings.src} 
                   alt={settings.alt || "Aperçu de l'image"} 
@@ -876,8 +897,20 @@ export const BuilderSettings = ({ block, onChange }) => {
                   style={{ maxHeight: '150px', objectFit: 'cover' }}
                   onError={(e) => { e.target.style.display = 'none'; }}
                 />
-                <div className="mt-1 text-muted text-xs" style={{ fontSize: '11px' }}>
-                  Aperçu de l'image actuelle
+                <div className="mt-1 text-muted text-xs d-flex justify-content-between align-items-center" style={{ fontSize: '11px' }}>
+                  <span>Image actuelle</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      updateSetting('src', '');
+                      updateSetting('caption', '');
+                    }}
+                    className="btn btn-outline-danger btn-xs py-0.5 px-1.5"
+                    style={{ fontSize: '10px' }}
+                    title="Supprimer l'image actuelle"
+                  >
+                    Supprimer l'image
+                  </button>
                 </div>
               </div>
             )}
@@ -891,7 +924,7 @@ export const BuilderSettings = ({ block, onChange }) => {
                 placeholder="https://... ou data:image/..."
                 className="db-input text-xs w-100"
               />
-              <div className="mt-1.5">
+              <div className="mt-1.5 d-flex gap-2">
                 <button
                   type="button"
                   onClick={() => setMediaModal({
@@ -914,7 +947,7 @@ export const BuilderSettings = ({ block, onChange }) => {
             </div>
 
             <div>
-              <label className="db-label font-bold text-xs">Téléverser une nouvelle image</label>
+              <label className="db-label font-bold text-xs">Téléverser / Remplacer par un fichier</label>
               <input
                 type="file"
                 accept="image/*"
@@ -944,18 +977,29 @@ export const BuilderSettings = ({ block, onChange }) => {
                 type="text"
                 value={settings.alt || ''}
                 onChange={(e) => updateSetting('alt', e.target.value)}
-                placeholder="Description pour les lecteurs d'écran"
+                placeholder="Description de l'image pour l'accessibilité"
                 className="db-input text-xs w-100"
               />
             </div>
 
             <div>
-              <label className="db-label font-bold text-xs">Lien optionnel (Clic sur l'image)</label>
+              <label className="db-label font-bold text-xs">Légende de l'image (Optionnel)</label>
+              <input
+                type="text"
+                value={settings.caption || ''}
+                onChange={(e) => updateSetting('caption', e.target.value)}
+                placeholder="Légende affichée sous l'image"
+                className="db-input text-xs w-100"
+              />
+            </div>
+
+            <div>
+              <label className="db-label font-bold text-xs">Lien de redirection au clic (Optionnel)</label>
               <input
                 type="text"
                 value={settings.link || ''}
                 onChange={(e) => updateSetting('link', e.target.value)}
-                placeholder="https://..."
+                placeholder="https://... ou /flipbooks"
                 className="db-input text-xs w-100"
               />
             </div>

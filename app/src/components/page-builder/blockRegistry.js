@@ -510,12 +510,13 @@ export const cloneBlock = (block) => {
 
 /**
  * Génère la structure complète de blocs pour la page d'accueil par défaut.
- * Contient un bloc Image et un bloc Vidéo directement éditables et visibles.
+ * Centrée sur Anjou Édition (maison d'édition & plateforme de publication).
+ * Aucun contenu historique régional n'est inventé ou injecté automatiquement.
  */
 export const getDefaultHomepageBlocks = () => {
   return [
     {
-      id: "sec_home_image_featured",
+      id: "sec_home_presentation",
       type: "section",
       settings: {
         classes: "py-5 bg-white border-top border-bottom",
@@ -523,42 +524,42 @@ export const getDefaultHomepageBlocks = () => {
       },
       children: [
         {
-          id: "cont_home_image_featured",
+          id: "cont_home_presentation",
           type: "container",
           settings: { fluid: false },
           children: [
             {
-              id: "row_home_image_featured",
+              id: "row_home_presentation",
               type: "row",
               settings: { classes: "align-items-center g-4" },
               children: [
                 {
-                  id: "col_home_image_left",
+                  id: "col_home_presentation_left",
                   type: "column",
                   settings: { sizeClasses: "col-md-6 col-12" },
                   children: [
                     {
-                      id: "heading_home_heritage",
+                      id: "heading_home_presentation",
                       type: "heading",
                       settings: {
                         level: "h2",
-                        content: "Le Patrimoine et la Douceur d'Anjou",
+                        content: "Anjou Édition — Une maison d’édition accessible à tous",
                         classes: "fw-bold text-dark mb-3"
                       }
                     },
                     {
-                      id: "text_home_heritage",
+                      id: "text_home_presentation",
                       type: "text",
                       settings: {
-                        content: "<p>Découvrez la richesse culturelle, littéraire et paysagère de notre région. De la Loire sauvage aux forteresses des Ducs d'Anjou, plongez au cœur de récits captivants et de créations uniques.</p>",
+                        content: "<p>Anjou Édition est une plateforme éditoriale ouverte aux auteurs, lecteurs, passionnés et curieux. Notre vocation est de donner vie à vos projets d'écriture, de transmission et de partage éditorial.</p>",
                         classes: "text-muted mb-4"
                       }
                     },
                     {
-                      id: "btn_home_heritage",
+                      id: "btn_home_presentation",
                       type: "button",
                       settings: {
-                        text: "Explorer nos publications",
+                        text: "Découvrir nos publications",
                         link: "/flipbooks",
                         buttonStyle: "btn-primary",
                         icon: "BookOpen"
@@ -567,17 +568,17 @@ export const getDefaultHomepageBlocks = () => {
                   ]
                 },
                 {
-                  id: "col_home_image_right",
+                  id: "col_home_presentation_right",
                   type: "column",
                   settings: { sizeClasses: "col-md-6 col-12" },
                   children: [
                     {
-                      id: "img_home_featured",
+                      id: "img_home_presentation",
                       type: "image",
                       settings: {
-                        src: "https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?q=80&w=1000",
-                        alt: "Château d'Angers et bord de Loire",
-                        caption: "Château d'Angers - Forteresse médiévale au bord de la Maine",
+                        src: "/anjou-edition-livre.png",
+                        alt: "Anjou Édition — Ouvrages et publications",
+                        caption: "Anjou Édition — Rendre l'édition et la lecture accessibles à tous",
                         classes: "img-fluid rounded-4 shadow-md w-100"
                       }
                     }
@@ -590,7 +591,7 @@ export const getDefaultHomepageBlocks = () => {
       ]
     },
     {
-      id: "sec_home_video_featured",
+      id: "sec_home_video_presentation",
       type: "section",
       settings: {
         classes: "py-5 bg-slate-50",
@@ -598,46 +599,46 @@ export const getDefaultHomepageBlocks = () => {
       },
       children: [
         {
-          id: "cont_home_video_featured",
+          id: "cont_home_video_presentation",
           type: "container",
           settings: { fluid: false },
           children: [
             {
-              id: "heading_home_video",
+              id: "heading_home_video_presentation",
               type: "heading",
               settings: {
                 level: "h2",
-                content: "Conférence & Patrimoine en Vidéo",
+                content: "Présentation & Rencontres Éditoriales",
                 alignment: "center",
                 classes: "fw-bold text-dark text-center mb-2"
               }
             },
             {
-              id: "text_home_video_subtitle",
+              id: "text_home_video_presentation_subtitle",
               type: "text",
               settings: {
-                content: "<p class='text-center text-muted mb-4'>Visionnez nos conférences littéraires, découvertes historiques et documentaires sur le terroir angevin.</p>",
+                content: "<p class='text-center text-muted mb-4'>Découvrez notre démarche éditoriale, nos entretiens avec les auteurs et nos projets de publication.</p>",
                 alignment: "center",
                 classes: "text-center mb-4"
               }
             },
             {
-              id: "row_home_video",
+              id: "row_home_video_presentation",
               type: "row",
               settings: { classes: "justify-content-center" },
               children: [
                 {
-                  id: "col_home_video",
+                  id: "col_home_video_presentation",
                   type: "column",
                   settings: { sizeClasses: "col-lg-10 col-12" },
                   children: [
                     {
-                      id: "vid_home_featured",
+                      id: "vid_home_presentation",
                       type: "video",
                       settings: {
-                        url: "https://www.youtube.com/watch?v=kGgY9fG3g80",
-                        videoId: "kGgY9fG3g80",
-                        title: "Visite guidée et patrimoine d'Anjou",
+                        url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+                        videoId: "dQw4w9WgXcQ",
+                        title: "Présentation Anjou Édition",
                         classes: "shadow-lg rounded-4 overflow-hidden"
                       }
                     }

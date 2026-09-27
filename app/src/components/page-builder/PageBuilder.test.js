@@ -14,6 +14,7 @@ describe('PageBuilder and Block Architecture Tests', () => {
   beforeEach(() => {
     localStorage.clear();
     jest.clearAllMocks();
+    window.confirm = jest.fn(() => true);
     window.history.pushState(null, '', '/ae-dashboard/builder');
   });
 
