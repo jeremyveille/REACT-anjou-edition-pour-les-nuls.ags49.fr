@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import './App.css';
 import {
   BookOpen,
@@ -24,7 +24,6 @@ import {
 import {
   textsData,
   flipbooksData,
-  videosData,
   galleryImages,
   articlesData,
   generateDefaultMenus
@@ -201,33 +200,79 @@ function App() {
   const [flipbooks, setFlipbooks] = useState(() => {
     try {
       const local = localStorage.getItem("ae_flipbooks");
-      const rawData = local ? JSON.parse(local) : flipbooksData;
-      const filtered = (Array.isArray(rawData) ? rawData : flipbooksData).filter(
-        fb => fb && fb.id !== "3322" && !(fb.title || '').toLowerCase().includes("guide historique")
-      );
-      if (filtered.length > 0) {
-        return filtered.map(fb => ({
-          ...fb,
-          pdfFile: fb.pdfFile || (fb.id === "4455" ? "secrets_vignoble_angevin.pdf" : "Seraphin-le-marin.pdf")
-        }));
+      if (local !== null) {
+        const parsed = JSON.parse(local);
+        if (Array.isArray(parsed)) {
+          return parsed.filter(
+            fb => fb && fb.id !== "3322" && !(fb.title || '').toLowerCase().includes("guide historique")
+          ).map(fb => ({
+            ...fb,
+            pdfFile: fb.pdfFile || (fb.id === "4455" ? "secrets_vignoble_angevin.pdf" : "Seraphin-le-marin.pdf")
+          }));
+        }
       }
-    } catch (e) {}
-    return flipbooksData.map(fb => ({
-      ...fb,
-      pdfFile: fb.pdfFile || (fb.id === "4455" ? "secrets_vignoble_angevin.pdf" : "Seraphin-le-marin.pdf")
-    }));
+      return flipbooksData.filter(
+        fb => fb && fb.id !== "3322" && !(fb.title || '').toLowerCase().includes("guide historique")
+      ).map(fb => ({
+        ...fb,
+        pdfFile: fb.pdfFile || (fb.id === "4455" ? "secrets_vignoble_angevin.pdf" : "Seraphin-le-marin.pdf")
+      }));
+    } catch (e) {
+      return [];
+    }
   });
 
+  // Dynamic Public Gallery & Videos States
+  const [publicGallery, setPublicGallery] = useState(() => {
+    try {
+      const local = localStorage.getItem("ae_gallery");
+      if (local !== null) {
+        const parsed = JSON.parse(local);
+        return Array.isArray(parsed) ? parsed : [];
+      }
+    } catch (e) {}
+    return [];
+  });
 
+  const [publicVideos, setPublicVideos] = useState(() => {
+    try {
+      const local = localStorage.getItem("ae_videos");
+      if (local !== null) {
+        const parsed = JSON.parse(local);
+        return Array.isArray(parsed) ? parsed : [];
+      }
+    } catch (e) {}
+    return [];
+  });
 
   useEffect(() => {
     let isMounted = true;
-    const fetchFlipbooks = async () => {
+    const fetchPublicMedia = async () => {
       try {
-        const snap = await getDocs(collection(db, "flipbooks"));
-        if (isMounted && snap && !snap.empty && snap.docs) {
+        let snapFb = null;
+        let galSnap = null;
+        let vidSnap = null;
+
+        try {
+          const res = getDocs(collection(db, "flipbooks"));
+          snapFb = res && typeof res.then === 'function' ? await res : res;
+        } catch (e) {}
+
+        try {
+          const res = getDocs(collection(db, "gallery"));
+          galSnap = res && typeof res.then === 'function' ? await res : res;
+        } catch (e) {}
+
+        try {
+          const res = getDocs(collection(db, "videos"));
+          vidSnap = res && typeof res.then === 'function' ? await res : res;
+        } catch (e) {}
+
+        if (!isMounted) return;
+
+        if (snapFb && !snapFb.empty && snapFb.docs) {
           const list = [];
-          for (const docSnap of snap.docs) {
+          for (const docSnap of snapFb.docs) {
             const data = docSnap.data() || {};
             const isGuideHistorique = docSnap.id === "3322" || 
               (data.title || '').toLowerCase().includes("guide historique") ||
@@ -246,17 +291,29 @@ function App() {
               pdfFile: data.pdfFile || (docSnap.id === "4455" ? "secrets_vignoble_angevin.pdf" : "Seraphin-le-marin.pdf")
             });
           }
-          const finalList = list.length > 0 ? list : flipbooksData;
-          setFlipbooks(finalList);
-          localStorage.setItem("ae_flipbooks", JSON.stringify(finalList));
+          setFlipbooks(list);
+          localStorage.setItem("ae_flipbooks", JSON.stringify(list));
+        }
+
+        if (galSnap && !galSnap.empty && galSnap.docs) {
+          const list = galSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+          setPublicGallery(list);
+          localStorage.setItem("ae_gallery", JSON.stringify(list));
+        }
+
+        if (vidSnap && !vidSnap.empty && vidSnap.docs) {
+          const list = vidSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+          setPublicVideos(list);
+          localStorage.setItem("ae_videos", JSON.stringify(list));
         }
       } catch (err) {
         if (isMounted) {
-          console.error("Failed to load flipbooks from Firestore:", err);
+          console.error("Failed to load public media from Firestore:", err);
         }
       }
     };
-    fetchFlipbooks();
+
+    fetchPublicMedia();
     return () => {
       isMounted = false;
     };
@@ -548,6 +605,26 @@ function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleLightboxNext = useCallback(() => {
+    const list = publicGallery.length > 0 ? publicGallery : galleryImages;
+    if (list.length === 0) return;
+    setLightbox(prev => ({
+      ...prev,
+      currentIndex: (prev.currentIndex + 1) % list.length,
+      zoom: false
+    }));
+  }, [publicGallery]);
+
+  const handleLightboxPrev = useCallback(() => {
+    const list = publicGallery.length > 0 ? publicGallery : galleryImages;
+    if (list.length === 0) return;
+    setLightbox(prev => ({
+      ...prev,
+      currentIndex: (prev.currentIndex - 1 + list.length) % list.length,
+      zoom: false
+    }));
+  }, [publicGallery]);
+
   // Keyboard navigation for Lightbox
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -558,23 +635,7 @@ function App() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [lightbox.isOpen, lightbox.currentIndex]);
-
-  const handleLightboxNext = () => {
-    setLightbox(prev => ({
-      ...prev,
-      currentIndex: (prev.currentIndex + 1) % galleryImages.length,
-      zoom: false
-    }));
-  };
-
-  const handleLightboxPrev = () => {
-    setLightbox(prev => ({
-      ...prev,
-      currentIndex: (prev.currentIndex - 1 + galleryImages.length) % galleryImages.length,
-      zoom: false
-    }));
-  };
+  }, [lightbox.isOpen, lightbox.currentIndex, handleLightboxNext, handleLightboxPrev]);
 
   // Helper to get active root menu items and their children
   function buildMenuTree(items, parentId = null) {
@@ -935,15 +996,23 @@ function App() {
           </button>
 
           <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
-            <img 
-              src={galleryImages[lightbox.currentIndex].url} 
-              alt={galleryImages[lightbox.currentIndex].title}
-              className={lightbox.zoom ? 'zoomed' : ''} 
-            />
-            <div className="lightbox-caption">
-              <h3>{galleryImages[lightbox.currentIndex].title}</h3>
-              <p>{galleryImages[lightbox.currentIndex].description}</p>
-            </div>
+            {(() => {
+              const list = publicGallery.length > 0 ? publicGallery : galleryImages;
+              const currentImg = list[lightbox.currentIndex] || list[0] || {};
+              return (
+                <>
+                  <img 
+                    src={currentImg.url} 
+                    alt={currentImg.title || 'Photographie'}
+                    className={lightbox.zoom ? 'zoomed' : ''} 
+                  />
+                  <div className="lightbox-caption">
+                    <h3>{currentImg.title || 'Photographie'}</h3>
+                    {currentImg.description && <p>{currentImg.description}</p>}
+                  </div>
+                </>
+              );
+            })()}
           </div>
 
           <button 
@@ -1673,7 +1742,6 @@ function App() {
           )}
 
           {/* VIEW: FLIPBOOKS */}
-
           {view.type === 'flipbooks' && (
             <div className="flipbooks-view fade-in">
               <button 
@@ -1690,28 +1758,46 @@ function App() {
                   <h2 className="view-title">Nos Flipbooks Interactifs</h2>
                   <p className="view-description">Sélectionnez un ouvrage ci-dessous pour le consulter en ligne dans notre lecteur interactif.</p>
                   
-                  <div className="flipbooks-grid">
-                    {flipbooks.map((fb) => (
-                      <div key={fb.id} className="flipbook-card">
-                        <div className="flipbook-cover-mock">
-                          <BookOpen size={48} color="white" />
-                          <h3>{fb.title}</h3>
+                  {flipbooks.length === 0 ? (
+                    <div className="text-center py-5 text-muted">
+                      <BookOpen size={48} className="mx-auto mb-3 text-slate-400" />
+                      <h4 className="text-lg font-bold text-slate-700 dark:text-slate-200">Aucun flipbook publié</h4>
+                      <p className="text-sm text-slate-500">Les publications et ouvrages à feuilleter paraîtront prochainement.</p>
+                    </div>
+                  ) : (
+                    <div className="flipbooks-grid">
+                      {flipbooks.map((fb) => (
+                        <div key={fb.id} className="flipbook-card">
+                          <div className="flipbook-cover-mock">
+                            <BookOpen size={48} color="white" />
+                            <h3>{fb.title}</h3>
+                          </div>
+                          <div className="flipbook-details">
+                            <h4>{fb.title}</h4>
+                            <p>{fb.description}</p>
+                            <button type="button" onClick={() => handleOpenFlipbook(fb.id)} className="btn-primary">
+                              Ouvrir le livre
+                            </button>
+                          </div>
                         </div>
-                        <div className="flipbook-details">
-                          <h4>{fb.title}</h4>
-                          <p>{fb.description}</p>
-                          <button type="button" onClick={() => handleOpenFlipbook(fb.id)} className="btn-primary">
-                            Ouvrir le livre
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ) : (
                 // Selected flipbook interactive reader
                 (() => {
                   const book = flipbooks.find(f => f.id === view.selectedId) || flipbooks[0];
+                  if (!book) {
+                    return (
+                      <div className="text-center py-5 text-muted">
+                        <p>Ouvrage introuvable.</p>
+                        <button type="button" onClick={() => setView({ type: 'flipbooks', selectedId: null })} className="btn-primary mt-3">
+                          Retour à la liste des flipbooks
+                        </button>
+                      </div>
+                    );
+                  }
                   return (
                     <PdfFlipbookReader 
                       book={book} 
@@ -1734,50 +1820,59 @@ function App() {
                 <ArrowLeft size={16} /> Retour à l'accueil
               </button>
 
-              <h2 className="view-title">Vidéos Historiques et Culturelles</h2>
+              <h2 className="view-title">Vidéos & Conférences</h2>
               
-              {(() => {
-                const currentVideo = videosData.find(v => v.id === view.selectedId) || videosData[0];
-                return (
-                  <div className="video-player-section">
-                    <div className="player-container">
-                      <iframe
-                        src={`https://www.youtube.com/embed/${currentVideo.youtubeId}?rel=0`}
-                        title={currentVideo.title}
-                        frameBorder="0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                      ></iframe>
-                    </div>
-                    <div className="video-description-card">
-                      <h3>{currentVideo.title}</h3>
-                      <span className="duration-badge">{currentVideo.duration}</span>
-                      <p>{currentVideo.description}</p>
-                    </div>
+              {publicVideos.length === 0 ? (
+                <div className="text-center py-5 text-muted">
+                  <Play size={48} className="mx-auto mb-3 text-slate-400" />
+                  <h4 className="text-lg font-bold text-slate-700 dark:text-slate-200">Aucune vidéo publiée</h4>
+                  <p className="text-sm text-slate-500">Les vidéos et présentations littéraires paraîtront prochainement.</p>
+                </div>
+              ) : (
+                (() => {
+                  const currentVideo = publicVideos.find(v => v.id === view.selectedId) || publicVideos[0];
+                  const yId = currentVideo.youtubeId || (currentVideo.url ? (currentVideo.url.match(/(?:youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*)/)?.[1] || currentVideo.youtubeId) : '');
+                  return (
+                    <div className="video-player-section">
+                      <div className="player-container">
+                        <iframe
+                          src={`https://www.youtube.com/embed/${yId}?rel=0`}
+                          title={currentVideo.title}
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        ></iframe>
+                      </div>
+                      <div className="video-description-card">
+                        <h3>{currentVideo.title}</h3>
+                        {currentVideo.duration && <span className="duration-badge">{currentVideo.duration}</span>}
+                        {currentVideo.description && <p>{currentVideo.description}</p>}
+                      </div>
 
-                    <h4 style={{ marginTop: '2rem', marginBottom: '1rem' }}>Toutes les vidéos</h4>
-                    <div className="videos-playlist-grid">
-                      {videosData.map((vid) => (
-                        <button 
-                          key={vid.id} 
-                          type="button"
-                          className={`playlist-item ${currentVideo.id === vid.id ? 'active' : ''}`}
-                          onClick={() => handleOpenVideo(vid.id)}
-                          aria-label={`Sélectionner la vidéo : ${vid.title}`}
-                        >
-                          <div className="playlist-item-thumb">
-                            <Play size={24} color="white" fill="white" />
-                          </div>
-                          <div className="playlist-item-info">
-                            <h5>{vid.title}</h5>
-                            <span>{vid.duration}</span>
-                          </div>
-                        </button>
-                      ))}
+                      <h4 style={{ marginTop: '2rem', marginBottom: '1rem' }}>Toutes les vidéos</h4>
+                      <div className="videos-playlist-grid">
+                        {publicVideos.map((vid) => (
+                          <button 
+                            key={vid.id} 
+                            type="button"
+                            className={`playlist-item ${currentVideo.id === vid.id ? 'active' : ''}`}
+                            onClick={() => handleOpenVideo(vid.id)}
+                            aria-label={`Sélectionner la vidéo : ${vid.title}`}
+                          >
+                            <div className="playlist-item-thumb">
+                              <Play size={24} color="white" fill="white" />
+                            </div>
+                            <div className="playlist-item-info">
+                              <h5>{vid.title}</h5>
+                              {vid.duration && <span>{vid.duration}</span>}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                );
-              })()}
+                  );
+                })()
+              )}
             </div>
           )}
 
@@ -1792,36 +1887,44 @@ function App() {
                 <ArrowLeft size={16} /> Retour à l'accueil
               </button>
 
-              <h2 className="view-title">Galerie Photo d'Anjou</h2>
+              <h2 className="view-title">Galerie Photo</h2>
               <p className="view-description">Cliquez sur une photographie pour l'agrandir en haute définition.</p>
 
-              <div className="full-gallery-grid">
-                {galleryImages.map((img, idx) => (
-                  <button 
-                    key={img.id} 
-                    type="button"
-                    className="full-gallery-item"
-                    onClick={() => setLightbox({ isOpen: true, currentIndex: idx, zoom: false })}
-                    aria-label={`Agrandir l'image : ${img.title}`}
-                  >
-                    <div className="gallery-img-wrapper">
-                      <OptimizedImage 
-                        src={img.url} 
-                        thumbnailSrc={img.thumbnailUrl}
-                        alt={img.title} 
-                        loading="lazy" 
-                        useThumbnail={true}
-                        thumbnailWidth={480}
-                        thumbnailHeight={340}
-                      />
-                      <div className="gallery-item-overlay">
-                        <h4>{img.title}</h4>
-                        <p>{img.description}</p>
+              {publicGallery.length === 0 ? (
+                <div className="text-center py-5 text-muted">
+                  <ImageIcon size={48} className="mx-auto mb-3 text-slate-400" />
+                  <h4 className="text-lg font-bold text-slate-700 dark:text-slate-200">Aucune photographie publiée</h4>
+                  <p className="text-sm text-slate-500">Les photographies d'Anjou Édition paraîtront prochainement.</p>
+                </div>
+              ) : (
+                <div className="full-gallery-grid">
+                  {publicGallery.map((img, idx) => (
+                    <button 
+                      key={img.id || idx} 
+                      type="button"
+                      className="full-gallery-item"
+                      onClick={() => setLightbox({ isOpen: true, currentIndex: idx, zoom: false })}
+                      aria-label={`Agrandir l'image : ${img.title || 'Photographie'}`}
+                    >
+                      <div className="gallery-img-wrapper">
+                        <OptimizedImage 
+                          src={img.url} 
+                          thumbnailSrc={img.thumbnailUrl}
+                          alt={img.title || 'Photographie'} 
+                          loading="lazy" 
+                          useThumbnail={true}
+                          thumbnailWidth={480}
+                          thumbnailHeight={340}
+                        />
+                        <div className="gallery-item-overlay">
+                          <h4>{img.title || 'Photographie'}</h4>
+                          {img.description && <p>{img.description}</p>}
+                        </div>
                       </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
