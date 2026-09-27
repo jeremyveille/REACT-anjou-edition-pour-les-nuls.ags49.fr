@@ -70,26 +70,25 @@ export const sanitizeHomePageBlocks = (blocksList) => {
 export const getLocalFlipbooksSync = () => {
   try {
     const local = localStorage.getItem('ae_flipbooks');
-    if (local) {
+    if (local !== null) {
       const parsed = JSON.parse(local);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        const filtered = parsed.filter(fb => 
+      if (Array.isArray(parsed)) {
+        return parsed.filter(fb => 
           fb && fb.id !== '3322' && 
           !(fb.title || '').toLowerCase().includes('guide historique') &&
           !(fb.pdfFile || '').toLowerCase().includes('guide_historique')
-        );
-        if (filtered.length > 0) {
-          return filtered.map((fb) => ({
-            ...fb,
-            pdfFile: fb.pdfFile || (fb.id === '4455' ? 'secrets_vignoble_angevin.pdf' : 'Seraphin-le-marin.pdf')
-          }));
-        }
+        ).map((fb) => ({
+          ...fb,
+          pdfFile: fb.pdfFile || (fb.id === '4455' ? 'secrets_vignoble_angevin.pdf' : 'Seraphin-le-marin.pdf')
+        }));
       }
     }
   } catch (e) {
     console.warn("Erreur lors de la lecture des flipbooks locaux", e);
   }
-  return flipbooksData.map((fb) => ({
+  return flipbooksData.filter(
+    fb => fb && fb.id !== '3322' && !(fb.title || '').toLowerCase().includes('guide historique')
+  ).map((fb) => ({
     ...fb,
     pdfFile: fb.pdfFile || (fb.id === '4455' ? 'secrets_vignoble_angevin.pdf' : 'Seraphin-le-marin.pdf')
   }));

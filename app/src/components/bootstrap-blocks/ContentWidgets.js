@@ -14,7 +14,6 @@ import { getThumbnailUrl, OptimizedImage } from '../../utils/imageOptimizer';
 import { getYoutubeEmbedUrl } from '../../utils/youtubeUtils';
 import PdfFlipbookReader from '../PdfFlipbookReader';
 import { ContactForm } from '../ContactForm';
-import { flipbooksData } from '../../data';
 import { getLocalFlipbooksSync } from '../../services/pageService';
 
 const YoutubeIcon = ({ size = 20, color = "currentColor", fill = "none" }) => (
@@ -533,11 +532,34 @@ export const FlipbookFeatured = ({ settings = {}, isEditing = false }) => {
   const customClasses = settings.classes || '';
   const style = settings.style || {};
 
+  if (!currentFlipbooks || currentFlipbooks.length === 0) {
+    if (isEditing) {
+      return (
+        <div className={`p-4 text-center border rounded bg-slate-50 text-muted ${customClasses}`} style={style}>
+          <BookOpen size={28} className="mx-auto mb-2 text-slate-400" />
+          <p className="mb-0 text-sm">Aucun flipbook disponible pour ce bloc.</p>
+        </div>
+      );
+    }
+    return null;
+  }
+
   if (mode === 'reader') {
     // Trouver le livre demandé ou le premier disponible
     const activeBook = (selectedBookId && currentFlipbooks.find(b => b.id === selectedBookId)) 
-      || currentFlipbooks[0] 
-      || flipbooksData[0];
+      || currentFlipbooks[0];
+
+    if (!activeBook) {
+      if (isEditing) {
+        return (
+          <div className={`p-4 text-center border rounded bg-slate-50 text-muted ${customClasses}`} style={style}>
+            <BookOpen size={28} className="mx-auto mb-2 text-slate-400" />
+            <p className="mb-0 text-sm">Sélectionnez un flipbook dans les réglages du bloc.</p>
+          </div>
+        );
+      }
+      return null;
+    }
 
     if (process.env.NODE_ENV !== 'production' || window.__AE_DEV_LOGS__) {
       console.log('[PageBuilder] Flipbook selected:', activeBook?.id);
@@ -586,12 +608,24 @@ export const FlipbookFeatured = ({ settings = {}, isEditing = false }) => {
  * Widget Galerie Photos
  */
 export const PhotoGallery = ({ settings = {}, isEditing = false }) => {
-  const title = settings.title || 'Galerie Photo d\'Anjou';
+  const title = settings.title || 'Galerie Photo';
   const subtitle = settings.subtitle || 'Cliquez sur une photographie pour l\'agrandir en haute définition.';
   const layout = settings.layout || 'grid';
   const images = Array.isArray(settings.images) && settings.images.length > 0 ? settings.images : [];
   const customClasses = settings.classes || '';
   const style = settings.style || {};
+
+  if (!images || images.length === 0) {
+    if (isEditing) {
+      return (
+        <div className={`p-4 text-center border rounded bg-slate-50 text-muted ${customClasses}`} style={style}>
+          <ImageIcon size={28} className="mx-auto mb-2 text-slate-400" />
+          <p className="mb-0 text-sm">Galerie vide. Ajoutez des photos dans les réglages du bloc.</p>
+        </div>
+      );
+    }
+    return null;
+  }
 
   if (layout === 'sidebar') {
     return (
@@ -635,8 +669,8 @@ export const PhotoGallery = ({ settings = {}, isEditing = false }) => {
               <OptimizedImage 
                 src={img.url} 
                 thumbnailSrc={img.thumbnailUrl}
-                alt={img.title || 'Photo Anjou'} 
-                loading="lazy"
+                alt={img.title || 'Photographie'} 
+                loading="lazy" 
                 useThumbnail={true}
                 thumbnailWidth={450}
                 thumbnailHeight={320}
