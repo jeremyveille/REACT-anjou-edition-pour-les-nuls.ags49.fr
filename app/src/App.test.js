@@ -512,6 +512,55 @@ describe('Dashboard -> Save -> Public Site Live Update Cycle', () => {
   });
 });
 
+describe('Deep Routing, Navigation and Accessibility Enhancements', () => {
+  it('directly resolves deep link /textes/rappel and renders the text reader with back button', async () => {
+    window.location.pathname = '/textes/rappel';
+
+    await renderApp();
+
+    // Verify text title and author from data.js
+    expect(await screen.findByText("Rappel d'Anjou")).toBeInTheDocument();
+    expect(screen.getByText(/René Bazin/i)).toBeInTheDocument();
+
+    // Verify back navigation button is accessible
+    const backBtn = screen.getByRole('button', { name: /Retour à l'accueil/i });
+    expect(backBtn).toBeInTheDocument();
+
+    // Click back to return home
+    await act(async () => {
+      fireEvent.click(backBtn);
+    });
+
+    expect(await screen.findByText(/Bienvenue sur Anjou Édition/i)).toBeInTheDocument();
+  });
+
+  it('directly resolves deep link /videos and renders the videos gallery section', async () => {
+    window.location.pathname = '/videos';
+
+    await renderApp();
+
+    expect(await screen.findByRole('heading', { name: /Vidéos & Conférences/i })).toBeInTheDocument();
+  });
+
+  it('directly resolves deep link /galerie and renders the photo gallery section', async () => {
+    window.location.pathname = '/galerie';
+
+    await renderApp();
+
+    expect(await screen.findByRole('heading', { name: /Galerie Photo/i })).toBeInTheDocument();
+  });
+
+  it('contains skip-to-content accessibility link targeting main-content', async () => {
+    await renderApp();
+
+    const skipLink = document.querySelector('.skip-to-content');
+    expect(skipLink).toBeInTheDocument();
+    expect(skipLink.getAttribute('href')).toBe('#main-content');
+    expect(document.getElementById('main-content')).toBeInTheDocument();
+  });
+});
+
+
 
 
 

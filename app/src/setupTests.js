@@ -11,6 +11,11 @@ global.ResizeObserver = class ResizeObserver {
   disconnect() {}
 };
 
+// Mock window.scrollTo for jsdom
+if (typeof window !== 'undefined') {
+  window.scrollTo = jest.fn();
+}
+
 // Mock Firebase libraries to prevent actual network calls and resource leaks
 jest.mock('firebase/app', () => ({
   initializeApp: jest.fn().mockReturnValue({}),
