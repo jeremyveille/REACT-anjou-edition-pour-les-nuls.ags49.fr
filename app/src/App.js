@@ -25,6 +25,7 @@ import {
   textsData,
   flipbooksData,
   galleryImages,
+  videosData,
   articlesData,
   generateDefaultMenus
 } from './data';
@@ -116,8 +117,16 @@ function App() {
     if (path === '/flipbooks' || path === '/flipbooks/') {
       return { type: 'flipbooks' };
     }
+    if (path.startsWith('/flipbooks/')) {
+      const fbId = path.replace('/flipbooks/', '').replace(/\/$/, '');
+      return { type: 'flipbooks', selectedId: fbId || null };
+    }
     if (path === '/videos' || path === '/videos/') {
       return { type: 'videos' };
+    }
+    if (path.startsWith('/videos/')) {
+      const vidId = path.replace('/videos/', '').replace(/\/$/, '');
+      return { type: 'videos', selectedId: vidId || null };
     }
     if (path === '/gallery' || path === '/gallery/' || path === '/galerie') {
       return { type: 'gallery' };
@@ -134,6 +143,32 @@ function App() {
       if (found) {
         return { type: 'article', article: found };
       }
+    }
+    if (path.startsWith('/textes/') || path.startsWith('/poesie/')) {
+      const rawSlug = path.replace(/^\/(?:textes|poesie)\//, '').replace(/\/$/, '');
+      const decodedSlug = decodeURIComponent(rawSlug).toLowerCase();
+      const foundKey = Object.keys(textsData).find(k => 
+        k.toLowerCase() === decodedSlug ||
+        k.toLowerCase().replace(/\s+/g, '-') === decodedSlug
+      );
+      if (foundKey) {
+        return {
+          type: 'text',
+          data: textsData[foundKey],
+          categoryName: foundKey
+        };
+      }
+      return {
+        type: 'text',
+        data: {
+          title: decodedSlug.charAt(0).toUpperCase() + decodedSlug.slice(1),
+          author: "Comité éditorial Anjou Édition",
+          date: "2026",
+          content: `Le contenu pour la catégorie "${decodedSlug}" sera bientôt disponible sur notre portail.\n\nNous enrichissons notre catalogue d'ouvrages et de documents régulièrement.\n\nN'hésitez pas à nous faire part de vos demandes via la page Contact.`
+        },
+        categoryName: decodedSlug,
+        isPending: true
+      };
     }
     const params = new URLSearchParams(window.location.search);
     if (params.get('preview') === 'true') {
@@ -190,7 +225,13 @@ function App() {
     } else {
       document.title = `${art.title} — Anjou Édition`;
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (typeof window.scrollTo === 'function') {
+      try {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch (e) {
+        window.scrollTo(0, 0);
+      }
+    }
   };
 
   // Lightbox State for Gallery
@@ -222,16 +263,16 @@ function App() {
     }
   });
 
-  // Dynamic Public Gallery & Videos States
+  // Dynamic Public Gallery & Videos States with reliable default local data
   const [publicGallery, setPublicGallery] = useState(() => {
     try {
       const local = localStorage.getItem("ae_gallery");
       if (local !== null) {
         const parsed = JSON.parse(local);
-        return Array.isArray(parsed) ? parsed : [];
+        return Array.isArray(parsed) && parsed.length > 0 ? parsed : galleryImages;
       }
     } catch (e) {}
-    return [];
+    return galleryImages;
   });
 
   const [publicVideos, setPublicVideos] = useState(() => {
@@ -239,10 +280,10 @@ function App() {
       const local = localStorage.getItem("ae_videos");
       if (local !== null) {
         const parsed = JSON.parse(local);
-        return Array.isArray(parsed) ? parsed : [];
+        return Array.isArray(parsed) && parsed.length > 0 ? parsed : videosData;
       }
     } catch (e) {}
-    return [];
+    return videosData;
   });
 
   useEffect(() => {
@@ -519,6 +560,7 @@ function App() {
       if (window.speechSynthesis) {
         window.speechSynthesis.cancel();
       }
+      setIsPlayingAudio(false);
     };
   }, [view]);
 
@@ -536,6 +578,42 @@ function App() {
       };
       loadVoices();
       window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+  }, []);
+
+  // Centralized unified navigation handler
+  const navigateTo = useCallback((viewObj, path = null, title = null) => {
+    setView(viewObj);
+    setActiveDropdown(null);
+    setMobileMenuOpen(false);
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      setIsPlayingAudio(false);
+    }
+    if (path) {
+      window.history.pushState({}, '', path);
+    }
+    if (title) {
+      document.title = title;
+    } else if (viewObj.type === 'home') {
+      document.title = "Anjou Édition — Pour les Nuls";
+    } else if (viewObj.type === 'flipbooks') {
+      document.title = "Nos Flipbooks Interactifs — Anjou Édition";
+    } else if (viewObj.type === 'videos') {
+      document.title = "Vidéos & Conférences — Anjou Édition";
+    } else if (viewObj.type === 'gallery') {
+      document.title = "Galerie Photos — Anjou Édition";
+    } else if (viewObj.type === 'contact') {
+      document.title = "Contact — Anjou Édition";
+    } else if (viewObj.type === 'privacy') {
+      document.title = "Politique de Confidentialité & Mentions Légales — Anjou Édition";
+    }
+    if (typeof window.scrollTo === 'function') {
+      try {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch (e) {
+        window.scrollTo(0, 0);
+      }
     }
   }, []);
 
@@ -570,39 +648,40 @@ function App() {
   };
 
   const handleSelectCategory = (itemName) => {
-    if (textsData[itemName]) {
-      setView({
+    const slug = encodeURIComponent(itemName.toLowerCase().replace(/\s+/g, '-'));
+    const isAvailable = !!textsData[itemName];
+    const dataObj = isAvailable ? textsData[itemName] : {
+      title: itemName,
+      author: "Comité éditorial Anjou Édition",
+      date: "2026",
+      content: `Le contenu pour la catégorie "${itemName}" sera bientôt disponible sur notre portail.\n\nNous enrichissons notre catalogue d'ouvrages et de documents régulièrement.\n\nN'hésitez pas à nous faire part de vos demandes via la page Contact.`
+    };
+    navigateTo(
+      {
         type: 'text',
-        data: textsData[itemName],
-        categoryName: itemName
-      });
-    } else {
-      setView({
-        type: 'text',
-        data: {
-          title: itemName,
-          author: "",
-          date: "2026",
-          content: `Le contenu pour la catégorie "${itemName}" sera bientôt disponible sur notre portail.\n\nNous enrichissons notre catalogue d'ouvrages et de documents régulièrement.\n\nN'hésitez pas à nous faire part de vos demandes via la page Contact.`
-        },
-        categoryName: itemName
-      });
-    }
-    setActiveDropdown(null);
-    setMobileMenuOpen(false);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+        data: dataObj,
+        categoryName: itemName,
+        isPending: !isAvailable
+      },
+      `/textes/${slug}`,
+      `${dataObj.title} — Anjou Édition`
+    );
   };
 
   const handleOpenFlipbook = (id) => {
-    setView({ type: 'flipbooks', selectedId: id });
-    setMobileMenuOpen(false);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    navigateTo(
+      { type: 'flipbooks', selectedId: id },
+      id ? `/flipbooks/${id}` : '/flipbooks',
+      "Nos Flipbooks Interactifs — Anjou Édition"
+    );
   };
 
   const handleOpenVideo = (id) => {
-    setView({ type: 'videos', selectedId: id });
-    setMobileMenuOpen(false);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    navigateTo(
+      { type: 'videos', selectedId: id },
+      id ? `/videos/${id}` : '/videos',
+      "Vidéos & Conférences — Anjou Édition"
+    );
   };
 
   const handleLightboxNext = useCallback(() => {
@@ -709,8 +788,7 @@ function App() {
       // Whitelisted shortcode actions
       const ALLOWED_SHORTCODES = {
         'open_contact_modal': () => {
-          setView({ type: 'contact' });
-          window.history.pushState({}, '', '/contact');
+          navigateTo({ type: 'contact' }, '/contact', "Contact — Anjou Édition");
         },
         'toggle_theme': () => {
           toggleDarkMode();
@@ -726,16 +804,13 @@ function App() {
           });
         },
         'show_flipbooks': () => {
-          setView({ type: 'flipbooks' });
-          window.history.pushState({}, '', '/flipbooks');
+          navigateTo({ type: 'flipbooks' }, '/flipbooks', "Nos Flipbooks Interactifs — Anjou Édition");
         },
         'show_videos': () => {
-          setView({ type: 'videos' });
-          window.history.pushState({}, '', '/videos');
+          navigateTo({ type: 'videos' }, '/videos', "Vidéos & Conférences — Anjou Édition");
         },
         'show_gallery': () => {
-          setView({ type: 'gallery' });
-          window.history.pushState({}, '', '/gallery');
+          navigateTo({ type: 'gallery' }, '/gallery', "Galerie Photos — Anjou Édition");
         },
         'alert_hello': () => {
           alert("Bienvenue sur Anjou Édition !");
@@ -762,8 +837,7 @@ function App() {
         }
 
         if (flipbookId) {
-          setView({ type: 'flipbooks', selectedId: flipbookId });
-          window.history.pushState({}, '', '/flipbooks');
+          navigateTo({ type: 'flipbooks', selectedId: flipbookId }, `/flipbooks/${flipbookId}`, "Nos Flipbooks Interactifs — Anjou Édition");
           return;
         }
       }
@@ -787,7 +861,7 @@ function App() {
         // Vérifier d'abord s'il s'agit d'une page personnalisée dynamique
         const customPage = customPages.find(p => p.slug === clean || p.title === clean || p.slug === tagName);
         if (customPage) {
-          setView({ type: 'custom-page', page: customPage });
+          navigateTo({ type: 'custom-page', page: customPage }, `/pages/${customPage.slug || clean}`, `${customPage.title} — Anjou Édition`);
         } else if (textsData[clean]) {
           handleSelectCategory(clean);
         } else {
@@ -800,31 +874,24 @@ function App() {
         window.open(item.url, "_blank", "noopener,noreferrer");
       } else {
         if (item.url === "/" || item.url === "/home" || item.url === "/accueil") {
-          setView({ type: 'home' });
-          window.history.pushState({}, '', '/');
+          navigateTo({ type: 'home' }, '/', "Anjou Édition — Pour les Nuls");
         } else if (item.url === "/contact") {
-          setView({ type: 'contact' });
-          window.history.pushState({}, '', '/contact');
+          navigateTo({ type: 'contact' }, '/contact', "Contact — Anjou Édition");
         } else if (item.url === "/flipbooks") {
-          setView({ type: 'flipbooks' });
-          window.history.pushState({}, '', '/flipbooks');
+          navigateTo({ type: 'flipbooks' }, '/flipbooks', "Nos Flipbooks Interactifs — Anjou Édition");
         } else if (item.url === "/videos") {
-          setView({ type: 'videos' });
-          window.history.pushState({}, '', '/videos');
+          navigateTo({ type: 'videos' }, '/videos', "Vidéos & Conférences — Anjou Édition");
         } else if (item.url === "/gallery") {
-          setView({ type: 'gallery' });
-          window.history.pushState({}, '', '/gallery');
+          navigateTo({ type: 'gallery' }, '/gallery', "Galerie Photos — Anjou Édition");
         } else if (item.url === "/ae-dashboard") {
-          setView({ type: 'dashboard' });
-          window.history.pushState({}, '', '/ae-dashboard');
+          navigateTo({ type: 'dashboard' }, '/ae-dashboard', "Administration — Anjou Édition");
         } else if (item.url.startsWith("/articles/")) {
           const articleSlug = item.url.replace('/articles/', '').replace('/', '');
           const targetArticle = articles.find(a => a.slug === articleSlug || a.id === articleSlug);
           if (targetArticle) {
             handleOpenArticle(targetArticle);
           } else {
-            setView({ type: 'home' });
-            window.history.pushState({}, '', '/');
+            navigateTo({ type: 'home' }, '/', "Anjou Édition — Pour les Nuls");
           }
         } else {
           // Vérifier si l'URL correspond à un article ou une page dynamique
@@ -835,7 +902,7 @@ function App() {
           } else {
             const customPage = customPages.find(p => p.slug === cleanSlug || p.slug === item.url);
             if (customPage) {
-              setView({ type: 'custom-page', page: customPage });
+              navigateTo({ type: 'custom-page', page: customPage }, `/pages/${cleanSlug}`, `${customPage.title} — Anjou Édition`);
             } else {
               // Si URL inconnue, essayer de charger le titre
               handleSelectCategory(item.title);
@@ -847,12 +914,11 @@ function App() {
       // Fallback si pas de shortcode ni de route
       const customPage = customPages.find(p => p.title === item.title || p.slug === item.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'));
       if (customPage) {
-        setView({ type: 'custom-page', page: customPage });
+        navigateTo({ type: 'custom-page', page: customPage }, `/pages/${customPage.slug}`, `${customPage.title} — Anjou Édition`);
       } else {
         handleSelectCategory(item.title);
       }
     }
-    // Helper components moved to PublicNav.js
   };
 
   const handleBackToSite = async () => {
@@ -864,8 +930,7 @@ function App() {
       if (Array.isArray(pages)) setCustomPages(pages);
       if (Array.isArray(fetchedArticles) && fetchedArticles.length > 0) setArticles(fetchedArticles);
     } catch (e) {}
-    setView({ type: 'home' });
-    window.history.pushState({}, '', '/');
+    navigateTo({ type: 'home' }, '/', "Anjou Édition — Pour les Nuls");
   };
 
   const handleLoginSubmit = async (e) => {
@@ -1078,7 +1143,7 @@ function App() {
             <div className="article-view-container fade-in">
               <button 
                 type="button" 
-                onClick={() => { setView({ type: 'home' }); window.history.pushState({}, '', '/'); }} 
+                onClick={() => navigateTo({ type: 'home' }, '/', "Anjou Édition — Pour les Nuls")} 
                 className="btn-back"
               >
                 <ArrowLeft size={16} /> Retour à l'accueil
@@ -1242,14 +1307,14 @@ function App() {
                   <div className="article-footer-cta-buttons">
                     <button 
                       type="button" 
-                      onClick={() => setView({ type: 'contact' })} 
+                      onClick={() => navigateTo({ type: 'contact' }, '/contact', "Contact — Anjou Édition")} 
                       className="btn-hero-primary"
                     >
                       <Send size={18} /> Proposer votre projet
                     </button>
                     <button 
                       type="button" 
-                      onClick={() => setView({ type: 'flipbooks' })} 
+                      onClick={() => navigateTo({ type: 'flipbooks' }, '/flipbooks', "Nos Flipbooks Interactifs — Anjou Édition")} 
                       className="btn-hero-secondary"
                     >
                       <BookOpen size={18} /> Découvrir nos publications
@@ -1312,7 +1377,7 @@ function App() {
                     </button>
                     <button 
                       type="button" 
-                      onClick={() => setView({ type: 'flipbooks' })} 
+                      onClick={() => navigateTo({ type: 'flipbooks' }, '/flipbooks', "Nos Flipbooks Interactifs — Anjou Édition")} 
                       className="btn-hero-secondary"
                       aria-label="Découvrir nos publications et livres à feuilleter"
                     >
@@ -1448,10 +1513,10 @@ function App() {
                   <div className="shortcuts-row-top">
                     <div 
                       className="portal-shortcut-card shortcut-flipbooks"
-                      onClick={() => setView({ type: 'flipbooks' })}
+                      onClick={() => navigateTo({ type: 'flipbooks' }, '/flipbooks', "Nos Flipbooks Interactifs — Anjou Édition")}
                       role="button"
                       tabIndex={0}
-                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setView({ type: 'flipbooks' }); }}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigateTo({ type: 'flipbooks' }, '/flipbooks', "Nos Flipbooks Interactifs — Anjou Édition"); }}
                       aria-label="Découvrir nos livres et flipbooks interactifs"
                     >
                       <div className="portal-shortcut-watermark" aria-hidden="true">
@@ -1486,10 +1551,10 @@ function App() {
 
                     <div 
                       className="portal-shortcut-card shortcut-photos"
-                      onClick={() => setView({ type: 'gallery' })}
+                      onClick={() => navigateTo({ type: 'gallery' }, '/gallery', "Galerie Photos — Anjou Édition")}
                       role="button"
                       tabIndex={0}
-                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setView({ type: 'gallery' }); }}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigateTo({ type: 'gallery' }, '/gallery', "Galerie Photos — Anjou Édition"); }}
                       aria-label="Consulter la galerie photo de l'Anjou"
                     >
                       <div className="portal-shortcut-watermark" aria-hidden="true">
@@ -1505,10 +1570,10 @@ function App() {
 
                     <div 
                       className="portal-shortcut-card shortcut-videos"
-                      onClick={() => setView({ type: 'videos' })}
+                      onClick={() => navigateTo({ type: 'videos' }, '/videos', "Vidéos & Conférences — Anjou Édition")}
                       role="button"
                       tabIndex={0}
-                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setView({ type: 'videos' }); }}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigateTo({ type: 'videos' }, '/videos', "Vidéos & Conférences — Anjou Édition"); }}
                       aria-label="Regarder les vidéos et conférences"
                     >
                       <div className="portal-shortcut-watermark" aria-hidden="true">
@@ -1526,10 +1591,10 @@ function App() {
                   <div className="shortcuts-row-bottom">
                     <div 
                       className="portal-shortcut-card shortcut-project"
-                      onClick={() => setView({ type: 'contact' })}
+                      onClick={() => navigateTo({ type: 'contact' }, '/contact', "Contact — Anjou Édition")}
                       role="button"
                       tabIndex={0}
-                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setView({ type: 'contact' }); }}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigateTo({ type: 'contact' }, '/contact', "Contact — Anjou Édition"); }}
                       aria-label="Proposer votre projet ou contacter la maison d'édition"
                     >
                       <div className="portal-shortcut-watermark" aria-hidden="true">
@@ -1600,119 +1665,151 @@ function App() {
             <div className="text-view fade-in">
               <button 
                 type="button" 
-                onClick={() => setView({ type: 'home' })} 
+                onClick={() => navigateTo({ type: 'home' }, '/', "Anjou Édition — Pour les Nuls")} 
                 className="btn-back"
               >
                 <ArrowLeft size={16} /> Retour à l'accueil
               </button>
 
-              <div className="text-reader-card">
-                <div className="text-header">
-                  <div className="text-meta">
-                    <span className="category-tag">{view.categoryName}</span>
-                    {view.data.author && <span className="author-name">Par {view.data.author}</span>}
-                    {view.data.date && <span className="date-tag">{view.data.date}</span>}
+              {view.isPending || view.data?.isPending ? (
+                <div className="text-reader-card text-pending-card">
+                  <div className="text-pending-badge">
+                    <Sparkles size={16} aria-hidden="true" />
+                    <span>EN COURS D'ENRICHISSEMENT ÉDITORIAL</span>
                   </div>
                   <h2>{view.data.title}</h2>
-                  
-                  {/* Reader controls */}
-                  <div className="reader-controls" role="toolbar" aria-label="Contrôles de lecture et d'accessibilité">
+                  <p className="text-pending-lead">
+                    Les publications et œuvres pour la catégorie <strong>{view.categoryName || view.data.title}</strong> sont actuellement en cours de préparation par notre équipe éditoriale.
+                  </p>
+                  <p className="text-pending-desc">
+                    Nous enrichissons régulièrement notre fonds littéraire, historique et patrimonial. Si vous disposez d'un texte, d'un recueil ou d'une anecdote liée à ce thème, nous serions ravis de l'étudier.
+                  </p>
+                  <div className="text-pending-actions">
                     <button 
-                      type="button"
-                      className={`control-btn ${isPlayingAudio ? 'active' : ''}`}
-                      onClick={() => handleToggleSpeech(view.data.content)}
-                      title={isPlayingAudio ? "Arrêter la lecture audio" : "Écouter le texte"}
-                      aria-label={isPlayingAudio ? "Arrêter la lecture audio par synthèse vocale" : "Écouter le texte par synthèse vocale"}
+                      type="button" 
+                      onClick={() => handleSelectCategory("RAPPEL")}
+                      className="btn-hero-primary"
                     >
-                      {isPlayingAudio ? <VolumeX size={18} aria-hidden="true" /> : <Volume2 size={18} aria-hidden="true" />}
-                      <span>{isPlayingAudio ? "Muet" : "Écouter"}</span>
+                      <BookOpen size={16} aria-hidden="true" /> Découvrir les textes en ligne
                     </button>
-
-                    {/* Speech Speed Selector */}
-                    <div className="speech-rate-selector" role="group" aria-label="Vitesse de lecture vocale">
-                      {[0.8, 1.0, 1.2, 1.5].map(rate => (
-                        <button
-                          key={rate}
-                          type="button"
-                          className={speechRate === rate ? 'active' : ''}
-                          onClick={() => {
-                            setSpeechRate(rate);
-                            localStorage.setItem('ae_speech_rate', rate.toString());
-                          }}
-                          aria-label={`Vitesse de lecture ${rate}x`}
-                          aria-pressed={speechRate === rate}
-                        >
-                          {rate}x
-                        </button>
-                      ))}
-                    </div>
-
-                    {/* Voice selector (if multiple voices available) */}
-                    {availableVoices.length > 1 && (
-                      <select
-                        className="speech-voice-select"
-                        value={selectedVoiceName}
-                        onChange={(e) => {
-                          setSelectedVoiceName(e.target.value);
-                          localStorage.setItem('ae_speech_voice', e.target.value);
-                        }}
-                        aria-label="Sélectionner la voix de lecture"
-                      >
-                        <option value="">Voix par défaut</option>
-                        {availableVoices.map(v => (
-                          <option key={v.name} value={v.name}>
-                            {v.name.length > 20 ? v.name.slice(0, 20) + '…' : v.name} ({v.lang})
-                          </option>
-                        ))}
-                      </select>
-                    )}
-
-                    <div className="font-sizer" role="group" aria-label="Taille de police du texte">
-                      <button 
-                        type="button"
-                        className={fontSize === 'small' ? 'active' : ''} 
-                        onClick={() => setFontSize('small')}
-                        aria-label="Taille de texte petite"
-                        aria-pressed={fontSize === 'small'}
-                      >
-                        A-
-                      </button>
-                      <button 
-                        type="button"
-                        className={fontSize === 'medium' ? 'active' : ''} 
-                        onClick={() => setFontSize('medium')}
-                        aria-label="Taille de texte normale"
-                        aria-pressed={fontSize === 'medium'}
-                      >
-                        A
-                      </button>
-                      <button 
-                        type="button"
-                        className={fontSize === 'large' ? 'active' : ''} 
-                        onClick={() => setFontSize('large')}
-                        aria-label="Taille de texte grande"
-                        aria-pressed={fontSize === 'large'}
-                      >
-                        A+
-                      </button>
-                    </div>
+                    <button 
+                      type="button" 
+                      onClick={() => navigateTo({ type: 'contact' }, '/contact', "Contact — Anjou Édition")}
+                      className="btn-hero-secondary"
+                    >
+                      <Send size={16} aria-hidden="true" /> Proposer un texte ou manuscrit
+                    </button>
                   </div>
                 </div>
+              ) : (
+                <div className="text-reader-card">
+                  <div className="text-header">
+                    <div className="text-meta">
+                      <span className="category-tag">{view.categoryName}</span>
+                      {view.data.author && <span className="author-name">Par {view.data.author}</span>}
+                      {view.data.date && <span className="date-tag">{view.data.date}</span>}
+                    </div>
+                    <h2>{view.data.title}</h2>
+                    
+                    {/* Reader controls */}
+                    <div className="reader-controls" role="toolbar" aria-label="Contrôles de lecture et d'accessibilité">
+                      <button 
+                        type="button"
+                        className={`control-btn ${isPlayingAudio ? 'active' : ''}`}
+                        onClick={() => handleToggleSpeech(view.data.content)}
+                        title={isPlayingAudio ? "Arrêter la lecture audio" : "Écouter le texte"}
+                        aria-label={isPlayingAudio ? "Arrêter la lecture audio par synthèse vocale" : "Écouter le texte par synthèse vocale"}
+                      >
+                        {isPlayingAudio ? <VolumeX size={18} aria-hidden="true" /> : <Volume2 size={18} aria-hidden="true" />}
+                        <span>{isPlayingAudio ? "Muet" : "Écouter"}</span>
+                      </button>
 
-                {/* Styled content based on text category */}
-                <div className={`text-content font-${fontSize} ${view.categoryName === 'Fable' || view.categoryName === 'POÉSIES' || view.categoryName === 'SONNET' || view.categoryName === 'ODE' || view.categoryName === 'RONDEAU' ? 'poetry' : 'prose'}`}>
-                  {view.data.content.split('\n\n').map((paragraph, index) => (
-                    <p key={index}>
-                      {paragraph.split('\n').map((line, lIdx) => (
-                        <React.Fragment key={lIdx}>
-                          {line}
-                          {lIdx < paragraph.split('\n').length - 1 && <br />}
-                        </React.Fragment>
-                      ))}
-                    </p>
-                  ))}
+                      {/* Speech Speed Selector */}
+                      <div className="speech-rate-selector" role="group" aria-label="Vitesse de lecture vocale">
+                        {[0.8, 1.0, 1.2, 1.5].map(rate => (
+                          <button
+                            key={rate}
+                            type="button"
+                            className={speechRate === rate ? 'active' : ''}
+                            onClick={() => {
+                              setSpeechRate(rate);
+                              localStorage.setItem('ae_speech_rate', rate.toString());
+                            }}
+                            aria-label={`Vitesse de lecture ${rate}x`}
+                            aria-pressed={speechRate === rate}
+                          >
+                            {rate}x
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Voice selector (if multiple voices available) */}
+                      {availableVoices.length > 1 && (
+                        <select
+                          className="speech-voice-select"
+                          value={selectedVoiceName}
+                          onChange={(e) => {
+                            setSelectedVoiceName(e.target.value);
+                            localStorage.setItem('ae_speech_voice', e.target.value);
+                          }}
+                          aria-label="Sélectionner la voix de lecture"
+                        >
+                          <option value="">Voix par défaut</option>
+                          {availableVoices.map(v => (
+                            <option key={v.name} value={v.name}>
+                              {v.name.length > 20 ? v.name.slice(0, 20) + '…' : v.name} ({v.lang})
+                            </option>
+                          ))}
+                        </select>
+                      )}
+
+                      <div className="font-sizer" role="group" aria-label="Taille de police du texte">
+                        <button 
+                          type="button"
+                          className={fontSize === 'small' ? 'active' : ''} 
+                          onClick={() => setFontSize('small')}
+                          aria-label="Taille de texte petite"
+                          aria-pressed={fontSize === 'small'}
+                        >
+                          A-
+                        </button>
+                        <button 
+                          type="button"
+                          className={fontSize === 'medium' ? 'active' : ''} 
+                          onClick={() => setFontSize('medium')}
+                          aria-label="Taille de texte normale"
+                          aria-pressed={fontSize === 'medium'}
+                        >
+                          A
+                        </button>
+                        <button 
+                          type="button"
+                          className={fontSize === 'large' ? 'active' : ''} 
+                          onClick={() => setFontSize('large')}
+                          aria-label="Taille de texte grande"
+                          aria-pressed={fontSize === 'large'}
+                        >
+                          A+
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Styled content based on text category */}
+                  <div className={`text-content font-${fontSize} ${view.categoryName === 'Fable' || view.categoryName === 'POÉSIES' || view.categoryName === 'SONNET' || view.categoryName === 'ODE' || view.categoryName === 'RONDEAU' ? 'poetry' : 'prose'}`}>
+                    {view.data.content.split('\n\n').map((paragraph, index) => (
+                      <p key={index}>
+                        {paragraph.split('\n').map((line, lIdx) => (
+                          <React.Fragment key={lIdx}>
+                            {line}
+                            {lIdx < paragraph.split('\n').length - 1 && <br />}
+                          </React.Fragment>
+                        ))}
+                      </p>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
 
@@ -1721,7 +1818,7 @@ function App() {
             <div className="ae-page-view-container">
               <button 
                 type="button" 
-                onClick={() => setView({ type: 'home' })} 
+                onClick={() => navigateTo({ type: 'home' }, '/', "Anjou Édition — Pour les Nuls")} 
                 className="btn-back mb-4"
               >
                 <ArrowLeft size={16} /> Retour à l'accueil
@@ -1746,7 +1843,7 @@ function App() {
             <div className="flipbooks-view fade-in">
               <button 
                 type="button" 
-                onClick={() => setView({ type: 'home' })} 
+                onClick={() => navigateTo({ type: 'home' }, '/', "Anjou Édition — Pour les Nuls")} 
                 className="btn-back"
               >
                 <ArrowLeft size={16} /> Retour à l'accueil
@@ -1792,7 +1889,7 @@ function App() {
                     return (
                       <div className="text-center py-5 text-muted">
                         <p>Ouvrage introuvable.</p>
-                        <button type="button" onClick={() => setView({ type: 'flipbooks', selectedId: null })} className="btn-primary mt-3">
+                        <button type="button" onClick={() => navigateTo({ type: 'flipbooks', selectedId: null }, '/flipbooks', "Nos Flipbooks Interactifs — Anjou Édition")} className="btn-primary mt-3">
                           Retour à la liste des flipbooks
                         </button>
                       </div>
@@ -1801,7 +1898,7 @@ function App() {
                   return (
                     <PdfFlipbookReader 
                       book={book} 
-                      onClose={() => setView({ type: 'flipbooks', selectedId: null })} 
+                      onClose={() => navigateTo({ type: 'flipbooks', selectedId: null }, '/flipbooks', "Nos Flipbooks Interactifs — Anjou Édition")} 
                     />
                   );
                 })()
@@ -1814,7 +1911,7 @@ function App() {
             <div className="videos-view fade-in">
               <button 
                 type="button" 
-                onClick={() => setView({ type: 'home' })} 
+                onClick={() => navigateTo({ type: 'home' }, '/', "Anjou Édition — Pour les Nuls")} 
                 className="btn-back"
               >
                 <ArrowLeft size={16} /> Retour à l'accueil
@@ -1881,7 +1978,7 @@ function App() {
             <div className="gallery-view fade-in">
               <button 
                 type="button" 
-                onClick={() => setView({ type: 'home' })} 
+                onClick={() => navigateTo({ type: 'home' }, '/', "Anjou Édition — Pour les Nuls")} 
                 className="btn-back"
               >
                 <ArrowLeft size={16} /> Retour à l'accueil
@@ -1933,27 +2030,27 @@ function App() {
             <div className="contact-view fade-in">
               <button 
                 type="button" 
-                onClick={() => setView({ type: 'home' })} 
+                onClick={() => navigateTo({ type: 'home' }, '/', "Anjou Édition — Pour les Nuls")} 
                 className="btn-back"
               >
                 <ArrowLeft size={16} /> Retour à l'accueil
               </button>
 
-              <ContactForm setView={setView} />
+              <ContactForm setView={setView} onNavigate={navigateTo} />
             </div>
           )}
 
           {/* VIEW: PRIVACY / RGPD */}
           {view.type === 'privacy' && (
             <div className="privacy-view fade-in">
-              <PrivacyPolicy setView={setView} />
+              <PrivacyPolicy setView={setView} onNavigate={navigateTo} />
             </div>
           )}
 
         </section>
       </main>
 
-      <PublicFooter setView={setView} />
+      <PublicFooter setView={setView} onNavigate={navigateTo} />
     </div>
   );
 }
