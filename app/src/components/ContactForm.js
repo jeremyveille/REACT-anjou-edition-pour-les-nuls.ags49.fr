@@ -3,7 +3,7 @@ import { CheckCircle2, AlertCircle, Send, ShieldCheck } from 'lucide-react';
 import { db } from '../firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
-export const ContactForm = ({ setView }) => {
+export const ContactForm = ({ setView, onNavigate }) => {
   const [contactForm, setContactForm] = useState({ name: '', email: '', subject: '', message: '' });
   const [formStatus, setFormStatus] = useState({ type: '', message: '', loading: false });
   const [gdprConsent, setGdprConsent] = useState(false);
@@ -148,7 +148,20 @@ export const ContactForm = ({ setView }) => {
             <label htmlFor="form-gdpr" style={{ cursor: 'pointer', display: 'inline' }}>
               En cochant cette case, j'accepte que mes données personnelles soient traitées pour répondre à ma demande, conformément à la
             </label>{' '}
-            <button type="button" onClick={(e) => { e.preventDefault(); setView({ type: 'privacy' }); }} style={{ background: 'none', border: 'none', padding: 0, color: 'var(--secondary)', textDecoration: 'underline', font: 'inherit', cursor: 'pointer', display: 'inline' }}>politique de confidentialité</button>. *
+            <button 
+              type="button" 
+              onClick={(e) => { 
+                e.preventDefault(); 
+                if (onNavigate) {
+                  onNavigate({ type: 'privacy' }, '/privacy', "Politique de Confidentialité & Mentions Légales — Anjou Édition");
+                } else if (setView) {
+                  setView({ type: 'privacy' }); 
+                }
+              }} 
+              style={{ background: 'none', border: 'none', padding: 0, color: 'var(--secondary)', textDecoration: 'underline', font: 'inherit', cursor: 'pointer', display: 'inline' }}
+            >
+              politique de confidentialité
+            </button>. *
           </div>
         </div>
 

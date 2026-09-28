@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Shield, Trash2, CheckCircle2, AlertTriangle, ExternalLink } from 'lucide-react';
 
-export const PrivacyPolicy = ({ setView }) => {
+export const PrivacyPolicy = ({ setView, onNavigate }) => {
   const [clearedSuccess, setClearedSuccess] = useState(false);
 
   const handleClearAllLocalData = () => {
@@ -12,11 +12,19 @@ export const PrivacyPolicy = ({ setView }) => {
     }
   };
 
+  const handleBack = () => {
+    if (onNavigate) {
+      onNavigate({ type: 'home' }, '/', "Anjou Édition — Pour les Nuls");
+    } else if (setView) {
+      setView({ type: 'home' });
+    }
+  };
+
   return (
     <div className="privacy-view fade-in">
       <button 
         type="button" 
-        onClick={() => setView({ type: 'home' })} 
+        onClick={handleBack} 
         className="btn-back"
         aria-label="Retour à l'accueil du site"
       >
@@ -96,7 +104,19 @@ export const PrivacyPolicy = ({ setView }) => {
               <li><strong>Droit à la portabilité :</strong> Recevoir vos données dans un format structuré et lisible par machine.</li>
             </ul>
             <p style={{ marginTop: '0.75rem' }}>
-              Pour exercer l'un de ces droits, adressez votre demande par notre <button type="button" onClick={() => setView({ type: 'contact' })} style={{ background: 'none', border: 'none', padding: 0, color: 'var(--secondary)', textDecoration: 'underline', cursor: 'pointer', font: 'inherit' }}>formulaire de contact</button> ou par courriel à <a href="mailto:contact@anjou-edition-nuls.fr" style={{ color: 'var(--secondary)' }}>contact@anjou-edition-nuls.fr</a>. Une réponse vous sera apportée sous 30 jours au maximum.
+              Pour exercer l'un de ces droits, adressez votre demande par notre <button 
+                type="button" 
+                onClick={() => {
+                  if (onNavigate) {
+                    onNavigate({ type: 'contact' }, '/contact', "Contact — Anjou Édition");
+                  } else if (setView) {
+                    setView({ type: 'contact' });
+                  }
+                }} 
+                style={{ background: 'none', border: 'none', padding: 0, color: 'var(--secondary)', textDecoration: 'underline', cursor: 'pointer', font: 'inherit' }}
+              >
+                formulaire de contact
+              </button> ou par courriel à <a href="mailto:contact@anjou-edition-nuls.fr" style={{ color: 'var(--secondary)' }}>contact@anjou-edition-nuls.fr</a>. Une réponse vous sera apportée sous 30 jours au maximum.
             </p>
             <p style={{ marginTop: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
               Si vous estimez, après nous avoir contactés, que vos droits ne sont pas respectés, vous pouvez adresser une réclamation auprès de la <a href="https://www.cnil.fr" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--secondary)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>CNIL (Commission Nationale de l'Informatique et des Libertés) <ExternalLink size={12} /></a>.

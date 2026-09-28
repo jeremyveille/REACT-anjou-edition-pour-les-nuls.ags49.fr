@@ -94,7 +94,26 @@ export const PublicHeader = ({ darkMode, toggleDarkMode, headerImage }) => {
   );
 };
 
-export const PublicFooter = ({ setView }) => {
+export const PublicFooter = ({ setView, onNavigate }) => {
+  const handleNav = (targetView, path, title) => {
+    if (typeof onNavigate === 'function') {
+      onNavigate(targetView, path, title);
+    } else if (typeof setView === 'function') {
+      setView(targetView);
+      if (typeof window !== 'undefined') {
+        if (path) window.history.pushState({}, '', path);
+        if (title) document.title = title;
+        if (typeof window.scrollTo === 'function') {
+          try {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          } catch (e) {
+            window.scrollTo(0, 0);
+          }
+        }
+      }
+    }
+  };
+
   return (
     <footer role="contentinfo" className="ae-mockup-footer">
       <div className="footer-mockup-wave" aria-hidden="true">
@@ -109,19 +128,19 @@ export const PublicFooter = ({ setView }) => {
           <AnjouEditionLogo size={36} className="footer-fleur-icon" />
         </div>
 
-        {setView && (
+        {(onNavigate || setView) && (
           <nav className="footer-links-capsule" aria-label="Liens de pied de page">
-            <button type="button" onClick={() => setView({ type: 'home' })}>Accueil</button>
+            <button type="button" onClick={() => handleNav({ type: 'home' }, '/', "Anjou Édition — Pour les Nuls")}>Accueil</button>
             <span aria-hidden="true" className="footer-sep">|</span>
-            <button type="button" onClick={() => setView({ type: 'flipbooks' })}>Flipbooks</button>
+            <button type="button" onClick={() => handleNav({ type: 'flipbooks' }, '/flipbooks', "Nos Flipbooks Interactifs — Anjou Édition")}>Flipbooks</button>
             <span aria-hidden="true" className="footer-sep">|</span>
-            <button type="button" onClick={() => setView({ type: 'videos' })}>Vidéos</button>
+            <button type="button" onClick={() => handleNav({ type: 'videos' }, '/videos', "Vidéos & Conférences — Anjou Édition")}>Vidéos</button>
             <span aria-hidden="true" className="footer-sep">|</span>
-            <button type="button" onClick={() => setView({ type: 'gallery' })}>Galerie</button>
+            <button type="button" onClick={() => handleNav({ type: 'gallery' }, '/gallery', "Galerie Photos — Anjou Édition")}>Galerie</button>
             <span aria-hidden="true" className="footer-sep">|</span>
-            <button type="button" onClick={() => setView({ type: 'contact' })}>Contact</button>
+            <button type="button" onClick={() => handleNav({ type: 'contact' }, '/contact', "Contact — Anjou Édition")}>Contact</button>
             <span aria-hidden="true" className="footer-sep">|</span>
-            <button type="button" onClick={() => setView({ type: 'privacy' })}>Mentions Légales & RGPD</button>
+            <button type="button" onClick={() => handleNav({ type: 'privacy' }, '/privacy', "Mentions Légales & RGPD — Anjou Édition")}>Mentions Légales & RGPD</button>
           </nav>
         )}
 
