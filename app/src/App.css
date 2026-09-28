@@ -1244,6 +1244,68 @@ main {
   box-shadow: var(--card-shadow);
 }
 
+.text-pending-card {
+  text-align: center;
+  padding: 3.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  background: var(--bg-card);
+  border: 1.5px dashed var(--border);
+  border-radius: 24px;
+}
+
+.text-pending-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(37, 99, 235, 0.08);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  color: var(--secondary);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 0.4rem 1rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+}
+
+.dark-mode .text-pending-badge {
+  background: rgba(37, 99, 235, 0.2);
+  border-color: rgba(96, 165, 250, 0.4);
+  color: #93c5fd;
+}
+
+.text-pending-card h2 {
+  font-size: clamp(1.8rem, 3.5vw, 2.4rem);
+  font-weight: 800;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.text-pending-lead {
+  font-size: 1.1rem;
+  color: var(--text-main);
+  max-width: 680px;
+  line-height: 1.6;
+}
+
+.text-pending-desc {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  max-width: 620px;
+  line-height: 1.6;
+}
+
+.text-pending-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
 .text-header {
   border-bottom: 1px solid var(--border);
   padding-bottom: 1.5rem;
