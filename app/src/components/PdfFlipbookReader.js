@@ -1037,11 +1037,21 @@ export default function PdfFlipbookReader({ book, onClose }) {
             <div className="pdf-error-container">
               <AlertCircle className="w-12 h-12 mb-2 text-red-500" />
               <p className="font-bold text-md">{error}</p>
-              <p className="ae-helper-text-muted-xs">Veuifiez vérifier que le PDF existe et qu'il est disponible.</p>
+              <p className="ae-helper-text-muted-xs">Veuillez vérifier que le PDF existe et qu'il est disponible.</p>
               {book.pdfFile && (
                 <div className="text-xs bg-slate-800 p-2 rounded font-mono text-slate-300 mt-2">
                   Fichier : {book.pdfFile}
                 </div>
+              )}
+              {onClose && (
+                <button 
+                  type="button" 
+                  onClick={onClose} 
+                  className="btn-primary mt-3"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer' }}
+                >
+                  <ChevronLeft size={16} aria-hidden="true" /> Fermer et revenir
+                </button>
               )}
             </div>
           )}
