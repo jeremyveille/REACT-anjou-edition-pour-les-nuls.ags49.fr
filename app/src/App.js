@@ -1611,13 +1611,6 @@ function App() {
                 </div>
               </section>
 
-              {/* Transition wave before Heritage section */}
-              <div className="heritage-transition-wave" aria-hidden="true">
-                <svg viewBox="0 0 1440 60" fill="none" preserveAspectRatio="none">
-                  <path d="M0,20 C360,50 1080,0 1440,20 L1440,60 L0,60 Z" fill="#e0f2fe" opacity="0.4" />
-                </svg>
-              </div>
-
               {/* 5. Blocs personnalisés du PageBuilder si présents */}
               {(() => {
                 const homeCustomPage = Array.isArray(customPages) ? customPages.find(p => p?.isHome === true || p?.isHomePage === true || p?.is_home === true || (p?.title || '').toLowerCase().includes('accueil') || p?.slug === 'home' || p?.slug === 'accueil' || p?.slug === '') : null;
@@ -1652,10 +1645,20 @@ function App() {
                 };
 
                 const filteredBlocks = filterTree(rawBlocks);
+                if (!filteredBlocks || filteredBlocks.length === 0) return null;
 
-                return filteredBlocks.map((block) => (
-                  <BlockRenderer key={block.id} block={block} isEditing={false} />
-                ));
+                return (
+                  <>
+                    <div className="heritage-transition-wave" aria-hidden="true">
+                      <svg viewBox="0 0 1440 60" fill="none" preserveAspectRatio="none">
+                        <path d="M0,20 C360,50 1080,0 1440,20 L1440,60 L0,60 Z" fill="#e0f2fe" opacity="0.4" />
+                      </svg>
+                    </div>
+                    {filteredBlocks.map((block) => (
+                      <BlockRenderer key={block.id} block={block} isEditing={false} />
+                    ))}
+                  </>
+                );
               })()}
             </div>
           )}
