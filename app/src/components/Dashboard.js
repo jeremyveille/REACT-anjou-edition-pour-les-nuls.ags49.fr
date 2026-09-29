@@ -9,7 +9,7 @@ import {
   Copy, Edit3, Eye, UploadCloud, Menu, Star, Check,
   ChevronUp, ChevronDown, ChevronLeft, ChevronRight, GripVertical
 } from "lucide-react";
-import { db, storage } from "../firebase";
+import { db, storage, auth } from "../firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storePDFFile } from "../utils/indexedDBStorage";
 import { savePdfToFirestore, deletePdfFromFirestore } from "../utils/firestoreChunker";
@@ -17,21 +17,22 @@ import PdfFlipbookReader from "./PdfFlipbookReader";
 import { 
   collection, 
   getDocs, 
-  addDoc, 
   deleteDoc, 
   doc, 
   setDoc,
-  getDoc 
+  getDoc,
+  writeBatch
 } from "firebase/firestore";
 import { 
   isGeminiConfigured, 
-  saveGeminiApiKey, 
+  clearLegacyGeminiKey,
   generateAiArticle, 
   generateAiFlipbookPages 
 } from "../services/geminiService";
 import { flipbooksData, textsData, articlesData, generateDefaultMenus } from "../data";
 import { PageBuilder } from "./page-builder/PageBuilder";
 import { pageService } from "../services/pageService";
+import { accountService } from "../services/accountService";
 import '../styles/page-builder.css';
 import '../styles/dashboard.css';
 
@@ -131,7 +132,7 @@ const ROUTE_MAP = {
   'parametres': 'Paramètres'
 };
 
-export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setFlipbooks: propSetFlipbooks }) {
+export default function Dashboard({ onBackToSite, onLogout, flipbooks: propFlipbooks, setFlipbooks: propSetFlipbooks }) {
   // Local fallback state if props are not provided
   const [localFlipbooks, setLocalFlipbooks] = useState(() => {
     try {
@@ -223,7 +224,6 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
     }
   }, [activeSection]);
 
-  const [isLoggedOut, setIsLoggedOut] = useState(false);
   const [notification, setNotification] = useState(
     "Connexion à la base de données Firebase en cours..."
   );
@@ -251,7 +251,7 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
   });
 
   // Gemini API client configuration
-  const [geminiApiKey, setGeminiApiKey] = useState(localStorage.getItem("gemini_api_key") || "");
+  useEffect(() => { clearLegacyGeminiKey(); }, []);
   const [aiTopic, setAiTopic] = useState("");
   const [aiStyle, setAiStyle] = useState("Historique");
   const [aiResult, setAiResult] = useState("");
@@ -371,16 +371,13 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
   const [showAddNewsModal, setShowAddNewsModal] = useState(false);
 
   // Mes Comptes
-  const [accountsList, setAccountsList] = useState(() => {
-    const local = localStorage.getItem("ae_accounts");
-    if (local) {
-      try { return JSON.parse(local); } catch (e) {}
-    }
-    return [];
-  });
+  const [accountsList, setAccountsList] = useState([]);
+  const [accountsError, setAccountsError] = useState('');
+  const [accountBusy, setAccountBusy] = useState('');
+  const [accountResetLink, setAccountResetLink] = useState(null);
   const [newAccountName, setNewAccountName] = useState("");
   const [newAccountEmail, setNewAccountEmail] = useState("");
-  const [newAccountRole, setNewAccountRole] = useState("Écrivain");
+  const [newAccountRole, setNewAccountRole] = useState("Membre");
   const [newAccountStatus, setNewAccountStatus] = useState("Actif");
   const [showAddAccountModal, setShowAddAccountModal] = useState(false);
 
@@ -388,7 +385,7 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
   const [isInitializing, setIsInitializing] = useState(true);
 
   const getGeminiClient = () => {
-    return isGeminiConfigured(geminiApiKey) ? { apiKey: geminiApiKey } : null;
+    return isGeminiConfigured() ? {} : null;
   };
 
   // Fetch all databases on load
@@ -651,64 +648,28 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
   };
 
   const fetchAccounts = async () => {
-    try {
-      const snap = await getDocs(collection(db, "accounts"));
-      if (!snap || snap.empty || !snap.docs) {
-        const local = localStorage.getItem("ae_accounts");
-        if (local !== null) {
-          try {
-            const parsed = JSON.parse(local);
-            setAccountsList(Array.isArray(parsed) ? parsed : []);
-            return;
-          } catch (err) {}
-        }
-        const defaultAdmin = [
-          { id: "u1", name: "JEREMY VEILLE", email: "jeremy.veille@hotmail.fr", role: "Administrateur", status: "Actif", color: "#004b7a" }
-        ];
-        setAccountsList(defaultAdmin);
-        localStorage.setItem("ae_accounts", JSON.stringify(defaultAdmin));
-      } else {
-        const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setAccountsList(list);
-        localStorage.setItem("ae_accounts", JSON.stringify(list));
-      }
-    } catch (e) {
-      console.error("Accounts error:", e);
-      const local = localStorage.getItem("ae_accounts");
-      if (local !== null) {
-        try {
-          setAccountsList(JSON.parse(local));
-        } catch (err) {
-          setAccountsList([]);
-        }
-      } else {
-        setAccountsList([
-          { id: "u1", name: "JEREMY VEILLE", email: "jeremy.veille@hotmail.fr", role: "Administrateur", status: "Actif", color: "#004b7a" }
-        ]);
-      }
-    }
+    setAccountsError('');
+    try { setAccountsList(await accountService.list()); }
+    catch (error) { setAccountsList([]); setAccountsError(error.message || 'Impossible de charger les comptes.'); }
   };
 
-  const saveAllMenusToFirebase = async (list) => {
-    setMenusList(list);
-    localStorage.setItem("ae_menus", JSON.stringify(list));
-
+  const saveAllMenusToFirebase = async (list, deletedId = null) => {
     try {
-      await Promise.all(list.map(async (m) => {
-        const { id, ...menuData } = m;
-        const dataToSave = {
-          ...menuData,
-          parentId: normalizeParentId(menuData.parentId),
-          order: menuData.order || 0,
-          updatedAt: new Date()
-        };
-        await setDoc(doc(db, "menus", id), dataToSave);
+      const batch = writeBatch(db);
+      if (deletedId) batch.delete(doc(db, "menus", deletedId));
+      list.forEach(({ id, ...menu }) => batch.set(doc(db, "menus", id), {
+        ...menu, parentId: normalizeParentId(menu.parentId), order: menu.order || 0, updatedAt: new Date()
       }));
-    } catch (err) {
-      console.error("Firebase save menus error:", err);
+      await batch.commit();
+      setMenusList(list);
+      try { localStorage.setItem("ae_menus", JSON.stringify(list)); } catch (_) {}
+      return true;
+    } catch (error) {
+      console.error("Menu save failed:", error);
+      setNotification("Le menu n’a pas été enregistré. Vos modifications restent ouvertes pour réessayer.");
+      return false;
     }
   };
-
   const fetchMenus = async () => {
     const defaults = generateDefaultMenus();
 
@@ -876,9 +837,6 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
             (data.pdfFile || '').toLowerCase().includes("guide_historique");
 
           if (isGuideHistorique) {
-            try {
-              deleteDoc(doc(db, "flipbooks", docSnap.id));
-            } catch (err) {}
             continue;
           }
 
@@ -913,33 +871,27 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
   };
 
   const handleAddFlipbookState = async (newFb) => {
+    await setDoc(doc(db, "flipbooks", newFb.id), newFb);
     const updated = [...flipbooks, newFb];
     setFlipbooks(updated);
-    localStorage.setItem("ae_flipbooks", JSON.stringify(updated));
-    try {
-      await setDoc(doc(db, "flipbooks", newFb.id), newFb);
-      setNotification(`Flipbook "${newFb.title}" ajouté avec succès sur Firebase.`);
-    } catch (err) {
-      console.error("Error saving flipbook to Firestore:", err);
-      setNotification(`Flipbook "${newFb.title}" créé localement.`);
-    }
+    try { localStorage.setItem("ae_flipbooks", JSON.stringify(updated)); } catch (_) {}
+    setNotification(`Flipbook "${newFb.title}" ajouté avec succès.`);
   };
-
   const handleDeleteFlipbook = async (id, title) => {
     if (!window.confirm(`Voulez-vous vraiment supprimer le flipbook "${title}" ?`)) {
       return;
     }
-    const updated = flipbooks.filter(fb => fb.id !== id);
-    setFlipbooks(updated);
-    localStorage.setItem("ae_flipbooks", JSON.stringify(updated));
-    setSelectedFlipbookIds(prev => prev.filter(item => item !== id));
     try {
       await deleteDoc(doc(db, "flipbooks", id));
-      await deletePdfFromFirestore(id);
+      const updated = flipbooks.filter(fb => fb.id !== id);
+      setFlipbooks(updated);
+      try { localStorage.setItem("ae_flipbooks", JSON.stringify(updated)); } catch (_) {}
+      setSelectedFlipbookIds(prev => prev.filter(item => item !== id));
+      try { await deletePdfFromFirestore(id); } catch (error) { console.warn('PDF cleanup failed:', error); }
       setNotification(`Flipbook "${title}" supprimé avec succès de Firebase.`);
     } catch (err) {
       console.error("Error deleting flipbook:", err);
-      setNotification(`Flipbook "${title}" supprimé localement.`);
+      setNotification("Suppression non enregistrée. Le flipbook est conservé ; réessayez.");
     }
   };
 
@@ -986,11 +938,14 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
             await savePdfToFirestore(editingFlipbook.id, editPdfFile);
             hasFirestoreChunks = true;
           } catch (chunkErr) {
-            console.error("Failed to save chunks:", chunkErr);
+            throw chunkErr;
           }
         }
       } catch (err) {
-        console.error("Error storing new PDF:", err);
+        setNotification("Le nouveau PDF n’a pas été enregistré. Votre saisie est conservée.");
+        setIsEditingSaving(false);
+        setGeminiProgressMsg("");
+        return;
       }
     }
 
@@ -1002,15 +957,17 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
     };
 
     const updatedList = flipbooks.map(fb => fb.id === editingFlipbook.id ? updatedFlipbook : fb);
-    setFlipbooks(updatedList);
-    localStorage.setItem("ae_flipbooks", JSON.stringify(updatedList));
-
     try {
       await setDoc(doc(db, "flipbooks", editingFlipbook.id), updatedFlipbook);
+      setFlipbooks(updatedList);
+      try { localStorage.setItem("ae_flipbooks", JSON.stringify(updatedList)); } catch (_) {}
       setNotification(`Flipbook "${editingFlipbook.title}" mis à jour sur Firebase.`);
     } catch (err) {
       console.error("Error updating flipbook on Firebase:", err);
-      setNotification(`Flipbook "${editingFlipbook.title}" mis à jour localement.`);
+      setNotification("Le flipbook n’a pas été enregistré. Votre saisie est conservée.");
+      setIsEditingSaving(false);
+      setGeminiProgressMsg("");
+      return;
     }
 
     setShowEditFlipbookModal(false);
@@ -1039,23 +996,23 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
     if (action === "trash") {
       if (window.confirm(`Voulez-vous vraiment supprimer les ${selectedFlipbookIds.length} flipbooks sélectionnés ?`)) {
         const updated = flipbooks.filter(fb => !selectedFlipbookIds.includes(fb.id));
-        setFlipbooks(updated);
-        localStorage.setItem("ae_flipbooks", JSON.stringify(updated));
-        
         const count = selectedFlipbookIds.length;
         const idsToDelete = [...selectedFlipbookIds];
-        setSelectedFlipbookIds([]);
-        setBulkActionTop("-1");
-        setBulkActionBottom("-1");
         
         try {
-          for (const id of idsToDelete) {
-            await deleteDoc(doc(db, "flipbooks", id));
-          }
+          const batch = writeBatch(db);
+          idsToDelete.forEach(id => batch.delete(doc(db, "flipbooks", id)));
+          await batch.commit();
+          setFlipbooks(updated);
+          try { localStorage.setItem("ae_flipbooks", JSON.stringify(updated)); } catch (_) {}
+          setSelectedFlipbookIds([]);
+          setBulkActionTop("-1");
+          setBulkActionBottom("-1");
+          await Promise.allSettled(idsToDelete.map(deletePdfFromFirestore));
           setNotification(`${count} flipbooks supprimés avec succès de Firebase.`);
         } catch (err) {
           console.error("Error batch deleting flipbooks:", err);
-          setNotification(`${count} flipbooks supprimés localement.`);
+          setNotification("La suppression groupée a échoué. Les flipbooks sont conservés.");
         }
       }
     } else if (action === "edit") {
@@ -1150,12 +1107,11 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
     const cleanDesc = newFlipbookDesc.trim();
 
     const fetchPagesWithGemini = async () => {
-      if (useGeminiForPages && isGeminiConfigured(geminiApiKey)) {
+      if (useGeminiForPages && isGeminiConfigured()) {
         return await generateAiFlipbookPages({
           title: cleanTitle,
           description: cleanDesc,
           fileName: fileName,
-          apiKey: geminiApiKey
         });
       }
       return null;
@@ -1190,7 +1146,7 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
       setGeminiProgressMsg("Enregistrement du fichier PDF...");
       setUploadProgress(85);
 
-      const newId = String(Math.floor(Math.random() * 9000) + 1000);
+      const newId = crypto.randomUUID();
       setNewGeneratedId(newId);
 
       // 1. Store in local IndexedDB
@@ -1217,6 +1173,7 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
         }
       }
 
+      if (!pdfUrl && !hasFirestoreChunks) throw new Error("Le PDF n’a pas pu être envoyé.");
       setGeminiProgressMsg("Finalisation du flipbook...");
       setUploadProgress(100);
       await new Promise(r => setTimeout(r, 300));
@@ -1261,10 +1218,7 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
       setNotification(`Page "${newPage.title}" ajoutée avec succès (statut: ${saved.status}).`);
     } catch (err) {
       console.error("Error adding page:", err);
-      const localSaved = { id: String(Date.now()), ...newPage };
-      setPagesList([localSaved, ...pagesList]);
-      setNewPageTitle("");
-      setNotification(`Page "${newPage.title}" ajoutée localement.`);
+      setNotification("Enregistrement impossible. Votre titre est conservé pour réessayer.");
     }
   };
 
@@ -1291,10 +1245,7 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
       setNotification(`Nouvel article "${newArt.title}" créé avec succès.`);
     } catch (err) {
       console.error("Error adding article:", err);
-      const localSaved = { id: String(Date.now()), ...newArt };
-      setArticlesList([localSaved, ...articlesList]);
-      setNewArticleTitle("");
-      setNotification(`Article "${newArt.title}" créé localement.`);
+      setNotification("Enregistrement impossible. Votre titre est conservé pour réessayer.");
     }
   };
 
@@ -1309,6 +1260,7 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
       setNotification("Article principal défini avec succès pour la page d'accueil.");
     } catch (e) {
       console.error("Erreur sélection article principal:", e);
+      setNotification("L’article à la une n’a pas été modifié. Vérifiez qu’il est publié et réessayez.");
     }
   };
 
@@ -1373,7 +1325,7 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
       setNotification("Page supprimée avec succès.");
     } catch (err) {
       console.error("Error deleting page:", err);
-      setPagesList(pagesList.filter(p => p.id !== id));
+      setNotification("Suppression non enregistrée. L’élément est conservé ; réessayez.");
     }
   };
 
@@ -1386,7 +1338,7 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
       setNotification("Article supprimé avec succès.");
     } catch (err) {
       console.error("Error deleting article:", err);
-      setArticlesList(articlesList.filter(a => a.id !== id));
+      setNotification("Suppression non enregistrée. L’élément est conservé ; réessayez.");
     }
   };
 
@@ -1419,7 +1371,7 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
       setNotification("Message de contact supprimé avec succès.");
     } catch (err) {
       console.error("Error deleting message:", err);
-      setMessagesList(messagesList.filter(m => m.id !== id));
+      setNotification("Suppression non enregistrée. L’élément est conservé ; réessayez.");
     }
   };
 
@@ -1430,19 +1382,13 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
       setNotification("Paramètres sauvegardés avec succès dans Firestore.");
     } catch (err) {
       console.error("Error updating settings:", err);
-      setNotification("Paramètres sauvegardés localement (mode hors ligne).");
+      setNotification("Les paramètres n’ont pas été enregistrés. Réessayez lorsque la connexion est rétablie.");
     }
   };
 
-  const handleSaveGeminiKey = (e) => {
-    e.preventDefault();
-    saveGeminiApiKey(geminiApiKey);
-    setNotification("Clé API Gemini configurée avec succès.");
-  };
-
   const handleGenerateArticle = async () => {
-    if (!isGeminiConfigured(geminiApiKey)) {
-      setNotification("Clé API Gemini non disponible.");
+    if (!isGeminiConfigured()) {
+      setNotification("L’assistant doit être activé par l’administrateur du site.");
       return;
     }
 
@@ -1452,7 +1398,6 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
       const text = await generateAiArticle({
         topic: aiTopic,
         style: aiStyle,
-        apiKey: geminiApiKey
       });
 
       setAiResult(text);
@@ -1482,34 +1427,27 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
       views: 0,
       date: new Date().toISOString().split('T')[0],
       content: aiResult,
+      status: "draft",
       category: cat
     };
 
     try {
-      const docRef = await addDoc(collection(db, "articles"), newArt);
-      setArticlesList([...articlesList, { id: docRef.id, ...newArt }]);
+      const saved = await pageService.savePage(newArt, null, "articles");
+      setArticlesList([...articlesList, saved]);
       setAiTopic("");
       setAiResult("");
-      setNotification(`L'article IA "${title}" a été publié dans la catégorie ${cat}.`);
+      setNotification(`Le brouillon IA "${title}" est enregistré. Relisez-le avant publication.`);
     } catch (err) {
       console.error("Error publishing AI article:", err);
-      setArticlesList([...articlesList, { id: String(Date.now()), ...newArt }]);
-      setAiTopic("");
-      setAiResult("");
+      setNotification("Le brouillon n’a pas été enregistré. Le texte est conservé pour réessayer.");
     }
   };
 
-  const handleLogout = () => {
-    setIsLoggedOut(true);
-    setNotification(null);
-  };
-
-  const handleRestartSession = () => {
-    setIsLoggedOut(false);
-    setActiveSection(null);
-    setSearchQuery("");
-    setActiveCategory("Accueil");
-    setNotification("Session restaurée avec Jeremy Veille.");
+  const handleLogout = async () => {
+    try {
+      if (typeof onLogout !== 'function') throw new Error('La déconnexion est indisponible. Rechargez la page.');
+      await onLogout();
+    } catch (error) { setNotification(error.message || 'La déconnexion a échoué. Réessayez.'); }
   };
 
   // --- New Handlers for Section Interactions ---
@@ -1529,80 +1467,45 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
 
 
   // 2. Médiathèque
-  const handleMediaUpload = (e) => {
+  const handleMediaUpload = async (e) => {
     const file = e.target.files[0];
-    if (!file) return;
-
-    setMediaUploading(true);
-    setMediaProgress(0);
-
-    let progress = 0;
-    const interval = setInterval(async () => {
-      progress += 10;
-      setMediaProgress(progress);
-      if (progress >= 100) {
-        clearInterval(interval);
-        
-        let url = "/anjou-edition-livre.png";
-        if (file.type.startsWith("image/")) {
-          try {
-            const reader = new FileReader();
-            url = await new Promise((resolve) => {
-              reader.onloadend = () => resolve(reader.result || '/anjou-edition-livre.png');
-              reader.onerror = () => resolve('/anjou-edition-livre.png');
-              reader.readAsDataURL(file);
-            });
-          } catch (err) {
-            console.warn("Could not create data URL:", err);
-          }
-        } else if (file.type.startsWith("audio/")) {
-          url = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
-        }
-
-        const newMedia = {
-          id: "m" + Date.now(),
-          name: file.name,
-          type: file.type || "application/octet-stream",
-          size: file.size,
-          date: new Date().toLocaleDateString("fr-FR") + " à " + new Date().toLocaleTimeString("fr-FR", { hour: '2-digit', minute: '2-digit' }),
-          url: url
-        };
-
-        try {
-          await setDoc(doc(db, "medias", newMedia.id), newMedia);
-          const updated = [...mediaList, newMedia];
-          setMediaList(updated);
-          localStorage.setItem("ae_medias", JSON.stringify(updated));
-          setNotification(`Fichier "${file.name}" importé avec succès.`);
-        } catch (err) {
-          console.error("Error storing media:", err);
-          const updated = [...mediaList, newMedia];
-          setMediaList(updated);
-          localStorage.setItem("ae_medias", JSON.stringify(updated));
-          setNotification(`Fichier "${file.name}" importé localement.`);
-        } finally {
-          setMediaUploading(false);
-        }
-      }
-    }, 100);
+    if (!file || mediaUploading) return;
+    if (file.size >= 50 * 1024 * 1024 || !/^(image\/|audio\/|video\/|application\/pdf$)/.test(file.type)) {
+      setNotification("Choisissez une image, une vidéo, un fichier audio ou un PDF de moins de 50 Mo.");
+      return;
+    }
+    setMediaUploading(true); setMediaProgress(0);
+    try {
+      const id = "m" + crypto.randomUUID();
+      const storagePath = `medias/${id}/${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+      const result = await uploadBytes(ref(storage, storagePath), file);
+      setMediaProgress(80);
+      const url = await getDownloadURL(result.ref);
+      const media = { id, name: file.name, type: file.type, size: file.size, storagePath, url, date: new Date().toLocaleDateString("fr-FR") };
+      await setDoc(doc(db, "medias", id), media);
+      const updated = [...mediaList, media];
+      setMediaList(updated);
+      try { localStorage.setItem("ae_medias", JSON.stringify(updated)); } catch (_) {}
+      setMediaProgress(100);
+      setNotification(`Fichier "${file.name}" importé avec succès.`);
+    } catch (error) {
+      console.error(error);
+      setNotification("Le fichier n’a pas été ajouté à la médiathèque. Réessayez.");
+    } finally { setMediaUploading(false); e.target.value = ''; }
   };
-
-  const handleDeleteMedia = async (id, name) => {
-    if (!window.confirm(`Supprimer définitivement le fichier "${name}" ?`)) return;
-
-    const updated = mediaList.filter(m => m.id !== id);
-    setMediaList(updated);
-    localStorage.setItem("ae_medias", JSON.stringify(updated));
-
+  const handleDeleteMedia = async (id, title) => {
+    if (!window.confirm(`Supprimer "${title}" ?`)) return;
     try {
       await deleteDoc(doc(db, "medias", id));
-      setNotification(`Fichier "${name}" supprimé.`);
-    } catch (err) {
-      console.error("Delete media error:", err);
-      setNotification(`Fichier "${name}" supprimé localement.`);
+      const updated = mediaList.filter(item => item.id !== id);
+      setMediaList(updated);
+      try { localStorage.setItem("ae_medias", JSON.stringify(updated)); } catch (_) {}
+      setNotification(`Fichier "${title}" supprimé(e).`);
+    } catch (error) {
+      console.error(error);
+      setNotification("Suppression non enregistrée. L’élément est conservé ; réessayez.");
     }
   };
-
   const handleOpenEditMedia = (media) => {
     setEditingMedia(media);
     setEditMediaName(media?.name || "");
@@ -1695,25 +1598,11 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
       if (editMediaFile) {
         finalSize = editMediaFile.size;
         finalType = editMediaFile.type || "image/jpeg";
-        try {
-          const timestamp = Date.now();
-          const cleanName = editMediaFile.name.replace(/[^a-zA-Z0-9.]/g, '_');
-          const storageRef = ref(storage, `medias/${timestamp}_${cleanName}`);
-          const uploadResult = await uploadBytes(storageRef, editMediaFile);
-          finalUrl = await getDownloadURL(uploadResult.ref);
-        } catch (storageErr) {
-          console.warn("Firebase Storage non accessible, utilisation du Data URL local:", storageErr);
-          try {
-            const reader = new FileReader();
-            finalUrl = await new Promise((resolve) => {
-              reader.onloadend = () => resolve(reader.result || editingMedia.url);
-              reader.onerror = () => resolve(editingMedia.url);
-              reader.readAsDataURL(editMediaFile);
-            });
-          } catch (blobErr) {
-            finalUrl = editMediaPreviewUrl || editingMedia.url;
-          }
-        }
+        const timestamp = Date.now();
+        const cleanName = editMediaFile.name.replace(/[^a-zA-Z0-9.]/g, '_');
+        const storageRef = ref(storage, `medias/${timestamp}_${cleanName}`);
+        const uploadResult = await uploadBytes(storageRef, editMediaFile);
+        finalUrl = await getDownloadURL(uploadResult.ref);
       }
 
       const updatedName = editMediaName.trim() || editingMedia.name;
@@ -1730,11 +1619,7 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
         date: new Date().toLocaleDateString("fr-FR") + " à " + new Date().toLocaleTimeString("fr-FR", { hour: '2-digit', minute: '2-digit' })
       };
 
-      try {
-        await setDoc(doc(db, "medias", updatedMedia.id), updatedMedia, { merge: true });
-      } catch (firestoreErr) {
-        console.warn("Firestore update error, updated locally:", firestoreErr);
-      }
+      await setDoc(doc(db, "medias", updatedMedia.id), updatedMedia, { merge: true });
 
       const updatedList = mediaList.map(m => m.id === updatedMedia.id ? updatedMedia : m);
       setMediaList(updatedList);
@@ -1747,7 +1632,10 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
       } catch (err) {}
 
       setNotification(`L'image "${updatedMedia.name}" a été modifiée avec succès.`);
-      handleCloseEditMedia();
+      setShowMediaEditModal(false);
+      setEditingMedia(null);
+      if (editMediaPreviewUrl.startsWith("blob:")) URL.revokeObjectURL(editMediaPreviewUrl);
+      setEditMediaFile(null);
     } catch (err) {
       console.error("Erreur lors de la modification de l'image:", err);
       setEditMediaError("Une erreur est survenue lors de l'enregistrement des modifications.");
@@ -1771,15 +1659,16 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
     };
 
     const updated = [...galleryList, newPhoto];
-    setGalleryList(updated);
-    localStorage.setItem("ae_gallery", JSON.stringify(updated));
 
     try {
       await setDoc(doc(db, "gallery", newPhoto.id), newPhoto);
+      setGalleryList(updated);
+      try { localStorage.setItem("ae_gallery", JSON.stringify(updated)); } catch (_) {}
       setNotification(`Photo "${newPhotoTitle}" ajoutée avec succès.`);
     } catch (err) {
       console.error("Error saving photo:", err);
-      setNotification(`Photo "${newPhotoTitle}" enregistrée localement.`);
+      setNotification("Enregistrement impossible. Votre saisie est conservée pour réessayer.");
+      return;
     }
 
     setNewPhotoTitle("");
@@ -1789,21 +1678,18 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
   };
 
   const handleDeletePhoto = async (id, title) => {
-    if (!window.confirm(`Retirer "${title}" de la galerie ?`)) return;
-
-    const updated = galleryList.filter(g => g.id !== id);
-    setGalleryList(updated);
-    localStorage.setItem("ae_gallery", JSON.stringify(updated));
-
+    if (!window.confirm(`Supprimer "${title}" ?`)) return;
     try {
       await deleteDoc(doc(db, "gallery", id));
-      setNotification(`Photo "${title}" retirée de la galerie.`);
-    } catch (err) {
-      console.error("Error deleting photo:", err);
-      setNotification(`Photo "${title}" retirée localement.`);
+      const updated = galleryList.filter(item => item.id !== id);
+      setGalleryList(updated);
+      try { localStorage.setItem("ae_gallery", JSON.stringify(updated)); } catch (_) {}
+      setNotification(`Photo "${title}" supprimé(e).`);
+    } catch (error) {
+      console.error(error);
+      setNotification("Suppression non enregistrée. L’élément est conservé ; réessayez.");
     }
   };
-
   // 4. Vidéos
   const getYoutubeId = (url) => {
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
@@ -1832,15 +1718,16 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
     };
 
     const updated = [...videoList, newVideo];
-    setVideoList(updated);
-    localStorage.setItem("ae_videos", JSON.stringify(updated));
 
     try {
       await setDoc(doc(db, "videos", newVideo.id), newVideo);
+      setVideoList(updated);
+      try { localStorage.setItem("ae_videos", JSON.stringify(updated)); } catch (_) {}
       setNotification(`Vidéo "${newVideoTitle}" publiée.`);
     } catch (err) {
       console.error("Error publishing video:", err);
-      setNotification(`Vidéo "${newVideoTitle}" publiée localement.`);
+      setNotification("Enregistrement impossible. Votre saisie est conservée pour réessayer.");
+      return;
     }
 
     setNewVideoTitle("");
@@ -1850,21 +1737,18 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
   };
 
   const handleDeleteVideo = async (id, title) => {
-    if (!window.confirm(`Supprimer la vidéo "${title}" ?`)) return;
-
-    const updated = videoList.filter(v => v.id !== id);
-    setVideoList(updated);
-    localStorage.setItem("ae_videos", JSON.stringify(updated));
-
+    if (!window.confirm(`Supprimer "${title}" ?`)) return;
     try {
       await deleteDoc(doc(db, "videos", id));
-      setNotification(`Vidéo "${title}" supprimée.`);
-    } catch (err) {
-      console.error(err);
-      setNotification(`Vidéo "${title}" supprimée localement.`);
+      const updated = videoList.filter(item => item.id !== id);
+      setVideoList(updated);
+      try { localStorage.setItem("ae_videos", JSON.stringify(updated)); } catch (_) {}
+      setNotification(`Vidéo "${title}" supprimé(e).`);
+    } catch (error) {
+      console.error(error);
+      setNotification("Suppression non enregistrée. L’élément est conservé ; réessayez.");
     }
   };
-
   // 5. Actualités
   const handleAddNewsSubmit = async (e) => {
     e.preventDefault();
@@ -1879,15 +1763,16 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
     };
 
     const updated = [...newsList, newNews];
-    setNewsList(updated);
-    localStorage.setItem("ae_news", JSON.stringify(updated));
 
     try {
       await setDoc(doc(db, "news", newNews.id), newNews);
+      setNewsList(updated);
+      try { localStorage.setItem("ae_news", JSON.stringify(updated)); } catch (_) {}
       setNotification(`Annonce "${newNewsTitle}" publiée.`);
     } catch (err) {
       console.error(err);
-      setNotification(`Annonce "${newNewsTitle}" publiée localement.`);
+      setNotification("Enregistrement impossible. Votre saisie est conservée pour réessayer.");
+      return;
     }
 
     setNewNewsTitle("");
@@ -1897,21 +1782,18 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
   };
 
   const handleDeleteNews = async (id, title) => {
-    if (!window.confirm(`Supprimer l'actualité "${title}" ?`)) return;
-
-    const updated = newsList.filter(n => n.id !== id);
-    setNewsList(updated);
-    localStorage.setItem("ae_news", JSON.stringify(updated));
-
+    if (!window.confirm(`Supprimer "${title}" ?`)) return;
     try {
       await deleteDoc(doc(db, "news", id));
-      setNotification(`Actualité "${title}" supprimée.`);
-    } catch (err) {
-      console.error(err);
-      setNotification(`Actualité "${title}" retirée localement.`);
+      const updated = newsList.filter(item => item.id !== id);
+      setNewsList(updated);
+      try { localStorage.setItem("ae_news", JSON.stringify(updated)); } catch (_) {}
+      setNotification(`Actualité "${title}" supprimé(e).`);
+    } catch (error) {
+      console.error(error);
+      setNotification("Suppression non enregistrée. L’élément est conservé ; réessayez.");
     }
   };
-
   // 5b. Navigation Menus & Reusable Shortcodes
   const sanitizeInput = (val) => {
     if (typeof val !== "string") return "";
@@ -2045,7 +1927,7 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
         }
         return m;
       });
-      setNotification(`Élément "${sanitizedTitle}" modifié avec succès.`);
+
     } else {
       // Add mode
       const maxOrder = menusList.reduce((max, item) => Math.max(max, item.order || 0), 0);
@@ -2070,14 +1952,15 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
       };
 
       updatedList = [...menusList, newMenuItem];
-      setNotification(`Élément "${newMenuItem.title}" créé.`);
+
       setNewlyAddedMenuItemId(newMenuItem.id);
       setTimeout(() => setNewlyAddedMenuItemId(null), 3000);
     }
 
     const reindexed = reindexMenuOrders(updatedList);
-    await saveAllMenusToFirebase(reindexed);
+    if (!await saveAllMenusToFirebase(reindexed)) return;
 
+    setNotification(`Élément "${sanitizedTitle}" enregistré.`);
     setShowAddMenuModal(false);
     setEditingMenuItemId(null);
   };
@@ -2126,7 +2009,7 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
     });
 
     const reindexed = reindexMenuOrders(updated);
-    await saveAllMenusToFirebase(reindexed);
+    if (!await saveAllMenusToFirebase(reindexed)) return;
 
     const msg = `Élément "${item.title}" monté.`;
     setMenuAriaAnnouncement(msg);
@@ -2165,7 +2048,7 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
     });
 
     const reindexed = reindexMenuOrders(updated);
-    await saveAllMenusToFirebase(reindexed);
+    if (!await saveAllMenusToFirebase(reindexed)) return;
 
     const msg = `Élément "${item.title}" descendu.`;
     setMenuAriaAnnouncement(msg);
@@ -2207,7 +2090,7 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
     });
 
     const reindexed = reindexMenuOrders(updated);
-    await saveAllMenusToFirebase(reindexed);
+    if (!await saveAllMenusToFirebase(reindexed)) return;
 
     const msg = `Élément "${targetItem.title}" défini comme sous-menu de "${newParent.title}".`;
     setMenuAriaAnnouncement(msg);
@@ -2242,7 +2125,7 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
     });
 
     const reindexed = reindexMenuOrders(updated);
-    await saveAllMenusToFirebase(reindexed);
+    if (!await saveAllMenusToFirebase(reindexed)) return;
 
     const msg = `Élément "${targetItem.title}" sorti du sous-menu.`;
     setMenuAriaAnnouncement(msg);
@@ -2292,7 +2175,7 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
     });
 
     const reindexed = reindexMenuOrders(updatedList);
-    await saveAllMenusToFirebase(reindexed);
+    if (!await saveAllMenusToFirebase(reindexed)) return;
 
     const msg = `Élément "${draggedItem.title}" déplacé.`;
     setMenuAriaAnnouncement(msg);
@@ -2315,26 +2198,7 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
       });
 
     const reindexed = reindexMenuOrders(updated);
-    setMenusList(reindexed);
-    localStorage.setItem("ae_menus", JSON.stringify(reindexed));
-
-    try {
-      await deleteDoc(doc(db, "menus", id));
-      await Promise.all(reindexed.map(async (m) => {
-        const { id: docId, ...menuData } = m;
-        const dataToSave = {
-          ...menuData,
-          parentId: normalizeParentId(menuData.parentId),
-          order: menuData.order || 0,
-          updatedAt: new Date()
-        };
-        await setDoc(doc(db, "menus", docId), dataToSave);
-      }));
-      setNotification(`Élément "${title}" supprimé.`);
-    } catch (err) {
-      console.error(err);
-      setNotification(`Élément "${title}" retiré localement.`);
-    }
+    if (await saveAllMenusToFirebase(reindexed, id)) setNotification(`Élément "${title}" supprimé.`);
   };
 
   const handleCopyShortcode = (shortcode) => {
@@ -2455,75 +2319,61 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
     );
   };
 
-  // 6. Mes Comptes
+  // Identity changes are acknowledged only after the privileged service confirms them.
   const handleAddAccountSubmit = async (e) => {
     e.preventDefault();
-    if (!newAccountName.trim() || !newAccountEmail.trim()) return;
-
-    const colors = ["#336ddc", "#004b7a", "#10b981", "#f59e0b", "#6366f1", "#ec4899", "#8b5cf6"];
-    const randomColor = colors[Math.floor(Math.random() * colors.length)];
-
-    const newAccount = {
-      id: "u" + Date.now(),
-      name: newAccountName,
-      email: newAccountEmail,
-      role: newAccountRole,
-      status: newAccountStatus,
-      color: randomColor
-    };
-
-    const updated = [...accountsList, newAccount];
-    setAccountsList(updated);
-    localStorage.setItem("ae_accounts", JSON.stringify(updated));
-
+    if (accountBusy) return;
+    setAccountBusy('create'); setAccountsError(''); setAccountResetLink(null);
     try {
-      await setDoc(doc(db, "accounts", newAccount.id), newAccount);
-      setNotification(`Compte d'écrivain créé pour "${newAccountName}".`);
-    } catch (err) {
-      console.error(err);
-      setNotification(`Compte créé localement.`);
-    }
-
-    setNewAccountName("");
-    setNewAccountEmail("");
-    setShowAddAccountModal(false);
+      const account = await accountService.create({ name: newAccountName, email: newAccountEmail, role: newAccountRole, status: newAccountStatus });
+      setAccountsList(current => [...current, account]);
+      setShowAddAccountModal(false);
+      setNewAccountName(''); setNewAccountEmail('');
+      setNotification('Compte Firebase créé. Utilisez « Lien de mot de passe » pour permettre à son titulaire de définir son mot de passe.');
+    } catch (error) { setAccountsError(error.message || 'Le compte n’a pas pu être créé.'); }
+    finally { setAccountBusy(''); }
   };
 
   const handleToggleAccountStatus = async (id) => {
-    const updated = accountsList.map(u => {
-      if (u.id === id) {
-        const newStatus = u.status === "Actif" ? "Inactif" : "Actif";
-        return { ...u, status: newStatus };
-      }
-      return u;
-    });
-
-    setAccountsList(updated);
-    localStorage.setItem("ae_accounts", JSON.stringify(updated));
-
-    const targetAccount = updated.find(u => u.id === id);
+    if (accountBusy) return;
+    const account = accountsList.find(item => item.id === id);
+    setAccountBusy(id); setAccountsError(''); setAccountResetLink(null);
     try {
-      await setDoc(doc(db, "accounts", id), targetAccount);
-      setNotification(`Statut de "${targetAccount.name}" mis à jour.`);
-    } catch (err) {
-      console.error(err);
-    }
+      const updated = await accountService.update(id, { disabled: account.status === 'Actif' });
+      setAccountsList(current => current.map(item => item.id === id ? updated : item));
+      setNotification('Statut Firebase du compte mis à jour.');
+    } catch (error) { setAccountsError(error.message || 'Le statut n’a pas été modifié.'); }
+    finally { setAccountBusy(''); }
   };
 
   const handleDeleteAccount = async (id, name) => {
-    if (!window.confirm(`Supprimer définitivement le compte d'écrivain de "${name}" ?`)) return;
-
-    const updated = accountsList.filter(u => u.id !== id);
-    setAccountsList(updated);
-    localStorage.setItem("ae_accounts", JSON.stringify(updated));
-
+    if (accountBusy || !window.confirm('Supprimer définitivement le compte Firebase de « ' + name + ' » ?')) return;
+    setAccountBusy(id); setAccountsError(''); setAccountResetLink(null);
     try {
-      await deleteDoc(doc(db, "accounts", id));
-      setNotification(`Compte de "${name}" supprimé.`);
-    } catch (err) {
-      console.error(err);
-      setNotification(`Compte retiré localement.`);
-    }
+      await accountService.remove(id);
+      setAccountsList(current => current.filter(item => item.id !== id));
+      setNotification('Compte Firebase supprimé.');
+    } catch (error) { setAccountsError(error.message || 'La suppression n’a pas pu être confirmée. Actualisez la liste.'); }
+    finally { setAccountBusy(''); }
+  };
+
+  const handleAccountResetLink = async account => {
+    if (accountBusy) return;
+    setAccountBusy(account.id); setAccountsError(''); setAccountResetLink(null);
+    try { setAccountResetLink({ email: account.email, url: await accountService.resetLink(account.id) }); }
+    catch (error) { setAccountsError(error.message || 'Le lien n’a pas pu être généré.'); }
+    finally { setAccountBusy(''); }
+  };
+
+  const handleSaveAccountName = async () => {
+    if (accountBusy || !auth.currentUser) return;
+    setAccountBusy(auth.currentUser.uid); setAccountsError('');
+    try {
+      const updated = await accountService.update(auth.currentUser.uid, { name: userName });
+      setAccountsList(current => current.map(item => item.id === updated.id ? updated : item));
+      setNotification('Nom du compte Firebase mis à jour.');
+    } catch (error) { setAccountsError(error.message || 'Le nom n’a pas été modifié.'); }
+    finally { setAccountBusy(''); }
   };
 
   const displayedPages = pagesList
@@ -2564,29 +2414,6 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
         (m.shortcode && m.shortcode.toLowerCase().includes(q))
       );
     });
-
-  if (isLoggedOut) {
-    return (
-      <div className="ae-fullscreen-center-wrapper">
-        <div className="ae-modal-card-dialog">
-          <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <ShieldCheck className="ae-icon-warning-bounce" />
-          </div>
-          <h1 className="text-2xl font-black text-slate-800 mb-2">Déconnexion Réussie</h1>
-          <p className="text-slate-600 text-sm mb-6">
-            Votre session administrative a été fermée de manière sécurisée. À bientôt sur Anjou Edition !
-          </p>
-          <button
-            id="btn-reconnect"
-            onClick={handleRestartSession}
-            className="w-full bg-[#336ddc] hover:bg-[#1e52be] text-white font-bold py-3 px-6 rounded-xl transition-all cursor-pointer shadow-md inline-flex items-center justify-center gap-2"
-          >
-            Se reconnecter en tant que Jeremy
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   const renderMenuForm = (isInline = false) => (
     <form onSubmit={handleAddMenuSubmit} className={isInline ? "space-y-4" : "ae-modal-body space-y-4"}>
@@ -3371,7 +3198,7 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
                           {!getGeminiClient() ? (
                             <div className="text-xs space-y-2">
                               <p className="ae-warning-box-compact">
-                                Clé API Gemini manquante. Veuillez la configurer dans l'onglet <strong>Paramètres</strong> pour activer la rédaction assistée.
+                                L’assistant de rédaction n’est pas encore activé. Vos articles restent modifiables manuellement.
                               </p>
                             </div>
                           ) : (
@@ -3435,7 +3262,7 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
                                     onClick={handlePublishAiArticle}
                                     className="db-btn-primary bg-emerald-600 hover:bg-emerald-700 border-none cursor-pointer"
                                   >
-                                    Publier cet Article
+                                    Enregistrer le brouillon
                                   </button>
                                 </div>
                               )}
@@ -3726,26 +3553,37 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
                       <div className="ae-toolbar-header-responsive">
                         <div>
                           <h4 className="ae-card-title-lg">
-                            Comptes & Écrivains d'Anjou
+                            Comptes de la plateforme
                           </h4>
                           <p className="ae-text-sm-muted">
-                            Gérez les profils et les permissions des auteurs de la plateforme littéraire.
+                            Gérez les comptes Firebase. Les administrateurs accèdent à la gestion du site ; les membres n’ont aucun droit d’administration.
                           </p>
                         </div>
                         <button
                           onClick={() => {
                             setNewAccountName("");
                             setNewAccountEmail("");
-                            setNewAccountRole("Écrivain");
+                            setNewAccountRole("Membre");
                             setNewAccountStatus("Actif");
                             setShowAddAccountModal(true);
                           }}
                           className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-4 py-2.5 rounded-lg cursor-pointer transition-colors inline-flex items-center gap-1.5 shadow-sm border-none"
                         >
-                          <Plus className="ae-icon-size-sm" /> Créer un profil
+                          <Plus className="ae-icon-size-sm" /> Créer un compte
                         </button>
                       </div>
 
+                      {accountsError && <p role="alert" className="ae-text-danger">{accountsError}</p>}
+                      <button type="button" className="db-btn-secondary" disabled={Boolean(accountBusy)} onClick={fetchAccounts}>Actualiser les comptes</button>
+                      {accountResetLink && (
+                        <div className="db-panel-card" role="status">
+                          <label htmlFor="account-reset-link">Lien de mot de passe pour {accountResetLink.email}</label>
+                          <input id="account-reset-link" className="db-input" readOnly value={accountResetLink.url} onFocus={e => e.target.select()} />
+                          <p>Copiez ce lien et transmettez-le uniquement au titulaire du compte. Aucun e-mail n’a été envoyé.</p>
+                          <button type="button" className="db-btn-secondary" onClick={() => setAccountResetLink(null)}>Masquer le lien</button>
+                        </div>
+                      )}
+                      {!accountsList.length && !accountsError && <p>Aucun compte à afficher.</p>}
                       <div className="accounts-grid animate-fade-in">
                         {accountsList.map((account) => (
                           <div key={account.id} className="account-card">
@@ -3766,18 +3604,23 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
                             </div>
                             
                             <div className="account-actions">
+                              <button type="button" className="account-btn" disabled={Boolean(accountBusy) || account.status !== "Actif"} onClick={() => handleAccountResetLink(account)}>Lien de mot de passe</button>
                               <button
                                 onClick={() => handleToggleAccountStatus(account.id)}
                                 className="account-btn border-none"
                                 title="Activer / Désactiver le compte"
+                                aria-label={"Activer ou désactiver " + account.name}
+                                disabled={Boolean(accountBusy) || account.id === auth.currentUser?.uid}
                               >
                                 <ShieldCheck className="ae-icon-emerald" />
                               </button>
-                              {account.name !== "JEREMY VEILLE" && (
+                              {account.id !== auth.currentUser?.uid && (
                                 <button
                                   onClick={() => handleDeleteAccount(account.id, account.name)}
                                   className="account-btn account-btn-danger border-none bg-transparent"
-                                  title="Supprimer le profil"
+                                  title="Supprimer le compte"
+                                  aria-label={"Supprimer le compte de " + account.name}
+                                  disabled={Boolean(accountBusy)}
                                 >
                                   <Trash2 className="ae-icon-md" />
                                 </button>
@@ -3797,10 +3640,8 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
                             className="text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white text-slate-800 outline-none flex-grow"
                           />
                           <button 
-                            onClick={() => {
-                              setNotification(`Nom d'administrateur mis à jour en "${userName}".`);
-                              setAccountsList(accountsList.map(a => a.email === "jeremy.veille@hotmail.fr" ? { ...a, name: userName } : a));
-                            }}
+                            onClick={handleSaveAccountName}
+                            disabled={Boolean(accountBusy)}
                             className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2 rounded-lg cursor-pointer border-none"
                           >
                             Valider
@@ -4419,24 +4260,11 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
                         </h4>
                         <div className="space-y-4">
                           <div>
-                            <label className="block text-xs font-bold text-slate-550 uppercase mb-1">Clé API Gemini</label>
-                            <div className="ae-flex-gap-sm">
-                              <input
-                                type="password"
-                                value={geminiApiKey}
-                                onChange={(e) => setGeminiApiKey(e.target.value)}
-                                placeholder="AIzaSy..."
-                                className="text-sm border border-slate-300 rounded-lg px-3 py-1.5 bg-white text-slate-800 outline-none flex-grow"
-                              />
-                              <button 
-                                onClick={handleSaveGeminiKey}
-                                className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-1.5 rounded-lg cursor-pointer transition-colors border-none"
-                              >
-                                Enregistrer
-                              </button>
-                            </div>
-                            <p className="text-[10px] text-slate-400 mt-1">
-                              Obtenez une clé API gratuite sur <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" className="ae-link-interactive-blue">Google AI Studio</a>. La clé est stockée de manière sécurisée localement dans votre navigateur.
+                            <p>{isGeminiConfigured()
+                              ? 'L’assistant est activé pour les administrateurs connectés.'
+                              : 'L’assistant n’est pas encore activé. Contactez la personne qui administre le site.'}</p>
+                            <p className="ae-code-meta-italic-xs">
+                              Les textes proposés doivent être relus avant publication.
                             </p>
                           </div>
                         </div>
@@ -4799,7 +4627,7 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
                                 onClick={handlePublishAiArticle}
                                 className="db-btn-primary bg-emerald-600 hover:bg-emerald-700 text-xs py-1 px-3 w-auto border-none cursor-pointer"
                               >
-                                Publier cet Article rédigé
+                                Enregistrer le brouillon
                               </button>
                             </div>
                           )}
@@ -5796,13 +5624,14 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
                 <div className="ae-modal-container" onClick={(e) => e.stopPropagation()}>
                   <div className="ae-modal-header">
                     <h3 className="ae-modal-title">
-                      <Users className="ae-icon-md" /> Créer un compte d'écrivain
+                      <Users className="ae-icon-md" /> Créer un compte Firebase
                     </h3>
                     <button onClick={() => setShowAddAccountModal(false)} className="ae-modal-close-btn">
                       <X className="ae-icon-md" />
                     </button>
                   </div>
                   <form onSubmit={handleAddAccountSubmit} className="ae-modal-body space-y-4">
+                    {accountsError && <p role="alert" className="ae-text-danger">{accountsError}</p>}
                     <div>
                       <label className="ae-modal-label">Nom de l'écrivain <span className="ae-text-danger">*</span></label>
                       <input 
@@ -5832,8 +5661,7 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
                         onChange={(e) => setNewAccountRole(e.target.value)} 
                         className="db-input w-full"
                       >
-                        <option value="Écrivain">Écrivain (Auteur)</option>
-                        <option value="Éditeur">Éditeur (Modérateur)</option>
+                        <option value="Membre">Membre (sans accès à l’administration)</option>
                         <option value="Administrateur">Administrateur (Gestion complète)</option>
                       </select>
                     </div>
@@ -5853,7 +5681,7 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
                         Annuler
                       </button>
                       <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded-lg cursor-pointer text-sm border-none">
-                        Créer le compte
+                        {accountBusy === 'create' ? 'Création en cours…' : 'Créer le compte'}
                       </button>
                     </div>
                   </form>

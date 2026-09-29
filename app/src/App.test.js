@@ -1,6 +1,12 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import App from './App';
+import useAdminSession from './hooks/useAdminSession';
+import { pageService } from './services/pageService';
+import { getDocs, deleteDoc } from 'firebase/firestore';
+
+jest.mock('./hooks/useAdminSession', () => jest.fn());
+jest.mock('./firebase', () => ({ db: {}, auth: {} }));
 
 // Mock the administrative Dashboard to avoid loading ES modules dependencies like @google/genai in Jest tests
 jest.mock('./components/Dashboard', () => {
@@ -60,13 +66,12 @@ beforeAll(() => {
 
 beforeEach(() => {
   localStorage.clear();
-  Object.defineProperty(window, 'location', {
-    value: {
-      pathname: '/',
-      search: ''
-    },
-    writable: true
-  });
+  jest.clearAllMocks();
+  window.history.replaceState({}, '', '/');
+  window.scrollTo = jest.fn();
+  pageService.getPages.mockResolvedValue([]);
+  getDocs.mockResolvedValue({ empty: true, docs: [] });
+  useAdminSession.mockReturnValue({ isAdmin: false, loading: false, login: jest.fn(), logout: jest.fn() });
 });
 
 const renderApp = async () => {
@@ -84,7 +89,7 @@ test('renders app header and checks welcome message', async () => {
   expect(titleElements.length).toBeGreaterThan(0);
   
   // Check welcome section text
-  const welcomeText = screen.getByText(/Bienvenue sur Anjou Édition/i);
+  const welcomeText = screen.getByRole('heading', { name: /la maison d['’]édition ouverte à tous/i, level: 1 });
   expect(welcomeText).toBeInTheDocument();
 });
 
@@ -92,7 +97,7 @@ test('navigates to flipbooks view when clicking flipbooks button', async () => {
   await renderApp();
   
   // Find "Voir les Flipbooks" button and click it
-  const btn = screen.getByRole('button', { name: /Voir les Flipbooks/i });
+  const btn = screen.getByRole('button', { name: /Découvrir nos publications et livres/i });
   await act(async () => {
     fireEvent.click(btn);
   });
@@ -211,7 +216,7 @@ test('navigates to privacy policy from footer link', async () => {
     fireEvent.click(backBtn);
   });
   
-  const welcomeText = screen.getByText(/Bienvenue sur Anjou Édition/i);
+  const welcomeText = screen.getByRole('heading', { name: /la maison d['’]édition ouverte à tous/i, level: 1 });
   expect(welcomeText).toBeInTheDocument();
 });
 
@@ -243,13 +248,7 @@ test('renders dynamic menu items and handles clicks', async () => {
 
 test('navigates to admin dashboard and attempts login', async () => {
   // Set location before render so the initial state is dashboard
-  Object.defineProperty(window, 'location', {
-    value: {
-      pathname: '/ae-dashboard',
-      search: ''
-    },
-    writable: true
-  });
+  window.history.replaceState({}, '', '/ae-dashboard');
   await renderApp();
   
   // We should see the login card since we are not authenticated
@@ -262,11 +261,87 @@ test('navigates to admin dashboard and attempts login', async () => {
   
   // Enter password and submit
   fireEvent.change(passwordInput, { target: { value: 'wrongpassword' } });
+  fireEvent.change(screen.getByLabelText('Adresse e-mail'), { target: { value: 'editor@example.com' } });
   
   const submitBtn = screen.getByRole('button', { name: /Connexion/i });
   await act(async () => {
     fireEvent.click(submitBtn);
   });
+  expect(useAdminSession.mock.results[0].value.login).toHaveBeenCalledWith('editor@example.com', 'wrongpassword');
+});
+
+test('keeps navigation, URL and browser history in sync', async () => {
+  await renderApp();
+  fireEvent.click(screen.getAllByRole('button', { name: /^Contact$/i }).find(button => button.classList.contains('contact-btn')));
+  expect(window.location.pathname).toBe('/contact');
+  fireEvent.click(screen.getByText('Mentions Légales & RGPD'));
+  expect(window.location.pathname).toBe('/privacy');
+  window.history.back();
+  await waitFor(() => expect(screen.getByRole('heading', { name: 'Formulaire de Contact' })).toBeInTheDocument());
+  expect(window.location.pathname).toBe('/contact');
+  window.history.forward();
+  await waitFor(() => expect(screen.getByRole('heading', { name: /Politique de Confidentialité & Mentions Légales/ })).toBeInTheDocument());
+});
+
+test('resolves a direct article link after asynchronous content loads and after remount', async () => {
+  const article = { id: 'remote', slug: 'nouvel-article', title: 'Une nouvelle histoire', content: 'Le texte publié.', status: 'published' };
+  let resolveArticles;
+  pageService.getPages.mockImplementation(type => type === 'articles' ? new Promise(resolve => { resolveArticles = resolve; }) : Promise.resolve([]));
+  window.history.replaceState({}, '', '/articles/nouvel-article');
+  const { unmount } = render(<App />);
+  expect(screen.getByRole('status')).toHaveTextContent('Chargement du contenu');
+  await act(async () => { resolveArticles([article]); });
+  expect(await screen.findByRole('heading', { name: 'Une nouvelle histoire' })).toBeInTheDocument();
+  expect(window.location.pathname).toBe('/articles/nouvel-article');
+  unmount();
+  pageService.getPages.mockImplementation(type => Promise.resolve(type === 'articles' ? [article] : []));
+  await renderApp();
+  expect(screen.getByText('Le texte publié.')).toBeInTheDocument();
+});
+
+test('resolves a direct custom page and renders a genuine missing page', async () => {
+  pageService.getPages.mockImplementation(type => Promise.resolve(type === 'articles' ? [] : [{ id: 'remote-page', slug: 'notre-atelier', status: 'published', blocks: [{ id: 'heading', type: 'heading', settings: { content: 'Notre atelier', level: 'h2' } }] }]));
+  window.history.replaceState({}, '', '/pages/notre-atelier');
+  await renderApp();
+  expect(await screen.findByRole('heading', { name: 'Notre atelier' })).toBeInTheDocument();
+  act(() => {
+    window.history.pushState({}, '', '/inexistante');
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  });
+  expect(screen.getByRole('heading', { name: 'Page introuvable' })).toBeInTheDocument();
+  expect(window.location.pathname).toBe('/inexistante');
+});
+
+test('filters removed flipbooks without deleting any document during public loading', async () => {
+  getDocs.mockResolvedValueOnce({ empty: false, docs: [{ id: '3322', data: () => ({ title: 'Guide historique' }) }, { id: 'retained', data: () => ({ title: 'Livre conservé' }) }] });
+  window.history.replaceState({}, '', '/flipbooks');
+  await renderApp();
+  expect(screen.queryByText('Guide historique')).not.toBeInTheDocument();
+  expect(screen.getAllByText('Livre conservé').length).toBeGreaterThan(0);
+  expect(deleteDoc).not.toHaveBeenCalled();
+});
+
+test('ignores a forged local authentication flag and waits for session verification', async () => {
+  localStorage.setItem('ae_authenticated', 'true');
+  window.history.replaceState({}, '', '/ae-dashboard');
+  useAdminSession.mockReturnValue({ isAdmin: false, loading: true, login: jest.fn(), logout: jest.fn() });
+  const { rerender } = await renderApp();
+  expect(screen.getByRole('status')).toHaveTextContent('Vérification de votre session');
+  expect(screen.queryByTestId('mock-dashboard')).not.toBeInTheDocument();
+  useAdminSession.mockReturnValue({ isAdmin: false, loading: false, login: jest.fn(), logout: jest.fn() });
+  rerender(<App />);
+  expect(screen.getByRole('heading', { name: 'Accès Administration' })).toBeInTheDocument();
+});
+
+test('opens and dismisses the mobile navigation with keyboard focus restored', async () => {
+  await renderApp();
+  const toggle = screen.getByRole('button', { name: 'Menu Mobile' });
+  fireEvent.click(toggle);
+  expect(screen.getByRole('dialog', { name: /navigation mobile/i })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Fermer le menu' })).toHaveFocus();
+  fireEvent.keyDown(document, { key: 'Escape' });
+  expect(screen.queryByRole('dialog', { name: /navigation mobile/i })).not.toBeInTheDocument();
+  expect(toggle).toHaveFocus();
 });
 
 test('ensures "Vidéos Populaires", "Actualités 2026", "Galerie" and "Chaîne YouTube" sidebar blocks are not rendered on homepage', async () => {

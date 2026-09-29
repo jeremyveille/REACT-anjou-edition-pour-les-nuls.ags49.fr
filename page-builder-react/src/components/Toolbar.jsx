@@ -10,6 +10,7 @@ import PreviewModal from './PreviewModal';
 import renderHtml from '../utils/renderHtml';
 import exportJson from '../utils/exportJson';
 import importJson from '../utils/importJson';
+import useDialog from '../utils/useDialog';
 
 export default function Toolbar() {
   const {
@@ -21,6 +22,7 @@ export default function Toolbar() {
     resetCanvas,
     importLayout,
     saveToLocalStorage,
+    storageError,
     isNavigatorOpen,
     setIsNavigatorOpen,
     isGlobalSettingsOpen,
@@ -33,13 +35,18 @@ export default function Toolbar() {
   const [copied, setCopied]                       = useState(false);
   const [saveSuccess, setSaveSuccess]             = useState(false);
   const fileInputRef                              = useRef(null);
+  const htmlDialogRef = useDialog(showHtmlModal, () => setShowHtmlModal(false));
 
   const generatedHtml = renderHtml(elements);
 
-  const handleCopyHtml = () => {
-    navigator.clipboard.writeText(generatedHtml);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopyHtml = async () => {
+    try {
+      await navigator.clipboard.writeText(generatedHtml);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      alert('La copie est indisponible. Sélectionnez le code ou téléchargez le fichier HTML.');
+    }
   };
 
   const handleDownloadHtml = () => {
@@ -71,11 +78,11 @@ ${generatedHtml}
     document.body.appendChild(a);
     a.click();
     a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   };
 
   const handleSave = () => {
-    saveToLocalStorage();
-    setSaveSuccess(true);
+    setSaveSuccess(saveToLocalStorage());
     setTimeout(() => setSaveSuccess(false), 2200);
   };
 
@@ -104,6 +111,7 @@ ${generatedHtml}
 
   return (
     <>
+      {storageError && <div role="alert" className="alert alert-warning m-0">{storageError}</div>}
       <header className="builder-toolbar">
         {/* ── Brand ── */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem', flexShrink: 0 }}>
@@ -130,6 +138,8 @@ ${generatedHtml}
             className={`pb-btn ${isNavigatorOpen ? 'active' : ''}`}
             onClick={() => setIsNavigatorOpen(!isNavigatorOpen)}
             title="Ouvrir le navigateur (Arborescence)"
+            aria-label="Ouvrir le navigateur (Arborescence)"
+            aria-pressed={isNavigatorOpen}
           >
             <Layers size={14} />
           </button>
@@ -140,6 +150,8 @@ ${generatedHtml}
             className={`pb-btn ${isGlobalSettingsOpen ? 'active' : ''}`}
             onClick={() => setIsGlobalSettingsOpen(!isGlobalSettingsOpen)}
             title="Réglages globaux du site"
+            aria-label="Réglages globaux du site"
+            aria-pressed={isGlobalSettingsOpen}
           >
             <Sliders size={14} />
           </button>
@@ -265,6 +277,7 @@ ${generatedHtml}
       {showHtmlModal && (
         <div
           className="pb-modal-backdrop"
+          ref={htmlDialogRef}
           role="dialog"
           aria-modal="true"
           aria-label="Export HTML"

@@ -12,6 +12,12 @@ global.ResizeObserver = class ResizeObserver {
 };
 
 // Mock Firebase libraries to prevent actual network calls and resource leaks
+jest.mock('firebase/functions', () => ({
+  getFunctions: jest.fn(() => ({})),
+  connectFunctionsEmulator: jest.fn(),
+  httpsCallable: jest.fn(() => jest.fn().mockResolvedValue({ data: {} }))
+}));
+
 jest.mock('firebase/app', () => ({
   initializeApp: jest.fn().mockReturnValue({}),
 }));

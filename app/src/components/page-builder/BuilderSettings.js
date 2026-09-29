@@ -48,7 +48,9 @@ const VideoBlockSettings = ({ block, onChange, onOpenMediaPicker }) => {
 
     const newVideoId = extractYoutubeVideoId(val);
 
-    if (newVideoId) {
+    if (!val.trim()) {
+      onChange(id, { ...settings, url: '', videoId: '', embedUrl: '', lastValidVideoId: '' });
+    } else if (newVideoId) {
       onChange(id, {
         ...settings,
         url: val,
@@ -61,7 +63,7 @@ const VideoBlockSettings = ({ block, onChange, onOpenMediaPicker }) => {
       onChange(id, {
         ...settings,
         url: val,
-        videoId: settings.videoId || settings.lastValidVideoId || 'dQw4w9WgXcQ'
+        videoId: settings.videoId || settings.lastValidVideoId || ''
       });
     }
   };

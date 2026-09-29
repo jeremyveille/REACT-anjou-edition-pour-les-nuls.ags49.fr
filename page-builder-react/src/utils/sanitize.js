@@ -26,11 +26,12 @@ export function sanitizeHtml(html) {
  * @returns {string} Sanitized URL
  */
 export function sanitizeUrl(url) {
-  if (!url) return '';
+  if (typeof url !== 'string') return '';
   const trimmed = url.trim();
   
   // Block javascript:, data:text/html, vbscript:, etc.
-  if (/^(javascript|data|vbscript):/i.test(trimmed)) {
+  // eslint-disable-next-line no-control-regex -- remove embedded control characters before protocol validation.
+  if (/^(javascript|data|vbscript):/i.test(trimmed.replace(/[\u0000-\u0020]/g, ''))) {
     // Check if it's a safe data image URL
     if (/^data:image\//i.test(trimmed)) {
       return trimmed;
@@ -46,6 +47,7 @@ export function sanitizeUrl(url) {
  * @returns {string} Escaped string
  */
 export function escapeAttr(str) {
+  if (typeof str === 'number' && Number.isFinite(str)) str = String(str);
   if (typeof str !== 'string') return '';
   return str
     .replace(/&/g, '&amp;')

@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import './App.css';
+import './styles/site-polish.css';
 import {
   BookOpen,
   Play,
@@ -28,9 +29,10 @@ import {
   articlesData,
   generateDefaultMenus
 } from './data';
-import { db, auth } from './firebase';
-import { collection, getDocs, doc, deleteDoc } from 'firebase/firestore';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { db } from './firebase';
+import { collection, getDocs } from 'firebase/firestore';
+import useAdminSession from './hooks/useAdminSession';
+import { pathForView, resolvePublicRoute } from './utils/publicRouting';
 import PdfFlipbookReader from './components/PdfFlipbookReader';
 
 import { pageService } from './services/pageService';
@@ -81,17 +83,19 @@ function App() {
   const [availableVoices, setAvailableVoices] = useState([]);
   const [selectedVoiceName, setSelectedVoiceName] = useState(() => localStorage.getItem('ae_speech_voice') || '');
   const [speechRate, setSpeechRate] = useState(() => parseFloat(localStorage.getItem('ae_speech_rate') || '1.0'));
-  const [isAuthenticated, setIsAuthenticated] = useState(() => localStorage.getItem('ae_authenticated') === 'true');
+  const { isAdmin, loading: sessionLoading, login, logout } = useAdminSession();
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPending, setLoginPending] = useState(false);
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  
+
   const [articles, setArticles] = useState(() => {
     try {
       const local = localStorage.getItem('ae_articles');
       if (local) {
         const parsed = JSON.parse(local);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed.filter(article => article.status === 'published');
       }
     } catch (e) {}
     return articlesData;
@@ -107,62 +111,47 @@ function App() {
     return feat || articlesData[0];
   });
 
-  // Helper to resolve view state from URL pathname
-  const resolveViewFromPath = (path, currentArticles = articlesData) => {
-    if (!path) return { type: 'home' };
-    if (path.startsWith('/ae-dashboard')) {
-      return { type: 'dashboard' };
-    }
-    if (path === '/flipbooks' || path === '/flipbooks/') {
-      return { type: 'flipbooks' };
-    }
-    if (path === '/videos' || path === '/videos/') {
-      return { type: 'videos' };
-    }
-    if (path === '/gallery' || path === '/gallery/' || path === '/galerie') {
-      return { type: 'gallery' };
-    }
-    if (path === '/contact' || path === '/contact/') {
-      return { type: 'contact' };
-    }
-    if (path === '/privacy' || path === '/politique-de-confidentialite') {
-      return { type: 'privacy' };
-    }
-    if (path.startsWith('/articles/')) {
-      const slug = path.replace('/articles/', '').replace(/\/$/, '');
-      const found = currentArticles.find(a => a.slug === slug || a.id === slug);
-      if (found) {
-        return { type: 'article', article: found };
-      }
-    }
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('preview') === 'true') {
-      return { type: 'preview', pageId: params.get('pageId') };
-    }
-    return { type: 'home' };
-  };
+  const [customPages, setCustomPages] = useState([]);
+  const [articlesLoading, setArticlesLoading] = useState(true);
+  const [pagesLoading, setPagesLoading] = useState(true);
+  const [route, setRoute] = useState(() => ({ pathname: window.location.pathname, search: window.location.search }));
+  const view = useMemo(() => resolvePublicRoute(route.pathname, route.search, {
+    articles, pages: customPages, texts: textsData, loading: articlesLoading || pagesLoading
+  }), [route, articles, customPages, articlesLoading, pagesLoading]);
 
-  // Navigation View State
-  const [view, setView] = useState(() => {
-    return resolveViewFromPath(window.location.pathname, articlesData);
-  });
+  const navigate = useCallback((path) => {
+    const destination = new URL(path, window.location.origin);
+    if (destination.pathname + destination.search !== window.location.pathname + window.location.search) {
+      window.history.pushState({}, '', destination.pathname + destination.search);
+    }
+    setRoute({ pathname: destination.pathname, search: destination.search });
+    setMobileMenuOpen(false);
+    setActiveDropdown(null);
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }, []);
+  const setView = useCallback((nextView) => navigate(pathForView(nextView)), [navigate]);
 
-  // Listen for browser back/forward navigation
   useEffect(() => {
     const handlePopState = () => {
-      const currentArticles = articles.length > 0 ? articles : articlesData;
-      setView(resolveViewFromPath(window.location.pathname, currentArticles));
+      setRoute({ pathname: window.location.pathname, search: window.location.search });
+      setMobileMenuOpen(false);
+      setActiveDropdown(null);
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [articles]);
+  }, []);
+
+  useEffect(() => {
+    const titles = { home: 'Accueil', contact: 'Contact', flipbooks: 'Flipbooks', videos: 'Vidéos', gallery: 'Galerie', privacy: 'Confidentialité', 'not-found': 'Page introuvable' };
+    document.title = view.article?.metaTitle || `${view.article?.title || view.page?.title || view.data?.title || titles[view.type] || 'Anjou Édition'} — Anjou Édition`;
+  }, [view]);
 
   // Load articles & featured article from Firestore / local
   useEffect(() => {
     let isMounted = true;
     const loadArticles = async () => {
       try {
-        const fetched = await pageService.getPages('articles');
+        const fetched = await pageService.getPages('articles', { publishedOnly: true });
         if (isMounted && Array.isArray(fetched) && fetched.length > 0) {
           setArticles(fetched);
           const feat = await pageService.getFeaturedArticle();
@@ -172,6 +161,8 @@ function App() {
         }
       } catch (err) {
         console.error("Failed to load articles", err);
+      } finally {
+        if (isMounted) setArticlesLoading(false);
       }
     };
     loadArticles();
@@ -184,7 +175,6 @@ function App() {
     const art = article || featuredArticle || articlesData[0];
     setView({ type: 'article', article: art });
     setMobileMenuOpen(false);
-    window.history.pushState({}, '', `/articles/${art.slug || art.id}`);
     if (art.metaTitle) {
       document.title = art.metaTitle;
     } else {
@@ -244,6 +234,7 @@ function App() {
     } catch (e) {}
     return [];
   });
+  const [mediaLoading, setMediaLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
@@ -274,14 +265,11 @@ function App() {
           const list = [];
           for (const docSnap of snapFb.docs) {
             const data = docSnap.data() || {};
-            const isGuideHistorique = docSnap.id === "3322" || 
+            const isGuideHistorique = docSnap.id === "3322" ||
               (data.title || '').toLowerCase().includes("guide historique") ||
               (data.pdfFile || '').toLowerCase().includes("guide_historique");
-            
+
             if (isGuideHistorique) {
-              try {
-                deleteDoc(doc(db, "flipbooks", docSnap.id));
-              } catch (e) {}
               continue;
             }
 
@@ -310,6 +298,8 @@ function App() {
         if (isMounted) {
           console.error("Failed to load public media from Firestore:", err);
         }
+      } finally {
+        if (isMounted) setMediaLoading(false);
       }
     };
 
@@ -319,13 +309,11 @@ function App() {
     };
   }, []);
 
-  const [customPages, setCustomPages] = useState([]);
-
   useEffect(() => {
     let isMounted = true;
     const loadCustomPages = async () => {
       try {
-        const pages = await pageService.getPages();
+        const pages = await pageService.getPages('pages', { publishedOnly: true });
         if (isMounted) {
           setCustomPages(Array.isArray(pages) ? pages : []);
         }
@@ -333,6 +321,8 @@ function App() {
         if (isMounted) {
           console.error("Failed to load custom pages", err);
         }
+      } finally {
+        if (isMounted) setPagesLoading(false);
       }
     };
     loadCustomPages();
@@ -341,8 +331,8 @@ function App() {
     const handleContentUpdated = async () => {
       try {
         const [pages, fetchedArticles] = await Promise.all([
-          pageService.getPages('pages'),
-          pageService.getPages('articles')
+          pageService.getPages('pages', { publishedOnly: true }),
+          pageService.getPages('articles', { publishedOnly: true })
         ]);
         if (isMounted && Array.isArray(pages)) {
           setCustomPages(pages);
@@ -416,7 +406,7 @@ function App() {
               title = "Poésies";
             }
             const isActive = data.isActive !== undefined ? data.isActive : (data.enabled !== undefined ? data.enabled : (data.status === "Actif"));
-            
+
             const rawType = data.type || (data.shortcode ? "shortcode" : "internal-link");
             let type = "internal";
             if (rawType === "external" || rawType === "external-link") {
@@ -554,7 +544,7 @@ function App() {
       const utterance = new SpeechSynthesisUtterance(cleanText);
       utterance.lang = 'fr-FR';
       utterance.rate = speechRate;
-      
+
       if (selectedVoiceName && availableVoices.length > 0) {
         const voiceObj = availableVoices.find(v => v.name === selectedVoiceName);
         if (voiceObj) utterance.voice = voiceObj;
@@ -562,7 +552,7 @@ function App() {
 
       utterance.onend = () => setIsPlayingAudio(false);
       utterance.onerror = () => setIsPlayingAudio(false);
-      
+
       speechUtteranceRef.current = utterance;
       setIsPlayingAudio(true);
       window.speechSynthesis.speak(utterance);
@@ -577,16 +567,7 @@ function App() {
         categoryName: itemName
       });
     } else {
-      setView({
-        type: 'text',
-        data: {
-          title: itemName,
-          author: "",
-          date: "2026",
-          content: `Le contenu pour la catégorie "${itemName}" sera bientôt disponible sur notre portail.\n\nNous enrichissons notre catalogue d'ouvrages et de documents régulièrement.\n\nN'hésitez pas à nous faire part de vos demandes via la page Contact.`
-        },
-        categoryName: itemName
-      });
+      setView({ type: 'not-found', path: `/textes/${encodeURIComponent(itemName)}` });
     }
     setActiveDropdown(null);
     setMobileMenuOpen(false);
@@ -665,7 +646,7 @@ function App() {
   // Filter published tree according to rules
   const filterPublishedTree = (tree) => {
     if (!tree) return [];
-    
+
     return tree.map(node => {
       const filteredChildren = filterPublishedTree(node.children || []);
       return {
@@ -675,7 +656,7 @@ function App() {
     }).filter(node => {
       const isNodeActive = node.status === "Actif" || node.isActive || node.enabled;
       const hasActiveChildren = node.children && node.children.length > 0;
-      
+
       // Keep if explicitly active OR if it serves as a parent to active children
       return isNodeActive || hasActiveChildren;
     });
@@ -700,7 +681,7 @@ function App() {
     }
 
     // Un élément peut avoir des enfants et une route simultanément,
-    // donc nous ne bloquons plus l'action s'il a des enfants, 
+    // donc nous ne bloquons plus l'action s'il a des enfants,
     // l'ouverture des sous-menus est gérée par CSS et des boutons spécifiques.
 
 
@@ -710,8 +691,8 @@ function App() {
       const ALLOWED_SHORTCODES = {
         'open_contact_modal': () => {
           setView({ type: 'contact' });
-          window.history.pushState({}, '', '/contact');
         },
+        'legal-notice': () => setView({ type: 'privacy' }),
         'toggle_theme': () => {
           toggleDarkMode();
         },
@@ -727,15 +708,12 @@ function App() {
         },
         'show_flipbooks': () => {
           setView({ type: 'flipbooks' });
-          window.history.pushState({}, '', '/flipbooks');
         },
         'show_videos': () => {
           setView({ type: 'videos' });
-          window.history.pushState({}, '', '/videos');
         },
         'show_gallery': () => {
           setView({ type: 'gallery' });
-          window.history.pushState({}, '', '/gallery');
         },
         'alert_hello': () => {
           alert("Bienvenue sur Anjou Édition !");
@@ -763,7 +741,6 @@ function App() {
 
         if (flipbookId) {
           setView({ type: 'flipbooks', selectedId: flipbookId });
-          window.history.pushState({}, '', '/flipbooks');
           return;
         }
       }
@@ -772,7 +749,7 @@ function App() {
       if (sc.startsWith('[') && sc.endsWith(']')) {
         clean = sc.slice(1, -1).trim();
       }
-      
+
       const tagName = clean.split(/\s+/)[0];
       const lowerTagName = tagName.toLowerCase();
 
@@ -795,53 +772,18 @@ function App() {
         }
       }
     } else if (item.url) {
-      // Link navigation routing
-      if (item.type === "external" || item.type === "external-link" || item.url.startsWith("http")) {
-        window.open(item.url, "_blank", "noopener,noreferrer");
-      } else {
-        if (item.url === "/" || item.url === "/home" || item.url === "/accueil") {
-          setView({ type: 'home' });
-          window.history.pushState({}, '', '/');
-        } else if (item.url === "/contact") {
-          setView({ type: 'contact' });
-          window.history.pushState({}, '', '/contact');
-        } else if (item.url === "/flipbooks") {
-          setView({ type: 'flipbooks' });
-          window.history.pushState({}, '', '/flipbooks');
-        } else if (item.url === "/videos") {
-          setView({ type: 'videos' });
-          window.history.pushState({}, '', '/videos');
-        } else if (item.url === "/gallery") {
-          setView({ type: 'gallery' });
-          window.history.pushState({}, '', '/gallery');
-        } else if (item.url === "/ae-dashboard") {
-          setView({ type: 'dashboard' });
-          window.history.pushState({}, '', '/ae-dashboard');
-        } else if (item.url.startsWith("/articles/")) {
-          const articleSlug = item.url.replace('/articles/', '').replace('/', '');
-          const targetArticle = articles.find(a => a.slug === articleSlug || a.id === articleSlug);
-          if (targetArticle) {
-            handleOpenArticle(targetArticle);
-          } else {
-            setView({ type: 'home' });
-            window.history.pushState({}, '', '/');
-          }
+      try {
+        const destination = new URL(item.url, window.location.origin);
+        if (!['http:', 'https:'].includes(destination.protocol)) return;
+        if (destination.origin !== window.location.origin || item.type === 'external' || item.type === 'external-link') {
+          window.open(destination.href, '_blank', 'noopener,noreferrer');
+        } else if (/^\/?poesie\//.test(item.url) && textsData[item.title]) {
+          handleSelectCategory(item.title);
         } else {
-          // Vérifier si l'URL correspond à un article ou une page dynamique
-          const cleanSlug = item.url.replace('/pages/', '').replace('/articles/', '').replace('/', '');
-          const targetArticle = articles.find(a => a.slug === cleanSlug || a.id === cleanSlug);
-          if (targetArticle) {
-            handleOpenArticle(targetArticle);
-          } else {
-            const customPage = customPages.find(p => p.slug === cleanSlug || p.slug === item.url);
-            if (customPage) {
-              setView({ type: 'custom-page', page: customPage });
-            } else {
-              // Si URL inconnue, essayer de charger le titre
-              handleSelectCategory(item.title);
-            }
-          }
+          navigate(destination.pathname + destination.search);
         }
+      } catch (_) {
+        setView({ type: 'not-found' });
       }
     } else {
       // Fallback si pas de shortcode ni de route
@@ -858,46 +800,35 @@ function App() {
   const handleBackToSite = async () => {
     try {
       const [pages, fetchedArticles] = await Promise.all([
-        pageService.getPages('pages'),
-        pageService.getPages('articles')
+        pageService.getPages('pages', { publishedOnly: true }),
+        pageService.getPages('articles', { publishedOnly: true })
       ]);
       if (Array.isArray(pages)) setCustomPages(pages);
       if (Array.isArray(fetchedArticles) && fetchedArticles.length > 0) setArticles(fetchedArticles);
     } catch (e) {}
     setView({ type: 'home' });
-    window.history.pushState({}, '', '/');
   };
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
+    if (loginPending) return;
+    setLoginPending(true);
+    setLoginError('');
     try {
-      await signInWithEmailAndPassword(auth, 'admin@anjou-edition.fr', loginPassword);
-      setIsAuthenticated(true);
-      localStorage.setItem('ae_authenticated', 'true');
-      setLoginError('');
+      await login(loginEmail.trim(), loginPassword);
+      setLoginPassword('');
     } catch (err) {
-      if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
-        // Fallback pour le premier lancement avec le mot de passe par défaut
-        if (loginPassword === 'admin2026') {
-          try {
-            await createUserWithEmailAndPassword(auth, 'admin@anjou-edition.fr', loginPassword);
-            setIsAuthenticated(true);
-            localStorage.setItem('ae_authenticated', 'true');
-            setLoginError('');
-          } catch (createErr) {
-            setLoginError('Erreur de création du compte admin : ' + createErr.message);
-          }
-        } else {
-          setLoginError('Mot de passe incorrect.');
-        }
-      } else {
-        setLoginError('Erreur de connexion : ' + err.message);
-      }
+      setLoginError('Connexion impossible. Vérifiez vos identifiants et votre accès administrateur.');
+    } finally {
+      setLoginPending(false);
     }
   };
 
   if (view.type === 'dashboard') {
-    if (!isAuthenticated) {
+    if (sessionLoading) {
+      return <div className="ae-empty-state-container" role="status">Vérification de votre session…</div>;
+    }
+    if (!isAdmin) {
       return (
         <div className={`admin-login-page ${darkMode ? 'dark-mode' : ''}`}>
           <div className="admin-login-card fade-in">
@@ -909,30 +840,37 @@ function App() {
               <h2 className="admin-login-subtitle">Accès Administration</h2>
               <p className="admin-login-desc">Connectez-vous pour accéder au tableau de bord.</p>
             </div>
-            
+
             {loginError && (
               <div className="admin-login-error fade-in" role="alert">
                 <AlertCircle size={18} />
                 <span>{loginError}</span>
               </div>
             )}
-            
+
             <form onSubmit={handleLoginSubmit} className="admin-login-form">
+              <div className="admin-login-field">
+                <label htmlFor="admin-email" className="admin-login-label">Adresse e-mail</label>
+                <div className="admin-login-input-wrapper">
+                  <input id="admin-email" type="email" className="admin-login-input" value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)} autoComplete="username" required />
+                </div>
+              </div>
               <div className="admin-login-field">
                 <label htmlFor="admin-pwd" className="admin-login-label">Mot de passe</label>
                 <div className="admin-login-input-wrapper">
-                  <input 
+                  <input
                     id="admin-pwd"
-                    type={showPassword ? "text" : "password"} 
-                    className="admin-login-input" 
+                    type={showPassword ? "text" : "password"}
+                    className="admin-login-input"
                     value={loginPassword}
                     onChange={(e) => { setLoginPassword(e.target.value); if (loginError) setLoginError(''); }}
                     placeholder="Saisissez votre mot de passe"
                     autoComplete="current-password"
                     required
                   />
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="admin-login-toggle-pwd"
                     onClick={() => setShowPassword(!showPassword)}
                     aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
@@ -942,8 +880,8 @@ function App() {
                 </div>
               </div>
               <div className="admin-login-actions">
-                <button type="submit" className="admin-login-submit">
-                  Connexion
+                <button type="submit" className="admin-login-submit" disabled={loginPending}>
+                  {loginPending ? 'Connexion en cours…' : 'Connexion'}
                 </button>
                 <button type="button" onClick={handleBackToSite} className="admin-login-back">
                   <ArrowLeft size={16} /> Retour au site
@@ -954,12 +892,12 @@ function App() {
         </div>
       );
     }
-    
+
     return (
       <div className="min-h-screen">
         <ErrorBoundary>
           <React.Suspense fallback={<div className="ae-empty-state-container">Chargement de l'administration...</div>}>
-            <Dashboard onBackToSite={handleBackToSite} flipbooks={flipbooks} setFlipbooks={setFlipbooks} />
+            <Dashboard onBackToSite={handleBackToSite} onLogout={logout} flipbooks={flipbooks} setFlipbooks={setFlipbooks} />
           </React.Suspense>
         </ErrorBoundary>
       </div>
@@ -970,25 +908,25 @@ function App() {
     <div className={`App ${darkMode ? 'dark-mode' : ''}`}>
       {/* Lightbox Component */}
       {lightbox.isOpen && (
-        <div 
-          className="lightbox" 
-          role="dialog" 
-          aria-modal="true" 
+        <div
+          className="lightbox"
+          role="dialog"
+          aria-modal="true"
           aria-label="Visionneuse d'agrandissement photo"
           onClick={() => setLightbox(prev => ({ ...prev, isOpen: false }))}
         >
-          <button 
+          <button
             type="button"
-            className="lightbox-close" 
+            className="lightbox-close"
             onClick={(e) => { e.stopPropagation(); setLightbox(prev => ({ ...prev, isOpen: false })); }}
             aria-label="Fermer la galerie"
           >
             <X size={28} aria-hidden="true" />
           </button>
-          
-          <button 
+
+          <button
             type="button"
-            className="lightbox-btn prev" 
+            className="lightbox-btn prev"
             onClick={(e) => { e.stopPropagation(); handleLightboxPrev(); }}
             aria-label="Image précédente"
           >
@@ -1001,10 +939,10 @@ function App() {
               const currentImg = list[lightbox.currentIndex] || list[0] || {};
               return (
                 <>
-                  <img 
-                    src={currentImg.url} 
+                  <img
+                    src={currentImg.url}
                     alt={currentImg.title || 'Photographie'}
-                    className={lightbox.zoom ? 'zoomed' : ''} 
+                    className={lightbox.zoom ? 'zoomed' : ''}
                   />
                   <div className="lightbox-caption">
                     <h3>{currentImg.title || 'Photographie'}</h3>
@@ -1015,18 +953,18 @@ function App() {
             })()}
           </div>
 
-          <button 
+          <button
             type="button"
-            className="lightbox-btn next" 
+            className="lightbox-btn next"
             onClick={(e) => { e.stopPropagation(); handleLightboxNext(); }}
             aria-label="Image suivante"
           >
             <ArrowRight size={24} aria-hidden="true" />
           </button>
 
-          <button 
+          <button
             type="button"
-            className="lightbox-zoom-btn" 
+            className="lightbox-zoom-btn"
             onClick={(e) => { e.stopPropagation(); setLightbox(prev => ({ ...prev, zoom: !prev.zoom })); }}
             title={lightbox.zoom ? "Dézoomer" : "Zoomer"}
             aria-label={lightbox.zoom ? "Dézoomer" : "Zoomer"}
@@ -1040,7 +978,7 @@ function App() {
 
       <PublicHeader darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
 
-      <PublicNav 
+      <PublicNav
         setView={setView}
         mobileMenuOpen={mobileMenuOpen}
         setMobileMenuOpen={setMobileMenuOpen}
@@ -1055,7 +993,15 @@ function App() {
       <main id="main-content">
         {/* Center Dynamic Content Area */}
         <section className="main-content">
-          
+          {view.type === 'loading' && <div className="ae-empty-state-container" role="status">Chargement du contenu…</div>}
+          {view.type === 'not-found' && (
+            <div className="contact-card">
+              <h1>Page introuvable</h1>
+              <p>Cette page n’existe pas ou n’est plus publiée.</p>
+              <button type="button" onClick={() => setView({ type: 'home' })} className="btn-primary">Retour à l’accueil</button>
+            </div>
+          )}
+
           {/* VIEW: PREVIEW */}
           {view.type === 'preview' && (
             <div className="ae-page-view-container">
@@ -1072,13 +1018,13 @@ function App() {
               </div>
             </div>
           )}
-          
+
           {/* VIEW: ARTICLE FULL READER */}
           {view.type === 'article' && view.article && (
             <div className="article-view-container fade-in">
-              <button 
-                type="button" 
-                onClick={() => { setView({ type: 'home' }); window.history.pushState({}, '', '/'); }} 
+              <button
+                type="button"
+                onClick={() => { setView({ type: 'home' }); }}
                 className="btn-back"
               >
                 <ArrowLeft size={16} /> Retour à l'accueil
@@ -1095,7 +1041,7 @@ function App() {
 
                   {/* Accessible Reader controls & Text-To-Speech */}
                   <div className="reader-controls" role="toolbar" aria-label="Contrôles de lecture et d'accessibilité">
-                    <button 
+                    <button
                       type="button"
                       className={`control-btn ${isPlayingAudio ? 'active' : ''}`}
                       onClick={() => handleToggleSpeech(view.article.content || view.article.excerpt || view.article.title)}
@@ -1125,27 +1071,27 @@ function App() {
                     </div>
 
                     <div className="font-sizer" role="group" aria-label="Taille de police du texte">
-                      <button 
+                      <button
                         type="button"
-                        className={fontSize === 'small' ? 'active' : ''} 
+                        className={fontSize === 'small' ? 'active' : ''}
                         onClick={() => setFontSize('small')}
                         aria-label="Taille de texte petite"
                         aria-pressed={fontSize === 'small'}
                       >
                         A-
                       </button>
-                      <button 
+                      <button
                         type="button"
-                        className={fontSize === 'medium' ? 'active' : ''} 
+                        className={fontSize === 'medium' ? 'active' : ''}
                         onClick={() => setFontSize('medium')}
                         aria-label="Taille de texte normale"
                         aria-pressed={fontSize === 'medium'}
                       >
                         A
                       </button>
-                      <button 
+                      <button
                         type="button"
-                        className={fontSize === 'large' ? 'active' : ''} 
+                        className={fontSize === 'large' ? 'active' : ''}
                         onClick={() => setFontSize('large')}
                         aria-label="Taille de texte grande"
                         aria-pressed={fontSize === 'large'}
@@ -1162,10 +1108,10 @@ function App() {
 
                 {view.article.image && (
                   <div className="article-featured-image-box">
-                    <OptimizedImage 
-                      src={view.article.image} 
+                    <OptimizedImage
+                      src={view.article.image}
                       thumbnailSrc={view.article.thumbnailUrl}
-                      alt={view.article.title} 
+                      alt={view.article.title}
                       loading="lazy"
                       useThumbnail={false}
                     />
@@ -1210,7 +1156,7 @@ function App() {
                             </ul>
                           );
                         }
-                        
+
                         const parts = trimmed.split(/(\*\*.*?\*\*)/g);
                         return (
                           <p key={idx}>
@@ -1240,16 +1186,16 @@ function App() {
                     Chez Anjou Édition, nous étudions chaque projet avec bienveillance et simplicité. Écrivez-nous pour nous présenter votre projet littéraire ou patrimonial.
                   </p>
                   <div className="article-footer-cta-buttons">
-                    <button 
-                      type="button" 
-                      onClick={() => setView({ type: 'contact' })} 
+                    <button
+                      type="button"
+                      onClick={() => setView({ type: 'contact' })}
                       className="btn-hero-primary"
                     >
                       <Send size={18} /> Proposer votre projet
                     </button>
-                    <button 
-                      type="button" 
-                      onClick={() => setView({ type: 'flipbooks' })} 
+                    <button
+                      type="button"
+                      onClick={() => setView({ type: 'flipbooks' })}
                       className="btn-hero-secondary"
                     >
                       <BookOpen size={18} /> Découvrir nos publications
@@ -1263,19 +1209,13 @@ function App() {
           {/* VIEW: HOME */}
           {view.type === 'home' && (
             <div className="home-view fade-in">
-              {/* Hidden elements for compatibility with existing tests */}
-              <div style={{ position: 'absolute', width: '1px', height: '1px', overflow: 'hidden', opacity: 0 }}>
-                <h2>Bienvenue sur Anjou Édition</h2>
-                <button type="button" onClick={() => setView({ type: 'flipbooks' })}>Voir les Flipbooks</button>
-              </div>
-
               {/* 1. Hero de la page d'accueil */}
               <section className="home-hero-wrapper" aria-labelledby="home-hero-heading">
                 {/* Immersive backdrop layer matching reference mockup */}
                 <div className="hero-backdrop-layer" aria-hidden="true">
-                  <img 
-                    src="/hero-book-scene.jpg" 
-                    alt="" 
+                  <img
+                    src="/hero-book-scene.jpg"
+                    alt=""
                     className="hero-backdrop-img"
                   />
                   <div className="hero-backdrop-gradient"></div>
@@ -1286,33 +1226,33 @@ function App() {
                     <Sparkles size={15} className="hero-badge-icon" aria-hidden="true" />
                     <span>MAISON D'ÉDITION ACCESSIBLE & HUMAINE</span>
                   </div>
-                  
+
                   <h1 id="home-hero-heading" className="home-hero-title">
                     <span className="hero-title-prefix">Anjou Édition,</span>
                     <span className="hero-title-highlight">la maison d’édition ouverte à tous</span>
                   </h1>
-                  
+
                   <p className="home-hero-subtitle">
                     Des livres, des histoires, des connaissances et des projets accessibles à chacun.
                   </p>
-                  
+
                   <p className="home-hero-secondary">
                     Que vous soyez auteur, lecteur, passionné ou simplement curieux, Anjou Édition vous invite à découvrir, apprendre, partager et transmettre.
                   </p>
-                  
+
                   <div className="home-hero-actions">
-                    <button 
-                      type="button" 
-                      onClick={() => handleOpenArticle(featuredArticle)} 
+                    <button
+                      type="button"
+                      onClick={() => handleOpenArticle(featuredArticle)}
                       className="btn-hero-primary"
                       aria-label="Découvrir Anjou Édition et notre vision"
                     >
                       <BookOpen size={18} aria-hidden="true" />
                       Découvrir Anjou Édition
                     </button>
-                    <button 
-                      type="button" 
-                      onClick={() => setView({ type: 'flipbooks' })} 
+                    <button
+                      type="button"
+                      onClick={() => setView({ type: 'flipbooks' })}
                       className="btn-hero-secondary"
                       aria-label="Découvrir nos publications et livres à feuilleter"
                     >
@@ -1343,7 +1283,7 @@ function App() {
                       <span className="section-heading-line" aria-hidden="true"></span>
                     </div>
                   </div>
-                  <div 
+                  <div
                     className="featured-article-card"
                     onClick={() => handleOpenArticle(featuredArticle)}
                     role="button"
@@ -1352,10 +1292,10 @@ function App() {
                     aria-label={`Lire l'article : ${featuredArticle.title}`}
                   >
                     <div className="featured-article-media">
-                      <OptimizedImage 
-                        src={featuredArticle.image || featuredArticle.thumbnailUrl || "/featured-article-book.jpg"} 
+                      <OptimizedImage
+                        src={featuredArticle.image || featuredArticle.thumbnailUrl || "/featured-article-book.jpg"}
                         thumbnailSrc={featuredArticle.thumbnailUrl || "/featured-article-book.jpg"}
-                        alt={featuredArticle.title} 
+                        alt={featuredArticle.title}
                         loading="lazy"
                         useThumbnail={false}
                         thumbnailWidth={600}
@@ -1446,7 +1386,7 @@ function App() {
                 </div>
                 <div className="home-shortcuts-grid-mockup">
                   <div className="shortcuts-row-top">
-                    <div 
+                    <div
                       className="portal-shortcut-card shortcut-flipbooks"
                       onClick={() => setView({ type: 'flipbooks' })}
                       role="button"
@@ -1465,7 +1405,7 @@ function App() {
                       <span className="portal-shortcut-link">Découvrir les livres <ChevronRight size={14} className="shortcut-chevron" /></span>
                     </div>
 
-                    <div 
+                    <div
                       className="portal-shortcut-card shortcut-poetry"
                       onClick={() => handleSelectCategory("RAPPEL")}
                       role="button"
@@ -1484,7 +1424,7 @@ function App() {
                       <span className="portal-shortcut-link">Lire les textes <ChevronRight size={14} className="shortcut-chevron" /></span>
                     </div>
 
-                    <div 
+                    <div
                       className="portal-shortcut-card shortcut-photos"
                       onClick={() => setView({ type: 'gallery' })}
                       role="button"
@@ -1503,7 +1443,7 @@ function App() {
                       <span className="portal-shortcut-link">Explorer les photos <ChevronRight size={14} className="shortcut-chevron" /></span>
                     </div>
 
-                    <div 
+                    <div
                       className="portal-shortcut-card shortcut-videos"
                       onClick={() => setView({ type: 'videos' })}
                       role="button"
@@ -1524,7 +1464,7 @@ function App() {
                   </div>
 
                   <div className="shortcuts-row-bottom">
-                    <div 
+                    <div
                       className="portal-shortcut-card shortcut-project"
                       onClick={() => setView({ type: 'contact' })}
                       role="button"
@@ -1598,9 +1538,9 @@ function App() {
           {/* VIEW: TEXT READER */}
           {view.type === 'text' && (
             <div className="text-view fade-in">
-              <button 
-                type="button" 
-                onClick={() => setView({ type: 'home' })} 
+              <button
+                type="button"
+                onClick={() => setView({ type: 'home' })}
                 className="btn-back"
               >
                 <ArrowLeft size={16} /> Retour à l'accueil
@@ -1614,10 +1554,10 @@ function App() {
                     {view.data.date && <span className="date-tag">{view.data.date}</span>}
                   </div>
                   <h2>{view.data.title}</h2>
-                  
+
                   {/* Reader controls */}
                   <div className="reader-controls" role="toolbar" aria-label="Contrôles de lecture et d'accessibilité">
-                    <button 
+                    <button
                       type="button"
                       className={`control-btn ${isPlayingAudio ? 'active' : ''}`}
                       onClick={() => handleToggleSpeech(view.data.content)}
@@ -1668,27 +1608,27 @@ function App() {
                     )}
 
                     <div className="font-sizer" role="group" aria-label="Taille de police du texte">
-                      <button 
+                      <button
                         type="button"
-                        className={fontSize === 'small' ? 'active' : ''} 
+                        className={fontSize === 'small' ? 'active' : ''}
                         onClick={() => setFontSize('small')}
                         aria-label="Taille de texte petite"
                         aria-pressed={fontSize === 'small'}
                       >
                         A-
                       </button>
-                      <button 
+                      <button
                         type="button"
-                        className={fontSize === 'medium' ? 'active' : ''} 
+                        className={fontSize === 'medium' ? 'active' : ''}
                         onClick={() => setFontSize('medium')}
                         aria-label="Taille de texte normale"
                         aria-pressed={fontSize === 'medium'}
                       >
                         A
                       </button>
-                      <button 
+                      <button
                         type="button"
-                        className={fontSize === 'large' ? 'active' : ''} 
+                        className={fontSize === 'large' ? 'active' : ''}
                         onClick={() => setFontSize('large')}
                         aria-label="Taille de texte grande"
                         aria-pressed={fontSize === 'large'}
@@ -1719,14 +1659,14 @@ function App() {
           {/* VIEW: CUSTOM PAGE BUILDER RENDER */}
           {view.type === 'custom-page' && (
             <div className="ae-page-view-container">
-              <button 
-                type="button" 
-                onClick={() => setView({ type: 'home' })} 
+              <button
+                type="button"
+                onClick={() => setView({ type: 'home' })}
                 className="btn-back mb-4"
               >
                 <ArrowLeft size={16} /> Retour à l'accueil
               </button>
-              
+
               <div className="ae-page-builder-canvas-panel">
                 {view.page.blocks && view.page.blocks.length > 0 ? (
                   view.page.blocks.map((block) => (
@@ -1744,9 +1684,9 @@ function App() {
           {/* VIEW: FLIPBOOKS */}
           {view.type === 'flipbooks' && (
             <div className="flipbooks-view fade-in">
-              <button 
-                type="button" 
-                onClick={() => setView({ type: 'home' })} 
+              <button
+                type="button"
+                onClick={() => setView({ type: 'home' })}
                 className="btn-back"
               >
                 <ArrowLeft size={16} /> Retour à l'accueil
@@ -1757,7 +1697,7 @@ function App() {
                 <div>
                   <h2 className="view-title">Nos Flipbooks Interactifs</h2>
                   <p className="view-description">Sélectionnez un ouvrage ci-dessous pour le consulter en ligne dans notre lecteur interactif.</p>
-                  
+
                   {flipbooks.length === 0 ? (
                     <div className="text-center py-5 text-muted">
                       <BookOpen size={48} className="mx-auto mb-3 text-slate-400" />
@@ -1787,8 +1727,9 @@ function App() {
               ) : (
                 // Selected flipbook interactive reader
                 (() => {
-                  const book = flipbooks.find(f => f.id === view.selectedId) || flipbooks[0];
+                  const book = flipbooks.find(f => String(f.id) === String(view.selectedId));
                   if (!book) {
+                    if (mediaLoading) return <p role="status">Chargement de l’ouvrage…</p>;
                     return (
                       <div className="text-center py-5 text-muted">
                         <p>Ouvrage introuvable.</p>
@@ -1799,9 +1740,9 @@ function App() {
                     );
                   }
                   return (
-                    <PdfFlipbookReader 
-                      book={book} 
-                      onClose={() => setView({ type: 'flipbooks', selectedId: null })} 
+                    <PdfFlipbookReader
+                      book={book}
+                      onClose={() => setView({ type: 'flipbooks', selectedId: null })}
                     />
                   );
                 })()
@@ -1812,16 +1753,16 @@ function App() {
           {/* VIEW: VIDEOS */}
           {view.type === 'videos' && (
             <div className="videos-view fade-in">
-              <button 
-                type="button" 
-                onClick={() => setView({ type: 'home' })} 
+              <button
+                type="button"
+                onClick={() => setView({ type: 'home' })}
                 className="btn-back"
               >
                 <ArrowLeft size={16} /> Retour à l'accueil
               </button>
 
               <h2 className="view-title">Vidéos & Conférences</h2>
-              
+
               {publicVideos.length === 0 ? (
                 <div className="text-center py-5 text-muted">
                   <Play size={48} className="mx-auto mb-3 text-slate-400" />
@@ -1830,7 +1771,8 @@ function App() {
                 </div>
               ) : (
                 (() => {
-                  const currentVideo = publicVideos.find(v => v.id === view.selectedId) || publicVideos[0];
+                  const currentVideo = view.selectedId ? publicVideos.find(v => String(v.id) === String(view.selectedId)) : publicVideos[0];
+                  if (!currentVideo) return <p role="status">{mediaLoading ? 'Chargement de la vidéo…' : 'Vidéo introuvable.'}</p>;
                   const yId = currentVideo.youtubeId || (currentVideo.url ? (currentVideo.url.match(/(?:youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*)/)?.[1] || currentVideo.youtubeId) : '');
                   return (
                     <div className="video-player-section">
@@ -1852,8 +1794,8 @@ function App() {
                       <h4 style={{ marginTop: '2rem', marginBottom: '1rem' }}>Toutes les vidéos</h4>
                       <div className="videos-playlist-grid">
                         {publicVideos.map((vid) => (
-                          <button 
-                            key={vid.id} 
+                          <button
+                            key={vid.id}
                             type="button"
                             className={`playlist-item ${currentVideo.id === vid.id ? 'active' : ''}`}
                             onClick={() => handleOpenVideo(vid.id)}
@@ -1879,9 +1821,9 @@ function App() {
           {/* VIEW: GALLERY */}
           {view.type === 'gallery' && (
             <div className="gallery-view fade-in">
-              <button 
-                type="button" 
-                onClick={() => setView({ type: 'home' })} 
+              <button
+                type="button"
+                onClick={() => setView({ type: 'home' })}
                 className="btn-back"
               >
                 <ArrowLeft size={16} /> Retour à l'accueil
@@ -1899,19 +1841,19 @@ function App() {
               ) : (
                 <div className="full-gallery-grid">
                   {publicGallery.map((img, idx) => (
-                    <button 
-                      key={img.id || idx} 
+                    <button
+                      key={img.id || idx}
                       type="button"
                       className="full-gallery-item"
                       onClick={() => setLightbox({ isOpen: true, currentIndex: idx, zoom: false })}
                       aria-label={`Agrandir l'image : ${img.title || 'Photographie'}`}
                     >
                       <div className="gallery-img-wrapper">
-                        <OptimizedImage 
-                          src={img.url} 
+                        <OptimizedImage
+                          src={img.url}
                           thumbnailSrc={img.thumbnailUrl}
-                          alt={img.title || 'Photographie'} 
-                          loading="lazy" 
+                          alt={img.title || 'Photographie'}
+                          loading="lazy"
                           useThumbnail={true}
                           thumbnailWidth={480}
                           thumbnailHeight={340}
@@ -1931,9 +1873,9 @@ function App() {
           {/* VIEW: CONTACT */}
           {view.type === 'contact' && (
             <div className="contact-view fade-in">
-              <button 
-                type="button" 
-                onClick={() => setView({ type: 'home' })} 
+              <button
+                type="button"
+                onClick={() => setView({ type: 'home' })}
                 className="btn-back"
               >
                 <ArrowLeft size={16} /> Retour à l'accueil

@@ -1,6 +1,53 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import Dashboard from './Dashboard';
+import { collection, getDocs, query, writeBatch, deleteDoc } from 'firebase/firestore';
+import { articlesData } from '../data';
+import { uploadBytes, getDownloadURL } from 'firebase/storage';
+import { pageService } from '../services/pageService';
+
+beforeEach(() => {
+  uploadBytes.mockResolvedValue({ ref: {} });
+  getDownloadURL.mockResolvedValue('https://example.test/uploaded-image.png');
+  writeBatch.mockImplementation(() => ({ set: jest.fn(), delete: jest.fn(), commit: jest.fn().mockResolvedValue() }));
+  collection.mockImplementation((_db, path) => path);
+  query.mockImplementation(col => col);
+  getDocs.mockImplementation(path => {
+    const items = path === 'articles' ? articlesData.map(article => ({ ...article, status: 'published' })) : [];
+    return Promise.resolve({ empty: items.length === 0, docs: items.map(item => ({ id: item.id, data: () => item })) });
+  });
+});
+
+describe('Dashboard persistence failures', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    window.confirm = jest.fn(() => true);
+    localStorage.setItem('ae_medias', JSON.stringify([
+      { id: 'kept-media', name: 'media-conserve.jpg', url: '/header-angers.jpg', type: 'image/jpeg', size: 40 }
+    ]));
+  });
+
+  test('keeps media visible and cached when deletion is rejected', async () => {
+    deleteDoc.mockRejectedValueOnce(new Error('permission-denied'));
+    render(<Dashboard onBackToSite={() => {}} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Médiathèque' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Supprimer media-conserve.jpg' }));
+    expect(await screen.findByText(/Suppression non enregistrée/)).toBeInTheDocument();
+    expect(screen.getByText('media-conserve.jpg')).toBeInTheDocument();
+    expect(JSON.parse(localStorage.getItem('ae_medias'))).toHaveLength(1);
+  });
+
+  test('keeps an article when its deletion fails', async () => {
+    const deletion = jest.spyOn(pageService, 'deletePage').mockRejectedValueOnce(new Error('offline'));
+    render(<Dashboard onBackToSite={() => {}} />);
+    fireEvent.click(screen.getByRole('button', { name: /^Articles/ }));
+    const title = articlesData[0].title;
+    fireEvent.click(await screen.findByRole('button', { name: `Supprimer l'article ${title}` }));
+    expect(await screen.findByText(/Suppression non enregistrée/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: `Supprimer l'article ${title}` })).toBeInTheDocument();
+    deletion.mockRestore();
+  });
+});
 
 // Mock ES Modules dependencies causing Jest issues
 jest.mock('@google/genai', () => ({
@@ -9,19 +56,28 @@ jest.mock('@google/genai', () => ({
 
 jest.mock('../firebase', () => ({
   db: {},
-  auth: { currentUser: { uid: 'admin-123' } }
+  storage: {},
+  auth: { currentUser: { uid: 'admin-123', getIdTokenResult: async () => ({ claims: { admin: true } }) } }
+}));
+
+jest.mock('../services/accountService', () => ({
+  accountService: { list: jest.fn().mockResolvedValue([]) }
 }));
 
 jest.mock('firebase/firestore', () => ({
   getFirestore: jest.fn(() => ({})),
-  collection: jest.fn(),
-  getDocs: jest.fn(() => Promise.resolve({ empty: true, docs: [] })),
+  collection: jest.fn((_db, path) => path),
+  getDocs: jest.fn(path => {
+    const items = path === 'articles' ? require('../data').articlesData.map(article => ({ ...article, status: 'published' })) : [];
+    return Promise.resolve({ empty: items.length === 0, docs: items.map(item => ({ id: item.id, data: () => item })) });
+  }),
   doc: jest.fn(),
   getDoc: jest.fn(() => Promise.resolve({ exists: () => false, data: () => ({}) })),
   addDoc: jest.fn(() => Promise.resolve({ id: 'mock_doc' })),
   setDoc: jest.fn(() => Promise.resolve()),
   deleteDoc: jest.fn(() => Promise.resolve()),
-  query: jest.fn(),
+  writeBatch: jest.fn(),
+  query: jest.fn(col => col),
   orderBy: jest.fn(),
   where: jest.fn(),
   limit: jest.fn()

@@ -127,6 +127,8 @@ export const PageBuilder = ({
 
   // Modale de confirmation pour modifications non enregistrées
   const [showUnsavedModal, setShowUnsavedModal] = useState(false);
+  const unsavedModalRef = useRef(null);
+  const savingRef = useRef(false);
   const [pendingContentChange, setPendingContentChange] = useState(null); // { id, type, action }
 
   // Inject Bootstrap dynamically for the builder context
@@ -466,6 +468,7 @@ export const PageBuilder = ({
 
   // Demande de changement de contenu avec vérification des modifications non enregistrées
   const handleRequestContentChange = (nextId, nextType) => {
+    if (savingRef.current) return;
     setIsSelectorOpen(false);
     if (selectedContent && selectedContent.id === nextId && selectedContent.type === nextType) {
       return;
@@ -479,13 +482,27 @@ export const PageBuilder = ({
     }
   };
 
+  // Les deux chemins d'enregistrement appliquent exactement les mêmes règles.
+  const validateForSave = useCallback(() => {
+    if (savingRef.current) return false;
+    let message = '';
+    if (!selectedContent?.id) message = "Aucun contenu sélectionné pour l'enregistrement.";
+    else if (!pageTitle.trim()) message = selectedContent.type === 'article'
+      ? "Veuillez donner un titre à l'article." : "Veuillez donner un titre à la page.";
+    else if (blocks.length === 0) message = 'Veuillez ajouter au moins un élément.';
+    if (message) {
+      setSaveToast({ show: true, message, type: 'error' });
+      alert(message);
+      return false;
+    }
+    return true;
+  }, [selectedContent, pageTitle, blocks.length]);
+
   // Sauvegarder et continuer vers la nouvelle page demandée
   const handleSaveAndContinue = async () => {
-    if (!selectedContent || !selectedContent.id) {
-      setShowUnsavedModal(false);
-      return;
-    }
+    if (!validateForSave()) return;
 
+    savingRef.current = true;
     setSaving(true);
     try {
       const collectionName = selectedContent.type === 'article' ? 'articles' : 'pages';
@@ -499,6 +516,13 @@ export const PageBuilder = ({
       };
 
       const result = await pageService.savePage(payload, selectedContent.id, collectionName);
+
+      initialContentRef.current = {
+        id: selectedContent.id,
+        type: selectedContent.type,
+        ...payload,
+        blocksJson: JSON.stringify(normalizedBlocks)
+      };
 
       let updatedPages = pagesList;
       let updatedArticles = articlesList;
@@ -524,14 +548,17 @@ export const PageBuilder = ({
       }
     } catch (err) {
       console.error("Erreur lors de la sauvegarde avant changement", err);
+      setSaveToast({ show: true, message: "L'enregistrement a échoué. Vos modifications restent ouvertes.", type: 'error' });
       alert("Une erreur est survenue lors de l'enregistrement des modifications.");
     } finally {
+      savingRef.current = false;
       setSaving(false);
     }
   };
 
   // Continuer sans enregistrer (abandonner les modifications)
   const handleDiscardAndContinue = () => {
+    if (savingRef.current) return;
     setShowUnsavedModal(false);
     if (pendingContentChange) {
       if (pendingContentChange.action === 'close') {
@@ -545,12 +572,14 @@ export const PageBuilder = ({
 
   // Annuler le changement de page
   const handleCancelModal = () => {
+    if (savingRef.current) return;
     setShowUnsavedModal(false);
     setPendingContentChange(null);
   };
 
   // Demande de fermeture du constructeur avec protection des données
   const handleRequestClose = () => {
+    if (savingRef.current) return;
     if (hasUnsavedChanges()) {
       setPendingContentChange({ action: 'close' });
       setShowUnsavedModal(true);
@@ -558,6 +587,49 @@ export const PageBuilder = ({
       onClose();
     }
   };
+
+  // Protéger aussi les modifications lors d'un rechargement ou d'une fermeture d'onglet.
+  useEffect(() => {
+    const handleBeforeUnload = (event) => {
+      if (!hasUnsavedChanges()) return;
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
+  useEffect(() => {
+    if (!showUnsavedModal) return;
+    const previousFocus = document.activeElement;
+    const dialog = unsavedModalRef.current;
+    dialog?.querySelector('button')?.focus();
+    const handleDialogKey = (event) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
+        if (!savingRef.current) {
+          setShowUnsavedModal(false);
+          setPendingContentChange(null);
+        }
+      }
+      if (event.key !== 'Tab') return;
+      const buttons = [...dialog.querySelectorAll('button:not([disabled])')];
+      const first = buttons[0];
+      const last = buttons[buttons.length - 1];
+      if (!first) { event.preventDefault(); return; }
+      if (event.shiftKey && (document.activeElement === first || !dialog.contains(document.activeElement))) {
+        event.preventDefault(); last.focus();
+      } else if (!event.shiftKey && (document.activeElement === last || !dialog.contains(document.activeElement))) {
+        event.preventDefault(); first.focus();
+      }
+    };
+    dialog?.addEventListener('keydown', handleDialogKey);
+    return () => {
+      dialog?.removeEventListener('keydown', handleDialogKey);
+      if (previousFocus?.isConnected) previousFocus.focus();
+    };
+  }, [showUnsavedModal]);
 
   const handleTitleChange = (e) => {
     const val = e.target.value;
@@ -962,19 +1034,9 @@ export const PageBuilder = ({
 
   // SAUVEGARDER ET PUBLIER LA PAGE
   const handleSavePage = useCallback(async () => {
-    if (!selectedContent || !selectedContent.id) {
-      alert("Aucun contenu sélectionné pour l'enregistrement.");
-      return;
-    }
-    if (!pageTitle.trim()) {
-      alert(selectedContent.type === 'article' ? "Veuillez donner un titre à l'article." : "Veuillez donner un titre à la page.");
-      return;
-    }
-    if (blocks.length === 0) {
-      alert("Veuillez ajouter au moins un élément.");
-      return;
-    }
+    if (!validateForSave()) return;
 
+    savingRef.current = true;
     setSaving(true);
     try {
       const collectionName = selectedContent.type === 'article' ? 'articles' : 'pages';
@@ -1015,26 +1077,30 @@ export const PageBuilder = ({
 
       setSaveToast({
         show: true,
-        message: `${selectedContent.type === 'article' ? 'Article' : 'Page'} "${pageTitle}" enregistré et synchronisé avec succès !`,
-        type: 'success'
+        message: result?.isLocalOnly
+          ? `"${pageTitle}" enregistré dans ce navigateur. La synchronisation distante reste à effectuer.`
+          : `${selectedContent.type === 'article' ? 'Article' : 'Page'} "${pageTitle}" enregistré avec succès !`,
+        type: result?.isLocalOnly ? 'info' : 'success'
       });
       onSaveSuccess(result);
     } catch (e) {
       console.error("Erreur de sauvegarde", e);
       setSaveToast({
         show: true,
-        message: "Une erreur est survenue lors de l'enregistrement.",
+        message: "L'enregistrement a échoué. Vos modifications restent ouvertes.",
         type: 'error'
       });
       alert("Une erreur est survenue lors de l'enregistrement.");
     } finally {
+      savingRef.current = false;
       setSaving(false);
     }
-  }, [selectedContent, pageTitle, pageSlug, pageCategory, pageStatus, blocks, onSaveSuccess]);
+  }, [selectedContent, pageTitle, pageSlug, pageCategory, pageStatus, blocks, onSaveSuccess, validateForSave]);
 
   // GESTION GLOBALE DES RACCOURCIS CLAVIER (Ctrl+Z, Ctrl+Y, Suppr, Ctrl+D, Escape, Ctrl+S)
   useEffect(() => {
     const handleKeyDown = (e) => {
+      if (showUnsavedModal) return;
       const activeTag = document.activeElement?.tagName?.toLowerCase();
       const isInput = activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select' || document.activeElement?.isContentEditable;
 
@@ -1091,7 +1157,7 @@ export const PageBuilder = ({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [canUndo, canRedo, undo, redo, activeBlockId, blocks, findParentId, handleDuplicateBlock, handleRemoveBlock, handleSavePage]);
+  }, [canUndo, canRedo, undo, redo, activeBlockId, blocks, findParentId, handleDuplicateBlock, handleRemoveBlock, handleSavePage, showUnsavedModal]);
 
   // ACTIONS UNDO / REDO
   const handleUndo = () => {
@@ -1481,6 +1547,7 @@ export const PageBuilder = ({
           }`}
           style={{ zIndex: 9999, maxWidth: '420px', borderRadius: '12px' }}
           role="status"
+          aria-label="Enregistrement de la page"
           aria-live="polite"
         >
           {saveToast.type === 'error' ? (
@@ -1568,6 +1635,7 @@ export const PageBuilder = ({
             backdropFilter: 'blur(4px)'
           }}
           role="dialog"
+          ref={unsavedModalRef}
           aria-modal="true"
           aria-labelledby="unsaved-modal-title"
           data-testid="unsaved-changes-modal"
@@ -1601,6 +1669,7 @@ export const PageBuilder = ({
               <button
                 type="button"
                 onClick={handleCancelModal}
+                disabled={saving}
                 className="btn btn-outline-secondary btn-sm py-2 px-3 rounded-lg font-medium"
               >
                 Annuler
@@ -1608,6 +1677,7 @@ export const PageBuilder = ({
               <button
                 type="button"
                 onClick={handleDiscardAndContinue}
+                disabled={saving}
                 className="btn btn-outline-danger btn-sm py-2 px-3 rounded-lg font-medium"
               >
                 Continuer sans enregistrer

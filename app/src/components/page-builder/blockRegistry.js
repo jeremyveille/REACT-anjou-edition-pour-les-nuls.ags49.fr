@@ -152,8 +152,8 @@ export const BLOCK_DEFINITIONS = {
     desc: 'Intégration vidéo YouTube ou lecteur vidéo',
     hasChildren: false,
     defaultSettings: {
-      url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-      videoId: 'dQw4w9WgXcQ',
+      url: '',
+      videoId: '',
       title: 'Vidéo',
       classes: '',
       style: {}
@@ -636,8 +636,8 @@ export const getDefaultHomepageBlocks = () => {
                       id: "vid_home_presentation",
                       type: "video",
                       settings: {
-                        url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-                        videoId: "dQw4w9WgXcQ",
+                        url: "",
+                        videoId: "",
                         title: "Présentation Anjou Édition",
                         classes: "shadow-lg rounded-4 overflow-hidden"
                       }

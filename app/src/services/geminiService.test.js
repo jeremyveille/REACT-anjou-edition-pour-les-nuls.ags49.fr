@@ -1,183 +1,62 @@
-import {
-  getGeminiApiKey,
-  isGeminiConfigured,
-  saveGeminiApiKey,
-  generateGeminiContent,
-  generateAiArticle,
-  generateAiFlipbookPages
-} from './geminiService';
-
-describe('geminiService', () => {
-  beforeEach(() => {
-    localStorage.clear();
-    jest.clearAllMocks();
-  });
-
-  describe('getGeminiApiKey and saveGeminiApiKey', () => {
-    test('retrieves empty string when no key is set', () => {
-      expect(getGeminiApiKey()).toBe('');
-      expect(isGeminiConfigured()).toBe(false);
-    });
-
-    test('saves and retrieves key from localStorage', () => {
-      saveGeminiApiKey('test-api-key-123');
-      expect(getGeminiApiKey()).toBe('test-api-key-123');
-      expect(isGeminiConfigured()).toBe(true);
-      expect(isGeminiConfigured('custom-key')).toBe(true);
-    });
-
-    test('removes key if empty string passed', () => {
-      saveGeminiApiKey('test-key');
-      expect(getGeminiApiKey()).toBe('test-key');
-      saveGeminiApiKey('');
-      expect(getGeminiApiKey()).toBe('');
-    });
-  });
-
-  describe('generateGeminiContent', () => {
-    test('throws error if no API key is configured', async () => {
-      await expect(
-        generateGeminiContent({ prompt: 'Bonjour' })
-      ).rejects.toThrow(/Clé API Gemini non configurée/);
-    });
-
-    test('calls fetch with correct endpoint, headers and payload', async () => {
-      const mockResponseData = {
-        candidates: [
-          {
-            content: {
-              parts: [{ text: 'Réponse générée par Gemini' }]
-            }
-          }
-        ]
-      };
-
-      global.fetch = jest.fn().mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve(mockResponseData)
-      });
-
-      const result = await generateGeminiContent({
-        prompt: 'Présente la Loire',
-        model: 'gemini-2.5-flash',
-        apiKey: 'fake-key-abc'
-      });
-
-      expect(global.fetch).toHaveBeenCalledTimes(1);
-      const [url, options] = global.fetch.mock.calls[0];
-      expect(url).toContain('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=fake-key-abc');
-      expect(options.method).toBe('POST');
-      expect(JSON.parse(options.body)).toEqual({
-        contents: [
-          {
-            role: 'user',
-            parts: [{ text: 'Présente la Loire' }]
-          }
-        ]
-      });
-      expect(result.text).toBe('Réponse générée par Gemini');
-    });
-
-    test('handles API errors properly', async () => {
-      global.fetch = jest.fn().mockResolvedValue({
-        ok: false,
-        status: 400,
-        statusText: 'Bad Request',
-        json: () => Promise.resolve({ error: { message: 'API key not valid' } })
-      });
-
-      await expect(
-        generateGeminiContent({
-          prompt: 'Test',
-          apiKey: 'invalid-key'
-        })
-      ).rejects.toThrow('API key not valid');
-    });
-  });
-
-  describe('generateAiArticle', () => {
-    test('generates article using formatted prompt', async () => {
-      const mockResponseData = {
-        candidates: [
-          {
-            content: {
-              parts: [{ text: '# Histoire de l\'Anjou\n\nVoici le texte.' }]
-            }
-          }
-        ]
-      };
-
-      global.fetch = jest.fn().mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve(mockResponseData)
-      });
-
-      const articleText = await generateAiArticle({
-        topic: 'Château d\'Angers',
-        style: 'Historique',
-        apiKey: 'fake-key'
-      });
-
-      expect(articleText).toContain('Histoire de l\'Anjou');
-    });
-  });
-
-  describe('generateAiFlipbookPages', () => {
-    test('parses and returns structured pages', async () => {
-      const mockPages = [
-        { pageNum: 1, title: 'Couverture', content: 'Page 1' },
-        { pageNum: 2, title: 'Intro', content: 'Page 2' }
-      ];
-
-      const mockResponseData = {
-        candidates: [
-          {
-            content: {
-              parts: [{ text: '```json\n' + JSON.stringify(mockPages) + '\n```' }]
-            }
-          }
-        ]
-      };
-
-      global.fetch = jest.fn().mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve(mockResponseData)
-      });
-
-      const pages = await generateAiFlipbookPages({
-        title: 'Livre des Rois',
-        description: 'Histoire royale',
-        fileName: 'rois.pdf',
-        apiKey: 'fake-key'
-      });
-
-      expect(pages).toEqual(mockPages);
-    });
-
-    test('returns null if response is invalid JSON', async () => {
-      const mockResponseData = {
-        candidates: [
-          {
-            content: {
-              parts: [{ text: 'Invalid non-json response' }]
-            }
-          }
-        ]
-      };
-
-      global.fetch = jest.fn().mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve(mockResponseData)
-      });
-
-      const pages = await generateAiFlipbookPages({
-        title: 'Test',
-        description: 'Desc',
-        fileName: 'test.pdf',
-        apiKey: 'fake-key'
-      });
-
-      expect(pages).toBeNull();
-    });
-  });
+import { httpsCallable } from 'firebase/functions';
+import { auth } from '../firebase';
+import { isGeminiConfigured, clearLegacyGeminiKey, generateGeminiContent, generateAiArticle, generateAiFlipbookPages } from './geminiService';
+jest.mock('firebase/functions', () => ({ httpsCallable: jest.fn() }));
+jest.mock('../firebase', () => ({ auth: { currentUser: { uid: 'admin' } }, functions: {} }));
+const generate = jest.fn();
+beforeEach(() => {
+  localStorage.clear();
+  jest.clearAllMocks();
+  process.env.REACT_APP_ENABLE_GEMINI = 'true';
+  auth.currentUser = { uid: 'admin' };
+  httpsCallable.mockReturnValue(generate);
+  generate.mockResolvedValue({ data: { text: 'Texte généré.' } });
+});
+afterAll(() => { delete process.env.REACT_APP_ENABLE_GEMINI; });
+test('service availability uses public flag, never a stored secret', () => {
+  process.env.REACT_APP_ENABLE_GEMINI = 'false';
+  localStorage.setItem('gemini_api_key', 'old-key');
+  expect(isGeminiConfigured()).toBe(false);
+  clearLegacyGeminiKey();
+  expect(localStorage.getItem('gemini_api_key')).toBeNull();
+});
+test('calls authenticated server and does not transmit client keys', async () => {
+  localStorage.setItem('gemini_api_key', 'old-key');
+  expect(await generateGeminiContent({ prompt: ' Loire ', apiKey: 'unsafe' })).toEqual({ text: 'Texte généré.' });
+  expect(httpsCallable).toHaveBeenCalledWith({}, 'generateContent', { timeout: 65000 });
+  expect(generate).toHaveBeenCalledWith({ prompt: 'Loire', systemInstruction: '' });
+  expect(localStorage.getItem('gemini_api_key')).toBeNull();
+});
+test('rejects unauthenticated generation', async () => {
+  auth.currentUser = null;
+  await expect(generateGeminiContent({ prompt: 'Loire' })).rejects.toThrow(/Reconnectez/);
+  expect(generate).not.toHaveBeenCalled();
+});
+test('rejects disabled service or empty prompt without request', async () => {
+  process.env.REACT_APP_ENABLE_GEMINI = 'false';
+  await expect(generateGeminiContent({ prompt: 'Loire' })).rejects.toThrow(/activé/);
+  process.env.REACT_APP_ENABLE_GEMINI = 'true';
+  await expect(generateGeminiContent({ prompt: ' ' })).rejects.toThrow(/Saisissez/);
+  expect(generate).not.toHaveBeenCalled();
+});
+test('provides useful quota errors', async () => {
+  generate.mockRejectedValueOnce({ code: 'functions/resource-exhausted' });
+  await expect(generateGeminiContent({ prompt: 'Loire' })).rejects.toThrow(/limite/);
+});
+test('does not announce success for empty responses', async () => {
+  generate.mockResolvedValueOnce({ data: { text: '' } });
+  await expect(generateGeminiContent({ prompt: 'Loire' })).rejects.toThrow(/renvoyé de texte/);
+});
+test('article generation includes topic and style', async () => {
+  await expect(generateAiArticle({ topic: 'Loire', style: 'Historique' })).resolves.toBe('Texte généré.');
+  expect(generate.mock.calls[0][0].prompt).toContain('Loire');
+});
+test('validates generated pages and propagates malformed responses', async () => {
+  const pages = Array.from({ length: 5 }, (_, i) => ({ pageNum: i + 1, title: 'Page', content: 'Texte.' }));
+  generate.mockResolvedValueOnce({ data: { text: JSON.stringify(pages) } });
+  expect(await generateAiFlipbookPages({ title: 'Anjou' })).toEqual(pages);
+  generate.mockResolvedValueOnce({ data: { text: 'Invalid JSON' } });
+  await expect(generateAiFlipbookPages({ title: 'Anjou' })).rejects.toThrow(/pages valides/);
+  generate.mockResolvedValueOnce({ data: { text: JSON.stringify([{ ...pages[0], pageNum: 3 }]) } });
+  await expect(generateAiFlipbookPages({ title: 'Anjou' })).rejects.toThrow(/cinq pages/);
 });

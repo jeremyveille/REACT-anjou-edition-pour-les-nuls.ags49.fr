@@ -22,6 +22,10 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
+    "test:ci": "react-scripts test --watchAll=false --runInBand --testMatch **/src/**/*.test.js",
+    "test:emulators": "node --test tests/rules/*.test.cjs tests/functions/*.test.cjs",
+    "emulators": "firebase emulators:start --project demo-anjou-edition --only auth,firestore,storage,functions",
+    "seed:emulators": "node scripts/seedEmulators.cjs",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
@@ -41,5 +45,9 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "5.0.2",
+    "firebase-tools": "15.32.0"
   }
 }

@@ -5,3 +5,10 @@ out_*.json
 prompt_*.txt
 tailwind_mapping.json
 tw_classes.json
+.npm-cache/
+.tools/
+artifacts/
+*-debug.log
+.firebase/
+.env.local
+.secret.local

@@ -876,8 +876,8 @@ describe('PageBuilder and Block Architecture Tests', () => {
                   id: 'vid_test_1',
                   type: 'video',
                   settings: {
-                    url: 'https://www.youtube.com/watch?v=oldVid123',
-                    videoId: 'oldVid123'
+                    url: 'https://www.youtube.com/watch?v=oldVid12345a',
+                    videoId: 'oldVid12345a'
                   }
                 }
               ]

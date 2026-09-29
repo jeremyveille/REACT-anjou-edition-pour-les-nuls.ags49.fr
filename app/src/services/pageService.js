@@ -1,4 +1,5 @@
 import { db, auth, storage } from '../firebase';
+import { hasAdminClaim } from '../hooks/useAdminSession';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { 
   collection, 
@@ -10,7 +11,8 @@ import {
   deleteDoc, 
   updateDoc, 
   query, 
-  orderBy 
+  orderBy,
+  where
 } from 'firebase/firestore';
 import { galleryImages, videosData, flipbooksData, articlesData } from '../data';
 import { normalizeBlocks, getDefaultHomepageBlocks } from '../components/page-builder/blockRegistry';
@@ -139,24 +141,22 @@ export const normalizeStatus = (rawStatus) => {
 /**
  * Vérifie si l'utilisateur courant dispose des privilèges Administrateur requis pour publier ou approuver.
  */
-export const isAuthorizedAdmin = () => {
-  const user = auth && auth.currentUser;
-  if (user) {
-    const adminEmails = [
-      'admin@anjou-edition.fr',
-      'jeremy.veille@hotmail.fr',
-      'contact@ags49.fr'
-    ];
-    if (user.uid === 'test-user-123') return true;
-    if (user.email && adminEmails.includes(user.email.toLowerCase())) return true;
-    if (user.customClaims && user.customClaims.admin) return true;
+export const isAuthorizedAdmin = async () => hasAdminClaim(auth && auth.currentUser);
+
+const requireAdmin = async () => {
+  if (!(await isAuthorizedAdmin())) {
+    const error = new Error('Cette action nécessite un compte administrateur.');
+    error.code = 'permission-denied';
+    throw error;
   }
-  try {
-    return localStorage.getItem('ae_authenticated') === 'true';
-  } catch (e) {
-    return false;
+  if (!db) {
+    const error = new Error('Enregistrement indisponible : connexion au service requise.');
+    error.code = 'unavailable';
+    throw error;
   }
 };
+
+const isPermissionError = error => /permission-denied|unauthenticated|unauthorized/.test(error?.code || '');
 
 /**
  * Récupère les éléments locaux stockés en secours.
@@ -188,59 +188,23 @@ const saveLocalItems = (collectionName, items) => {
  * Service de journalisation d'audit éditorial (collection auditLogs).
  */
 export const auditService = {
-  /**
-   * Enregistre un événement dans la piste d'audit Firestore et le cache local.
-   */
   async log({ action, resourceType, resourceId, resourceTitle, details = {} }) {
-    const user = auth && auth.currentUser;
-    const actorId = user ? user.uid : (isAuthorizedAdmin() ? 'admin_session' : 'anonymous');
-    const actorEmail = user ? (user.email || 'user@anjou-edition.fr') : (isAuthorizedAdmin() ? 'admin@anjou-edition.fr' : 'anonymous');
-    const actorRole = isAuthorizedAdmin() ? 'admin' : 'contributor';
-    const timestamp = new Date().toISOString();
-
-    const logEntry = {
-      timestamp,
-      action, // 'CREATE', 'UPDATE', 'REQUEST_REVIEW', 'APPROVE', 'PUBLISH', 'UNPUBLISH', 'DELETE', 'DEDUPLICATE'
-      resourceType, // 'page', 'article', 'system'
-      resourceId: String(resourceId || 'unknown'),
-      resourceTitle: String(resourceTitle || 'Sans titre'),
-      actorId,
-      actorEmail,
-      actorRole,
-      details
+    await requireAdmin();
+    const user = auth.currentUser;
+    const entry = {
+      timestamp: new Date().toISOString(), action, resourceType,
+      resourceId: String(resourceId || 'unknown'), resourceTitle: String(resourceTitle || 'Sans titre'),
+      actorId: user.uid, actorEmail: user.email || '', actorRole: 'admin', details
     };
-
-    try {
-      if (db) {
-        await addDoc(collection(db, 'auditLogs'), logEntry);
-      }
-    } catch (err) {
-      // Stockage local de secours
-      try {
-        const localLogs = getLocalItems('auditLogs');
-        localLogs.unshift({ id: `audit_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`, ...logEntry });
-        saveLocalItems('auditLogs', localLogs.slice(0, 200));
-      } catch (e) {}
-    }
-    return logEntry;
+    // A failed audit write must not turn a committed content write into a false failure.
+    try { await addDoc(collection(db, 'auditLogs'), entry); }
+    catch (error) { console.error('Journalisation distante indisponible.', error); return { ...entry, auditStored: false }; }
+    return { ...entry, auditStored: true };
   },
-
-  /**
-   * Récupère les logs d'audit récents.
-   */
   async getLogs() {
-    try {
-      if (db) {
-        const q = query(collection(db, 'auditLogs'), orderBy('timestamp', 'desc'));
-        const snapshot = await getDocs(q);
-        if (snapshot && !snapshot.empty && snapshot.docs) {
-          return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-        }
-      }
-    } catch (err) {
-      // Ignorer l'erreur Firestore et basculer sur le local
-    }
-    return getLocalItems('auditLogs');
+    await requireAdmin();
+    const snapshot = await getDocs(query(collection(db, 'auditLogs'), orderBy('timestamp', 'desc')));
+    return (snapshot?.docs || []).map(d => ({ id: d.id, ...d.data() }));
   }
 };
 
@@ -252,385 +216,95 @@ export const pageService = {
    * Récupère la liste de toutes les pages ou articles (Firestore d'abord, fallback local).
    * STRICTEMENT en lecture seule : aucune création automatique (auto-seed) en base de données lors d'une lecture.
    */
-  async getPages(collectionName = 'pages') {
+  async getPages(collectionName = 'pages', { publishedOnly = false } = {}) {
+    if (!['pages', 'articles'].includes(collectionName)) throw new Error('Collection éditoriale inconnue.');
+    const isAdmin = publishedOnly ? false : await isAuthorizedAdmin();
+    const publicOnly = publishedOnly || !isAdmin;
+    const cacheCollection = publicOnly ? 'public_' + collectionName : collectionName;
+    const prepare = items => items
+      .filter(item => !publicOnly || item.status === EDITORIAL_STATUS.PUBLISHED)
+      .map(item => {
+        let blocks = item.blocks || [];
+        const isHome = collectionName === 'pages' && ((item.title || '').toLowerCase().includes('accueil') || ['home', 'accueil'].includes(item.slug));
+        if (isHome) blocks = sanitizeHomePageBlocks(blocks);
+        if (isHome && blocks.length === 0) blocks = getDefaultHomepageBlocks();
+        return { ...item, status: normalizeStatus(item.status), blocks: normalizeBlocks(blocks) };
+      }).sort((a, b) => String(b.updatedAt || '').localeCompare(String(a.updatedAt || '')));
     try {
-      if (db) {
-        const q = query(collection(db, collectionName), orderBy('updatedAt', 'desc'));
-        const snapshot = await getDocs(q);
-        const items = [];
-        if (snapshot && !snapshot.empty && snapshot.docs) {
-          snapshot.docs.forEach((docSnap) => {
-            const data = docSnap.data() || {};
-            let blocks = data.blocks;
-            const isHome = (data.title || '').toLowerCase().includes('accueil') || data.slug === 'home' || data.slug === 'accueil';
-            if (isHome && collectionName === 'pages') {
-              blocks = sanitizeHomePageBlocks(blocks || []);
-            }
-            if ((!blocks || blocks.length === 0) && isHome && collectionName === 'pages') {
-              blocks = getDefaultHomepageBlocks();
-            }
-            items.push({ 
-              ...data,
-              id: docSnap.id, 
-              status: normalizeStatus(data.status),
-              blocks: normalizeBlocks(blocks || []) 
-            });
-          });
-
-          // Assurer la présence des articles de base si collectionName === 'articles'
-          if (collectionName === 'articles') {
-            articlesData.forEach(baseArt => {
-              const exists = items.some(it => it.id === baseArt.id || it.slug === baseArt.slug);
-              if (!exists) {
-                items.push(baseArt);
-              }
-            });
-          }
-
-          // Synchroniser le cache local avec les données réelles
-          saveLocalItems(collectionName, items);
-          return items;
-        }
-      }
-
-      // Si la collection Firestore est vide ou non initialisée, retourner un tableau local ou défauts
-      const local = getLocalItems(collectionName);
-      if (local && local.length > 0) {
-        return local.map(item => {
-          let blocks = item.blocks;
-          const isHome = (item.title || '').toLowerCase().includes('accueil') || item.slug === 'home' || item.slug === 'accueil';
-          if (isHome && collectionName === 'pages') {
-            blocks = sanitizeHomePageBlocks(blocks || []);
-          }
-          if ((!blocks || blocks.length === 0) && isHome && collectionName === 'pages') {
-            blocks = getDefaultHomepageBlocks();
-          }
-          return {
-            ...item,
-            status: normalizeStatus(item.status),
-            blocks: normalizeBlocks(blocks || [])
-          };
-        });
-      }
-
-      // Fallback par défaut pour les articles
-      if (collectionName === 'articles') {
-        saveLocalItems('articles', articlesData);
-        return articlesData;
-      }
-
-      return [];
+      if (!db) throw Object.assign(new Error('Service indisponible'), { code: 'unavailable' });
+      const constraints = publicOnly ? [where('status', '==', 'published')] : [];
+      const snapshot = await getDocs(query(collection(db, collectionName), ...constraints));
+      const items = prepare((snapshot?.docs || []).map(item => ({ ...item.data(), id: item.id })));
+      saveLocalItems(cacheCollection, items);
+      return items;
     } catch (error) {
-      console.warn(`Firestore indisponible ou restreint, récupération des ${collectionName} locaux...`, error);
-      const local = getLocalItems(collectionName);
-      if (local && local.length > 0) {
-        return local.map(item => {
-          let blocks = item.blocks;
-          const isHome = (item.title || '').toLowerCase().includes('accueil') || item.slug === 'home' || item.slug === 'accueil';
-          if (isHome && collectionName === 'pages') {
-            blocks = sanitizeHomePageBlocks(blocks || []);
-          }
-          if ((!blocks || blocks.length === 0) && isHome && collectionName === 'pages') {
-            blocks = getDefaultHomepageBlocks();
-          }
-          return {
-            ...item,
-            status: normalizeStatus(item.status),
-            blocks: normalizeBlocks(blocks || [])
-          };
-        });
-      }
-      if (collectionName === 'articles') {
-        return articlesData;
-      }
-      if (collectionName === 'pages') {
-        return [
-          {
-            id: 'page_home_default',
-            title: 'Accueil - Anjou Édition',
-            slug: 'accueil',
-            isHome: true,
-            isHomePage: true,
-            category: 'Accueil',
-            status: 'published',
-            blocks: getDefaultHomepageBlocks()
-          }
-        ];
-      }
+      if (isPermissionError(error)) throw error;
+      // Only published public data is cached for unauthenticated offline reading.
+      const local = getLocalItems(cacheCollection);
+      if (local.length) return prepare(local);
+      if (collectionName === 'articles') return prepare(articlesData);
       return [];
     }
   },
 
-  /**
-   * Enregistre ou met à jour une page ou un article avec vérification stricte du workflow éditorial.
-   * @param {Object} pageData Données de la page ou de l'article.
-   * @param {string} [id] ID si mise à jour.
-   * @param {string} [collectionName] Collection cible ('pages' ou 'articles').
-   */
   async savePage(pageData, id = null, collectionName = 'pages') {
-    const user = auth && auth.currentUser;
-    const userId = user ? user.uid : (isAuthorizedAdmin() ? 'admin_session' : 'anonymous');
-    const email = user ? (user.email || 'user@anjou-edition.fr') : (isAuthorizedAdmin() ? 'admin@anjou-edition.fr' : 'Visiteur');
+    await requireAdmin();
+    const user = auth.currentUser;
     const timestamp = new Date().toISOString();
-    const isAdmin = isAuthorizedAdmin();
-
-    // Normalisation du statut demandé
-    let targetStatus = normalizeStatus(pageData.status || EDITORIAL_STATUS.DRAFT);
-
-    // CONTRÔLE D'AUTORITÉ : Seul un administrateur peut approuver ou publier directement
-    if ((targetStatus === EDITORIAL_STATUS.APPROVED || targetStatus === EDITORIAL_STATUS.PUBLISHED) && !isAdmin) {
-      console.warn(`Tentative de publication non autorisée par "${email}". Statut rétrogradé à "${EDITORIAL_STATUS.PENDING_REVIEW}".`);
-      targetStatus = EDITORIAL_STATUS.PENDING_REVIEW;
-    }
-
-    // Assurer que les URLs blob: éphémères sont converties en Data URLs permanents
-    let cleanBlocks = pageData.blocks || [];
-    if (cleanBlocks && cleanBlocks.length > 0) {
-      cleanBlocks = await this.ensurePersistentBlocks(cleanBlocks);
-    }
-    let cleanImage = pageData.image || '';
-    if (typeof cleanImage === 'string' && cleanImage.startsWith('blob:')) {
-      cleanImage = await this.convertBlobToDataUrl(cleanImage);
-    }
-    let cleanThumbnail = pageData.thumbnailUrl || '';
-    if (typeof cleanThumbnail === 'string' && cleanThumbnail.startsWith('blob:')) {
-      cleanThumbnail = await this.convertBlobToDataUrl(cleanThumbnail);
-    }
-
-    const currentVersion = Number(pageData.version) || 1;
-
+    const status = normalizeStatus(pageData.status);
     const normalizedData = {
       ...pageData,
-      image: cleanImage || pageData.image,
-      thumbnailUrl: cleanThumbnail || pageData.thumbnailUrl,
       title: pageData.title || 'Sans titre',
-      slug: pageData.slug || (pageData.title ? pageData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'sans-titre'),
-      category: pageData.category || 'Outils',
-      status: targetStatus,
-      blocks: normalizeBlocks(cleanBlocks),
-      updatedAt: timestamp,
-      updatedBy: email,
-      version: id ? (currentVersion + 1) : 1
+      slug: pageData.slug || (pageData.title || 'sans-titre').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      category: pageData.category || 'Outils', status,
+      blocks: normalizeBlocks(await this.ensurePersistentBlocks(pageData.blocks || [])),
+      updatedAt: timestamp, updatedBy: user.email || user.uid,
+      version: id ? (Number(pageData.version) || 1) + 1 : 1
     };
-
-    // Métadonnées de validation et publication
-    if (targetStatus === EDITORIAL_STATUS.APPROVED) {
-      normalizedData.approvedBy = email;
-      normalizedData.approvedAt = timestamp;
-    }
-    if (targetStatus === EDITORIAL_STATUS.PUBLISHED) {
-      normalizedData.publishedBy = email;
-      normalizedData.publishedAt = timestamp;
-    }
-
-    if (id) {
-      // Mode Édition
-      try {
-        if (db) {
-          const docRef = doc(db, collectionName, id);
-          await setDoc(docRef, normalizedData, { merge: true });
-        }
-        
-        // Mettre à jour en local
-        const localItems = getLocalItems(collectionName);
-        const updatedItems = localItems.map(p => p.id === id ? { ...p, ...normalizedData } : p);
-        saveLocalItems(collectionName, updatedItems);
-        
-        // Audit log
-        let auditAction = 'UPDATE';
-        if (targetStatus === EDITORIAL_STATUS.PUBLISHED) auditAction = 'PUBLISH';
-        else if (targetStatus === EDITORIAL_STATUS.APPROVED) auditAction = 'APPROVE';
-        else if (targetStatus === EDITORIAL_STATUS.PENDING_REVIEW) auditAction = 'REQUEST_REVIEW';
-
-        await auditService.log({
-          action: auditAction,
-          resourceType: collectionName === 'articles' ? 'article' : 'page',
-          resourceId: id,
-          resourceTitle: normalizedData.title,
-          details: { status: targetStatus, version: normalizedData.version }
-        });
-
-        if (typeof window !== 'undefined') {
-          try {
-            window.dispatchEvent(new CustomEvent('ae_content_updated', {
-              detail: { collectionName, id, data: normalizedData }
-            }));
-          } catch (e) {}
-        }
-
-        return { id, ...normalizedData };
-      } catch (error) {
-        console.error(`Erreur Firestore lors de la mise à jour de ${collectionName}, bascule locale.`, error);
-        const localItems = getLocalItems(collectionName);
-        const updatedItems = localItems.map(p => p.id === id ? { ...p, ...normalizedData } : p);
-        saveLocalItems(collectionName, updatedItems);
-
-        if (typeof window !== 'undefined') {
-          try {
-            window.dispatchEvent(new CustomEvent('ae_content_updated', {
-              detail: { collectionName, id, data: normalizedData }
-            }));
-          } catch (e) {}
-        }
-
-        return { id, ...normalizedData, isLocalOnly: true };
-      }
-    } else {
-      // Mode Création
-      const creationData = {
-        ...normalizedData,
-        createdAt: timestamp,
-        createdBy: email,
-        creatorId: userId
-      };
-
-      try {
-        let savedId = null;
-        if (db) {
-          const docRef = await addDoc(collection(db, collectionName), creationData);
-          savedId = docRef && docRef.id ? docRef.id : ('local_' + Date.now());
-        } else {
-          savedId = 'local_' + Date.now();
-        }
-        
-        // Ajouter en local
-        const localItems = getLocalItems(collectionName);
-        localItems.unshift({ id: savedId, ...creationData });
-        saveLocalItems(collectionName, localItems);
-        
-        // Audit log
-        await auditService.log({
-          action: 'CREATE',
-          resourceType: collectionName === 'articles' ? 'article' : 'page',
-          resourceId: savedId,
-          resourceTitle: creationData.title,
-          details: { status: targetStatus, initialVersion: 1 }
-        });
-
-        if (typeof window !== 'undefined') {
-          try {
-            window.dispatchEvent(new CustomEvent('ae_content_updated', {
-              detail: { collectionName, id: savedId, data: creationData }
-            }));
-          } catch (e) {}
-        }
-
-        return { id: savedId, ...creationData };
-      } catch (error) {
-        console.error(`Erreur Firestore lors de la création dans ${collectionName}, bascule locale.`, error);
-        const localId = 'local_' + Date.now();
-        const localItems = getLocalItems(collectionName);
-        localItems.unshift({ id: localId, ...creationData });
-        saveLocalItems(collectionName, localItems);
-
-        if (typeof window !== 'undefined') {
-          try {
-            window.dispatchEvent(new CustomEvent('ae_content_updated', {
-              detail: { collectionName, id: localId, data: creationData }
-            }));
-          } catch (e) {}
-        }
-
-        return { id: localId, ...creationData, isLocalOnly: true };
+    for (const field of ['image', 'thumbnailUrl']) {
+      if (typeof normalizedData[field] === 'string' && normalizedData[field].startsWith('blob:')) {
+        normalizedData[field] = await this.convertBlobToDataUrl(normalizedData[field]);
       }
     }
+    if (!id) Object.assign(normalizedData, { createdAt: timestamp, createdBy: user.email || user.uid, creatorId: user.uid });
+    if (status === EDITORIAL_STATUS.APPROVED) Object.assign(normalizedData, { approvedBy: user.email || user.uid, approvedAt: timestamp });
+    if (status === EDITORIAL_STATUS.PUBLISHED) Object.assign(normalizedData, { publishedBy: user.email || user.uid, publishedAt: timestamp });
+    delete normalizedData.id;
+    delete normalizedData.isLocalOnly;
+    Object.keys(normalizedData).forEach(key => { if (normalizedData[key] === undefined) delete normalizedData[key]; });
+    let savedId = id;
+    if (savedId) await setDoc(doc(db, collectionName, savedId), normalizedData, { merge: true });
+    else savedId = (await addDoc(collection(db, collectionName), normalizedData)).id;
+    if (!savedId) throw new Error('Le service n’a pas confirmé l’enregistrement.');
+    const saved = { id: savedId, ...normalizedData };
+    const local = getLocalItems(collectionName).filter(item => item.id !== savedId);
+    saveLocalItems(collectionName, [saved, ...local]);
+    await auditService.log({ action: id ? 'UPDATE' : 'CREATE', resourceType: collectionName === 'articles' ? 'article' : 'page', resourceId: savedId, resourceTitle: saved.title, details: { status, version: saved.version } });
+    if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('ae_content_updated', { detail: { collectionName, id: savedId, data: normalizedData } }));
+    return saved;
   },
 
-  /**
-   * Supprime une page ou un article avec enregistrement dans la piste d'audit.
-   * @param {string} id ID.
-   * @param {string} [collectionName] Collection cible.
-   */
   async deletePage(id, collectionName = 'pages') {
-    const localItems = getLocalItems(collectionName);
-    const existing = localItems.find(p => p.id === id);
-
-    try {
-      if (db && !id.startsWith('local_')) {
-        const docRef = doc(db, collectionName, id);
-        await deleteDoc(docRef);
-      }
-    } catch (error) {
-      console.error(`Erreur Firestore lors de la suppression de ${collectionName}`, error);
-    } finally {
-      // Supprimer dans tous les cas localement
-      const filtered = localItems.filter(p => p.id !== id);
-      saveLocalItems(collectionName, filtered);
-
-      // Audit log
-      await auditService.log({
-        action: 'DELETE',
-        resourceType: collectionName === 'articles' ? 'article' : 'page',
-        resourceId: id,
-        resourceTitle: existing ? existing.title : 'Élément supprimé',
-        details: { deletedAt: new Date().toISOString() }
-      });
-    }
+    await requireAdmin();
+    await deleteDoc(doc(db, collectionName, id));
+    saveLocalItems(collectionName, getLocalItems(collectionName).filter(item => item.id !== id));
+    saveLocalItems('public_' + collectionName, getLocalItems('public_' + collectionName).filter(item => item.id !== id));
+    await auditService.log({ action: 'DELETE', resourceType: collectionName === 'articles' ? 'article' : 'page', resourceId: id });
   },
 
-  /**
-   * Met à jour le statut de publication d'une page ou d'un article en respectant le workflow.
-   * @param {string} id ID.
-   * @param {string} status 'draft', 'pending_review', 'approved', 'published'.
-   * @param {string} [collectionName] Collection cible.
-   */
   async updateStatus(id, status, collectionName = 'pages') {
-    const normalized = normalizeStatus(status);
-    const isAdmin = isAuthorizedAdmin();
-    const user = auth && auth.currentUser;
-    const email = user ? (user.email || 'admin@anjou-edition.fr') : 'admin@anjou-edition.fr';
+    await requireAdmin();
+    const finalStatus = normalizeStatus(status);
+    const user = auth.currentUser;
     const timestamp = new Date().toISOString();
-
-    let finalStatus = normalized;
-    if ((normalized === EDITORIAL_STATUS.APPROVED || normalized === EDITORIAL_STATUS.PUBLISHED) && !isAdmin) {
-      console.warn(`Permission insuffisante pour passer le statut à "${normalized}". Statut forcé à "${EDITORIAL_STATUS.PENDING_REVIEW}".`);
-      finalStatus = EDITORIAL_STATUS.PENDING_REVIEW;
-    }
-
-    const updatePayload = { 
-      status: finalStatus, 
-      updatedAt: timestamp,
-      updatedBy: email
-    };
-
-    if (finalStatus === EDITORIAL_STATUS.APPROVED) {
-      updatePayload.approvedBy = email;
-      updatePayload.approvedAt = timestamp;
-    }
-    if (finalStatus === EDITORIAL_STATUS.PUBLISHED) {
-      updatePayload.publishedBy = email;
-      updatePayload.publishedAt = timestamp;
-    }
-
-    try {
-      if (db && !id.startsWith('local_')) {
-        const docRef = doc(db, collectionName, id);
-        await updateDoc(docRef, updatePayload);
-      }
-      
-      const localItems = getLocalItems(collectionName);
-      const updated = localItems.map(p => p.id === id ? { ...p, ...updatePayload } : p);
-      saveLocalItems(collectionName, updated);
-
-      // Audit log
-      let auditAction = 'UPDATE';
-      if (finalStatus === EDITORIAL_STATUS.PUBLISHED) auditAction = 'PUBLISH';
-      else if (finalStatus === EDITORIAL_STATUS.APPROVED) auditAction = 'APPROVE';
-      else if (finalStatus === EDITORIAL_STATUS.PENDING_REVIEW) auditAction = 'REQUEST_REVIEW';
-      else if (finalStatus === EDITORIAL_STATUS.DRAFT) auditAction = 'UNPUBLISH';
-
-      await auditService.log({
-        action: auditAction,
-        resourceType: collectionName === 'articles' ? 'article' : 'page',
-        resourceId: id,
-        details: { newStatus: finalStatus }
-      });
-    } catch (error) {
-      console.error(`Erreur Firestore lors de la mise à jour du statut dans ${collectionName}`, error);
-      const localItems = getLocalItems(collectionName);
-      const updated = localItems.map(p => p.id === id ? { ...p, ...updatePayload } : p);
-      saveLocalItems(collectionName, updated);
-    }
+    const updatePayload = { status: finalStatus, updatedAt: timestamp, updatedBy: user.email || user.uid };
+    if (finalStatus === EDITORIAL_STATUS.APPROVED) Object.assign(updatePayload, { approvedBy: user.email || user.uid, approvedAt: timestamp });
+    if (finalStatus === EDITORIAL_STATUS.PUBLISHED) Object.assign(updatePayload, { publishedBy: user.email || user.uid, publishedAt: timestamp });
+    await updateDoc(doc(db, collectionName, id), updatePayload);
+    saveLocalItems(collectionName, getLocalItems(collectionName).map(item => item.id === id ? { ...item, ...updatePayload } : item));
+    if (finalStatus !== EDITORIAL_STATUS.PUBLISHED) saveLocalItems('public_' + collectionName, getLocalItems('public_' + collectionName).filter(item => item.id !== id));
+    await auditService.log({ action: finalStatus === EDITORIAL_STATUS.PUBLISHED ? 'PUBLISH' : 'UPDATE', resourceType: collectionName === 'articles' ? 'article' : 'page', resourceId: id, details: { newStatus: finalStatus } });
+    return updatePayload;
   },
 
   /**
@@ -640,6 +314,7 @@ export const pageService = {
    * @returns {Promise<{ totalFound: number, uniqueCount: number, removedIds: string[] }>}
    */
   async deduplicateItems(collectionName = 'pages') {
+    await requireAdmin();
     const items = await this.getPages(collectionName);
     if (!items || items.length === 0) {
       return { totalFound: 0, uniqueCount: 0, removedIds: [] };
@@ -710,7 +385,8 @@ export const pageService = {
         return list;
       }
     } catch (err) {
-      console.warn('Fallback offline sur localStorage pour la médiathèque:', err);
+      if (isPermissionError(err)) throw err;
+      console.warn('Médiathèque hors ligne : utilisation du cache.', err);
     }
 
     try {
@@ -821,6 +497,7 @@ export const pageService = {
    * @returns {Promise<Object>} L'élément enregistré.
    */
   async saveMediaItem(mediaItem) {
+    await requireAdmin();
     let finalMediaUrl = mediaItem.url || '';
     if (typeof finalMediaUrl === 'string' && finalMediaUrl.startsWith('blob:')) {
       finalMediaUrl = await this.convertBlobToDataUrl(finalMediaUrl);
@@ -841,7 +518,7 @@ export const pageService = {
       const docRef = doc(db, 'media', itemToSave.id);
       await setDoc(docRef, itemToSave, { merge: true });
     } catch (err) {
-      console.warn('Mode hors-ligne: enregistrement local du média', err);
+      throw err;
     }
 
     try {
@@ -864,11 +541,12 @@ export const pageService = {
    * @returns {Promise<boolean>}
    */
   async deleteMediaItem(id) {
+    await requireAdmin();
     try {
       const docRef = doc(db, 'media', id);
       await deleteDoc(docRef);
     } catch (err) {
-      console.warn('Mode hors-ligne: suppression locale du média', err);
+      throw err;
     }
 
     try {
@@ -888,6 +566,7 @@ export const pageService = {
    * @returns {Promise<string>} L'URL de téléchargement publique permanente.
    */
   async uploadMedia(file, metadata = {}) {
+    await requireAdmin();
     const timestamp = Date.now();
     const fileName = (typeof file === 'string' ? 'media_upload' : (file?.name || 'media_upload'));
     const uniqueName = `${timestamp}_${fileName.replace(/[^a-zA-Z0-9.]/g, '_')}`;
@@ -901,7 +580,8 @@ export const pageService = {
         const uploadResult = await uploadBytes(storageRef, file);
         downloadUrl = await getDownloadURL(uploadResult.ref);
       } catch (error) {
-        console.warn('Firebase Storage non disponible ou hors-ligne, conversion en Data URL permanent:', error);
+        if (isPermissionError(error)) throw error;
+        console.warn('Firebase Storage indisponible, tentative de stockage du média dans Firestore.', error);
       }
     }
 
@@ -964,7 +644,7 @@ export const pageService = {
    */
   async getFeaturedArticle() {
     try {
-      const articles = await this.getPages('articles');
+      const articles = await this.getPages('articles', { publishedOnly: true });
       if (!articles || articles.length === 0) {
         return articlesData[0] || null;
       }
@@ -1008,25 +688,11 @@ export const pageService = {
    * Définit quel article est mis en avant sur la page d'accueil et persiste le choix.
    */
   async setFeaturedArticle(articleId) {
-    try {
-      localStorage.setItem('ae_featured_article_id', articleId);
-      const articles = await this.getPages('articles');
-      const updated = articles.map(a => ({
-        ...a,
-        isFeatured: a.id === articleId
-      }));
-      saveLocalItems('articles', updated);
-
-      if (db) {
-        try {
-          const docRef = doc(db, 'settings', 'homepage');
-          await setDoc(docRef, { featuredArticleId: articleId, updatedAt: new Date().toISOString() }, { merge: true });
-        } catch (err) {}
-      }
-      return true;
-    } catch (e) {
-      console.error("Erreur lors de la mise en avant de l'article:", e);
-      return false;
-    }
+    await requireAdmin();
+    const articles = await this.getPages('articles', { publishedOnly: true });
+    if (!articles.some(article => article.id === articleId)) throw new Error('Seul un article publié peut être mis en avant.');
+    await setDoc(doc(db, 'settings', 'homepage'), { featuredArticleId: articleId, updatedAt: new Date().toISOString() });
+    localStorage.setItem('ae_featured_article_id', articleId);
+    return true;
   }
 };

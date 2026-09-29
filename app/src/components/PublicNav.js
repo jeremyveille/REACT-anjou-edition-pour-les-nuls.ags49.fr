@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { ChevronDown, ChevronRight, Search, Send, Menu, X } from 'lucide-react';
 
 export const PublicNav = ({
@@ -12,6 +12,49 @@ export const PublicNav = ({
   dropdownRefs,
   isPreview = false
 }) => {
+  const drawerRef = useRef(null);
+  const toggleRef = useRef(null);
+  const menuItems = getActiveMenuItems();
+  // Home and contact already have permanent controls beside the desktop menu.
+  const desktopItems = menuItems.filter(item => {
+    if (item.children?.length) return true;
+    if (!['accueil', 'contact'].includes((item.title || item.label || '').trim().toLowerCase())) return true;
+    const url = (item.url || '').replace(/\/$/, '');
+    return !(item.url === '/' || ['/home', '/accueil', '/contact'].includes(url) ||
+      item.shortcode === 'open_contact_modal' || item.shortcode === 'go_home');
+  });
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return undefined;
+    const drawer = drawerRef.current;
+    const trigger = toggleRef.current;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    drawer?.querySelector('button')?.focus();
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setMobileMenuOpen(false);
+      } else if (event.key === 'Tab') {
+        const focusable = [...drawer.querySelectorAll('button, summary, a[href], input')]
+          .filter(element => !element.disabled && element.getClientRects().length > 0);
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last?.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first?.focus();
+        }
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', handleKeyDown);
+      trigger?.focus();
+    };
+  }, [mobileMenuOpen, setMobileMenuOpen]);
 
   const renderDropdownItems = (items, depth = 2, isArts = false) => {
     return items.map((child) => {
@@ -115,7 +158,7 @@ export const PublicNav = ({
 
   return (
     <>
-      <nav>
+      <nav className="public-nav" aria-label="Navigation principale">
         <div className="nav-container">
           <button 
             type="button" 
@@ -127,7 +170,7 @@ export const PublicNav = ({
           </button>
           
           <div className="nav-links">
-            {getActiveMenuItems().map((item) => {
+            {desktopItems.map((item) => {
               const hasChildren = item.children && item.children.length > 0;
               if (hasChildren) {
                 const isArts = (item.title || item.label || "").trim().toLowerCase().startsWith("art");
@@ -205,6 +248,7 @@ export const PublicNav = ({
             <button 
               type="button" 
               className="mobile-menu-toggle-btn"
+              ref={toggleRef}
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="Menu Mobile"
               aria-expanded={mobileMenuOpen}
@@ -217,7 +261,7 @@ export const PublicNav = ({
       </nav>
 
       {/* Mobile Drawer Navigation Menu */}
-      <div id="mobile-drawer" className={`mobile-drawer ${mobileMenuOpen ? 'open' : ''}`} role="dialog" aria-modal="true" aria-label="Menu principal de navigation mobile">
+      <div id="mobile-drawer" ref={drawerRef} className={`mobile-drawer ${mobileMenuOpen ? 'open' : ''}`} role="dialog" aria-modal={mobileMenuOpen ? true : undefined} aria-hidden={!mobileMenuOpen} inert={!mobileMenuOpen} aria-label="Menu principal de navigation mobile">
         <div className="mobile-drawer-header">
           <h2>Anjou Édition</h2>
           <button type="button" onClick={() => setMobileMenuOpen(false)} aria-label="Fermer le menu">

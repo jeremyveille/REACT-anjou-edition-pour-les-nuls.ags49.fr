@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { CheckCircle2, AlertCircle, Send, ShieldCheck } from 'lucide-react';
 import { db } from '../firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
@@ -7,9 +7,11 @@ export const ContactForm = ({ setView }) => {
   const [contactForm, setContactForm] = useState({ name: '', email: '', subject: '', message: '' });
   const [formStatus, setFormStatus] = useState({ type: '', message: '', loading: false });
   const [gdprConsent, setGdprConsent] = useState(false);
+  const submissionPending = useRef(false);
 
   const handleContactSubmit = async (e) => {
     e.preventDefault();
+    if (submissionPending.current) return;
     const trimmedName = contactForm.name.trim();
     const trimmedEmail = contactForm.email.trim();
     const trimmedSubject = contactForm.subject.trim();
@@ -26,11 +28,19 @@ export const ContactForm = ({ setView }) => {
       return;
     }
 
+    if (trimmedName.length < 2 || trimmedName.length > 100 || trimmedEmail.length > 150 ||
+        trimmedSubject.length < 2 || trimmedSubject.length > 200 ||
+        trimmedMessage.length < 5 || trimmedMessage.length > 5000) {
+      setFormStatus({ type: 'error', message: 'Le nom doit comporter de 2 à 100 caractères, le sujet de 2 à 200 caractères et le message de 5 à 5 000 caractères.', loading: false });
+      return;
+    }
+
     if (!gdprConsent) {
       setFormStatus({ type: 'error', message: 'Veuillez accepter le traitement de vos données personnelles.', loading: false });
       return;
     }
 
+    submissionPending.current = true;
     setFormStatus({ type: '', message: '', loading: true });
 
     try {
@@ -52,23 +62,13 @@ export const ContactForm = ({ setView }) => {
     } catch (error) {
       console.error("Firebase Firestore Error: ", error);
       
-      const offlineMessages = JSON.parse(localStorage.getItem('contact_messages') || '[]');
-      offlineMessages.push({
-        name: trimmedName,
-        email: trimmedEmail.toLowerCase(),
-        subject: trimmedSubject,
-        message: trimmedMessage,
-        timestamp: new Date().toISOString()
-      });
-      localStorage.setItem('contact_messages', JSON.stringify(offlineMessages));
-
       setFormStatus({
-        type: 'success',
-        message: 'Message enregistré localement ! (Connexion serveur indisponible, nous le traiterons dès le rétablissement du réseau).',
+        type: 'error',
+        message: 'Votre message n’a pas été envoyé. Votre saisie est conservée dans ce formulaire. Vérifiez votre connexion, puis réessayez.',
         loading: false
       });
-      setContactForm({ name: '', email: '', subject: '', message: '' });
-      setGdprConsent(false);
+    } finally {
+      submissionPending.current = false;
     }
   };
 
@@ -84,12 +84,13 @@ export const ContactForm = ({ setView }) => {
         </div>
       )}
 
-      <form onSubmit={handleContactSubmit} className="contact-form" noValidate={false}>
+      <form onSubmit={handleContactSubmit} className="contact-form" noValidate>
         <div className="form-group">
           <label htmlFor="form-name">Nom complet *</label>
           <input 
             type="text" 
             id="form-name" 
+            disabled={formStatus.loading}
             value={contactForm.name}
             onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
             placeholder="Jean Dupont"
@@ -103,6 +104,7 @@ export const ContactForm = ({ setView }) => {
           <input 
             type="email" 
             id="form-email" 
+            disabled={formStatus.loading}
             value={contactForm.email}
             onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
             placeholder="jean.dupont@email.com"
@@ -116,6 +118,7 @@ export const ContactForm = ({ setView }) => {
           <input 
             type="text" 
             id="form-subject" 
+            disabled={formStatus.loading}
             value={contactForm.subject}
             onChange={(e) => setContactForm({ ...contactForm, subject: e.target.value })}
             placeholder="Demande d'information"
@@ -127,6 +130,7 @@ export const ContactForm = ({ setView }) => {
           <label htmlFor="form-message">Votre message *</label>
           <textarea 
             id="form-message" 
+            disabled={formStatus.loading}
             rows="6"
             value={contactForm.message}
             onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
@@ -139,6 +143,7 @@ export const ContactForm = ({ setView }) => {
           <input 
             type="checkbox" 
             id="form-gdpr" 
+            disabled={formStatus.loading}
             checked={gdprConsent}
             onChange={(e) => setGdprConsent(e.target.checked)}
             required

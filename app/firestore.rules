@@ -1,102 +1,62 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Helper function: vérifie si l'utilisateur est authentifié
-    function isAuthenticated() {
-      return request.auth != null;
+    function isAdmin() {
+      return request.auth != null && request.auth.token.admin == true;
     }
-
-    // Formulaire de contact :
-    // Création publique contrôlée avec validation de schéma stricte.
-    // Lecture et suppression réservées aux administrateurs connectés.
+    function published() { return resource.data.status == 'published'; }
+    function validStatus() {
+      return request.resource.data.status in ['draft', 'pending_review', 'approved', 'published'];
+    }
     match /contacts/{document} {
-      allow create: if request.resource.data.name is string 
-                    && request.resource.data.name.size() >= 2 
-                    && request.resource.data.name.size() <= 100
-                    && request.resource.data.email is string 
-                    && request.resource.data.email.size() >= 5 
-                    && request.resource.data.email.size() <= 150
-                    && request.resource.data.subject is string 
-                    && request.resource.data.subject.size() >= 2 
-                    && request.resource.data.subject.size() <= 200
-                    && request.resource.data.message is string 
-                    && request.resource.data.message.size() >= 5 
-                    && request.resource.data.message.size() <= 5000;
-                    
-      allow read, update, delete: if isAuthenticated();
+      allow create: if request.resource.data.keys().hasOnly(['name', 'email', 'subject', 'message', 'timestamp'])
+        && request.resource.data.name is string && request.resource.data.name.size() >= 2 && request.resource.data.name.size() <= 100
+        && request.resource.data.email is string && request.resource.data.email.size() >= 5 && request.resource.data.email.size() <= 150
+        && request.resource.data.subject is string && request.resource.data.subject.size() >= 2 && request.resource.data.subject.size() <= 200
+        && request.resource.data.message is string && request.resource.data.message.size() >= 5 && request.resource.data.message.size() <= 5000
+        && request.resource.data.timestamp == request.time;
+      allow read, update, delete: if isAdmin();
     }
-
-    // Pages du site :
-    match /pages/{pageId} {
-      allow read: if true;
-      allow create, update, delete: if isAuthenticated();
+    match /pages/{id} {
+      allow read: if isAdmin() || published();
+      allow create, update: if isAdmin() && validStatus();
+      allow delete: if isAdmin();
     }
-
-    // Articles :
-    match /articles/{articleId} {
-      allow read: if true;
-      allow create, update, delete: if isAuthenticated();
+    match /articles/{id} {
+      allow read: if isAdmin() || published();
+      allow create, update: if isAdmin() && validStatus();
+      allow delete: if isAdmin();
     }
-
-    // Journal d'audit éditorial (auditLogs) :
-    match /auditLogs/{logId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
+    match /auditLogs/{id} {
+      allow read: if isAdmin();
+      allow create: if isAdmin() && request.resource.data.actorId == request.auth.uid;
       allow update, delete: if false;
     }
-
-    // Collections publiques du portail (Flipbooks, Médias, Galerie, Vidéos, Menus, Actualités, Paramètres) :
-    // Lecture publique autorisée pour l'affichage du portail.
-    // Écritures réservées aux utilisateurs connectés.
-    match /flipbooks/{docId} {
+    match /{collection}/{id} {
+      allow read: if collection in ['flipbooks', 'medias', 'media', 'gallery', 'videos', 'news', 'menus'];
+      allow write: if collection in ['flipbooks', 'medias', 'media', 'gallery', 'videos', 'news', 'menus'] && isAdmin();
+    }
+    match /flipbooks/{id}/{nested=**} {
       allow read: if true;
-      allow write: if isAuthenticated();
+      allow write: if isAdmin();
     }
-
-    match /flipbooks/{docId}/{allSubcollections=**} {
+    // This document contains only the public homepage selection.
+    match /settings/homepage {
       allow read: if true;
-      allow write: if isAuthenticated();
+      allow create, update: if isAdmin()
+        && request.resource.data.keys().hasOnly(['featuredArticleId', 'updatedAt'])
+        && request.resource.data.featuredArticleId is string;
+      allow delete: if isAdmin();
     }
-
-    match /medias/{docId} {
-      allow read: if true;
-      allow write: if isAuthenticated();
+    match /settings/{id} {
+      allow read: if isAdmin();
+      allow write: if isAdmin() && id != 'homepage';
     }
-
-    match /gallery/{docId} {
-      allow read: if true;
-      allow write: if isAuthenticated();
+    // Identity changes are performed only by the privileged account callable.
+    match /accounts/{id} {
+      allow read: if isAdmin();
+      allow write: if false;
     }
-
-    match /videos/{docId} {
-      allow read: if true;
-      allow write: if isAuthenticated();
-    }
-
-    match /news/{docId} {
-      allow read: if true;
-      allow write: if isAuthenticated();
-    }
-
-    match /menus/{docId} {
-      allow read: if true;
-      allow write: if isAuthenticated();
-    }
-
-    match /settings/{docId} {
-      allow read: if true;
-      allow write: if isAuthenticated();
-    }
-
-    match /accounts/{docId} {
-      allow read: if true;
-      allow write: if isAuthenticated();
-    }
-
-    // Règle par défaut : Tout autre accès non explicitement autorisé est strictement refusé (Deny by default).
-    match /{document=**} {
-      allow read, write: if false;
-    }
+    match /{document=**} { allow read, write: if false; }
   }
 }

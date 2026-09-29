@@ -3,10 +3,12 @@ import { LayoutTemplate, X, Check, Sparkles } from 'lucide-react';
 import { TEMPLATES, instantiateTemplate } from '../data/templates';
 import { useBuilder } from '../store/builderStore';
 import { sanitizeBuilderData } from '../utils/sanitize';
+import useDialog from '../utils/useDialog';
 
 const CATEGORY_ORDER = ['Démarrage', 'Business', 'Créatif', 'Contenu'];
 
 export default function TemplatesModal({ onClose }) {
+  const dialogRef = useDialog(true, onClose);
   const { importLayout, elements } = useBuilder();
   const [selected, setSelected] = useState(null);
   const [hovered, setHovered] = useState(null);
@@ -33,6 +35,7 @@ export default function TemplatesModal({ onClose }) {
   return (
     <div
       className="pb-modal-backdrop"
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-label="Bibliothèque de templates"

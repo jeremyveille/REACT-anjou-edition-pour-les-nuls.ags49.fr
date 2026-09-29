@@ -1,20 +1,23 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useReducer } from 'react';
 import updateElementTree from '../utils/updateElement';
 import duplicateElementInTree from '../utils/duplicateElement';
 import deleteElementFromTree from '../utils/deleteElement';
 import moveElementInTree from '../utils/moveElement';
 import { sanitizeBuilderData } from '../utils/sanitize';
+import validateLayout from '../utils/validateLayout';
+import { builderHistory, emptyHistory } from '../utils/builderHistory';
 
 const BuilderContext = createContext(null);
 
 const LOCAL_STORAGE_KEY = 'react_page_builder_content';
-const HISTORY_LIMIT = 50;
 
 export function BuilderProvider({ children }) {
-  const [elements, setElementsState] = useState([]);
+  const [history, dispatch] = useReducer(builderHistory, emptyHistory);
+  const { elements, past, future, pending } = history;
   const [selectedElementId, setSelectedElementId] = useState(null);
   const [previewMode, setPreviewMode] = useState('desktop'); // 'desktop' | 'tablet' | 'mobile'
+  const [storageError, setStorageError] = useState('');
   
   // New Elementor-inspired UI states
   const [isNavigatorOpen, setIsNavigatorOpen] = useState(false);
@@ -22,16 +25,16 @@ export function BuilderProvider({ children }) {
   const [copiedStyle, setCopiedStyle] = useState(null);
   const [contextMenu, setContextMenu] = useState(null); // { x, y, elementId }
   
-  // History stacks
-  const [past, setPast] = useState([]);
-  const [future, setFuture] = useState([]);
-
   // Local storage management
   const saveToLocalStorage = useCallback((dataToSave = elements) => {
     try {
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataToSave));
+      setStorageError('');
+      return true;
     } catch (e) {
       console.error('Error saving to localStorage', e);
+      setStorageError('Enregistrement impossible dans ce navigateur. Votre travail reste ouvert : exportez-le en JSON avant de quitter.');
+      return false;
     }
   }, [elements]);
 
@@ -40,14 +43,13 @@ export function BuilderProvider({ children }) {
       const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        const sanitized = sanitizeBuilderData(parsed);
-        setElementsState(sanitized);
-        setPast([]);
-        setFuture([]);
+        const sanitized = validateLayout(parsed);
+        dispatch({ type: 'reset', elements: sanitized });
         return sanitized;
       }
     } catch (e) {
       console.error('Error loading from localStorage', e);
+      setStorageError('Le document enregistré ne peut pas être ouvert. Les données du navigateur ont été conservées.');
     }
     return null;
   }, []);
@@ -55,9 +57,7 @@ export function BuilderProvider({ children }) {
   const clearLocalStorage = useCallback(() => {
     try {
       localStorage.removeItem(LOCAL_STORAGE_KEY);
-      setElementsState([]);
-      setPast([]);
-      setFuture([]);
+      dispatch({ type: 'reset', elements: [] });
       setSelectedElementId(null);
     } catch (e) {
       console.error('Error clearing localStorage', e);
@@ -71,57 +71,23 @@ export function BuilderProvider({ children }) {
 
   // Core state mutation with history checkpoint
   const updateElementsAndHistory = useCallback((newElements, options = {}) => {
-    const { silent = false, clearFuture = true } = options;
-
-    setElementsState(currentElements => {
-      // 1. Record history if not silent
-      if (!silent) {
-        setPast(prevPast => {
-          const updatedPast = [...prevPast, currentElements];
-          if (updatedPast.length > HISTORY_LIMIT) {
-            updatedPast.shift();
-          }
-          return updatedPast;
-        });
-        if (clearFuture) {
-          setFuture([]);
-        }
-      }
-
-      // 2. Save to localStorage (can auto-save on every state change)
-      saveToLocalStorage(newElements);
-      return newElements;
-    });
+    dispatch({ type: 'update', elements: newElements, ...options });
+    saveToLocalStorage(newElements);
   }, [saveToLocalStorage]);
 
   // Undo/Redo functions
   const undo = useCallback(() => {
-    if (past.length === 0) return;
-
-    setPast(prevPast => {
-      const previous = prevPast[prevPast.length - 1];
-      const newPast = prevPast.slice(0, -1);
-
-      setFuture(prevFuture => [elements, ...prevFuture]);
-      setElementsState(previous);
-      saveToLocalStorage(previous);
-      return newPast;
-    });
-  }, [past, elements, saveToLocalStorage]);
+    if (!pending && past.length === 0) return;
+    dispatch({ type: 'undo' });
+    saveToLocalStorage(pending || past[past.length - 1]);
+  }, [past, pending, saveToLocalStorage]);
 
   const redo = useCallback(() => {
     if (future.length === 0) return;
 
-    setFuture(prevFuture => {
-      const next = prevFuture[0];
-      const newFuture = prevFuture.slice(1);
-
-      setPast(prevPast => [...prevPast, elements]);
-      setElementsState(next);
-      saveToLocalStorage(next);
-      return newFuture;
-    });
-  }, [future, elements, saveToLocalStorage]);
+    dispatch({ type: 'redo' });
+    saveToLocalStorage(future[0]);
+  }, [future, saveToLocalStorage]);
 
   // Elements operations
   const setElements = useCallback((newElements) => {
@@ -163,6 +129,7 @@ export function BuilderProvider({ children }) {
   // Handle Keyboard Shortcuts (Ctrl+Z, Ctrl+Y, Ctrl+Shift+Z, Suppr, Ctrl+D, Escape)
   useEffect(() => {
     const handleKeyDown = (e) => {
+      if (document.querySelector('[aria-modal="true"]')) return;
       const activeTag = document.activeElement?.tagName?.toLowerCase();
       const isInput = activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select' || document.activeElement?.isContentEditable;
 
@@ -225,8 +192,9 @@ export function BuilderProvider({ children }) {
   }, [updateElementsAndHistory]);
 
   const importLayout = useCallback((newElements) => {
+    const validated = validateLayout(newElements);
     setSelectedElementId(null);
-    updateElementsAndHistory(newElements);
+    updateElementsAndHistory(validated);
   }, [updateElementsAndHistory]);
 
   return (
@@ -235,7 +203,8 @@ export function BuilderProvider({ children }) {
         elements,
         selectedElementId,
         previewMode,
-        canUndo: past.length > 0,
+        storageError,
+        canUndo: past.length > 0 || pending !== null,
         canRedo: future.length > 0,
         isNavigatorOpen,
         setIsNavigatorOpen,

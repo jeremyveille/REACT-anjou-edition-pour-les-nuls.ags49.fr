@@ -1,10 +1,10 @@
 import { pageService, auditService, EDITORIAL_STATUS, normalizeStatus, isAuthorizedAdmin } from './pageService';
-import { db, auth } from '../firebase';
-import { addDoc } from 'firebase/firestore';
+import { auth } from '../firebase';
+import { addDoc, getDocs, setDoc, updateDoc, deleteDoc, where } from 'firebase/firestore';
 
 jest.mock('../firebase', () => ({
   db: {},
-  auth: { currentUser: { uid: 'test-user-123', email: 'admin@anjou-edition.fr' } },
+  auth: { currentUser: null },
   storage: {}
 }));
 
@@ -18,13 +18,20 @@ jest.mock('firebase/firestore', () => ({
   deleteDoc: jest.fn(() => Promise.resolve()),
   updateDoc: jest.fn(() => Promise.resolve()),
   query: jest.fn(),
-  orderBy: jest.fn()
+  orderBy: jest.fn(),
+  where: jest.fn()
 }));
 
 describe('pageService Security & Workflow tests', () => {
   beforeEach(() => {
     localStorage.clear();
     jest.clearAllMocks();
+    auth.currentUser = { uid: 'verified-admin', email: 'admin@example.test', getIdTokenResult: jest.fn().mockResolvedValue({ claims: { admin: true } }) };
+    getDocs.mockResolvedValue({ empty: true, docs: [] });
+    setDoc.mockResolvedValue();
+    updateDoc.mockResolvedValue();
+    deleteDoc.mockResolvedValue();
+    addDoc.mockImplementation((_col, data) => Promise.resolve({ id: 'mock_doc_id_123', ...data }));
   });
 
   test('getPages is strictly read-only and does NOT write or seed documents when collection is empty', async () => {
@@ -46,8 +53,62 @@ describe('pageService Security & Workflow tests', () => {
     expect(normalizeStatus(null)).toBe(EDITORIAL_STATUS.DRAFT);
   });
 
-  test('isAuthorizedAdmin returns true for verified admin email', () => {
-    expect(isAuthorizedAdmin()).toBe(true);
+  test('isAuthorizedAdmin uses the verified admin custom claim', async () => {
+    await expect(isAuthorizedAdmin()).resolves.toBe(true);
+  });
+
+  test('a forged local session, known UID or email cannot publish', async () => {
+    localStorage.setItem('ae_authenticated', 'true');
+    auth.currentUser = { uid: 'test-user-123', email: 'admin@anjou-edition.fr', getIdTokenResult: jest.fn().mockResolvedValue({ claims: {} }) };
+    await expect(pageService.savePage({ title: 'Forbidden', status: 'published' })).rejects.toMatchObject({ code: 'permission-denied' });
+    expect(addDoc).not.toHaveBeenCalled();
+    expect(localStorage.getItem('ae_pages')).toBeNull();
+  });
+
+  test('public reads filter published documents even when an admin visits the site', async () => {
+    getDocs.mockResolvedValueOnce({ docs: [
+      { id: 'published', data: () => ({ status: 'published', title: 'Visible' }) },
+      { id: 'draft', data: () => ({ status: 'draft', title: 'Private' }) }
+    ] });
+    const pages = await pageService.getPages('pages', { publishedOnly: true });
+    expect(where).toHaveBeenCalledWith('status', '==', 'published');
+    expect(pages.map(page => page.id)).toEqual(['published']);
+    expect(localStorage.getItem('ae_pages')).toBeNull();
+    expect(JSON.parse(localStorage.getItem('ae_public_pages'))).toHaveLength(1);
+  });
+
+  test('public offline fallback never reads private admin drafts', async () => {
+    auth.currentUser = null;
+    localStorage.setItem('ae_pages', JSON.stringify([{ id: 'secret', status: 'draft' }]));
+    getDocs.mockRejectedValueOnce({ code: 'unavailable' });
+    await expect(pageService.getPages('pages')).resolves.toEqual([]);
+  });
+
+  test('permission denial is not masked by cached content', async () => {
+    localStorage.setItem('ae_pages', JSON.stringify([{ id: 'private', status: 'draft' }]));
+    getDocs.mockRejectedValueOnce({ code: 'permission-denied' });
+    await expect(pageService.getPages('pages')).rejects.toMatchObject({ code: 'permission-denied' });
+  });
+
+  test('failed publication preserves the cached draft and reports failure', async () => {
+    localStorage.setItem('ae_pages', JSON.stringify([{ id: 'draft', status: 'draft' }]));
+    updateDoc.mockRejectedValueOnce({ code: 'permission-denied' });
+    await expect(pageService.updateStatus('draft', 'published')).rejects.toMatchObject({ code: 'permission-denied' });
+    expect(JSON.parse(localStorage.getItem('ae_pages'))[0].status).toBe('draft');
+    expect(addDoc).not.toHaveBeenCalled();
+  });
+
+  test('a failed save cannot return a locally published page', async () => {
+    addDoc.mockRejectedValueOnce({ code: 'unavailable' });
+    await expect(pageService.savePage({ title: 'Not saved', status: 'published' })).rejects.toMatchObject({ code: 'unavailable' });
+    expect(localStorage.getItem('ae_pages')).toBeNull();
+  });
+
+  test('a rejected deletion keeps the cached document', async () => {
+    localStorage.setItem('ae_pages', JSON.stringify([{ id: 'keep', status: 'draft' }]));
+    deleteDoc.mockRejectedValueOnce({ code: 'permission-denied' });
+    await expect(pageService.deletePage('keep')).rejects.toMatchObject({ code: 'permission-denied' });
+    expect(JSON.parse(localStorage.getItem('ae_pages'))).toHaveLength(1);
   });
 
   test('savePage creates a new page in local and Firestore with audit log', async () => {
@@ -100,7 +161,7 @@ describe('pageService Security & Workflow tests', () => {
     const local = JSON.parse(localStorage.getItem('ae_pages') || '[]');
     const found = local.find(p => p.id === page.id);
     expect(found.status).toBe(EDITORIAL_STATUS.PUBLISHED);
-    expect(found.publishedBy).toBe('admin@anjou-edition.fr');
+    expect(found.publishedBy).toBe('admin@example.test');
     expect(found.publishedAt).toBeDefined();
   });
 
@@ -111,6 +172,7 @@ describe('pageService Security & Workflow tests', () => {
       { id: 'dup2', title: 'Page Doublon', slug: 'page-doublon', updatedAt: '2026-06-02T12:00:00Z', blocks: [{ id: 'b1', type: 'heading' }] }
     ];
     localStorage.setItem('ae_pages', JSON.stringify(duplicates));
+    getDocs.mockResolvedValueOnce({ docs: duplicates.map(item => ({ id: item.id, data: () => item })) });
 
     const result = await pageService.deduplicateItems('pages');
     expect(result.totalFound).toBe(2);

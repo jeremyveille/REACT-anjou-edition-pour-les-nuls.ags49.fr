@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { X, Monitor, Tablet, Smartphone, ExternalLink } from 'lucide-react';
 import { useBuilder } from '../store/builderStore';
 import renderHtml from '../utils/renderHtml';
+import useDialog from '../utils/useDialog';
 
 const DEVICE_WIDTHS = {
   desktop: '100%',
@@ -22,6 +23,7 @@ const DEVICE_ICONS = {
 };
 
 export default function PreviewModal({ onClose }) {
+  const dialogRef = useDialog(true, onClose);
   const { elements, previewMode, setPreviewMode } = useBuilder();
   const iframeRef = useRef(null);
 
@@ -56,15 +58,6 @@ ${pageHtml}
     iframe.srcdoc = fullHtml;
   }, [fullHtml]);
 
-  /* Close on Escape */
-  useEffect(() => {
-    const handleKey = (e) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
-  }, [onClose]);
-
   const handleOpenInTab = () => {
     const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
     const url = URL.createObjectURL(blob);
@@ -77,6 +70,7 @@ ${pageHtml}
   return (
     <div
       className="pb-preview-backdrop"
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-label="Aperçu plein écran"
@@ -150,7 +144,7 @@ ${pageHtml}
               ref={iframeRef}
               className="pb-preview-iframe"
               title="Aperçu de la page"
-              sandbox="allow-scripts allow-same-origin"
+              sandbox="allow-scripts"
             />
             {previewMode === 'mobile' && (
               <div className="pb-phone-chrome pb-phone-chrome-bottom">

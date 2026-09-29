@@ -39,8 +39,51 @@ jobs:
         working-directory: app
         env:
           CI: "true"
-        run: npm test
+        run: npm run test:ci
 
       - name: 🏗️ Compilation de production (React Build)
         working-directory: app
         run: npm run build
+
+  builder:
+    name: Constructeur autonome
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: page-builder-react/package-lock.json
+      - run: npm ci
+        working-directory: page-builder-react
+      - run: npm test && npm run lint && npm run build
+        working-directory: page-builder-react
+
+  firebase_security:
+    name: Fonctions et règles Firebase
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            app/package-lock.json
+            app/functions/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+        working-directory: app
+      - run: npm ci && npm test
+        working-directory: app/functions
+      - name: Configurer uniquement le secret vide de démonstration
+        working-directory: app/functions
+        run: node -e "require('fs').writeFileSync('.secret.local', 'GEMINI_API_KEY=\n')"
+      - name: Tester les accès et les comptes dans les émulateurs
+        working-directory: app
+        run: npx firebase emulators:exec --project demo-anjou-edition --only auth,firestore,storage,functions "npm run test:emulators"

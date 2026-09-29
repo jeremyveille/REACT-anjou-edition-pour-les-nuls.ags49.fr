@@ -227,10 +227,18 @@ export const Alert = ({ settings = {} }) => {
  */
 export const Video = ({ settings = {}, isEditing = false, onOpenMediaPicker }) => {
   const input = settings.url || (settings.videoId ? `https://www.youtube.com/watch?v=${settings.videoId}` : (settings.src || ''));
-  const fallbackEmbed = settings.videoId ? `https://www.youtube.com/embed/${settings.videoId}` : (settings.lastValidVideoId ? `https://www.youtube.com/embed/${settings.lastValidVideoId}` : 'https://www.youtube.com/embed/dQw4w9WgXcQ');
+  const fallbackEmbed = settings.lastValidVideoId ? getYoutubeEmbedUrl(settings.lastValidVideoId, '') : '';
   const embedUrl = getYoutubeEmbedUrl(input, fallbackEmbed);
   const customClasses = settings.classes || settings.className || '';
   const style = settings.style || {};
+
+  if (!embedUrl) {
+    return <div className="video-empty-state" role="status">
+      <Play size={30} aria-hidden="true" />
+      <p>{isEditing ? 'Ajoutez une vidéo pour compléter ce bloc.' : 'Nos prochaines rencontres seront bientôt disponibles ici.'}</p>
+      {isEditing && onOpenMediaPicker && <button type="button" className="btn btn-primary" onClick={() => onOpenMediaPicker('url', 'video')}>Choisir une vidéo</button>}
+    </div>;
+  }
 
   return (
     <div className={`ratio ratio-16x9 position-relative ${customClasses}`} style={style}>

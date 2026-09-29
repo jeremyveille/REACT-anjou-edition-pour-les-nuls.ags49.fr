@@ -1,8 +1,10 @@
 import { useDroppable, useDraggable } from '@dnd-kit/core';
+import { cloneElement } from 'react';
 import { useBuilder } from '../store/builderStore';
 import * as Icons from 'lucide-react';
 import { getYoutubeEmbedUrl } from '../utils/youtubeUtils';
 import { sanitizeHtml } from '../utils/sanitize';
+import { advancedStyles, visibilityClasses } from '../utils/appearance';
 import { Copy, Trash2, GripVertical, Settings, Star } from 'lucide-react';
 
 /* ── Draggable wrapper for existing elements ── */
@@ -504,48 +506,27 @@ export default function ElementRenderer({ element }) {
     }
   };
 
-  // Build wrapper-level inline styles from advanced settings
-  const buildWrapperStyle = () => {
-    const s = settings;
-    const style = {};
-    // Gradient (overrides solid background color if both defined)
-    if (s.gradientFrom && s.gradientTo) {
-      style.background = `linear-gradient(${s.gradientDir || 'to bottom'}, ${s.gradientFrom}, ${s.gradientTo})`;
-    }
-    // Box shadow
-    if (s.boxShadow) style.boxShadow = s.boxShadow;
-    return style;
-  };
-
-  // Responsive visibility classes
-  const buildResponsiveClasses = () => {
-    const s = settings;
-    const cls = [];
-    if (s.hideMobile) cls.push('d-none d-md-block');
-    if (s.hideTablet) cls.push('d-md-none d-lg-block');
-    if (s.hideDesktop) cls.push('d-lg-none');
-    return cls.join(' ');
-  };
-
   const wrapperClasses = [
     'canvas-element-wrapper',
     isSelected ? 'selected' : '',
     isOver && element.type !== 'column' ? 'drop-indicator-top' : '',
-    buildResponsiveClasses(),
+    visibilityClasses(settings),
   ].filter(Boolean).join(' ');
 
-  const wrapperStyle = buildWrapperStyle();
+  const content = renderContent();
+  const styledContent = content ? cloneElement(content, {
+    style: { ...content.props.style, ...advancedStyles(settings) },
+  }) : null;
 
   return (
     <div
       ref={element.type !== 'column' ? setNodeRef : null}
       className={wrapperClasses}
-      style={Object.keys(wrapperStyle).length ? wrapperStyle : undefined}
       onClick={handleSelect}
       onContextMenu={handleContextMenu}
     >
       {renderToolbar()}
-      {renderContent()}
+      {styledContent}
     </div>
   );
 }

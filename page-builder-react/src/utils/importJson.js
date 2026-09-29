@@ -1,4 +1,4 @@
-import { sanitizeBuilderData } from './sanitize';
+import validateLayout from './validateLayout.js';
 
 /**
  * Handles reading and parsing a JSON file.
@@ -12,7 +12,7 @@ export default function importJson(file) {
       return;
     }
 
-    if (file.type !== 'application/json' && !file.name.endsWith('.json')) {
+    if (file.type !== 'application/json' && !file.name.toLowerCase().endsWith('.json')) {
       reject(new Error('Veuillez sélectionner un fichier JSON valide'));
       return;
     }
@@ -21,10 +21,10 @@ export default function importJson(file) {
     reader.onload = (e) => {
       try {
         const rawData = JSON.parse(e.target.result);
-        const sanitized = sanitizeBuilderData(rawData);
+        const sanitized = validateLayout(rawData);
         resolve(sanitized);
       } catch (err) {
-        reject(new Error('Erreur lors de la lecture ou du parsing du fichier JSON'));
+        reject(err instanceof SyntaxError ? new Error('Le fichier ne contient pas un JSON valide. Le contenu actuel est conservé.') : err);
       }
     };
     reader.onerror = () => {
