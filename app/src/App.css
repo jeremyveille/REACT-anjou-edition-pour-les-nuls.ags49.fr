@@ -4166,6 +4166,7 @@ textarea:focus-visible,
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center 30%;
   transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -4981,6 +4982,7 @@ footer.ae-public-footer {
   height: 100%;
   max-height: 440px;
   object-fit: cover;
+  object-position: center 30%;
 }
 
 .article-lead-paragraph {
@@ -5897,6 +5899,7 @@ nav {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center 30%;
   transition: transform 0.5s ease;
 }
 
