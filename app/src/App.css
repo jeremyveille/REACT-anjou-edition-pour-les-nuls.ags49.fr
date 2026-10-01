@@ -4490,30 +4490,63 @@ textarea:focus-visible,
   transform: scale(1.08);
 }
 
-/* Univers 1 : Flipbooks (Bleu) */
+/* Univers 1 : Flipbooks (Illustration Livre Contes) */
 .shortcut-flipbooks {
-  background: linear-gradient(150deg, #ffffff 0%, #eff6ff 100%);
-  border-color: rgba(37, 99, 235, 0.15);
+  position: relative;
+  background-image: 
+    linear-gradient(135deg, rgba(255, 255, 255, 0.88) 0%, rgba(239, 246, 255, 0.82) 100%),
+    url('./assets/bg-card-storybook.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border-color: rgba(37, 99, 235, 0.22);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.08);
 }
 .shortcut-flipbooks .portal-shortcut-icon {
-  background: rgba(37, 99, 235, 0.1);
+  background: rgba(255, 255, 255, 0.94);
   color: #2563eb;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
+  backdrop-filter: blur(4px);
+}
+.shortcut-flipbooks .portal-shortcut-title {
+  color: #0f172a;
+}
+.shortcut-flipbooks .portal-shortcut-desc {
+  color: #334155;
+  font-weight: 500;
+}
+.shortcut-flipbooks .portal-shortcut-watermark {
+  display: none;
 }
 .shortcut-flipbooks:hover {
+  background-image: 
+    linear-gradient(135deg, rgba(255, 255, 255, 0.74) 0%, rgba(239, 246, 255, 0.68) 100%),
+    url('./assets/bg-card-storybook.png');
   border-color: #2563eb;
-  box-shadow: 0 14px 28px -4px rgba(37, 99, 235, 0.15);
+  box-shadow: 0 14px 28px -4px rgba(37, 99, 235, 0.2);
 }
 .shortcut-flipbooks .portal-shortcut-link {
-  color: #2563eb;
+  color: #1d4ed8;
+  font-weight: 700;
 }
 
 .dark-mode .shortcut-flipbooks {
-  background: linear-gradient(150deg, #1e293b 0%, #1e3a8a 100%);
-  border-color: rgba(59, 130, 246, 0.2);
+  background-image: 
+    linear-gradient(135deg, rgba(15, 23, 42, 0.88) 0%, rgba(30, 58, 138, 0.88) 100%),
+    url('./assets/bg-card-storybook.png');
+  background-size: cover;
+  background-position: center;
+  border-color: rgba(59, 130, 246, 0.3);
 }
 .dark-mode .shortcut-flipbooks .portal-shortcut-icon {
-  background: rgba(59, 130, 246, 0.2);
+  background: rgba(30, 41, 59, 0.92);
   color: #93c5fd;
+}
+.dark-mode .shortcut-flipbooks .portal-shortcut-title {
+  color: #f8fafc;
+}
+.dark-mode .shortcut-flipbooks .portal-shortcut-desc {
+  color: #cbd5e1;
 }
 
 /* Univers 2 : Poésies & Textes (Violet) */
@@ -4594,30 +4627,63 @@ textarea:focus-visible,
   color: #fda4af;
 }
 
-/* Univers 5 : Proposer un projet (Bleu Ciel) */
+/* Univers 5 : Proposer un projet (Illustration Livre Contes) */
 .shortcut-project {
-  background: linear-gradient(150deg, #ffffff 0%, #f0f9ff 100%);
-  border-color: rgba(2, 132, 199, 0.15);
+  position: relative;
+  background-image: 
+    linear-gradient(135deg, rgba(255, 255, 255, 0.88) 0%, rgba(240, 249, 255, 0.82) 100%),
+    url('./assets/bg-card-storybook.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border-color: rgba(2, 132, 199, 0.22);
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.08);
 }
 .shortcut-project .portal-shortcut-icon {
-  background: rgba(2, 132, 199, 0.1);
+  background: rgba(255, 255, 255, 0.94);
   color: #0284c7;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.15);
+  backdrop-filter: blur(4px);
+}
+.shortcut-project .portal-shortcut-title {
+  color: #0f172a;
+}
+.shortcut-project .portal-shortcut-desc {
+  color: #334155;
+  font-weight: 500;
+}
+.shortcut-project .portal-shortcut-watermark {
+  display: none;
 }
 .shortcut-project:hover {
+  background-image: 
+    linear-gradient(135deg, rgba(255, 255, 255, 0.74) 0%, rgba(240, 249, 255, 0.68) 100%),
+    url('./assets/bg-card-storybook.png');
   border-color: #0284c7;
-  box-shadow: 0 14px 28px -4px rgba(2, 132, 199, 0.15);
+  box-shadow: 0 14px 28px -4px rgba(2, 132, 199, 0.2);
 }
 .shortcut-project .portal-shortcut-link {
   color: #0284c7;
+  font-weight: 700;
 }
 
 .dark-mode .shortcut-project {
-  background: linear-gradient(150deg, #1e293b 0%, #0c4a6e 100%);
-  border-color: rgba(56, 189, 248, 0.2);
+  background-image: 
+    linear-gradient(135deg, rgba(15, 23, 42, 0.88) 0%, rgba(12, 74, 110, 0.88) 100%),
+    url('./assets/bg-card-storybook.png');
+  background-size: cover;
+  background-position: center;
+  border-color: rgba(56, 189, 248, 0.3);
 }
 .dark-mode .shortcut-project .portal-shortcut-icon {
-  background: rgba(56, 189, 248, 0.2);
+  background: rgba(30, 41, 59, 0.92);
   color: #7dd3fc;
+}
+.dark-mode .shortcut-project .portal-shortcut-title {
+  color: #f8fafc;
+}
+.dark-mode .shortcut-project .portal-shortcut-desc {
+  color: #cbd5e1;
 }
 
 .portal-shortcut-title {
@@ -5978,25 +6044,15 @@ nav {
 }
 
 .home-shortcuts-grid-mockup {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
-.shortcuts-row-top {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1.25rem;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
 }
 
-.shortcuts-row-bottom {
-  display: flex;
-  justify-content: flex-start;
-}
-
-.shortcuts-row-bottom .portal-shortcut-card {
-  width: calc((100% - 3.75rem) / 4);
-  min-width: 240px;
+@media (max-width: 650px) {
+  .home-shortcuts-grid-mockup {
+    grid-template-columns: 1fr;
+  }
 }
 
 .portal-shortcut-card {
@@ -6067,11 +6123,21 @@ nav {
 }
 
 .shortcut-flipbooks {
-  background: #f0f7ff;
-  border: 1px solid rgba(37, 99, 235, 0.15);
+  background-image: 
+    linear-gradient(135deg, rgba(255, 255, 255, 0.88) 0%, rgba(239, 246, 255, 0.82) 100%),
+    url('./assets/bg-card-storybook.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border: 1px solid rgba(37, 99, 235, 0.22);
 }
-.shortcut-flipbooks .portal-shortcut-icon { background: #e0f2fe; color: #2563eb; }
-.shortcut-flipbooks .portal-shortcut-link { color: #2563eb; }
+.shortcut-flipbooks .portal-shortcut-icon { 
+  background: rgba(255, 255, 255, 0.94); 
+  color: #2563eb; 
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
+  backdrop-filter: blur(4px);
+}
+.shortcut-flipbooks .portal-shortcut-link { color: #1d4ed8; }
 
 .shortcut-poetry {
   background: #f5f3ff;
@@ -6095,10 +6161,20 @@ nav {
 .shortcut-videos .portal-shortcut-link { color: #e11d48; }
 
 .shortcut-project {
-  background: #f0f9ff;
-  border: 1px solid rgba(2, 132, 199, 0.15);
+  background-image: 
+    linear-gradient(135deg, rgba(255, 255, 255, 0.88) 0%, rgba(240, 249, 255, 0.82) 100%),
+    url('./assets/bg-card-storybook.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border: 1px solid rgba(2, 132, 199, 0.22);
 }
-.shortcut-project .portal-shortcut-icon { background: #e0f2fe; color: #0284c7; }
+.shortcut-project .portal-shortcut-icon { 
+  background: rgba(255, 255, 255, 0.94); 
+  color: #0284c7; 
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.15);
+  backdrop-filter: blur(4px);
+}
 .shortcut-project .portal-shortcut-link { color: #0284c7; }
 
 /* Transition wave between shortcuts and heritage section */

@@ -1510,103 +1510,36 @@ function App() {
                   </div>
                 </div>
                 <div className="home-shortcuts-grid-mockup">
-                  <div className="shortcuts-row-top">
-                    <div 
-                      className="portal-shortcut-card shortcut-flipbooks"
-                      onClick={() => navigateTo({ type: 'flipbooks' }, '/flipbooks', "Nos Flipbooks Interactifs — Anjou Édition")}
-                      role="button"
-                      tabIndex={0}
-                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigateTo({ type: 'flipbooks' }, '/flipbooks', "Nos Flipbooks Interactifs — Anjou Édition"); }}
-                      aria-label="Découvrir nos livres et flipbooks interactifs"
-                    >
-                      <div className="portal-shortcut-watermark" aria-hidden="true">
-                        <BookOpen size={90} />
-                      </div>
-                      <div className="portal-shortcut-icon">
-                        <BookOpen size={20} aria-hidden="true" />
-                      </div>
-                      <h3 className="portal-shortcut-title">Nos Flipbooks</h3>
-                      <p className="portal-shortcut-desc">Feuilletez nos ouvrages et publications numériques enrichies.</p>
-                      <span className="portal-shortcut-link">Découvrir les livres <ChevronRight size={14} className="shortcut-chevron" /></span>
+                  <div 
+                    className="portal-shortcut-card shortcut-flipbooks"
+                    onClick={() => navigateTo({ type: 'flipbooks' }, '/flipbooks', "Nos Flipbooks Interactifs — Anjou Édition")}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigateTo({ type: 'flipbooks' }, '/flipbooks', "Nos Flipbooks Interactifs — Anjou Édition"); }}
+                    aria-label="Découvrir nos livres et flipbooks interactifs"
+                  >
+                    <div className="portal-shortcut-icon">
+                      <BookOpen size={20} aria-hidden="true" />
                     </div>
-
-                    <div 
-                      className="portal-shortcut-card shortcut-poetry"
-                      onClick={() => handleSelectCategory("RAPPEL")}
-                      role="button"
-                      tabIndex={0}
-                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleSelectCategory("RAPPEL"); }}
-                      aria-label="Lire les poésies, fables et nouvelles"
-                    >
-                      <div className="portal-shortcut-watermark" aria-hidden="true">
-                        <Feather size={90} />
-                      </div>
-                      <div className="portal-shortcut-icon">
-                        <Feather size={20} aria-hidden="true" />
-                      </div>
-                      <h3 className="portal-shortcut-title">Textes & Poésies</h3>
-                      <p className="portal-shortcut-desc">Lisez et écoutez nos poésies, fables et contes avec synthèse vocale.</p>
-                      <span className="portal-shortcut-link">Lire les textes <ChevronRight size={14} className="shortcut-chevron" /></span>
-                    </div>
-
-                    <div 
-                      className="portal-shortcut-card shortcut-photos"
-                      onClick={() => navigateTo({ type: 'gallery' }, '/gallery', "Galerie Photos — Anjou Édition")}
-                      role="button"
-                      tabIndex={0}
-                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigateTo({ type: 'gallery' }, '/gallery', "Galerie Photos — Anjou Édition"); }}
-                      aria-label="Consulter la galerie photo de l'Anjou"
-                    >
-                      <div className="portal-shortcut-watermark" aria-hidden="true">
-                        <ImageIcon size={90} />
-                      </div>
-                      <div className="portal-shortcut-icon">
-                        <ImageIcon size={20} aria-hidden="true" />
-                      </div>
-                      <h3 className="portal-shortcut-title">Photos d'Anjou</h3>
-                      <p className="portal-shortcut-desc">Explorez les photographies haute définition des paysages d'Anjou.</p>
-                      <span className="portal-shortcut-link">Explorer les photos <ChevronRight size={14} className="shortcut-chevron" /></span>
-                    </div>
-
-                    <div 
-                      className="portal-shortcut-card shortcut-videos"
-                      onClick={() => navigateTo({ type: 'videos' }, '/videos', "Vidéos & Conférences — Anjou Édition")}
-                      role="button"
-                      tabIndex={0}
-                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigateTo({ type: 'videos' }, '/videos', "Vidéos & Conférences — Anjou Édition"); }}
-                      aria-label="Regarder les vidéos et conférences"
-                    >
-                      <div className="portal-shortcut-watermark" aria-hidden="true">
-                        <Play size={90} />
-                      </div>
-                      <div className="portal-shortcut-icon">
-                        <Play size={20} aria-hidden="true" />
-                      </div>
-                      <h3 className="portal-shortcut-title">Vidéos & Conférences</h3>
-                      <p className="portal-shortcut-desc">Vidéos sur le patrimoine littéraire, historique et la Loire.</p>
-                      <span className="portal-shortcut-link">Regarder <ChevronRight size={14} className="shortcut-chevron" /></span>
-                    </div>
+                    <h3 className="portal-shortcut-title">Nos Flipbooks</h3>
+                    <p className="portal-shortcut-desc">Feuilletez nos ouvrages et publications numériques enrichies.</p>
+                    <span className="portal-shortcut-link">Découvrir les livres <ChevronRight size={14} className="shortcut-chevron" /></span>
                   </div>
 
-                  <div className="shortcuts-row-bottom">
-                    <div 
-                      className="portal-shortcut-card shortcut-project"
-                      onClick={() => navigateTo({ type: 'contact' }, '/contact', "Contact — Anjou Édition")}
-                      role="button"
-                      tabIndex={0}
-                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigateTo({ type: 'contact' }, '/contact', "Contact — Anjou Édition"); }}
-                      aria-label="Proposer votre projet ou contacter la maison d'édition"
-                    >
-                      <div className="portal-shortcut-watermark" aria-hidden="true">
-                        <Send size={90} />
-                      </div>
-                      <div className="portal-shortcut-icon">
-                        <Send size={20} aria-hidden="true" />
-                      </div>
-                      <h3 className="portal-shortcut-title">Proposer un projet</h3>
-                      <p className="portal-shortcut-desc">Auteur, association ou passionné : soumettez votre manuscrit ou idée.</p>
-                      <span className="portal-shortcut-link">Nous contacter <ChevronRight size={14} className="shortcut-chevron" /></span>
+                  <div 
+                    className="portal-shortcut-card shortcut-project"
+                    onClick={() => navigateTo({ type: 'contact' }, '/contact', "Contact — Anjou Édition")}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigateTo({ type: 'contact' }, '/contact', "Contact — Anjou Édition"); }}
+                    aria-label="Proposer votre projet ou contacter la maison d'édition"
+                  >
+                    <div className="portal-shortcut-icon">
+                      <Send size={20} aria-hidden="true" />
                     </div>
+                    <h3 className="portal-shortcut-title">Proposer un projet</h3>
+                    <p className="portal-shortcut-desc">Auteur, association ou passionné : soumettez votre manuscrit ou idée.</p>
+                    <span className="portal-shortcut-link">Nous contacter <ChevronRight size={14} className="shortcut-chevron" /></span>
                   </div>
                 </div>
               </section>
