@@ -4494,19 +4494,19 @@ textarea:focus-visible,
 /* Univers 1 : Flipbooks (Illustration Livre Contes) */
 .shortcut-flipbooks {
   position: relative;
-  background-image: 
-    linear-gradient(135deg, rgba(255, 255, 255, 0.88) 0%, rgba(239, 246, 255, 0.82) 100%),
-    url('./assets/bg-card-storybook.png');
+  background-color: #fffdf9;
+  background-image: url('./assets/bg-card-storybook.png');
   background-size: cover;
-  background-position: center;
+  background-position: center center;
   background-repeat: no-repeat;
   border-color: rgba(37, 99, 235, 0.22);
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.08);
+  box-shadow: 0 8px 24px rgba(30, 90, 160, 0.08), 0 2px 8px rgba(30, 90, 160, 0.05);
 }
 .shortcut-flipbooks .portal-shortcut-icon {
-  background: rgba(255, 255, 255, 0.94);
-  color: #2563eb;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
+  background: rgba(255, 255, 255, 0.95);
+  color: #1d4ed8;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.14);
+  border: 1px solid rgba(37, 99, 235, 0.15);
   backdrop-filter: blur(4px);
 }
 .shortcut-flipbooks .portal-shortcut-title {
@@ -4520,11 +4520,8 @@ textarea:focus-visible,
   display: none;
 }
 .shortcut-flipbooks:hover {
-  background-image: 
-    linear-gradient(135deg, rgba(255, 255, 255, 0.74) 0%, rgba(239, 246, 255, 0.68) 100%),
-    url('./assets/bg-card-storybook.png');
   border-color: #2563eb;
-  box-shadow: 0 14px 28px -4px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 14px 30px rgba(30, 90, 160, 0.14), 0 4px 12px rgba(30, 90, 160, 0.08);
 }
 .shortcut-flipbooks .portal-shortcut-link {
   color: #1d4ed8;
@@ -4631,19 +4628,19 @@ textarea:focus-visible,
 /* Univers 5 : Proposer un projet (Illustration Livre Contes) */
 .shortcut-project {
   position: relative;
-  background-image: 
-    linear-gradient(135deg, rgba(255, 255, 255, 0.88) 0%, rgba(240, 249, 255, 0.82) 100%),
-    url('./assets/bg-card-storybook.png');
+  background-color: #fffdf9;
+  background-image: url('./assets/bg-card-storybook.png');
   background-size: cover;
-  background-position: center;
+  background-position: center center;
   background-repeat: no-repeat;
   border-color: rgba(2, 132, 199, 0.22);
-  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.08);
+  box-shadow: 0 8px 24px rgba(30, 90, 160, 0.08), 0 2px 8px rgba(30, 90, 160, 0.05);
 }
 .shortcut-project .portal-shortcut-icon {
-  background: rgba(255, 255, 255, 0.94);
+  background: rgba(255, 255, 255, 0.95);
   color: #0284c7;
-  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.15);
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.14);
+  border: 1px solid rgba(2, 132, 199, 0.15);
   backdrop-filter: blur(4px);
 }
 .shortcut-project .portal-shortcut-title {
@@ -4657,11 +4654,8 @@ textarea:focus-visible,
   display: none;
 }
 .shortcut-project:hover {
-  background-image: 
-    linear-gradient(135deg, rgba(255, 255, 255, 0.74) 0%, rgba(240, 249, 255, 0.68) 100%),
-    url('./assets/bg-card-storybook.png');
   border-color: #0284c7;
-  box-shadow: 0 14px 28px -4px rgba(2, 132, 199, 0.2);
+  box-shadow: 0 14px 30px rgba(30, 90, 160, 0.14), 0 4px 12px rgba(30, 90, 160, 0.08);
 }
 .shortcut-project .portal-shortcut-link {
   color: #0284c7;
@@ -6074,46 +6068,104 @@ nav {
 }
 
 .portal-shortcut-card {
-  border-radius: 18px;
-  padding: 1.6rem 1.4rem;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  border-radius: 20px;
+  padding: 1.85rem 1.65rem;
+  background-color: #ffffff;
+  background-image: url('./assets/bg-card-storybook.png');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  border: 1px solid rgba(30, 90, 160, 0.18);
+  box-shadow:
+    0 8px 24px rgba(30, 90, 160, 0.08),
+    0 2px 8px rgba(30, 90, 160, 0.05);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.25s ease;
   cursor: pointer;
   display: flex;
   flex-direction: column;
   color: inherit;
+  font-family: inherit;
+  text-align: left;
+  min-height: 220px;
+}
+
+/* Pseudo-élément protégeant la lisibilité du texte à gauche et sublimant l'illustration pastel à droite */
+.portal-shortcut-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 255, 255, 0.84) 42%,
+    rgba(255, 255, 255, 0.22) 70%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+  transition: opacity 0.3s ease;
+}
+
+/* Contenu textuel et interactif situé au-dessus de l'overlay */
+.portal-shortcut-card > * {
+  position: relative;
+  z-index: 2;
 }
 
 .portal-shortcut-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 24px -4px rgba(15, 23, 42, 0.08);
+  box-shadow:
+    0 14px 30px rgba(30, 90, 160, 0.14),
+    0 4px 12px rgba(30, 90, 160, 0.08);
+}
+
+.portal-shortcut-card:hover::before {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.92) 0%,
+    rgba(255, 255, 255, 0.78) 42%,
+    rgba(255, 255, 255, 0.16) 70%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+
+/* Accessibilité A11Y : Focus-visible clairement identifiable */
+.portal-shortcut-card:focus-visible {
+  outline: 3px solid #2563eb;
+  outline-offset: 3px;
+  box-shadow:
+    0 0 0 4px rgba(37, 99, 235, 0.2),
+    0 12px 28px rgba(30, 90, 160, 0.12);
 }
 
 .portal-shortcut-watermark {
-  position: absolute;
-  top: -10px;
-  right: -10px;
-  opacity: 0.05;
-  pointer-events: none;
+  display: none;
 }
 
 .portal-shortcut-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 1rem;
+  margin-bottom: 1.15rem;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.portal-shortcut-card:hover .portal-shortcut-icon {
+  transform: scale(1.08);
 }
 
 .portal-shortcut-title {
-  font-size: 1.05rem;
+  font-size: 1.18rem;
   font-weight: 800;
   color: #0f172a;
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.45rem;
+  letter-spacing: -0.015em;
+  line-height: 1.3;
 }
 
 .dark-mode .portal-shortcut-title {
@@ -6121,42 +6173,59 @@ nav {
 }
 
 .portal-shortcut-desc {
-  font-size: 0.85rem;
-  color: #64748b;
-  line-height: 1.5;
-  margin-bottom: 0.85rem;
+  font-size: 0.88rem;
+  color: #334155;
+  line-height: 1.55;
+  margin-bottom: 1.15rem;
   flex-grow: 1;
+  font-weight: 500;
+  max-width: 82%;
 }
 
 .dark-mode .portal-shortcut-desc {
-  color: #94a3b8;
+  color: #cbd5e1;
 }
 
 .portal-shortcut-link {
-  font-size: 0.84rem;
+  font-size: 0.86rem;
   font-weight: 700;
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
+  gap: 0.35rem;
+  margin-top: auto;
 }
 
-.shortcut-flipbooks {
-  background-image: 
-    linear-gradient(135deg, rgba(255, 255, 255, 0.88) 0%, rgba(239, 246, 255, 0.82) 100%),
-    url('./assets/bg-card-storybook.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  border: 1px solid rgba(37, 99, 235, 0.22);
+.portal-shortcut-link .shortcut-chevron {
+  transition: transform 0.2s ease;
 }
+
+.portal-shortcut-card:hover .shortcut-chevron {
+  transform: translateX(4px);
+}
+
+/* Univers 1 : Flipbooks */
+.shortcut-flipbooks {
+  border-color: rgba(37, 99, 235, 0.22);
+  background-position: right bottom;
+}
+
 .shortcut-flipbooks .portal-shortcut-icon { 
-  background: rgba(255, 255, 255, 0.94); 
-  color: #2563eb; 
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
+  background: rgba(255, 255, 255, 0.95); 
+  color: #1d4ed8; 
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.14);
+  border: 1px solid rgba(37, 99, 235, 0.15);
   backdrop-filter: blur(4px);
 }
-.shortcut-flipbooks .portal-shortcut-link { color: #1d4ed8; }
 
+.shortcut-flipbooks .portal-shortcut-link { 
+  color: #1d4ed8; 
+}
+
+.shortcut-flipbooks:hover {
+  border-color: #2563eb;
+}
+
+/* Univers 2, 3, 4 : Conservés pour cohérence s'ils sont réutilisés */
 .shortcut-poetry {
   background: #f5f3ff;
   border: 1px solid rgba(124, 58, 237, 0.15);
@@ -6178,22 +6247,131 @@ nav {
 .shortcut-videos .portal-shortcut-icon { background: #ffe4e6; color: #e11d48; }
 .shortcut-videos .portal-shortcut-link { color: #e11d48; }
 
+/* Univers 5 : Proposer un projet */
 .shortcut-project {
-  background-image: 
-    linear-gradient(135deg, rgba(255, 255, 255, 0.88) 0%, rgba(240, 249, 255, 0.82) 100%),
-    url('./assets/bg-card-storybook.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  border: 1px solid rgba(2, 132, 199, 0.22);
+  border-color: rgba(2, 132, 199, 0.22);
+  background-position: right top;
 }
+
 .shortcut-project .portal-shortcut-icon { 
-  background: rgba(255, 255, 255, 0.94); 
+  background: rgba(255, 255, 255, 0.95); 
   color: #0284c7; 
-  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.15);
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.14);
+  border: 1px solid rgba(2, 132, 199, 0.15);
   backdrop-filter: blur(4px);
 }
-.shortcut-project .portal-shortcut-link { color: #0284c7; }
+
+.shortcut-project .portal-shortcut-link { 
+  color: #0369a1; 
+}
+
+.shortcut-project:hover {
+  border-color: #0284c7;
+}
+
+/* Mode Sombre */
+.dark-mode .portal-shortcut-card {
+  background-color: #0f172a;
+  border-color: rgba(59, 130, 246, 0.25);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.dark-mode .portal-shortcut-card::before {
+  background: linear-gradient(
+    90deg,
+    rgba(15, 23, 42, 0.95) 0%,
+    rgba(15, 23, 42, 0.86) 42%,
+    rgba(15, 23, 42, 0.45) 65%,
+    rgba(15, 23, 42, 0.15) 100%
+  );
+}
+
+.dark-mode .portal-shortcut-card:hover::before {
+  background: linear-gradient(
+    90deg,
+    rgba(15, 23, 42, 0.92) 0%,
+    rgba(15, 23, 42, 0.80) 42%,
+    rgba(15, 23, 42, 0.38) 65%,
+    rgba(15, 23, 42, 0.10) 100%
+  );
+}
+
+.dark-mode .shortcut-flipbooks .portal-shortcut-icon {
+  background: rgba(30, 41, 59, 0.95);
+  color: #93c5fd;
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.dark-mode .shortcut-flipbooks .portal-shortcut-link {
+  color: #93c5fd;
+}
+
+.dark-mode .shortcut-project .portal-shortcut-icon {
+  background: rgba(30, 41, 59, 0.95);
+  color: #7dd3fc;
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+.dark-mode .shortcut-project .portal-shortcut-link {
+  color: #7dd3fc;
+}
+
+/* Responsive Tablette & Mobile */
+@media (max-width: 899px) {
+  .home-shortcuts-grid-mockup {
+    gap: 1.25rem;
+  }
+}
+
+@media (max-width: 650px) {
+  .portal-shortcut-card {
+    padding: 1.6rem 1.4rem;
+    min-height: auto;
+    background-size: 190% auto;
+  }
+
+  .shortcut-flipbooks {
+    background-position: right bottom;
+  }
+
+  .shortcut-project {
+    background-position: right top;
+  }
+
+  .portal-shortcut-desc {
+    max-width: 82%;
+  }
+
+  .portal-shortcut-card::before {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.96) 0%,
+      rgba(255, 255, 255, 0.88) 45%,
+      rgba(255, 255, 255, 0.30) 72%,
+      rgba(255, 255, 255, 0) 100%
+    );
+  }
+
+  .portal-shortcut-card:hover::before {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.93) 0%,
+      rgba(255, 255, 255, 0.82) 45%,
+      rgba(255, 255, 255, 0.22) 72%,
+      rgba(255, 255, 255, 0) 100%
+    );
+  }
+
+  .dark-mode .portal-shortcut-card::before {
+    background: linear-gradient(
+      90deg,
+      rgba(15, 23, 42, 0.96) 0%,
+      rgba(15, 23, 42, 0.88) 45%,
+      rgba(15, 23, 42, 0.40) 72%,
+      rgba(15, 23, 42, 0.10) 100%
+    );
+  }
+}
 
 /* Transition wave between shortcuts and heritage section */
 .heritage-transition-wave {
