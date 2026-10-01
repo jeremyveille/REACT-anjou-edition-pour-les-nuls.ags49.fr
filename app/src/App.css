@@ -5318,7 +5318,19 @@ footer.ae-public-footer {
 .header-mockup-logo-icon {
   display: flex;
   align-items: center;
-  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.2));
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.35));
+}
+
+.header-mockup-shelf-logo {
+  height: 56px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.4));
+  transition: transform 0.25s ease;
+}
+
+.header-mockup-shelf-logo:hover {
+  transform: scale(1.05);
 }
 
 .header-mockup-titles {
@@ -5545,14 +5557,17 @@ nav {
     margin: 6px auto 0 auto;
     height: 145px;
     min-height: 145px;
-    border-radius: 14px 14px 22px 22px;
+    border-radius: 14px;
   }
   .header-mockup-content {
-    left: 1.25rem;
+    left: calc(1.25rem + 10%);
   }
   .header-mockup-logo-icon svg {
     width: 34px !important;
     height: 34px !important;
+  }
+  .header-mockup-shelf-logo {
+    height: 40px !important;
   }
   .header-mockup-titles h1 {
     font-size: 1.35rem;
