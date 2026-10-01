@@ -38,8 +38,8 @@ export const PublicHeader = ({ darkMode, toggleDarkMode, headerImage }) => {
             <AnjouEditionLogo size={44} />
           </div>
           <div className="header-mockup-titles">
-            <h1>Anjou Édition</h1>
-            <h2>POUR LES NULS</h2>
+            <h1 className="brand-title">Anjou Édition</h1>
+            <p className="brand-subtitle">POUR LES NULS</p>
           </div>
         </div>
       </div>

@@ -3,6 +3,7 @@ import { useBuilder } from '../store/builderStore';
 import * as Icons from 'lucide-react';
 import { getYoutubeEmbedUrl } from '../utils/youtubeUtils';
 import { sanitizeHtml } from '../utils/sanitize';
+import { visibilityClasses } from '../utils/appearance';
 import { Copy, Trash2, GripVertical, Settings, Star } from 'lucide-react';
 
 /* ── Draggable wrapper for existing elements ── */
@@ -517,21 +518,11 @@ export default function ElementRenderer({ element }) {
     return style;
   };
 
-  // Responsive visibility classes
-  const buildResponsiveClasses = () => {
-    const s = settings;
-    const cls = [];
-    if (s.hideMobile) cls.push('d-none d-md-block');
-    if (s.hideTablet) cls.push('d-md-none d-lg-block');
-    if (s.hideDesktop) cls.push('d-lg-none');
-    return cls.join(' ');
-  };
-
   const wrapperClasses = [
     'canvas-element-wrapper',
     isSelected ? 'selected' : '',
     isOver && element.type !== 'column' ? 'drop-indicator-top' : '',
-    buildResponsiveClasses(),
+    visibilityClasses(settings),
   ].filter(Boolean).join(' ');
 
   const wrapperStyle = buildWrapperStyle();
