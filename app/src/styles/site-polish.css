@@ -46,7 +46,7 @@
   text-align: center; border: 1px dashed var(--border); border-radius: 20px;
   color: var(--text-muted); background: var(--bg-sidebar);
 }
-.dark-mode .pillar-welcome, .dark-mode .shortcut-flipbooks, .dark-mode .shortcut-project { background: #152d48; }
+.dark-mode .pillar-welcome { background: #152d48; }
 .dark-mode .pillar-explain { background: #312b22; }
 .dark-mode .pillar-guide, .dark-mode .shortcut-photos { background: #16372f; }
 .dark-mode .shortcut-poetry { background: #29243f; }
