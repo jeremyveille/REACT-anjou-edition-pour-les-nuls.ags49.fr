@@ -316,7 +316,7 @@ nav {
   position: relative;
   width: 92%;
   max-width: 1400px;
-  margin: -2.25rem auto 0 auto;
+  margin: 1rem auto 0 auto;
   padding: 0.35rem 1rem;
   border-radius: 999px;
   background: var(--glass-bg);
@@ -2389,7 +2389,7 @@ canvas {
     border-radius: 20px;
     width: 95%;
     padding: 0.35rem 0.85rem;
-    margin-top: -2rem;
+    margin-top: 0.75rem;
   }
   .nav-logo {
     font-size: 0.95rem;
@@ -2491,7 +2491,7 @@ canvas {
     border-radius: 999px;
     width: calc(100% - 16px);
     max-width: calc(100% - 16px);
-    margin: -1.35rem auto 0 auto;
+    margin: 0.75rem auto 0 auto;
     padding: 0.25rem 0.5rem;
     box-sizing: border-box;
   }
@@ -5258,7 +5258,7 @@ footer.ae-public-footer {
   display: flex;
   align-items: center;
   overflow: hidden;
-  border-radius: 18px 18px 36px 36px;
+  border-radius: 20px;
   box-shadow: 0 10px 30px -5px rgba(10, 25, 49, 0.16);
   background: #004ecc;
   padding: 0;
@@ -5290,9 +5290,9 @@ footer.ae-public-footer {
   height: 100%;
   background: linear-gradient(
     90deg,
-    rgba(0, 75, 195, 0.90) 0%,
-    rgba(0, 85, 215, 0.65) 24%,
-    rgba(0, 95, 230, 0.18) 48%,
+    rgba(0, 75, 195, 0.36) 0%,
+    rgba(0, 85, 215, 0.26) 24%,
+    rgba(0, 95, 230, 0.07) 48%,
     rgba(0, 105, 240, 0.0) 72%
   );
   pointer-events: none;
@@ -5300,7 +5300,7 @@ footer.ae-public-footer {
 
 .header-mockup-content {
   position: absolute;
-  left: clamp(2rem, 5vw, 4.5rem);
+  left: calc(clamp(2rem, 5vw, 4.5rem) + 10%);
   top: 45%;
   transform: translateY(-50%);
   z-index: 2;
@@ -5334,7 +5334,7 @@ footer.ae-public-footer {
   letter-spacing: -0.015em;
   line-height: 1.05;
   color: #ffffff;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.55), 0 1px 3px rgba(0, 0, 0, 0.4);
   margin: 0;
 }
 
@@ -5345,7 +5345,7 @@ footer.ae-public-footer {
   text-transform: uppercase;
   color: #ffffff;
   opacity: 0.95;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.55);
   margin: 0.2rem 0 0 0;
   align-self: flex-end;
 }
@@ -5380,7 +5380,7 @@ nav {
   z-index: 100;
   width: calc(100% - 96px);
   max-width: 1220px;
-  margin: -23px auto 2rem auto;
+  margin: 14px auto 2rem auto;
   padding: 0.22rem 0.5rem;
   height: 44px;
   min-height: 44px;
@@ -5528,14 +5528,14 @@ nav {
     width: calc(100% - 24px);
     margin: 8px auto 0 auto;
     height: clamp(150px, 28vw, 180px);
-    border-radius: 16px 16px 28px 28px;
+    border-radius: 16px;
   }
   .ae-mockup-header .header-mockup-bg-img {
     object-position: right top;
   }
   nav {
     width: calc(100% - 32px);
-    margin: -20px auto 1.5rem auto;
+    margin: 10px auto 1.5rem auto;
   }
 }
 
@@ -5565,7 +5565,7 @@ nav {
     width: calc(100% - 20px);
     height: 40px;
     min-height: 40px;
-    margin: -18px auto 1.25rem auto;
+    margin: 8px auto 1.25rem auto;
     padding: 0.2rem 0.4rem;
   }
   .nav-logo {
