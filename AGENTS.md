@@ -31,7 +31,7 @@ Ce document sert de guide et de référence pour tout agent ou développeur trav
     > [!IMPORTANT]
     > **RÈGLE STRICTE** : **NE JAMAIS UTILISER TAILWIND**. Le projet repose à 100% sur du Vanilla CSS écrit à la main et sur Bootstrap 5 pour les blocs du Page Builder.
 *   **Bibliothèque d'Icônes** : [lucide-react v1.17.0](https://lucide.dev/)
-*   **Tests** : Jest et [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/) (17 suites de tests complètes et 133 tests unitaires/d'intégration, 100% de réussite).
+*   **Tests** : Jest et [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/) (22 suites de tests complètes et 173 tests unitaires/d'intégration, 100% de réussite).
 
 ### 2. Page Builder Visuel (page-builder-react)
 *   **Framework Frontend** : [React v18.3.1](https://react.dev/)
@@ -139,7 +139,14 @@ Se déplacer dans le dossier : `cd page-builder-react`
 *   **XL — Grands écrans** : `@media (min-width: 1200px)` (Disposition 3 colonnes jusqu'à 1700px max, KPIs 4 colonnes).
 *   **Classes mutualisées** : `.responsive-container`, `.responsive-grid`, `.responsive-actions`, `.responsive-form`, `.responsive-table`, `.responsive-modal`.
 
+### 7. Barres Latérales Administrables du Flipbook (`FlipbookLayout`, `FlipbookSidebar`, `FlipbookSidebarEditor`)
+*   **Disposition publique à 3 colonnes** : Encadre le lecteur central (`PdfFlipbookReader`) avec une barre latérale gauche (~20%) et une barre latérale droite (~20%) qui s'adaptent automatiquement à l'espace disponible.
+*   **Responsive sans compromis** : Sur mobile et tablette (`<= 860px`), disposition verticale fluide ordonnée avec priorité absolue au Flipbook en haut (`order: 1`), suivi des blocs de la barre gauche (`order: 2`), puis de la barre droite (`order: 3`), avec zéro débordement horizontal.
+*   **Administration unifiée dans le Dashboard** : Section « Barres latérales du Flipbook » avec colonnes « Barre gauche » et « Barre droite », gestion fine des blocs (création, modification, activation/désactivation, monter, descendre, suppression).
+*   **Types de blocs multimédias supportés** : Images (médiathèque, upload ou URL), vidéos (intégration YouTube responsive 16/9 ou vidéos locales HTML5), textes/HTML sécurisés avec assainissement XSS (`sanitizeHtml`), titres avec niveaux hiérarchiques, boutons d'action stylisés, documents PDF téléchargeables.
+*   **Persistance hybride** : Association exclusive à chaque flipbook (`leftSidebar` et `rightSidebar`), synchronisée sur Firestore et mise en cache dans `localStorage`.
+
 ---
 
-*Dernière mise à jour du contexte par l'agent : 20 septembre 2026.*
+*Dernière mise à jour du contexte par l'agent : 2 octobre 2026.*
 
