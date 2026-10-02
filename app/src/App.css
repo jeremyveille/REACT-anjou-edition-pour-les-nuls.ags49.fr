@@ -5381,7 +5381,7 @@ footer.ae-public-footer {
 }
 
 /* --- 2. FLOATING NAVBAR ACCENT BUTTON --- */
-nav {
+nav.public-nav {
   position: relative;
   z-index: 100;
   width: calc(100% - 96px);
@@ -5399,7 +5399,7 @@ nav {
   align-items: center;
 }
 
-.dark-mode nav {
+.dark-mode nav.public-nav {
   background: #1e293b;
   border-color: rgba(51, 65, 85, 0.9);
 }
