@@ -1,0 +1,751 @@
+/* ==========================================================================
+   FLIPBOOK SIDEBARS STYLES - ANJOU ÉDITION
+   Barres latérales administrables (gauche & droite) autour du Flipbook
+   100% Vanilla CSS pur conforme à l'identité visuelle du projet
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. DISPOSITION PUBLIQUE DU FLIPBOOK (3 COLONNES)
+   -------------------------------------------------------------------------- */
+
+.flipbook-layout-wrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 1680px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  padding: 0.5rem 0;
+  min-width: 0;
+}
+
+/* Colonnes des barres latérales gauche et droite */
+.flipbook-sidebar-column {
+  width: 20%;
+  min-width: 220px;
+  max-width: 320px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+/* Zone centrale contenant le lecteur Flipbook */
+.flipbook-main-stage {
+  flex: 1 1 60%;
+  min-width: 0; /* Empêche le débordement flex */
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Si seule la barre gauche est présente */
+.flipbook-layout-wrapper.has-left-only .flipbook-sidebar-column {
+  width: 22%;
+  max-width: 340px;
+}
+
+.flipbook-layout-wrapper.has-left-only .flipbook-main-stage {
+  flex: 1 1 78%;
+}
+
+/* Si seule la barre droite est présente */
+.flipbook-layout-wrapper.has-right-only .flipbook-sidebar-column {
+  width: 22%;
+  max-width: 340px;
+}
+
+.flipbook-layout-wrapper.has-right-only .flipbook-main-stage {
+  flex: 1 1 78%;
+}
+
+/* Si aucune barre latérale n'a de blocs actifs */
+.flipbook-layout-wrapper.has-no-sidebars .flipbook-main-stage {
+  flex: 1 1 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* --------------------------------------------------------------------------
+   2. CONTENU DES BARRES LATÉRALES SUR LE SITE PUBLIC
+   -------------------------------------------------------------------------- */
+
+.flipbook-sidebar {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.flipbook-sidebar-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  width: 100%;
+}
+
+/* Cartes de blocs génériques */
+.flipbook-sidebar-card {
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 14px;
+  padding: 1.15rem;
+  box-shadow: var(--card-shadow, 0 4px 12px -2px rgba(15, 23, 42, 0.05));
+  transition: var(--transition, all 0.25s ease);
+  color: var(--text-main, #0f172a);
+  box-sizing: border-box;
+  overflow: hidden;
+  position: relative;
+}
+
+.flipbook-sidebar-card:hover {
+  box-shadow: var(--hover-shadow, 0 10px 20px -3px rgba(15, 23, 42, 0.08));
+  border-color: rgba(30, 58, 138, 0.25);
+}
+
+/* Titre d'un bloc */
+.flipbook-block-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main, #0f172a);
+  margin: 0 0 0.65rem 0;
+  line-height: 1.35;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Bloc Heading / Titre stylé */
+.flipbook-block-heading-container {
+  margin: 0.25rem 0;
+}
+
+.flipbook-block-heading {
+  font-weight: 800;
+  color: var(--primary, #1e3a8a);
+  margin: 0;
+  line-height: 1.3;
+  position: relative;
+  padding-bottom: 0.4rem;
+  border-bottom: 2px solid rgba(30, 58, 138, 0.2);
+}
+
+.flipbook-block-heading.level-h2 {
+  font-size: 1.15rem;
+}
+
+.flipbook-block-heading.level-h3 {
+  font-size: 1rem;
+}
+
+.flipbook-block-heading.level-h4 {
+  font-size: 0.9rem;
+}
+
+.flipbook-block-heading.level-h5 {
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Bloc Texte / Contenu HTML */
+.flipbook-block-content {
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: var(--text-muted, #64748b);
+  word-break: break-word;
+}
+
+.flipbook-block-content p {
+  margin: 0 0 0.5rem 0;
+}
+
+.flipbook-block-content p:last-child {
+  margin-bottom: 0;
+}
+
+.flipbook-block-content a {
+  color: var(--secondary, #2563eb);
+  text-decoration: underline;
+  transition: color 0.2s;
+}
+
+.flipbook-block-content a:hover {
+  color: var(--primary, #1e3a8a);
+}
+
+/* Bloc Image */
+.flipbook-block-figure {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.flipbook-responsive-img {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  display: block;
+  object-fit: cover;
+  transition: transform 0.25s ease;
+}
+
+.flipbook-image-link {
+  display: block;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.flipbook-image-link:hover .flipbook-responsive-img {
+  transform: scale(1.02);
+}
+
+.flipbook-block-caption {
+  font-size: 0.75rem;
+  color: var(--text-muted, #64748b);
+  margin-top: 0.45rem;
+  line-height: 1.35;
+  font-style: italic;
+  text-align: center;
+}
+
+/* Bloc Vidéo (YouTube ou HTML5) */
+.flipbook-video-ratio-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #0b1120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flipbook-video-iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.flipbook-responsive-video {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  border-radius: 8px;
+  object-fit: cover;
+  background: #000;
+}
+
+/* Bloc Bouton / Lien */
+.flipbook-block-button-container {
+  text-align: center;
+  padding: 1.25rem 1rem;
+}
+
+.flipbook-sidebar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.65rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border-radius: 10px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.flipbook-sidebar-btn.flipbook-btn-primary {
+  background: var(--primary, #1e3a8a);
+  color: #ffffff;
+  border: 1px solid var(--primary, #1e3a8a);
+}
+
+.flipbook-sidebar-btn.flipbook-btn-primary:hover {
+  background: var(--primary-hover, #172554);
+  box-shadow: 0 4px 10px rgba(30, 58, 138, 0.25);
+  transform: translateY(-1px);
+}
+
+.flipbook-sidebar-btn.flipbook-btn-secondary {
+  background: var(--secondary, #2563eb);
+  color: #ffffff;
+  border: 1px solid var(--secondary, #2563eb);
+}
+
+.flipbook-sidebar-btn.flipbook-btn-secondary:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.flipbook-sidebar-btn.flipbook-btn-outline {
+  background: transparent;
+  color: var(--primary, #1e3a8a);
+  border: 1.5px solid var(--primary, #1e3a8a);
+}
+
+.flipbook-sidebar-btn.flipbook-btn-outline:hover {
+  background: rgba(30, 58, 138, 0.08);
+}
+
+.flipbook-sidebar-btn.flipbook-btn-gold {
+  background: var(--accent-gold, #d97706);
+  color: #ffffff;
+  border: 1px solid var(--accent-gold, #d97706);
+}
+
+.flipbook-sidebar-btn.flipbook-btn-gold:hover {
+  background: #b45309;
+  transform: translateY(-1px);
+}
+
+/* Bloc Document PDF */
+.flipbook-block-pdf {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  padding: 1rem;
+}
+
+.flipbook-pdf-icon-wrap {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  background: rgba(225, 29, 72, 0.1);
+  color: #e11d48;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.flipbook-pdf-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.flipbook-pdf-desc {
+  font-size: 0.78rem;
+  color: var(--text-muted, #64748b);
+  margin: 0.2rem 0 0.5rem 0;
+}
+
+.flipbook-pdf-download-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--secondary, #2563eb);
+  text-decoration: none;
+  padding: 0.3rem 0.6rem;
+  background: rgba(37, 99, 235, 0.08);
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.flipbook-pdf-download-btn:hover {
+  background: rgba(37, 99, 235, 0.15);
+  color: var(--primary, #1e3a8a);
+}
+
+/* --------------------------------------------------------------------------
+   3. RESPONSIVE POUR L'AFFICHAGE DU FLIPBOOK ET DE SES BARRES
+   -------------------------------------------------------------------------- */
+
+/* Écrans intermédiaires (1024px et moins) */
+@media (max-width: 1024px) {
+  .flipbook-layout-wrapper {
+    gap: 1rem;
+  }
+  .flipbook-sidebar-column {
+    width: 22%;
+    min-width: 190px;
+  }
+  .flipbook-sidebar-card {
+    padding: 0.85rem;
+  }
+}
+
+/* Tablette et Mobile (860px et moins) : passage en disposition verticale */
+@media (max-width: 860px) {
+  .flipbook-layout-wrapper {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  /* Flipbook en priorité absolue tout en haut */
+  .flipbook-main-stage {
+    order: 1;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  /* Barre gauche en deuxième */
+  .flipbook-sidebar-left-wrapper {
+    order: 2;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  /* Barre droite en troisième */
+  .flipbook-sidebar-right-wrapper {
+    order: 3;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  /* Sur tablette/mobile, les blocs dans les barres peuvent se mettre en grille 2 colonnes si l'espace le permet */
+  .flipbook-sidebar-inner {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1rem;
+  }
+}
+
+/* Smartphones étroits (540px et moins) */
+@media (max-width: 540px) {
+  .flipbook-sidebar-inner {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   4. ÉDITEUR DES BARRES LATÉRALES DANS LE DASHBOARD
+   -------------------------------------------------------------------------- */
+
+.flipbook-sidebars-editor-container {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.flipbook-editor-columns-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  margin-top: 1rem;
+}
+
+@media (max-width: 860px) {
+  .flipbook-editor-columns-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.flipbook-sidebar-admin-column {
+  background: var(--bg-sidebar, #f8fafc);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.dark-mode .flipbook-sidebar-admin-column {
+  background: rgba(30, 41, 59, 0.5);
+  border-color: #334155;
+}
+
+.flipbook-admin-col-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid var(--border, #e2e8f0);
+}
+
+.flipbook-admin-col-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-main, #0f172a);
+}
+
+.flipbook-admin-badge-count {
+  background: var(--primary-sky-light, #e0f2fe);
+  color: var(--primary, #1e3a8a);
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 0.15rem 0.55rem;
+  border-radius: 9999px;
+}
+
+.dark-mode .flipbook-admin-badge-count {
+  background: rgba(2, 132, 199, 0.2);
+  color: #38bdf8;
+}
+
+.flipbook-admin-blocks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.flipbook-admin-empty-msg {
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--text-muted, #64748b);
+  font-style: italic;
+  padding: 1.5rem 0.5rem;
+  background: var(--bg-card, #ffffff);
+  border: 1px dashed var(--border, #cbd5e1);
+  border-radius: 8px;
+}
+
+/* Carte d'un bloc dans l'éditeur */
+.flipbook-editor-block-card {
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.dark-mode .flipbook-editor-block-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.flipbook-editor-block-card.is-disabled {
+  opacity: 0.65;
+  border-style: dashed;
+}
+
+/* En-tête du bloc dans l'éditeur */
+.flipbook-editor-block-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 0.85rem;
+  background: rgba(241, 245, 249, 0.7);
+  border-bottom: 1px solid var(--border, #e2e8f0);
+  gap: 0.5rem;
+}
+
+.dark-mode .flipbook-editor-block-header {
+  background: rgba(15, 23, 42, 0.4);
+  border-color: #334155;
+}
+
+.flipbook-editor-block-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.flipbook-editor-block-num {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--primary, #1e3a8a);
+  background: var(--primary-sky-light, #e0f2fe);
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.dark-mode .flipbook-editor-block-num {
+  background: rgba(30, 58, 138, 0.4);
+  color: #93c5fd;
+}
+
+.flipbook-editor-block-summary {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-main, #0f172a);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.flipbook-editor-block-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+/* Boutons de contrôle accessibles du bloc */
+.flipbook-btn-ctrl {
+  background: #ffffff;
+  border: 1px solid var(--border, #cbd5e1);
+  color: var(--text-main, #334155);
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.15s ease;
+}
+
+.dark-mode .flipbook-btn-ctrl {
+  background: #0f172a;
+  border-color: #475569;
+  color: #cbd5e1;
+}
+
+.flipbook-btn-ctrl:hover:not(:disabled) {
+  background: var(--primary, #1e3a8a);
+  color: #ffffff;
+  border-color: var(--primary, #1e3a8a);
+}
+
+.flipbook-btn-ctrl:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.flipbook-btn-ctrl.btn-danger:hover:not(:disabled) {
+  background: #e11d48;
+  border-color: #e11d48;
+  color: #ffffff;
+}
+
+.flipbook-btn-ctrl.btn-toggle-active {
+  color: var(--accent-green, #059669);
+}
+
+.flipbook-btn-ctrl.btn-toggle-inactive {
+  color: var(--text-muted, #94a3b8);
+}
+
+/* Formulaire de configuration du bloc */
+.flipbook-editor-block-body {
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  box-sizing: border-box;
+}
+
+.flipbook-editor-field-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.flipbook-editor-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-main, #334155);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dark-mode .flipbook-editor-label {
+  color: #e2e8f0;
+}
+
+/* Bouton Ajouter un bloc */
+.flipbook-btn-add-block {
+  width: 100%;
+  padding: 0.65rem 1rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--primary, #1e3a8a);
+  background: var(--bg-card, #ffffff);
+  border: 1.5px dashed var(--primary, #1e3a8a);
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  margin-top: auto;
+}
+
+.dark-mode .flipbook-btn-add-block {
+  background: #1e293b;
+  color: #60a5fa;
+  border-color: #3b82f6;
+}
+
+.flipbook-btn-add-block:hover {
+  background: rgba(30, 58, 138, 0.08);
+  transform: translateY(-1px);
+}
+
+/* Sélecteur de type d'ajout de bloc */
+.flipbook-add-menu {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border, #cbd5e1);
+  border-radius: 8px;
+  margin-top: 0.5rem;
+  animation: fadeIn 0.2s ease;
+}
+
+.dark-mode .flipbook-add-menu {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+.flipbook-add-type-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.6rem 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-main, #334155);
+  background: var(--bg-sidebar, #f8fafc);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.dark-mode .flipbook-add-type-btn {
+  background: #0f172a;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+.flipbook-add-type-btn:hover {
+  background: var(--primary-sky-light, #e0f2fe);
+  border-color: var(--primary, #1e3a8a);
+  color: var(--primary, #1e3a8a);
+}
+
+.dark-mode .flipbook-add-type-btn:hover {
+  background: rgba(30, 58, 138, 0.4);
+  color: #93c5fd;
+}
+
+/* Aperçu miniature dans l'éditeur */
+.flipbook-editor-preview-thumb {
+  max-height: 90px;
+  width: auto;
+  max-width: 100%;
+  border-radius: 6px;
+  border: 1px solid var(--border, #e2e8f0);
+  object-fit: cover;
+  display: block;
+  margin-top: 0.35rem;
+}
