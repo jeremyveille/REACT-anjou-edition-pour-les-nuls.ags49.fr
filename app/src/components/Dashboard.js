@@ -7,13 +7,16 @@ import {
   Trash2, ShieldCheck, Sparkles, BookOpen,
   LayoutDashboard, Megaphone, FolderOpen, LogOut, X,
   Copy, Edit3, Eye, UploadCloud, Menu, Star, Check,
-  ChevronUp, ChevronDown, ChevronLeft, ChevronRight, GripVertical
+  ChevronUp, ChevronDown, ChevronLeft, ChevronRight, GripVertical,
+  PanelLeft
 } from "lucide-react";
 import { db, storage } from "../firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storePDFFile } from "../utils/indexedDBStorage";
 import { savePdfToFirestore, deletePdfFromFirestore } from "../utils/firestoreChunker";
 import PdfFlipbookReader from "./PdfFlipbookReader";
+import FlipbookSidebarEditor from "./FlipbookSidebarEditor";
+import FlipbookLayout from "./FlipbookLayout";
 import { 
   collection, 
   getDocs, 
@@ -945,7 +948,10 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
 
   // Editing handlers
   const handleEditFlipbookClick = (fb) => {
-    setEditingFlipbook(JSON.parse(JSON.stringify(fb))); // Deep copy
+    const copy = JSON.parse(JSON.stringify(fb));
+    if (!Array.isArray(copy.leftSidebar)) copy.leftSidebar = [];
+    if (!Array.isArray(copy.rightSidebar)) copy.rightSidebar = [];
+    setEditingFlipbook(copy);
     setShowEditFlipbookModal(true);
   };
 
@@ -998,7 +1004,9 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
       ...editingFlipbook, 
       pdfFile: finalPdfFile, 
       pdfUrl: finalPdfUrl,
-      hasFirestoreChunks: hasFirestoreChunks
+      hasFirestoreChunks: hasFirestoreChunks,
+      leftSidebar: Array.isArray(editingFlipbook.leftSidebar) ? editingFlipbook.leftSidebar : [],
+      rightSidebar: Array.isArray(editingFlipbook.rightSidebar) ? editingFlipbook.rightSidebar : []
     };
 
     const updatedList = flipbooks.map(fb => fb.id === editingFlipbook.id ? updatedFlipbook : fb);
@@ -1230,7 +1238,9 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
         pdfUrl: pdfUrl,
         hasFirestoreChunks: hasFirestoreChunks,
         date: new Date().toLocaleDateString("fr-FR") + " à " + new Date().toLocaleTimeString("fr-FR", { hour: '2-digit', minute: '2-digit' }),
-        pages: generatedPages
+        pages: generatedPages,
+        leftSidebar: [],
+        rightSidebar: []
       };
 
       await handleAddFlipbookState(newFlipbookObj);
@@ -5037,7 +5047,7 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
             {/* Edit Flipbook Modal */}
             {showEditFlipbookModal && editingFlipbook && (
               <div className="ae-modal-overlay" onClick={() => { setShowEditFlipbookModal(false); setEditingFlipbook(null); setEditPdfFile(null); }}>
-                <div className="ae-modal-container max-w-2xl animate-fade-in" onClick={(e) => e.stopPropagation()}>
+                <div className="ae-modal-container max-w-5xl animate-fade-in" onClick={(e) => e.stopPropagation()}>
                   <div className="ae-modal-header">
                     <h3 className="ae-modal-header-title">
                       <BookOpen className="ae-icon-navy-accent" />
@@ -5222,6 +5232,21 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
                       </div>
                     </div>
 
+                    {/* Section: Barres latérales du Flipbook */}
+                    <div className="border-t border-slate-200 pt-4 mt-4 dark:border-slate-800">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <PanelLeft className="text-blue-600 dark:text-blue-400" size={18} />
+                        <h4 className="ae-heading-sm">Barres latérales du Flipbook</h4>
+                      </div>
+                      <p className="text-xs text-slate-500 mb-3">
+                        Personnalisez les colonnes d'accompagnement affichées à gauche et à droite de ce flipbook sur le site public (images, vidéos locales ou YouTube, textes, boutons, PDF).
+                      </p>
+                      <FlipbookSidebarEditor 
+                        flipbook={editingFlipbook}
+                        onChange={(updated) => setEditingFlipbook(updated)}
+                      />
+                    </div>
+
                     <div className="ae-modal-footer">
                       <button 
                         type="button" 
@@ -5254,11 +5279,13 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
             {/* Viewer/Reader Flipbook Modal */}
             {showViewFlipbookModal && viewingFlipbook && (
               <div className="ae-modal-overlay" onClick={() => { setShowViewFlipbookModal(false); setViewingFlipbook(null); }}>
-                <div className="ae-modal-container" onClick={(e) => e.stopPropagation()} style={{ padding: 0, maxWidth: '1150px', width: '95vw', border: 'none', background: 'transparent', boxShadow: 'none' }}>
-                  <PdfFlipbookReader 
-                    book={viewingFlipbook} 
-                    onClose={() => { setShowViewFlipbookModal(false); setViewingFlipbook(null); }} 
-                  />
+                <div className="ae-modal-container" onClick={(e) => e.stopPropagation()} style={{ padding: 0, maxWidth: '1480px', width: '96vw', border: 'none', background: 'transparent', boxShadow: 'none' }}>
+                  <FlipbookLayout book={viewingFlipbook}>
+                    <PdfFlipbookReader 
+                      book={viewingFlipbook} 
+                      onClose={() => { setShowViewFlipbookModal(false); setViewingFlipbook(null); }} 
+                    />
+                  </FlipbookLayout>
                 </div>
               </div>
             )}
