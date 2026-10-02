@@ -192,7 +192,12 @@ export const PublicNav = ({
                           {displayTitle}
                         </button>
                       ) : (
-                        <span className="nav-dropdown-label">{displayTitle}</span>
+                        <span 
+                          className="nav-dropdown-label"
+                          onClick={() => setActiveDropdown(activeDropdown === item.title ? null : item.title)}
+                        >
+                          {displayTitle}
+                        </span>
                       )}
                       <button
                         type="button"
