@@ -356,6 +356,69 @@ export const flipbooksData = [
       { pageNum: 3, title: "Le Chenin Blanc", content: "Cépage roi de la Loire, le Chenin produit de grands vins blancs secs (Savennières), moelleux (Coteaux du Layon) et effervescents. Il exprime des arômes de coing et de miel." },
       { pageNum: 4, title: "Le Cabernet Franc", content: "Cépage rouge historique, il donne des vins fruités et structurés (Saumur-Champigny, Anjou Rouge), caractérisés par des notes de fruits rouges et de poivron vert." },
       { pageNum: 5, title: "L'Art de la Dégustation", content: "Pour apprécier pleinement ces vins, servez les blancs entre 10 et 12°C, et les rouges légèrement rafraîchis autour de 16°C. Accompagnez-les de fromages de chèvre locaux." }
+    ],
+    leftSidebar: [
+      { 
+        id: "block_left_1", 
+        type: "heading", 
+        level: "h3", 
+        text: "Terroirs & Histoire", 
+        enabled: true 
+      },
+      { 
+        id: "block_left_2", 
+        type: "image", 
+        title: "Coteaux du Layon", 
+        imageUrl: "/images/featured-article-book.jpg", 
+        imageAlt: "Grappe de chenin d'Anjou sous le soleil", 
+        caption: "Le Chenin Blanc, cépage emblématique du Val de Loire", 
+        linkUrl: "/flipbooks", 
+        enabled: true 
+      },
+      { 
+        id: "block_left_3", 
+        type: "text", 
+        title: "Note de lecture", 
+        content: "<p>Cet ouvrage interactif a été conçu pour faire découvrir aux passionnés l'histoire millénaire de nos parcelles viticoles et l'esprit des vignerons de l'Anjou.</p>", 
+        enabled: true 
+      }
+    ],
+    rightSidebar: [
+      { 
+        id: "block_right_1", 
+        type: "heading", 
+        level: "h3", 
+        text: "Reportages & Fiches", 
+        enabled: true 
+      },
+      { 
+        id: "block_right_2", 
+        type: "video", 
+        title: "La Loire & les Vignes", 
+        videoUrl: "https://www.youtube.com/watch?v=bO2tOaFf-1I", 
+        videoSourceType: "youtube",
+        caption: "Découverte des paysages ligériens et de la faune unique", 
+        enabled: true 
+      },
+      { 
+        id: "block_right_3", 
+        type: "button", 
+        title: "Échange littéraire", 
+        buttonText: "Contacter les auteurs", 
+        buttonUrl: "/contact", 
+        buttonStyle: "primary", 
+        openNewTab: false, 
+        enabled: true 
+      },
+      { 
+        id: "block_right_4", 
+        type: "pdf", 
+        title: "Fiche complémentaire", 
+        pdfTitle: "Guide des Cépages Angevins (PDF)", 
+        pdfUrl: "secrets_vignoble_angevin.pdf", 
+        description: "Téléchargez la fiche récapitulative au format PDF pour votre visite.", 
+        enabled: true 
+      }
     ]
   }
 ];

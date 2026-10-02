@@ -34,6 +34,7 @@ import { db, auth } from './firebase';
 import { collection, getDocs, doc, deleteDoc } from 'firebase/firestore';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import PdfFlipbookReader from './components/PdfFlipbookReader';
+import FlipbookLayout from './components/FlipbookLayout';
 
 import { pageService } from './services/pageService';
 import { BlockRenderer } from './components/page-builder/BlockRenderer';
@@ -247,17 +248,24 @@ function App() {
         if (Array.isArray(parsed)) {
           return parsed.filter(
             fb => fb && fb.id !== "3322" && !(fb.title || '').toLowerCase().includes("guide historique")
-          ).map(fb => ({
-            ...fb,
-            pdfFile: fb.pdfFile || (fb.id === "4455" ? "secrets_vignoble_angevin.pdf" : "Seraphin-le-marin.pdf")
-          }));
+          ).map(fb => {
+            const defaultFb = flipbooksData.find(d => d.id === fb.id);
+            return {
+              ...fb,
+              pdfFile: fb.pdfFile || (fb.id === "4455" ? "secrets_vignoble_angevin.pdf" : "Seraphin-le-marin.pdf"),
+              leftSidebar: Array.isArray(fb.leftSidebar) ? fb.leftSidebar : (defaultFb?.leftSidebar || []),
+              rightSidebar: Array.isArray(fb.rightSidebar) ? fb.rightSidebar : (defaultFb?.rightSidebar || [])
+            };
+          });
         }
       }
       return flipbooksData.filter(
         fb => fb && fb.id !== "3322" && !(fb.title || '').toLowerCase().includes("guide historique")
       ).map(fb => ({
         ...fb,
-        pdfFile: fb.pdfFile || (fb.id === "4455" ? "secrets_vignoble_angevin.pdf" : "Seraphin-le-marin.pdf")
+        pdfFile: fb.pdfFile || (fb.id === "4455" ? "secrets_vignoble_angevin.pdf" : "Seraphin-le-marin.pdf"),
+        leftSidebar: Array.isArray(fb.leftSidebar) ? fb.leftSidebar : [],
+        rightSidebar: Array.isArray(fb.rightSidebar) ? fb.rightSidebar : []
       }));
     } catch (e) {
       return [];
@@ -327,10 +335,13 @@ function App() {
               continue;
             }
 
+            const defaultFb = flipbooksData.find(d => d.id === docSnap.id);
             list.push({
               id: docSnap.id,
               ...data,
-              pdfFile: data.pdfFile || (docSnap.id === "4455" ? "secrets_vignoble_angevin.pdf" : "Seraphin-le-marin.pdf")
+              pdfFile: data.pdfFile || (docSnap.id === "4455" ? "secrets_vignoble_angevin.pdf" : "Seraphin-le-marin.pdf"),
+              leftSidebar: Array.isArray(data.leftSidebar) ? data.leftSidebar : (defaultFb?.leftSidebar || []),
+              rightSidebar: Array.isArray(data.rightSidebar) ? data.rightSidebar : (defaultFb?.rightSidebar || [])
             });
           }
           setFlipbooks(list);
@@ -1833,10 +1844,12 @@ function App() {
                     );
                   }
                   return (
-                    <PdfFlipbookReader 
-                      book={book} 
-                      onClose={() => navigateTo({ type: 'flipbooks', selectedId: null }, '/flipbooks', "Nos Flipbooks Interactifs — Anjou Édition")} 
-                    />
+                    <FlipbookLayout book={book}>
+                      <PdfFlipbookReader 
+                        book={book} 
+                        onClose={() => navigateTo({ type: 'flipbooks', selectedId: null }, '/flipbooks', "Nos Flipbooks Interactifs — Anjou Édition")} 
+                      />
+                    </FlipbookLayout>
                   );
                 })()
               )}
