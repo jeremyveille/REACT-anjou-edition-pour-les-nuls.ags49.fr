@@ -88,6 +88,16 @@ Se déplacer dans le dossier : `cd app`
 *   **Types de blocs multimédias supportés** : Images (médiathèque, upload ou URL), vidéos (intégration YouTube responsive 16/9 ou vidéos locales HTML5), textes/HTML sécurisés avec assainissement XSS (`sanitizeHtml`), titres avec niveaux hiérarchiques, boutons d'action stylisés, documents PDF téléchargeables.
 *   **Persistance hybride** : Association exclusive à chaque flipbook (`leftSidebar` et `rightSidebar`), synchronisée sur Firestore et mise en cache dans `localStorage`.
 
+### 10. Menu d'Administration Latéral Ergonomique (`DashboardSidebar`, `DashboardHeader`, `dashboard.css`)
+*   **Desktop ouvert par défaut** : Largeur fixe de 275px sur grand écran, immédiatement identifiable, évitant le recours au hamburger header sur desktop.
+*   **Organisation claire en 2 volets** :
+    *   **NAVIGATION** : Tableau de bord, Pages, Articles, Actualités, Constructeur de page, Flipbooks, Médias (groupe dépliable regroupant Médiathèque et Galerie photos), Vidéos, Messages (avec compteur de notifications).
+    *   **GESTION** : Apparence & Menus, Comptes / Écrivains, Paramètres système.
+*   **Rubrique active mise en valeur** : Fond bleu clair (`#e0f2fe`), texte et icône bleu foncé (`#004b7a`), barre indicatrice verticale gauche (4px) et attribut sémantique `aria-current="page"`.
+*   **Menu Rétractable & Persistance** : Bouton explicite « Réduire le menu » en bas passant la barre en mode compact (76px) avec infobulles accessibles au survol/focus (`role="tooltip"`), mémorisé dans le `localStorage` (`ae_sidebar_collapsed`).
+*   **Défilement ergonomique & Fixité** : En-tête (Logo Anjou Édition) et pied de page (Profil utilisateur + Déconnexion) restent strictement fixes et toujours visibles ; seule la liste centrale des liens dispose d'un défilement vertical fin si la hauteur d'écran est réduite (`min-height: 0; overflow-y: auto;`).
+*   **Responsive & Drawer Mobile** : Sur tablettes et smartphones (`< 900px`), le bouton hamburger du header ouvre un drawer latéral avec overlay avec flou (`backdrop-filter`), blocage du défilement d'arrière-plan, bouton de fermeture `×`, fermeture par touche `Échap`, et restitution automatique du focus clavier au bouton déclencheur.
+
 ---
 
 *Dernière mise à jour du contexte par l'agent : 2 octobre 2026.*
