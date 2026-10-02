@@ -46,7 +46,7 @@ describe("DashboardSidebar Component Tests", () => {
 
     // NAVIGATION items
     expect(screen.getByRole("button", { name: /Tableau de bord/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Pages/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Pages/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Articles/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Actualités/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Constructeur/i })).toBeInTheDocument();
@@ -77,7 +77,7 @@ describe("DashboardSidebar Component Tests", () => {
 
     // When activeSection is 'Page'
     rerender(<DashboardSidebar {...defaultProps} activeSection="Page" />);
-    const pagesBtn = screen.getByRole("button", { name: /Pages/i });
+    const pagesBtn = screen.getByRole("button", { name: /^Pages/i });
     expect(pagesBtn).toHaveAttribute("aria-current", "page");
     expect(pagesBtn).toHaveClass("active");
 
@@ -183,5 +183,21 @@ describe("DashboardSidebar Component Tests", () => {
     fireEvent.click(logoutBtn);
 
     expect(mockHandleLogout).toHaveBeenCalled();
+  });
+
+  test("has id='dashboard-sidebar' and proper aria attributes for accessibility", () => {
+    render(<DashboardSidebar {...defaultProps} pagesCount={8} articlesCount={15} />);
+
+    const aside = screen.getByRole("complementary");
+    expect(aside).toHaveAttribute("id", "dashboard-sidebar");
+
+    // Badges for pages and articles
+    expect(screen.getByText("8")).toBeInTheDocument();
+    expect(screen.getByText("15")).toBeInTheDocument();
+
+    // Media submenu toggle has aria-controls and aria-expanded
+    const mediaBtn = screen.getByRole("button", { name: /Médias/i });
+    expect(mediaBtn).toHaveAttribute("aria-controls", "sidebar-submenu-medias");
+    expect(mediaBtn).toHaveAttribute("aria-expanded", "true");
   });
 });

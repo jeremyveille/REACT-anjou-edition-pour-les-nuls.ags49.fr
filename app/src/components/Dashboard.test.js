@@ -440,4 +440,45 @@ describe('Dashboard Media Library & Edit Image Tests', () => {
   });
 });
 
+describe('Dashboard Layout & Ergonomics Tests', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    window.history.pushState(null, '', '/ae-dashboard');
+  });
+
+  test('renders topbar header, stats, recent activities, and administrative widgets on coherent grid', async () => {
+    const mockBackToSite = jest.fn();
+    render(<Dashboard onBackToSite={mockBackToSite} />);
+
+    // 1. Topbar Header: Tableau de bord, Voir le site, single primary Déconnexion button
+    expect(screen.getByRole('heading', { level: 2, name: /Tableau de bord/i })).toBeInTheDocument();
+    
+    const backToSiteBtn = screen.getByRole('button', { name: /Voir le site/i });
+    expect(backToSiteBtn).toBeInTheDocument();
+    fireEvent.click(backToSiteBtn);
+    expect(mockBackToSite).toHaveBeenCalledTimes(1);
+
+    const logoutBtn = document.getElementById('btn-nav-logout');
+    expect(logoutBtn).toBeInTheDocument();
+
+    // 2. Four KPI stat cards (await async loading)
+    expect(await screen.findByText(/Pages existantes/i)).toBeInTheDocument();
+    expect(screen.getByText(/Articles de blog/i)).toBeInTheDocument();
+    expect(screen.getByText(/Boîte de Réception/i)).toBeInTheDocument();
+    expect(screen.getByText(/Base de données/i)).toBeInTheDocument();
+
+    // 3. Recent activities brought near stats
+    expect(screen.getByText(/Pages Récentes/i)).toBeInTheDocument();
+    expect(screen.getByText(/Derniers Messages/i)).toBeInTheDocument();
+
+    // 4. Administrative status card (no promo image, compact status)
+    expect(screen.getByText(/Service Anjou Édition/i)).toBeInTheDocument();
+    expect(screen.getByText(/Statut : Actif/i)).toBeInTheDocument();
+
+    // 5. Conseil d'administration (compact, WCAG AA compliant)
+    expect(screen.getByText(/Conseil d'administration/i)).toBeInTheDocument();
+  });
+});
+
+
 
