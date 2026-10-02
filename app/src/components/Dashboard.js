@@ -8,7 +8,6 @@ import {
   Trash2, ShieldCheck, Sparkles, BookOpen,
   Megaphone, X,
   Copy, Edit3, Eye, UploadCloud, Menu, Star, Check,
-  ChevronUp, ChevronDown, ChevronLeft, ChevronRight, GripVertical,
   PanelLeft
 } from "lucide-react";
 import { db, storage } from "../firebase";
@@ -36,8 +35,10 @@ import {
 import { flipbooksData, textsData, articlesData, generateDefaultMenus } from "../data";
 import { PageBuilder } from "./page-builder/PageBuilder";
 import { pageService } from "../services/pageService";
+import MenuManager from "./menu-manager/MenuManager";
 import '../styles/page-builder.css';
 import '../styles/dashboard.css';
+import '../styles/menu-manager.css';
 
 
 const normalizeParentId = (id) => {
@@ -45,32 +46,6 @@ const normalizeParentId = (id) => {
   return id;
 };
 
-const getShortcodeDisplayValue = (shortcode) => {
-  if (!shortcode) return "";
-  let clean = shortcode.trim();
-  
-  if (clean.startsWith('[') && clean.endsWith(']')) {
-    clean = clean.slice(1, -1).trim();
-  }
-  
-  if (clean.includes("PdfFlipbookReader")) {
-    const idMatch = clean.match(/id\s*(?:===|==|=)\s*["']?(\d+)["']?/);
-    if (idMatch && idMatch[1]) {
-      return `ID: ${idMatch[1]}`;
-    }
-    const genericIdMatch = clean.match(/\b\d{4,}\b/);
-    if (genericIdMatch) {
-      return `ID: ${genericIdMatch[0]}`;
-    }
-    return "ID: Inconnu";
-  }
-  
-  if (/^\d+$/.test(clean)) {
-    return `ID: ${clean}`;
-  }
-  
-  return `Shortcode: ${clean}`;
-};
 
 const reindexMenuOrders = (list) => {
   const groups = {};
@@ -284,11 +259,8 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
   const [newMenuItemType, setNewMenuItemType] = useState("internal-link");
   const [newMenuItemParentId, setNewMenuItemParentId] = useState("");
   const [menuAriaAnnouncement, setMenuAriaAnnouncement] = useState("");
-  const [draggedItemId, setDraggedItemId] = useState(null);
-  const [newlyAddedMenuItemId, setNewlyAddedMenuItemId] = useState(null);
 
-  // Search, Preview & Focus tracking
-  const [menusSearchQuery, setMenusSearchQuery] = useState("");
+  // Preview & Focus tracking
   const [showPreviewShortcodeModal, setShowPreviewShortcodeModal] = useState(false);
   const [previewingShortcodeItem, setPreviewingShortcodeItem] = useState(null);
   
@@ -2083,8 +2055,6 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
 
       updatedList = [...menusList, newMenuItem];
       setNotification(`Élément "${newMenuItem.title}" créé.`);
-      setNewlyAddedMenuItemId(newMenuItem.id);
-      setTimeout(() => setNewlyAddedMenuItemId(null), 3000);
     }
 
     const reindexed = reindexMenuOrders(updatedList);
@@ -2105,249 +2075,8 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
     return ids;
   };
 
-  // Keyboard navigation & drag-and-drop helpers
-  const handleMoveUp = async (id) => {
-    const item = menusList.find(m => m.id === id);
-    if (!item) return;
-    const targetParentId = normalizeParentId(item.parentId);
-    
-    // Create a copy of the list to avoid mutating state directly
-    let updated = menusList.map(m => ({ ...m }));
-    
-    const siblings = updated
-      .filter(m => normalizeParentId(m.parentId) === targetParentId)
-      .sort((a, b) => (a.order || 0) - (b.order || 0));
-      
-    const idx = siblings.findIndex(m => m.id === id);
-    if (idx <= 0) return; // Already first sibling
 
-    // Swap in the siblings array
-    const temp = siblings[idx];
-    siblings[idx] = siblings[idx - 1];
-    siblings[idx - 1] = temp;
-    
-    // Force sequential orders on siblings so that they stay in this EXACT order
-    siblings.forEach((sibling, i) => {
-      sibling.order = i + 1;
-    });
 
-    // Merge siblings back into updated array
-    updated = updated.map(m => {
-      const updatedSibling = siblings.find(s => s.id === m.id);
-      return updatedSibling ? updatedSibling : m;
-    });
-
-    const reindexed = reindexMenuOrders(updated);
-    await saveAllMenusToFirebase(reindexed);
-
-    const msg = `Élément "${item.title}" monté.`;
-    setMenuAriaAnnouncement(msg);
-    setNotification(`Élément "${item.title}" déplacé.`);
-  };
-
-  const handleMoveDown = async (id) => {
-    const item = menusList.find(m => m.id === id);
-    if (!item) return;
-    const targetParentId = normalizeParentId(item.parentId);
-    
-    // Create a copy of the list to avoid mutating state directly
-    let updated = menusList.map(m => ({ ...m }));
-    
-    const siblings = updated
-      .filter(m => normalizeParentId(m.parentId) === targetParentId)
-      .sort((a, b) => (a.order || 0) - (b.order || 0));
-      
-    const idx = siblings.findIndex(m => m.id === id);
-    if (idx === -1 || idx >= siblings.length - 1) return; // Already last sibling
-
-    // Swap in the siblings array
-    const temp = siblings[idx];
-    siblings[idx] = siblings[idx + 1];
-    siblings[idx + 1] = temp;
-    
-    // Force sequential orders on siblings so that they stay in this EXACT order
-    siblings.forEach((sibling, i) => {
-      sibling.order = i + 1;
-    });
-
-    // Merge siblings back into updated array
-    updated = updated.map(m => {
-      const updatedSibling = siblings.find(s => s.id === m.id);
-      return updatedSibling ? updatedSibling : m;
-    });
-
-    const reindexed = reindexMenuOrders(updated);
-    await saveAllMenusToFirebase(reindexed);
-
-    const msg = `Élément "${item.title}" descendu.`;
-    setMenuAriaAnnouncement(msg);
-    setNotification(`Élément "${item.title}" déplacé.`);
-  };
-
-  const handleMakeSubItem = async (id) => {
-    const targetItem = menusList.find(m => m.id === id);
-    if (!targetItem) return;
-
-    // Find siblings (sharing the same parent)
-    const targetParentId = normalizeParentId(targetItem.parentId);
-    const siblings = menusList
-      .filter(m => normalizeParentId(m.parentId) === targetParentId)
-      .sort((a, b) => (a.order || 0) - (b.order || 0));
-
-    const idx = siblings.findIndex(m => m.id === id);
-    if (idx <= 0) {
-      setNotification("Impossible de créer un sous-menu : pas d'élément précédent à ce niveau.");
-      return;
-    }
-
-    // New parent is the sibling preceding this item
-    const newParent = siblings[idx - 1];
-    const newParentId = newParent.id;
-    const existingChildren = menusList.filter(m => normalizeParentId(m.parentId) === newParentId);
-    const newOrder = existingChildren.length + 1;
-
-    // Update item
-    const updated = menusList.map(m => {
-      if (m.id === id) {
-        return {
-          ...m,
-          parentId: newParentId,
-          order: newOrder
-        };
-      }
-      return m;
-    });
-
-    const reindexed = reindexMenuOrders(updated);
-    await saveAllMenusToFirebase(reindexed);
-
-    const msg = `Élément "${targetItem.title}" défini comme sous-menu de "${newParent.title}".`;
-    setMenuAriaAnnouncement(msg);
-    setNotification(`"${targetItem.title}" est maintenant un sous-menu.`);
-  };
-
-  const handleMakeTopItem = async (id) => {
-    const targetItem = menusList.find(m => m.id === id);
-    if (!targetItem) return;
-    const targetParentId = normalizeParentId(targetItem.parentId);
-    if (!targetParentId) return;
-
-    // Parent of current item
-    const parentItem = menusList.find(m => m.id === targetParentId);
-    const newParentId = parentItem ? normalizeParentId(parentItem.parentId) : null;
-    const parentOrder = parentItem ? (parentItem.order || 0) : 0;
-    const newOrder = parentOrder + 1;
-
-    // Update parentId and shift orders of items that come after parent
-    const updated = menusList.map(m => {
-      if (m.id === id) {
-        return {
-          ...m,
-          parentId: newParentId,
-          order: newOrder
-        };
-      }
-      if (normalizeParentId(m.parentId) === newParentId && m.order >= newOrder && m.id !== id) {
-        return { ...m, order: m.order + 1 };
-      }
-      return m;
-    });
-
-    const reindexed = reindexMenuOrders(updated);
-    await saveAllMenusToFirebase(reindexed);
-
-    const msg = `Élément "${targetItem.title}" sorti du sous-menu.`;
-    setMenuAriaAnnouncement(msg);
-    setNotification(`"${targetItem.title}" a été remonté.`);
-  };
-
-  const handleMoveItemDragAndDrop = async (draggedId, targetId) => {
-    if (draggedId === targetId) return;
-
-    // Avoid cyclical parenting (dragging into own children)
-    const descendantIds = getDescendantIds(draggedId, menusList);
-    if (descendantIds.includes(targetId)) {
-      setNotification("Opération impossible : impossible de déplacer un élément dans ses propres sous-menus.");
-      return;
-    }
-
-    const draggedItem = menusList.find(m => m.id === draggedId);
-    const targetItem = menusList.find(m => m.id === targetId);
-    if (!draggedItem || !targetItem) return;
-
-    const targetParentId = normalizeParentId(targetItem.parentId);
-
-    // Get siblings under target parent (excluding the dragged item)
-    const siblings = menusList
-      .filter(m => normalizeParentId(m.parentId) === targetParentId && m.id !== draggedId)
-      .sort((a, b) => (a.order || 0) - (b.order || 0));
-
-    const targetSiblingsIdx = siblings.findIndex(m => m.id === targetId);
-
-    const updatedSiblings = [...siblings];
-    updatedSiblings.splice(targetSiblingsIdx, 0, { ...draggedItem, parentId: targetParentId });
-
-    // Re-assign orders
-    updatedSiblings.forEach((sib, index) => {
-      sib.order = index + 1;
-    });
-
-    const updatedList = menusList.map(m => {
-      if (m.id === draggedId) {
-        return { ...m, parentId: targetParentId, order: updatedSiblings.find(sib => sib.id === draggedId).order };
-      }
-      const sibMatch = updatedSiblings.find(sib => sib.id === m.id);
-      if (sibMatch) {
-        return { ...m, order: sibMatch.order };
-      }
-      return m;
-    });
-
-    const reindexed = reindexMenuOrders(updatedList);
-    await saveAllMenusToFirebase(reindexed);
-
-    const msg = `Élément "${draggedItem.title}" déplacé.`;
-    setMenuAriaAnnouncement(msg);
-    setNotification("Ordre du menu mis à jour.");
-  };
-
-  const handleDeleteMenu = async (id, title) => {
-    if (!window.confirm(`Voulez-vous vraiment supprimer l'élément "${title}" ?`)) return;
-
-    const targetItem = menusList.find(m => m.id === id);
-    const parentId = targetItem ? normalizeParentId(targetItem.parentId) : null;
-
-    const updated = menusList
-      .filter(m => m.id !== id)
-      .map(m => {
-        if (normalizeParentId(m.parentId) === id) {
-          return { ...m, parentId: parentId };
-        }
-        return m;
-      });
-
-    const reindexed = reindexMenuOrders(updated);
-    setMenusList(reindexed);
-    localStorage.setItem("ae_menus", JSON.stringify(reindexed));
-
-    try {
-      await deleteDoc(doc(db, "menus", id));
-      await Promise.all(reindexed.map(async (m) => {
-        const { id: docId, ...menuData } = m;
-        const dataToSave = {
-          ...menuData,
-          parentId: normalizeParentId(menuData.parentId),
-          order: menuData.order || 0,
-          updatedAt: new Date()
-        };
-        await setDoc(doc(db, "menus", docId), dataToSave);
-      }));
-      setNotification(`Élément "${title}" supprimé.`);
-    } catch (err) {
-      console.error(err);
-      setNotification(`Élément "${title}" retiré localement.`);
-    }
-  };
 
   const handleCopyShortcode = (shortcode) => {
     if (!shortcode) return;
@@ -2566,16 +2295,6 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
       (fb.description && fb.description.toLowerCase().includes(searchQuery.toLowerCase()))
     );
 
-  const displayedMenus = getFlattenedMenuTree(menusList)
-    .filter(m => {
-      const q = menusSearchQuery.toLowerCase().trim();
-      if (!q) return true;
-      return (
-        (m.title && m.title.toLowerCase().includes(q)) ||
-        (m.description && m.description.toLowerCase().includes(q)) ||
-        (m.shortcode && m.shortcode.toLowerCase().includes(q))
-      );
-    });
 
   if (isLoggedOut) {
     return (
@@ -3934,243 +3653,20 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
                   )}
 
                   {activeSection === "Mes menus" && (
-                    <div className="space-y-6">
-                      <div className="ae-toolbar-header-responsive">
-                        <div>
-                          <h4 className="ae-card-title-lg">
-                            Menu de Navigation & Actions de Shortcode
-                          </h4>
-                          <p className="ae-text-sm-muted">
-                            Gérez et réordonnez la structure du menu de votre site. Glissez-déposez les éléments pour les réorganiser ou les imbriquer.
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Screen reader aria-live region */}
-                      <div className="sr-only" aria-live="polite" aria-atomic="true">
-                        {menuAriaAnnouncement}
-                      </div>
-
-                      {/* Search Bar & Focus Information */}
-                      <div className="ae-banner-header-card">
-                        <div className="flex-grow max-w-md">
-                          <input 
-                            type="text"
-                            placeholder="Rechercher un élément ou shortcode..."
-                            value={menusSearchQuery}
-                            onChange={(e) => setMenusSearchQuery(e.target.value)}
-                            className="db-input"
-                          />
-                        </div>
-                        <div className="ae-caption-with-icon">
-                          <span className="ae-indicator-pulse-blue"></span>
-                          <span>Faites glisser les éléments ou utilisez les boutons pour réordonner</span>
-                        </div>
-                      </div>
-                      {/* Menu Builder Drag and Drop List */}
-                      <div className="menu-builder-list">
-                        {displayedMenus.map((item) => {
-                          const targetParentId = normalizeParentId(item.parentId);
-                          const itemSiblings = menusList
-                            .filter(m => normalizeParentId(m.parentId) === targetParentId)
-                            .sort((a, b) => (a.order || 0) - (b.order || 0));
-                          const canGoRight = itemSiblings.findIndex(m => m.id === item.id) > 0;
-                          const canGoLeft = targetParentId !== null;
-                          const isLeaf = !menusList.some(m => normalizeParentId(m.parentId) === item.id);
-
-                          return (
-                            <div 
-                              key={item.id}
-                              className={`menu-builder-item ${draggedItemId === item.id ? "dragging" : ""} ${newlyAddedMenuItemId === item.id ? "new-item-highlight" : ""}`}
-                              style={{
-                                marginLeft: `${(item.depth || 0) * 30}px`,
-                                borderLeft: item.depth > 0 ? "3px solid var(--secondary)" : "none",
-                                paddingLeft: item.depth > 0 ? "12px" : "0"
-                              }}
-                              draggable
-                              onDragStart={(e) => {
-                                setDraggedItemId(item.id);
-                                e.dataTransfer.effectAllowed = "move";
-                              }}
-                              onDragEnd={() => setDraggedItemId(null)}
-                              onDragOver={(e) => {
-                                e.preventDefault();
-                              }}
-                              onDrop={(e) => {
-                                e.preventDefault();
-                                if (!draggedItemId || draggedItemId === item.id) return;
-                                handleMoveItemDragAndDrop(draggedItemId, item.id);
-                              }}
-                            >
-                              <div className="menu-builder-item-left">
-                                <div 
-                                  className="menu-drag-handle" 
-                                  title="Faites glisser pour réordonner"
-                                >
-                                  <GripVertical className="ae-icon-size-sm" />
-                                </div>
-                                <div className="menu-item-details">
-                                  <div className="ae-flex-row-gap-md">
-                                    <span className="text-base">
-                                      {item.icon === "Home" && "🏠"}
-                                      {item.icon === "Newspaper" && "📰"}
-                                      {item.icon === "HelpCircle" && "❓"}
-                                      {item.icon === "Layers" && "🧩"}
-                                      {item.icon === "Link" && "🔗"}
-                                    </span>
-                                    <span className="menu-item-title">{item.title}</span>
-                                    {!isLeaf && (
-                                      <span className="text-[10px] bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 px-1.5 py-0.5 rounded font-sans">
-                                        Parent
-                                      </span>
-                                    )}
-                                  </div>
-                                  <div className="ae-menu-item-meta">
-                                    <span className={`menu-badge-type ${item.type === "internal" || item.type === "internal-link" ? "internal" : item.type === "external" || item.type === "external-link" ? "external" : "shortcode"}`}>
-                                      {item.type === "internal" || item.type === "internal-link" ? "Lien interne" : item.type === "external" || item.type === "external-link" ? "Lien externe" : "Shortcode"}
-                                    </span>
-                                    <span className={`menu-badge-status ${item.status === "Actif" || item.isActive ? "active" : "inactive"}`}>
-                                      {item.status || (item.isActive ? "Actif" : "Inactif")}
-                                    </span>
-                                    {item.url && <span className="ae-mono-badge-muted">({item.url})</span>}
-                                    {isLeaf && item.shortcode && (
-                                      <span className="text-[11px] font-mono font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-1.5 py-0.5 rounded ml-1">
-                                        {getShortcodeDisplayValue(item.shortcode)}
-                                      </span>
-                                    )}
-                                    {!isLeaf && item.shortcode && (
-                                      <span className="ae-text-strikethrough-mono" title="Masqué car possède des enfants">
-                                        {getShortcodeDisplayValue(item.shortcode)}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Action controls (Accessibility alternatives + standard actions) */}
-                              <div className="menu-item-actions">
-                                {/* Reordering buttons for keyboard/a11y users */}
-                                <button
-                                  type="button"
-                                  onClick={() => handleMoveUp(item.id)}
-                                  className="menu-action-btn"
-                                  aria-label={`Monter l'élément ${item.title}`}
-                                  title="Monter"
-                                >
-                                  <ChevronUp className="ae-icon-sm" />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleMoveDown(item.id)}
-                                  className="menu-action-btn"
-                                  aria-label={`Descendre l'élément ${item.title}`}
-                                  title="Descendre"
-                                >
-                                  <ChevronDown className="ae-icon-sm" />
-                                </button>
-                                
-                                {/* Nesting controls */}
-                                {canGoLeft && (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleMakeTopItem(item.id)}
-                                    className="menu-action-btn"
-                                    aria-label={`Remonter l'élément d'un niveau`}
-                                    title="Remonter d'un niveau (Sortir)"
-                                  >
-                                    <ChevronLeft className="ae-icon-sm" />
-                                  </button>
-                                )}
-                                {(!item.parentId || canGoRight) && (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleMakeSubItem(item.id)}
-                                    className="menu-action-btn"
-                                    aria-label={`Déplacer en sous-menu de l'élément précédent`}
-                                    title="Déplacer en sous-menu"
-                                  >
-                                    <ChevronRight className="ae-icon-sm" />
-                                  </button>
-                                )}
-
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setEditingMenuItemId(item.id);
-                                    setNewMenuItemTitle(item.title);
-                                    setNewMenuItemIcon(item.icon || "Layers");
-                                    setNewMenuItemUrl(item.url || item.slug || "");
-                                    setNewMenuItemShortcode(item.shortcode || "");
-                                    setNewMenuItemStatus(item.status || (item.isActive ? "Actif" : "Inactif"));
-                                    setNewMenuItemDescription(item.description || "");
-                                    setNewMenuItemType(item.type || "internal");
-                                    setNewMenuItemParentId(item.parentId || "");
-                                    setShowAddMenuModal(true);
-                                  }}
-                                  className="menu-action-btn"
-                                  aria-label={`Modifier l'élément ${item.title}`}
-                                >
-                                  Modifier
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleDeleteMenu(item.id, item.title)}
-                                  className="menu-action-btn danger"
-                                  aria-label={`Supprimer l'élément ${item.title}`}
-                                  title="Supprimer"
-                                >
-                                  <Trash2 className="ae-icon-sm" />
-                                </button>
-                              </div>
-                            </div>
-                          );
-                        })}
-                        {displayedMenus.length === 0 && (
-                          <div className="text-center py-12 text-slate-400 italic bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 w-full">
-                            Aucun élément de menu trouvé.
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Bouton Ajouter un élément & Formulaire Inline */}
-                      {(!showAddMenuModal || editingMenuItemId !== null) ? (
-                        <div className="mt-4">
-                          <button
-                            onClick={() => {
-                              setEditingMenuItemId(null);
-                              setNewMenuItemTitle("");
-                              setNewMenuItemIcon("Layers");
-                              setNewMenuItemUrl("");
-                              setNewMenuItemShortcode("");
-                              setNewMenuItemStatus("Actif");
-                              setNewMenuItemDescription("");
-                              setNewMenuItemType("internal-link");
-                              setNewMenuItemParentId("");
-                              setShowAddMenuModal(true);
-                              
-                              setTimeout(() => {
-                                const formEl = document.getElementById("inline-add-menu-form");
-                                if (formEl && typeof formEl.scrollIntoView === 'function') {
-                                  formEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                                }
-                              }, 100);
-                            }}
-                            className="w-full md:w-auto bg-blue-50 dark:bg-slate-800 hover:bg-blue-100 dark:hover:bg-slate-700 text-blue-700 dark:text-blue-400 text-sm font-bold px-6 py-3 rounded-xl cursor-pointer transition-colors inline-flex items-center justify-center gap-2 border border-blue-200 dark:border-slate-700 shadow-sm"
-                          >
-                            <Plus className="ae-icon-size-sm" /> Ajouter un élément
-                          </button>
-                        </div>
-                      ) : (
-                        <div id="inline-add-menu-form" className="mt-6 inline-form-transition">
-                          <div className="ae-dashboard-panel-card">
-                            <h3 className="flex items-center gap-2 text-blue-600 font-bold mb-4 text-lg border-b border-slate-100 dark:border-slate-800 pb-3">
-                              <Plus className="ae-icon-md" /> Ajouter un élément
-                            </h3>
-                            {renderMenuForm(true)}
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                    <MenuManager
+                      menusList={menusList}
+                      onSaveAllMenus={saveAllMenusToFirebase}
+                      pagesList={pagesList}
+                      textsData={textsData}
+                      flipbooks={flipbooks}
+                      normalizeParentId={normalizeParentId}
+                      reindexMenuOrders={reindexMenuOrders}
+                      getDescendantIds={getDescendantIds}
+                      getFlattenedMenuTree={getFlattenedMenuTree}
+                      menuAriaAnnouncement={menuAriaAnnouncement}
+                      setMenuAriaAnnouncement={setMenuAriaAnnouncement}
+                      setNotification={setNotification}
+                    />
                   )}
 
                   {activeSection === "Paramètres" && (

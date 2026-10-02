@@ -63,3 +63,17 @@ export function escapeHtml(str) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
 }
+
+/**
+ * Strips script tags and all HTML tags from input string.
+ * @param {string} val 
+ * @returns {string} Sanitized plain text
+ */
+export function sanitizeInput(val) {
+  if (typeof val !== "string") return "";
+  return val
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
+    .replace(/<[^>]*>/g, "")
+    .trim();
+}
+
