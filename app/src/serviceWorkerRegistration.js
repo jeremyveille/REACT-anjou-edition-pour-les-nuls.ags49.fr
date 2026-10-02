@@ -8,6 +8,16 @@ const isLocalhost = Boolean(
 
 export function register(config) {
   if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator && navigator.serviceWorker) {
+    if (typeof navigator.serviceWorker.addEventListener === 'function') {
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing && typeof window !== 'undefined' && window.location) {
+          refreshing = true;
+          window.location.reload();
+        }
+      });
+    }
+
     if (process.env.NODE_ENV === 'production') {
       // The URL constructor is available in all browsers that support SW.
       const publicUrl = new URL(process.env.PUBLIC_URL || '', window.location.href);
@@ -44,6 +54,9 @@ function registerValidSW(swUrl, config) {
   navigator.serviceWorker
     .register(swUrl)
     .then((registration) => {
+      if (registration && typeof registration.update === 'function') {
+        registration.update().catch(() => {});
+      }
       registration.onupdatefound = () => {
         const installingWorker = registration.installing;
         if (installingWorker == null) {

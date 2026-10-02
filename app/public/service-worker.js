@@ -1,7 +1,7 @@
 /* eslint-disable no-restricted-globals */
 
 // Cache versioning
-const CACHE_VERSION = 'v4';
+const CACHE_VERSION = 'v6';
 const STATIC_CACHE = `anjou-edition-static-${CACHE_VERSION}`;
 const MEDIA_CACHE = `anjou-edition-media-${CACHE_VERSION}`;
 const PDF_CACHE = `anjou-edition-pdf-${CACHE_VERSION}`;
@@ -28,9 +28,16 @@ self.addEventListener('install', (event) => {
       // Use map with individual catches so if one asset fails, the rest still install
       return Promise.all(
         STATIC_ASSETS.map((asset) => {
-          return cache.add(asset).catch((err) => {
-            console.warn(`[Service Worker] Impossible de pré-mettre en cache l'asset : ${asset}`, err);
-          });
+          const req = new Request(asset, { cache: 'reload' });
+          return fetch(req)
+            .then((res) => {
+              if (res.status === 200) {
+                return cache.put(asset, res);
+              }
+            })
+            .catch((err) => {
+              console.warn(`[Service Worker] Impossible de pré-mettre en cache l'asset : ${asset}`, err);
+            });
         })
       );
     }).then(() => self.skipWaiting())
