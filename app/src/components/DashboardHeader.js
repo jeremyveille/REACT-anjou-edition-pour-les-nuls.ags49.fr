@@ -33,9 +33,9 @@ export default function DashboardHeader({
   };
 
   return (
-    <header className="dashboard-topbar ae-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', margin: '0 0 24px 0', padding: '16px 24px', background: 'linear-gradient(135deg, var(--blue-dark, #004b7a) 0%, var(--blue-primary, #336ddc) 100%)', color: 'white', borderRadius: '12px' }}>
+    <header className="dashboard-topbar ae-card">
       {/* LEFT: Toggle & Title */}
-      <div className="topbar-left" style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+      <div className="topbar-left">
         <button
           ref={hamburgerBtnRef}
           type="button"
@@ -45,40 +45,40 @@ export default function DashboardHeader({
           aria-expanded={sidebarOpen}
           aria-controls="dashboard-sidebar"
           title="Menu de navigation"
-          style={{ color: 'white', background: 'rgba(255,255,255,0.1)', flexShrink: 0 }}
         >
           <Menu size={20} aria-hidden="true" />
         </button>
-        <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-          <h2 className="topbar-title" style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        <div className="topbar-title-wrapper">
+          <h2 className="topbar-title">
             {getSectionTitle()}
           </h2>
-          <span style={{ fontSize: '0.75rem', opacity: 0.8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Administration Anjou Édition</span>
+          <span className="topbar-subtitle">Administration Anjou Édition</span>
         </div>
       </div>
 
       {/* RIGHT: Quick Action Buttons */}
-      <div className="topbar-right" style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
+      <div className="topbar-right">
         {onBackToSiteClick && (
           <button
             id="btn-nav-back-to-site"
+            type="button"
             onClick={onBackToSiteClick}
-            className="ae-button"
-            title="Voir le site"
-            style={{ background: 'rgba(255,255,255,0.15)', color: 'white', border: '1px solid rgba(255,255,255,0.2)' }}
+            className="ae-button topbar-btn-site"
+            title="Voir le site grand public"
           >
-            <BookOpen size={16} />
+            <BookOpen size={16} aria-hidden="true" />
             <span className="header-btn-text">Voir le site</span>
           </button>
         )}
         
         <button
           id="btn-nav-logout"
+          type="button"
           onClick={onLogoutClick}
-          className="ae-button ae-button--danger"
-          title="Déconnexion"
+          className="ae-button ae-button--danger topbar-btn-logout"
+          title="Déconnexion de l'espace d'administration"
         >
-          <Lock size={16} />
+          <Lock size={16} aria-hidden="true" />
           <span className="header-btn-text">Déconnexion</span>
         </button>
       </div>

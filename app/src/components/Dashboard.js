@@ -2509,12 +2509,8 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
         </div>
       )}
 
-      {/* Visual background decoration banner */}
-      <div className="blue-top-accent"></div>
-
-      {/* Main Container positioned elegantly top-level */}
-      <div className="ae-layout-container position-relative">
-        <div className={`container-card dashboard-layout-container ${sidebarOpen ? "sidebar-open" : ""}`}>
+      {/* SaaS Dashboard Layout: Sidebar | Main Content Area */}
+      <div className={`dashboard-layout-container ${sidebarOpen ? "sidebar-open" : ""}`}>
           
           {/* Left Sidebar */}
           <DashboardSidebar
@@ -3891,9 +3887,8 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
                 /* ======================================================== */
                 /* STANDARD TWO COLUMN DASHBOARD PRESENTATION LAYOUT       */
                 /* ======================================================== */
-                <div className="space-y-6">
-                  
-                  {/* KPI Cards Row */}
+                <div className="ae-dashboard-home-content">
+                  {/* KPI Cards Row (Responsive Grid: 4 columns desktop, 2 tablet, 1 mobile) */}
                   <div className="ae-stats-grid">
                     <div className="ae-card ae-stat-card">
                       <div className="ae-stat-content">
@@ -3901,8 +3896,8 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
                         <span className="ae-stat-value">{pagesList.length}</span>
                         <span className="ae-stat-desc">En ligne & Brouillons</span>
                       </div>
-                      <div className="ae-stat-icon-wrapper" style={{ background: '#ecfdf5', color: '#059669' }}>
-                        <FileText size={24} />
+                      <div className="ae-stat-icon-wrapper ae-stat-icon--green">
+                        <FileText size={22} aria-hidden="true" />
                       </div>
                     </div>
 
@@ -3912,8 +3907,8 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
                         <span className="ae-stat-value">{articlesList.length}</span>
                         <span className="ae-stat-desc">Lectorat & Poésies</span>
                       </div>
-                      <div className="ae-stat-icon-wrapper" style={{ background: '#eff6ff', color: '#2563eb' }}>
-                        <Newspaper size={24} />
+                      <div className="ae-stat-icon-wrapper ae-stat-icon--blue">
+                        <Newspaper size={22} aria-hidden="true" />
                       </div>
                     </div>
 
@@ -3923,8 +3918,8 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
                         <span className="ae-stat-value">{messagesList.length}</span>
                         <span className="ae-stat-desc">Messages de contact</span>
                       </div>
-                      <div className="ae-stat-icon-wrapper" style={{ background: '#fffbeb', color: '#d97706' }}>
-                        <MessageSquare size={24} />
+                      <div className="ae-stat-icon-wrapper ae-stat-icon--amber">
+                        <MessageSquare size={22} aria-hidden="true" />
                       </div>
                     </div>
 
@@ -3934,176 +3929,170 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
                         <span className="ae-stat-value">Active</span>
                         <span className="ae-stat-desc">Mode Cloud Firestore</span>
                       </div>
-                      <div className="ae-stat-icon-wrapper" style={{ background: '#ecfdf5', color: '#059669' }}>
-                        <ShieldCheck size={24} />
+                      <div className="ae-stat-icon-wrapper ae-stat-icon--emerald">
+                        <ShieldCheck size={22} aria-hidden="true" />
                       </div>
                     </div>
                   </div>
 
-                  {/* Main Grid: Info & Activities */}
-                  <div className="ae-dashboard-grid-12cols" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
-                    
-                    {/* Left Column: Welcome Info Card */}
-                    <div className="ae-column-sidebar" style={{ display: 'flex', flexDirection: 'column' }}>
-                      <InfoCard 
-                        onLearnMore={() => {
-                          setNotification("Le portail Anjou Edition est configuré avec l'API Éditeur v2.4 pour la production.");
-                        }} 
-                      />
-                      
-                      <div className="ae-card" style={{ marginTop: '24px', background: 'rgba(51, 109, 220, 0.03)', borderColor: 'rgba(51, 109, 220, 0.15)' }}>
-                        <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#004b7a', fontWeight: 700, margin: '0 0 8px 0', fontSize: '0.95rem' }}>
-                          <Sparkles size={16} />
-                          Conseil d'administration :
+                  {/* Main Grid: Coherent 2-Column Responsive Grid directly aligned with stats */}
+                  <div className="ae-dashboard-main-grid">
+                    {/* Recent Pages activity */}
+                    <div className="ae-card ae-activity-card">
+                      <div className="ae-card-header">
+                        <h4 className="ae-card-title">
+                          <FileText className="ae-card-title-icon" size={18} aria-hidden="true" />
+                          Pages Récentes
                         </h4>
-                        <p style={{ margin: 0, fontSize: '0.875rem', color: '#475569', lineHeight: 1.6 }}>
-                          Le menu latéral vous permet d'accéder instantanément à tous les modules d'administration. Vos modifications sont enregistrées en temps réel dans Firestore.
-                        </p>
+                        <button 
+                          onClick={() => setActiveSection("Page")}
+                          className="ae-button ae-button--secondary ae-button--sm"
+                          title="Gérer toutes les pages"
+                        >
+                          Gérer
+                        </button>
                       </div>
-                    </div>
-
-                    {/* Right Column: Activities & AI generation */}
-                    <div className="ae-layout-main-column-wide" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                      
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
-                        {/* Recent Pages activity */}
-                        <div className="ae-card" style={{ padding: '20px' }}>
-                          <div className="ae-card-header">
-                            <h4 className="ae-card-title">
-                              <FileText className="ae-card-title-icon" size={20} />
-                              Pages Récentes
-                            </h4>
+                      <div className="ae-activity-list">
+                        {pagesList.slice(-3).reverse().map(p => (
+                          <div key={p.id} className="ae-list-item">
+                            <div className="ae-list-item-content">
+                              <span className="ae-list-item-title">{p.title}</span>
+                              <span className="ae-list-item-meta">Auteur : {p.author || "Jeremy Veille"} | {p.status || "Brouillon"}</span>
+                            </div>
                             <button 
                               onClick={() => setActiveSection("Page")}
-                              className="ae-button ae-button--secondary"
-                              style={{ padding: '4px 12px', fontSize: '0.75rem' }}
+                              className="ae-button ae-button--ghost ae-button--sm"
+                              title={`Éditer la page ${p.title}`}
                             >
-                              Gérer
+                              Éditer
                             </button>
                           </div>
-                          <div>
-                            {pagesList.slice(-3).reverse().map(p => (
-                              <div key={p.id} className="ae-list-item">
-                                <div className="ae-list-item-content">
-                                  <span className="ae-list-item-title">{p.title}</span>
-                                  <span className="ae-list-item-meta">Auteur: {p.author} | {p.status}</span>
-                                </div>
-                                <button 
-                                  onClick={() => setActiveSection("Page")}
-                                  className="ae-button ae-button--ghost"
-                                >
-                                  Éditer
-                                </button>
-                              </div>
-                            ))}
-                            {pagesList.length === 0 && (
-                              <div className="text-center py-4 text-slate-400 text-sm italic">Aucune page créée.</div>
-                            )}
-                          </div>
-                        </div>
+                        ))}
+                        {pagesList.length === 0 && (
+                          <div className="ae-empty-text">Aucune page créée.</div>
+                        )}
+                      </div>
+                    </div>
 
-                        {/* Recent Messages activity */}
-                        <div className="ae-card" style={{ padding: '20px' }}>
-                          <div className="ae-card-header">
-                            <h4 className="ae-card-title">
-                              <MessageSquare className="ae-card-title-icon" size={20} style={{ color: '#059669' }} />
-                              Derniers Messages
-                            </h4>
+                    {/* Recent Messages activity */}
+                    <div className="ae-card ae-activity-card">
+                      <div className="ae-card-header">
+                        <h4 className="ae-card-title">
+                          <MessageSquare className="ae-card-title-icon ae-icon-emerald" size={18} aria-hidden="true" />
+                          Derniers Messages
+                        </h4>
+                        <button 
+                          onClick={() => setActiveSection("Messages")}
+                          className="ae-button ae-button--secondary ae-button--sm"
+                          title="Consulter la boîte de réception"
+                        >
+                          Boîte
+                        </button>
+                      </div>
+                      <div className="ae-activity-list">
+                        {messagesList.slice(-3).reverse().map(m => (
+                          <div key={m.id} className="ae-list-item">
+                            <div className="ae-list-item-content">
+                              <span className="ae-list-item-title">{m.subject || "Message de contact"}</span>
+                              <span className="ae-list-item-meta">De : {m.name || "Visiteur"} | {m.date || "Récemment"}</span>
+                            </div>
                             <button 
                               onClick={() => setActiveSection("Messages")}
-                              className="ae-button ae-button--secondary"
-                              style={{ padding: '4px 12px', fontSize: '0.75rem' }}
+                              className="ae-button ae-button--ghost ae-button--sm"
+                              title="Lire le message"
                             >
-                              Boîte
+                              Lire
                             </button>
                           </div>
-                          <div>
-                            {messagesList.slice(-3).reverse().map(m => (
-                              <div key={m.id} className="ae-list-item">
-                                <div className="ae-list-item-content">
-                                  <span className="ae-list-item-title">{m.subject}</span>
-                                  <span className="ae-list-item-meta">De: {m.name} | {m.date}</span>
-                                </div>
-                                <button 
-                                  onClick={() => setActiveSection("Messages")}
-                                  className="ae-button ae-button--ghost"
-                                >
-                                  Lire
-                                </button>
-                              </div>
-                            ))}
-                            {messagesList.length === 0 && (
-                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px 0', color: '#94a3b8' }}>
-                                <MessageSquare size={32} style={{ marginBottom: '8px', opacity: 0.5 }} />
-                                <span className="text-sm italic">Aucun message de contact.</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
+                        ))}
+                        {messagesList.length === 0 && (
+                          <div className="ae-empty-text">Aucun message de contact.</div>
+                        )}
                       </div>
+                    </div>
 
-                      {/* Quick AI Widget */}
-                      {getGeminiClient() && (
-                        <div className="quick-ai-widget">
-                          <div className="quick-ai-header">
-                            <h4 className="quick-ai-title">
-                              <Sparkles className="ae-status-pulse-indigo" />
-                              Générateur d'Article Rapide (Gemini)
-                            </h4>
-                            <button 
-                              onClick={() => setActiveSection("Article")}
-                              className="ae-activity-action-btn"
-                              style={{ color: "#4f46e5" }}
-                            >
-                              Aller à l'éditeur IA
-                            </button>
-                          </div>
-                          <div className="ae-responsive-grid-2col">
-                            <div>
-                              <input 
-                                type="text" 
-                                value={aiTopic}
-                                onChange={(e) => setAiTopic(e.target.value)}
-                                placeholder="Sujet (ex: Le vin angevin)..."
-                                className="db-input text-xs"
-                              />
-                            </div>
-                            <div className="ae-flex-gap-sm">
-                              <select
-                                value={aiStyle}
-                                onChange={(e) => setAiStyle(e.target.value)}
-                                className="db-select text-xs"
-                              >
-                                <option value="Historique">Historique</option>
-                                <option value="Poétique">Poétique</option>
-                                <option value="Journalistique">Journalistique</option>
-                              </select>
-                              <button
-                                onClick={handleGenerateArticle}
-                                disabled={aiLoading || !aiTopic.trim()}
-                                className="db-btn-primary bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-350 shrink-0 border-none cursor-pointer"
-                                style={{ width: "auto" }}
-                              >
-                                {aiLoading ? "Génération..." : "Rédiger"}
-                              </button>
-                            </div>
-                          </div>
-                          {aiResult && (
-                            <div className="mt-2 p-3 bg-white/70 dark:bg-slate-900/60 rounded-lg border border-indigo-150 space-y-2">
-                              <p className="ae-description-clamped">{aiResult}</p>
-                              <button
-                                onClick={handlePublishAiArticle}
-                                className="db-btn-primary bg-emerald-600 hover:bg-emerald-700 text-xs py-1 px-3 w-auto border-none cursor-pointer"
-                              >
-                                Publier cet Article rédigé
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      )}
+                    {/* Administrative Status Card: Service Anjou Édition */}
+                    <InfoCard 
+                      onLearnMore={() => {
+                        setNotification("Le portail Anjou Edition est configuré avec l'API Éditeur v2.4 pour la production.");
+                      }} 
+                    />
 
+                    {/* Conseil d'administration: Compact & High Contrast (WCAG AAA) */}
+                    <div className="ae-card ae-admin-tip-card">
+                      <div className="ae-tip-header">
+                        <Sparkles size={18} className="ae-tip-icon" aria-hidden="true" />
+                        <h4 className="ae-tip-title">Conseil d'administration</h4>
+                      </div>
+                      <p className="ae-tip-text">
+                        Le menu latéral vous permet d'accéder instantanément à tous les modules d'administration. Vos modifications sont enregistrées en temps réel dans Firestore.
+                      </p>
+                      <div className="ae-tip-footer-badge">
+                        <span className="ae-tip-status-dot" aria-hidden="true"></span>
+                        Synchronisation temps réel
+                      </div>
                     </div>
                   </div>
+
+                  {/* Quick AI Widget */}
+                  {getGeminiClient() && (
+                    <div className="ae-card quick-ai-widget" style={{ marginTop: '16px' }}>
+                      <div className="quick-ai-header">
+                        <h4 className="quick-ai-title">
+                          <Sparkles className="ae-status-pulse-indigo" />
+                          Générateur d'Article Rapide (Gemini)
+                        </h4>
+                        <button 
+                          onClick={() => setActiveSection("Article")}
+                          className="ae-activity-action-btn"
+                          style={{ color: "#4f46e5" }}
+                        >
+                          Aller à l'éditeur IA
+                        </button>
+                      </div>
+                      <div className="ae-responsive-grid-2col">
+                        <div>
+                          <input 
+                            type="text" 
+                            value={aiTopic}
+                            onChange={(e) => setAiTopic(e.target.value)}
+                            placeholder="Sujet (ex: Le vin angevin)..."
+                            className="db-input text-xs"
+                          />
+                        </div>
+                        <div className="ae-flex-gap-sm">
+                          <select
+                            value={aiStyle}
+                            onChange={(e) => setAiStyle(e.target.value)}
+                            className="db-select text-xs"
+                          >
+                            <option value="Historique">Historique</option>
+                            <option value="Poétique">Poétique</option>
+                            <option value="Journalistique">Journalistique</option>
+                          </select>
+                          <button
+                            onClick={handleGenerateArticle}
+                            disabled={aiLoading || !aiTopic.trim()}
+                            className="db-btn-primary bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-350 shrink-0 border-none cursor-pointer"
+                            style={{ width: "auto" }}
+                          >
+                            {aiLoading ? "Génération..." : "Rédiger"}
+                          </button>
+                        </div>
+                      </div>
+                      {aiResult && (
+                        <div className="mt-2 p-3 bg-white/70 dark:bg-slate-900/60 rounded-lg border border-indigo-150 space-y-2">
+                          <p className="ae-description-clamped">{aiResult}</p>
+                          <button
+                            onClick={handlePublishAiArticle}
+                            className="db-btn-primary bg-emerald-600 hover:bg-emerald-700 text-xs py-1 px-3 w-auto border-none cursor-pointer"
+                          >
+                            Publier cet Article rédigé
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -5410,7 +5399,6 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
 
           </div>
         </div>
-      </div>
     </div>
   );
 }

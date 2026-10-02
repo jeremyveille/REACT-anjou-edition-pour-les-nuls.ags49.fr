@@ -122,6 +122,7 @@ export default function DashboardSidebar({
       />
 
       <aside 
+        id="dashboard-sidebar"
         className={`dashboard-sidebar ${isCollapsed ? "is-collapsed" : ""} ${sidebarOpen ? "is-mobile-open" : ""}`}
         aria-label="Menu principal du tableau de bord"
       >
@@ -251,7 +252,7 @@ export default function DashboardSidebar({
               <span className="sidebar-menu-icon">
                 <Layers size={18} aria-hidden="true" />
               </span>
-              <span className="sidebar-label">Constructeur</span>
+              <span className="sidebar-label">Constructeur de pages</span>
             </span>
             {isCollapsed && <span className="sidebar-tooltip" role="tooltip">Constructeur de pages</span>}
           </button>
