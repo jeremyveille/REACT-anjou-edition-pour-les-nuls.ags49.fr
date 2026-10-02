@@ -9,7 +9,8 @@ export default function DashboardHeader({
   currentPage,
   activeSection,
   sidebarOpen,
-  setSidebarOpen
+  setSidebarOpen,
+  hamburgerBtnRef
 }) {
   // Translate activeSection into user friendly French titles
   const getSectionTitle = () => {
@@ -36,11 +37,14 @@ export default function DashboardHeader({
       {/* LEFT: Toggle & Title */}
       <div className="topbar-left" style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
         <button
+          ref={hamburgerBtnRef}
           type="button"
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="ae-icon-button"
+          className="ae-icon-button topbar-menu-toggle"
           aria-label="Afficher ou masquer le menu latéral"
           aria-expanded={sidebarOpen}
+          aria-controls="dashboard-sidebar"
+          title="Menu de navigation"
           style={{ color: 'white', background: 'rgba(255,255,255,0.1)', flexShrink: 0 }}
         >
           <Menu size={20} aria-hidden="true" />

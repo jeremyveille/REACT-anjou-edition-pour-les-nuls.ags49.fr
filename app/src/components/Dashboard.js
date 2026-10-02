@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import DashboardHeader from "./DashboardHeader";
+import DashboardSidebar from "./DashboardSidebar";
 import InfoCard from "./InfoCard";
 import { 
   ArrowLeft, FileText, Image, Newspaper, Play, 
-  Settings, Users, Layers, MessageSquare, Plus, 
+  Users, Layers, MessageSquare, Plus, 
   Trash2, ShieldCheck, Sparkles, BookOpen,
-  LayoutDashboard, Megaphone, FolderOpen, LogOut, X,
+  Megaphone, X,
   Copy, Edit3, Eye, UploadCloud, Menu, Star, Check,
   ChevronUp, ChevronDown, ChevronLeft, ChevronRight, GripVertical,
   PanelLeft
@@ -172,6 +173,7 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("Accueil");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const hamburgerBtnRef = useRef(null);
   const [newPageCategory, setNewPageCategory] = useState("Outils");
   const [newArticleCategory, setNewArticleCategory] = useState("Outils");
 
@@ -2793,244 +2795,31 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
 
       {/* Main Container positioned elegantly top-level */}
       <div className="ae-layout-container position-relative">
-        <div className={`container-card dashboard-layout-container ${sidebarOpen ? "sidebar-open" : ""}`} style={{ overflow: 'hidden' }}>
+        <div className={`container-card dashboard-layout-container ${sidebarOpen ? "sidebar-open" : ""}`}>
           
-          {/* Mobile sidebar overlay */}
-          <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)}></div>
-
-          {/* 1. Left Sidebar */}
-          <aside className="dashboard-sidebar">
-            <div>
-              {/* Sidebar branding */}
-              <div 
-                className="sidebar-brand cursor-pointer"
-                onClick={() => {
-                  setActiveSection(null);
-                  setActiveCategory("Accueil");
-                  setSidebarOpen(false);
-                  setNotification("Retour à l'accueil du tableau de bord.");
-                }}
-              >
-                <div className="sidebar-brand-icon">
-                  <BookOpen className="ae-icon-md" />
-                </div>
-                <div className="sidebar-brand-text">
-                  <span>ANJOU ÉDITION</span>
-                  <span className="sidebar-brand-subtitle">Pour les Nuls</span>
-                </div>
-              </div>
-
-              {/* Sidebar Menu */}
-              <nav className="sidebar-menu">
-                <div className="sidebar-section-title">Général</div>
-                <button
-                  onClick={() => {
-                    setActiveSection(null);
-                    setActiveCategory("Accueil");
-                    setSidebarOpen(false);
-                  }}
-                  className={`sidebar-menu-btn ${!activeSection ? "active" : ""}`}
-                >
-                  <span className="sidebar-menu-btn-inner">
-                    <LayoutDashboard className="ae-icon-size-sm" />
-                    Vue d'ensemble
-                  </span>
-                </button>
-
-                <div className="sidebar-section-title">Gestion Contenus</div>
-                <button
-                  onClick={() => {
-                    setActiveSection("Page");
-                    setSidebarOpen(false);
-                  }}
-                  className={`sidebar-menu-btn ${activeSection === "Page" ? "active" : ""}`}
-                >
-                  <span className="sidebar-menu-btn-inner">
-                    <FileText className="ae-icon-size-sm" />
-                    Pages
-                  </span>
-                  <span className="sidebar-badge">{pagesList.length}</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    setActiveSection("Article");
-                    setSidebarOpen(false);
-                  }}
-                  className={`sidebar-menu-btn ${activeSection === "Article" ? "active" : ""}`}
-                >
-                  <span className="sidebar-menu-btn-inner">
-                    <Newspaper className="ae-icon-size-sm" />
-                    Articles
-                  </span>
-                  <span className="sidebar-badge">{articlesList.length}</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    setActiveSection("Mes Flipbooks");
-                    setSidebarOpen(false);
-                  }}
-                  className={`sidebar-menu-btn ${activeSection === "Mes Flipbooks" ? "active" : ""}`}
-                >
-                  <span className="sidebar-menu-btn-inner">
-                    <BookOpen className="ae-icon-size-sm" />
-                    Flipbooks
-                  </span>
-                  <span className="sidebar-badge">{flipbooks.length}</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    const homePage = (pagesList || []).find(p => p.isHome === true || p.isHomePage === true || p.is_home === true || p.slug === 'accueil' || p.slug === 'home' || p.slug === '/' || (p.title || '').toLowerCase().includes('accueil')) || (pagesList && pagesList[0]);
-                    setBuilderEditingId(homePage ? homePage.id : null);
-                    setBuilderEditingType('page');
-                    setActiveSection("Constructeur de Page");
-                    setSidebarOpen(false);
-                  }}
-                  className={`sidebar-menu-btn ${activeSection === "Constructeur de Page" ? "active" : ""}`}
-                >
-                  <span className="sidebar-menu-btn-inner">
-                    <Layers className="ae-icon-size-sm" />
-                    Constructeur
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    setActiveSection("Actualités");
-                    setSidebarOpen(false);
-                  }}
-                  className={`sidebar-menu-btn ${activeSection === "Actualités" ? "active" : ""}`}
-                >
-                  <span className="sidebar-menu-btn-inner">
-                    <Megaphone className="ae-icon-size-sm" />
-                    Actualités
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    setActiveSection("Mes menus");
-                    setSidebarOpen(false);
-                  }}
-                  className={`sidebar-menu-btn ${activeSection === "Mes menus" ? "active" : ""}`}
-                >
-                  <span className="sidebar-menu-btn-inner">
-                    <Menu className="ae-icon-size-sm" />
-                    Mes menus
-                  </span>
-                </button>
-
-                <div className="sidebar-section-title">Médias</div>
-                <button
-                  onClick={() => {
-                    setActiveSection("Médiathèque");
-                    setSidebarOpen(false);
-                  }}
-                  className={`sidebar-menu-btn ${activeSection === "Médiathèque" ? "active" : ""}`}
-                >
-                  <span className="sidebar-menu-btn-inner">
-                    <FolderOpen className="ae-icon-size-sm" />
-                    Médiathèque
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    setActiveSection("Galerie");
-                    setSidebarOpen(false);
-                  }}
-                  className={`sidebar-menu-btn ${activeSection === "Galerie" ? "active" : ""}`}
-                >
-                  <span className="sidebar-menu-btn-inner">
-                    <Image className="ae-icon-size-sm" />
-                    Galerie Photos
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    setActiveSection("Vidéos");
-                    setSidebarOpen(false);
-                  }}
-                  className={`sidebar-menu-btn ${activeSection === "Vidéos" ? "active" : ""}`}
-                >
-                  <span className="sidebar-menu-btn-inner">
-                    <Play className="ae-icon-size-sm" />
-                    Vidéos
-                  </span>
-                </button>
-
-                <div className="sidebar-section-title">Administration</div>
-                <button
-                  onClick={() => {
-                    setActiveSection("Messages");
-                    setSidebarOpen(false);
-                  }}
-                  className={`sidebar-menu-btn ${activeSection === "Messages" ? "active" : ""}`}
-                >
-                  <span className="sidebar-menu-btn-inner">
-                    <MessageSquare className="ae-icon-size-sm" />
-                    Messages
-                  </span>
-                  {messagesList.length > 0 && (
-                    <span className="sidebar-badge sidebar-badge-red">{messagesList.length}</span>
-                  )}
-                </button>
-
-                <button
-                  onClick={() => {
-                    setActiveSection("Mes Comptes");
-                    setSidebarOpen(false);
-                  }}
-                  className={`sidebar-menu-btn ${activeSection === "Mes Comptes" ? "active" : ""}`}
-                >
-                  <span className="sidebar-menu-btn-inner">
-                    <Users className="ae-icon-size-sm" />
-                    Comptes / Écrivains
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    setActiveSection("Paramètres");
-                    setSidebarOpen(false);
-                  }}
-                  className={`sidebar-menu-btn ${activeSection === "Paramètres" ? "active" : ""}`}
-                >
-                  <span className="sidebar-menu-btn-inner">
-                    <Settings className="ae-icon-size-sm" />
-                    Paramètres
-                  </span>
-                </button>
-              </nav>
-            </div>
-
-            {/* Sidebar User Footer */}
-            <div className="sidebar-footer" style={{ padding: '24px', borderTop: '1px solid #e2e8f0', background: '#f8fafc' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#004b7a', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1rem' }}>
-                  {userName.charAt(0)}
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#0f172a' }}>{userName}</span>
-                  <span style={{ fontSize: '0.75rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }}></span>
-                    Administrateur
-                  </span>
-                </div>
-              </div>
-              <button
-                onClick={handleLogout}
-                className="ae-button ae-button--danger"
-                style={{ width: '100%', justifyContent: 'center' }}
-              >
-                <LogOut size={16} />
-                Déconnexion
-              </button>
-            </div>
-          </aside>
+          {/* Left Sidebar */}
+          <DashboardSidebar
+            activeSection={activeSection}
+            setActiveSection={setActiveSection}
+            setActiveCategory={setActiveCategory}
+            sidebarOpen={sidebarOpen}
+            setSidebarOpen={setSidebarOpen}
+            userName={userName}
+            handleLogout={handleLogout}
+            pagesCount={pagesList.length}
+            articlesCount={articlesList.length}
+            flipbooksCount={flipbooks.length}
+            messagesCount={messagesList.length}
+            onOpenPageBuilder={() => {
+              const homePage = (pagesList || []).find(p => p.isHome === true || p.isHomePage === true || p.is_home === true || p.slug === 'accueil' || p.slug === 'home' || p.slug === '/' || (p.title || '').toLowerCase().includes('accueil')) || (pagesList && pagesList[0]);
+              setBuilderEditingId(homePage ? homePage.id : null);
+              setBuilderEditingType('page');
+              setActiveSection("Constructeur de Page");
+              setSidebarOpen(false);
+            }}
+            setNotification={setNotification}
+            hamburgerBtnRef={hamburgerBtnRef}
+          />
 
           {/* 2. Right Content Area */}
           <div className="dashboard-content-area">
@@ -3050,6 +2839,7 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
               activeSection={activeSection}
               sidebarOpen={sidebarOpen}
               setSidebarOpen={setSidebarOpen}
+              hamburgerBtnRef={hamburgerBtnRef}
             />
 
             {/* Main Area Content */}
