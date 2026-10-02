@@ -533,7 +533,7 @@
 }
 
 .ae-mobile-nav-item-button {
-  flex-grow: 1; text-align: left; margin: 0; padding: 0;
+  flex-grow: 1; text-align: left; margin: 0; padding: 0; font-family: inherit; font-size: inherit; font-weight: inherit; color: inherit;
 }
 
 .ae-caption-constrained {

@@ -335,7 +335,7 @@ nav {
 }
 
 .nav-logo {
-  font-size: 0.95rem;
+  font-size: 0.9975rem;
   font-weight: 800;
   color: var(--text-main);
   text-transform: uppercase;
@@ -362,7 +362,7 @@ nav {
   text-decoration: none;
   color: var(--text-main);
   font-weight: 600;
-  font-size: 0.8rem;
+  font-size: 0.84rem;
   padding: 0.35rem 0.6rem;
   border-radius: 99px;
   cursor: pointer;
@@ -387,7 +387,7 @@ nav {
   align-items: center;
   padding: 0;
   border-radius: 99px;
-  font-size: 0.8rem;
+  font-size: 0.84rem;
   font-weight: 600;
   color: var(--text-main);
   transition: var(--transition);
@@ -402,7 +402,7 @@ nav {
 
 .nav-dropdown-btn,
 .nav-dropdown-label {
-  font-size: 0.8rem;
+  font-size: 0.84rem;
   font-weight: 600;
   font-family: inherit;
   color: inherit;
@@ -441,7 +441,7 @@ nav {
 }
 
 .contact-btn {
-  font-size: 0.8rem;
+  font-size: 0.84rem;
   font-weight: 700 !important;
   padding: 0.35rem 0.75rem !important;
   border: 1.5px solid var(--secondary) !important;
@@ -504,7 +504,7 @@ nav {
   border: none;
   width: 100%;
   text-align: left;
-  font-size: 0.72rem;
+  font-size: 0.756rem;
   font-weight: 500;
   line-height: 1.25;
   cursor: pointer;
@@ -522,7 +522,7 @@ nav {
 
 /* Level 2 Navigation Items */
 .dropdown-item.level-2 {
-  font-size: 0.72rem;
+  font-size: 0.756rem;
   font-weight: 600;
   padding: 0.32rem 0.55rem;
   line-height: 1.25;
@@ -531,7 +531,7 @@ nav {
 /* Level 3 Navigation Items (Sub-submenus) */
 .dropdown-item.level-3,
 .dropdown-level-3 .dropdown-item {
-  font-size: 0.67rem;
+  font-size: 0.7035rem;
   font-weight: 500;
   padding: 0.26rem 0.5rem;
   line-height: 1.25;
@@ -567,7 +567,7 @@ nav {
   background: transparent;
   border: none;
   color: inherit;
-  font-size: 0.72rem;
+  font-size: 0.756rem;
   font-weight: 600;
   line-height: 1.25;
   cursor: pointer;
@@ -579,7 +579,7 @@ nav {
 
 .ae-dropdown-sub-btn.level-3,
 .ae-dropdown-sub-text.level-3 {
-  font-size: 0.67rem;
+  font-size: 0.7035rem;
   font-weight: 500;
   padding: 0.26rem 0.5rem;
 }
@@ -653,7 +653,7 @@ nav {
 
 .dropdown-menu-below .dropdown-item.level-3 {
   padding: 0.24rem 0.45rem;
-  font-size: 0.67rem;
+  font-size: 0.7035rem;
   font-weight: 500;
   line-height: 1.25;
   border-radius: 6px;
@@ -708,7 +708,7 @@ nav {
 }
 
 .mobile-drawer-header h2 {
-  font-size: 1.25rem;
+  font-size: 1.3125rem;
   font-weight: 800;
 }
 
@@ -735,7 +735,7 @@ nav {
   border: none;
   background: none;
   color: var(--text-main);
-  font-size: 0.95rem;
+  font-size: 0.9975rem;
   font-weight: 600;
   border-radius: 10px;
   cursor: pointer;
@@ -753,32 +753,32 @@ nav {
 .mobile-nav-link.main-link {
   background: rgba(59, 130, 246, 0.08);
   color: var(--secondary);
-  font-size: 1.05rem;
+  font-size: 1.1025rem;
   margin-bottom: 0.75rem;
 }
 
 .mobile-nav-link.sub-link {
-  font-size: 0.82rem;
+  font-size: 0.861rem;
   font-weight: 500;
   padding: 0.45rem 0.65rem;
   line-height: 1.25;
 }
 
 .mobile-nav-link.sub-link.level-2 {
-  font-size: 0.82rem;
+  font-size: 0.861rem;
   font-weight: 600;
   padding: 0.45rem 0.65rem;
 }
 
 .mobile-nav-link.sub-link.level-3 {
-  font-size: 0.75rem;
+  font-size: 0.7875rem;
   font-weight: 500;
   padding: 0.35rem 0.55rem;
 }
 
 .mobile-separator {
   padding: 0.5rem 1rem;
-  font-size: 0.75rem;
+  font-size: 0.7875rem;
   font-weight: 700;
   color: var(--text-muted);
   text-transform: uppercase;
@@ -794,7 +794,7 @@ nav {
 .mobile-summary {
   width: 100%;
   padding: 0.65rem 0.85rem;
-  font-size: 0.92rem;
+  font-size: 0.966rem;
   font-weight: 600;
   cursor: pointer;
   list-style: none;
@@ -806,13 +806,13 @@ nav {
 }
 
 .mobile-summary.mobile-summary-level-1 {
-  font-size: 0.95rem;
+  font-size: 0.9975rem;
   font-weight: 600;
   padding: 0.65rem 0.85rem;
 }
 
 .mobile-summary.mobile-summary-level-2 {
-  font-size: 0.82rem;
+  font-size: 0.861rem;
   font-weight: 600;
   padding: 0.45rem 0.65rem;
 }
@@ -2328,7 +2328,7 @@ canvas {
     padding: 0.3rem 0.75rem;
   }
   .nav-logo {
-    font-size: 0.88rem;
+    font-size: 0.924rem;
     padding: 0.3rem 0.55rem;
   }
   .nav-links {
@@ -2338,7 +2338,7 @@ canvas {
   .ae-nav-item-compact,
   .nav-dropdown-btn,
   .nav-dropdown-label {
-    font-size: 0.74rem;
+    font-size: 0.777rem;
   }
   .nav-item {
     padding: 0.3rem 0.45rem;
@@ -2351,7 +2351,7 @@ canvas {
     padding: 0.3rem 0.35rem 0.3rem 0.1rem;
   }
   .contact-btn {
-    font-size: 0.74rem !important;
+    font-size: 0.777rem !important;
     padding: 0.3rem 0.55rem !important;
   }
   main {
@@ -2392,11 +2392,11 @@ canvas {
     margin-top: 0.75rem;
   }
   .nav-logo {
-    font-size: 0.95rem;
+    font-size: 0.9975rem;
     padding: 0.35rem 0.6rem;
   }
   .contact-btn {
-    font-size: 0.78rem !important;
+    font-size: 0.819rem !important;
     padding: 0.35rem 0.65rem !important;
   }
   .nav-links {
@@ -2503,7 +2503,7 @@ canvas {
     min-width: 0;
   }
   .nav-logo {
-    font-size: clamp(0.76rem, 3vw, 0.84rem);
+    font-size: clamp(0.798rem, 3.15vw, 0.882rem);
     padding: 0.3rem 0.45rem;
     line-height: 1.2;
     white-space: nowrap;
@@ -2515,7 +2515,7 @@ canvas {
     flex-shrink: 0;
   }
   .contact-btn {
-    font-size: 0.72rem !important;
+    font-size: 0.756rem !important;
     padding: 0.26rem 0.55rem !important;
     gap: 0.25rem;
     min-height: 32px;
@@ -2556,7 +2556,7 @@ canvas {
   }
   .mobile-nav-link {
     padding: 0.55rem 0.75rem;
-    font-size: 0.88rem;
+    font-size: 0.924rem;
     border-radius: 8px;
   }
 
@@ -5414,7 +5414,7 @@ nav {
 .nav-logo {
   background: #005ce6 !important;
   color: #ffffff !important;
-  font-size: 0.70rem !important;
+  font-size: 0.735rem !important;
   font-weight: 700 !important;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -5438,63 +5438,102 @@ nav {
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 0.08rem;
+  justify-content: center;
+  gap: 0.25rem;
   flex-wrap: nowrap;
 }
 
+.nav-links .dropdown {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+}
+
 .nav-item,
-.ae-nav-item-compact,
-.nav-dropdown-btn,
-.nav-dropdown-label {
-  font-size: 0.68rem !important;
+.ae-nav-item-compact {
+  height: 30px;
+  min-height: 30px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.714rem !important;
   font-weight: 700 !important;
   color: #0d2757 !important;
   text-transform: uppercase;
   letter-spacing: 0.02em;
-  padding: 0.24rem 0.38rem !important;
-  border-radius: 9999px;
+  padding: 0.24rem 0.55rem !important;
+  border-radius: 9999px !important;
   white-space: nowrap;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  line-height: 1;
   transition: all 0.2s ease;
 }
 
 .nav-item:hover,
-.ae-nav-item-compact:hover,
-.nav-dropdown-btn:hover {
+.ae-nav-item-compact:hover {
   color: #005ce6 !important;
   background: rgba(0, 92, 230, 0.06) !important;
 }
 
 .dark-mode .nav-item,
-.dark-mode .ae-nav-item-compact,
-.dark-mode .nav-dropdown-btn,
-.dark-mode .nav-dropdown-label {
+.dark-mode .ae-nav-item-compact {
   color: #f8fafc !important;
 }
 
 .dark-mode .nav-item:hover,
-.dark-mode .ae-nav-item-compact:hover,
-.dark-mode .nav-dropdown-btn:hover {
+.dark-mode .ae-nav-item-compact:hover {
   color: #60a5fa !important;
   background: rgba(59, 130, 246, 0.15) !important;
 }
 
-.ae-input-addon-btn {
-  padding: 0 0.1rem;
-  color: #0d2757;
+.ae-nav-item-compact .nav-dropdown-btn,
+.ae-nav-item-compact .nav-dropdown-label {
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  color: inherit !important;
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  text-transform: inherit !important;
+  letter-spacing: inherit !important;
+  line-height: 1 !important;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.ae-nav-item-compact .ae-input-addon-btn {
+  padding: 0 0 0 3px !important;
+  margin: 0 !important;
+  min-height: unset !important;
+  min-width: unset !important;
+  height: auto !important;
+  width: auto !important;
+  border: none !important;
+  background: transparent !important;
+  color: inherit !important;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
 }
 
-.dark-mode .ae-input-addon-btn {
-  color: #f8fafc;
+.ae-nav-item-compact .ae-input-addon-btn svg {
+  display: block;
 }
 
 .contact-btn {
   border: 1.5px solid #005ce6 !important;
   color: #005ce6 !important;
   font-weight: 700 !important;
-  font-size: 0.70rem !important;
+  font-size: 0.735rem !important;
   text-transform: none !important;
   letter-spacing: normal !important;
   padding: 0.32rem 0.9rem !important;
@@ -5578,12 +5617,12 @@ nav {
     padding: 0.2rem 0.4rem;
   }
   .nav-logo {
-    font-size: 0.65rem !important;
+    font-size: 0.6825rem !important;
     padding: 0.25rem 0.65rem !important;
     height: 26px;
   }
   .contact-btn {
-    font-size: 0.65rem !important;
+    font-size: 0.6825rem !important;
     padding: 0.25rem 0.65rem !important;
     height: 26px;
   }
