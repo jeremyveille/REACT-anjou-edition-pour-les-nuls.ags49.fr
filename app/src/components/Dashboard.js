@@ -7,16 +7,16 @@ import {
   Users, Layers, MessageSquare, Plus, 
   Trash2, ShieldCheck, Sparkles, BookOpen,
   Megaphone, X,
-  Copy, Edit3, Eye, UploadCloud, Menu, Star, Check,
-  PanelLeft
+  Copy, Edit3, Eye, UploadCloud, Menu, Star, Check
 } from "lucide-react";
 import { db, storage } from "../firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storePDFFile } from "../utils/indexedDBStorage";
 import { savePdfToFirestore, deletePdfFromFirestore } from "../utils/firestoreChunker";
 import PdfFlipbookReader from "./PdfFlipbookReader";
-import FlipbookSidebarEditor from "./FlipbookSidebarEditor";
 import FlipbookLayout from "./FlipbookLayout";
+import FlipbookManager from "./FlipbookManager";
+import FlipbookEditModal from "./FlipbookEditModal";
 import { 
   collection, 
   getDocs, 
@@ -168,19 +168,11 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
   // States for Editing a flipbook
   const [showEditFlipbookModal, setShowEditFlipbookModal] = useState(false);
   const [editingFlipbook, setEditingFlipbook] = useState(null);
-  const [editPdfFile, setEditPdfFile] = useState(null);
   const [isEditingSaving, setIsEditingSaving] = useState(false);
 
   // States for Reading/Viewing a flipbook
   const [showViewFlipbookModal, setShowViewFlipbookModal] = useState(false);
   const [viewingFlipbook, setViewingFlipbook] = useState(null);
-
-  // States for batch actions and filters
-  const [selectedFlipbookIds, setSelectedFlipbookIds] = useState([]);
-  const [tempDate, setTempDate] = useState("0");
-  const [filterDate, setFilterDate] = useState("0");
-  const [bulkActionTop, setBulkActionTop] = useState("-1");
-  const [bulkActionBottom, setBulkActionBottom] = useState("-1");
 
   const fileInputRef = useRef(null);
   
@@ -909,7 +901,6 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
     const updated = flipbooks.filter(fb => fb.id !== id);
     setFlipbooks(updated);
     localStorage.setItem("ae_flipbooks", JSON.stringify(updated));
-    setSelectedFlipbookIds(prev => prev.filter(item => item !== id));
     try {
       await deleteDoc(doc(db, "flipbooks", id));
       await deletePdfFromFirestore(id);
@@ -929,41 +920,34 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
     setShowEditFlipbookModal(true);
   };
 
-  const handleAddPageToEditing = () => {
-    const nextPageNum = editingFlipbook.pages.length + 1;
-    const newPages = [...editingFlipbook.pages, { pageNum: nextPageNum, title: `Page ${nextPageNum}`, content: "" }];
-    setEditingFlipbook({ ...editingFlipbook, pages: newPages });
-  };
-
-  const handleEditFlipbookSubmit = async (e) => {
-    e.preventDefault();
-    if (!editingFlipbook.title.trim() || !editingFlipbook.description.trim()) {
+  const handleSaveFlipbook = async (updatedData, newPdfFile) => {
+    if (!updatedData.title?.trim() || !updatedData.description?.trim()) {
       alert("Le titre et la description ne peuvent pas être vides.");
       return;
     }
 
     setIsEditingSaving(true);
-    let finalPdfFile = editingFlipbook.pdfFile;
-    let finalPdfUrl = editingFlipbook.pdfUrl;
-    let hasFirestoreChunks = editingFlipbook.hasFirestoreChunks || false;
+    let finalPdfFile = updatedData.pdfFile;
+    let finalPdfUrl = updatedData.pdfUrl;
+    let hasFirestoreChunks = updatedData.hasFirestoreChunks || false;
 
-    if (editPdfFile) {
+    if (newPdfFile) {
       setGeminiProgressMsg("Enregistrement du nouveau fichier PDF...");
       try {
-        await storePDFFile(editingFlipbook.id, editPdfFile);
-        finalPdfFile = editPdfFile.name;
+        await storePDFFile(updatedData.id, newPdfFile);
+        finalPdfFile = newPdfFile.name;
 
         let pdfUrl = null;
         try {
-          const storageRef = ref(storage, `flipbooks/${editingFlipbook.id}/${editPdfFile.name}`);
-          const uploadResult = await uploadBytes(storageRef, editPdfFile);
+          const storageRef = ref(storage, `flipbooks/${updatedData.id}/${newPdfFile.name}`);
+          const uploadResult = await uploadBytes(storageRef, newPdfFile);
           pdfUrl = await getDownloadURL(uploadResult.ref);
           finalPdfUrl = pdfUrl;
         } catch (storageErr) {
           console.warn("Firebase Storage upload failed for edit:", storageErr);
           try {
             setGeminiProgressMsg("Sauvegarde du PDF dans Firestore (découpage automatique)...");
-            await savePdfToFirestore(editingFlipbook.id, editPdfFile);
+            await savePdfToFirestore(updatedData.id, newPdfFile);
             hasFirestoreChunks = true;
           } catch (chunkErr) {
             console.error("Failed to save chunks:", chunkErr);
@@ -975,85 +959,59 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
     }
 
     const updatedFlipbook = { 
-      ...editingFlipbook, 
+      ...updatedData, 
       pdfFile: finalPdfFile, 
       pdfUrl: finalPdfUrl,
       hasFirestoreChunks: hasFirestoreChunks,
-      leftSidebar: Array.isArray(editingFlipbook.leftSidebar) ? editingFlipbook.leftSidebar : [],
-      rightSidebar: Array.isArray(editingFlipbook.rightSidebar) ? editingFlipbook.rightSidebar : []
+      leftSidebar: Array.isArray(updatedData.leftSidebar) ? updatedData.leftSidebar : [],
+      rightSidebar: Array.isArray(updatedData.rightSidebar) ? updatedData.rightSidebar : []
     };
 
-    const updatedList = flipbooks.map(fb => fb.id === editingFlipbook.id ? updatedFlipbook : fb);
+    const updatedList = flipbooks.map(fb => fb.id === updatedData.id ? updatedFlipbook : fb);
     setFlipbooks(updatedList);
     localStorage.setItem("ae_flipbooks", JSON.stringify(updatedList));
 
     try {
-      await setDoc(doc(db, "flipbooks", editingFlipbook.id), updatedFlipbook);
-      setNotification(`Flipbook "${editingFlipbook.title}" mis à jour sur Firebase.`);
+      await setDoc(doc(db, "flipbooks", updatedData.id), updatedFlipbook);
+      setNotification(`Flipbook "${updatedData.title}" mis à jour sur Firebase.`);
     } catch (err) {
       console.error("Error updating flipbook on Firebase:", err);
-      setNotification(`Flipbook "${editingFlipbook.title}" mis à jour localement.`);
+      setNotification(`Flipbook "${updatedData.title}" mis à jour localement.`);
     }
 
     setShowEditFlipbookModal(false);
-    setEditingFlipbook(null); setEditPdfFile(null);
+    setEditingFlipbook(null); 
     setGeminiProgressMsg("");
     setIsEditingSaving(false);
+  };
+
+  const handleBulkDeleteFlipbooks = async (idsToDelete) => {
+    if (!idsToDelete || idsToDelete.length === 0) return;
+    if (!window.confirm(`Voulez-vous vraiment supprimer les ${idsToDelete.length} flipbooks sélectionnés ?`)) {
+      return;
+    }
+    const updated = flipbooks.filter(fb => !idsToDelete.includes(fb.id));
+    setFlipbooks(updated);
+    localStorage.setItem("ae_flipbooks", JSON.stringify(updated));
+
+    const count = idsToDelete.length;
+
+    try {
+      for (const id of idsToDelete) {
+        await deleteDoc(doc(db, "flipbooks", id));
+        await deletePdfFromFirestore(id);
+      }
+      setNotification(`${count} flipbook${count > 1 ? 's' : ''} supprimé${count > 1 ? 's' : ''} avec succès de Firebase.`);
+    } catch (err) {
+      console.error("Error batch deleting flipbooks:", err);
+      setNotification(`${count} flipbook${count > 1 ? 's' : ''} supprimé${count > 1 ? 's' : ''} localement.`);
+    }
   };
 
   // Viewer handlers
   const handleViewFlipbookClick = (fb) => {
     setViewingFlipbook(fb);
     setShowViewFlipbookModal(true);
-  };
-
-  // Bulk actions handler
-  const handleBulkAction = async (action) => {
-    if (action === "-1") {
-      alert("Veuillez sélectionner une action groupée.");
-      return;
-    }
-    if (selectedFlipbookIds.length === 0) {
-      alert("Aucun flipbook sélectionné.");
-      return;
-    }
-
-    if (action === "trash") {
-      if (window.confirm(`Voulez-vous vraiment supprimer les ${selectedFlipbookIds.length} flipbooks sélectionnés ?`)) {
-        const updated = flipbooks.filter(fb => !selectedFlipbookIds.includes(fb.id));
-        setFlipbooks(updated);
-        localStorage.setItem("ae_flipbooks", JSON.stringify(updated));
-        
-        const count = selectedFlipbookIds.length;
-        const idsToDelete = [...selectedFlipbookIds];
-        setSelectedFlipbookIds([]);
-        setBulkActionTop("-1");
-        setBulkActionBottom("-1");
-        
-        try {
-          for (const id of idsToDelete) {
-            await deleteDoc(doc(db, "flipbooks", id));
-          }
-          setNotification(`${count} flipbooks supprimés avec succès de Firebase.`);
-        } catch (err) {
-          console.error("Error batch deleting flipbooks:", err);
-          setNotification(`${count} flipbooks supprimés localement.`);
-        }
-      }
-    } else if (action === "edit") {
-      alert("La modification groupée n'est pas supportée. Veuillez modifier les flipbooks individuellement.");
-    }
-  };
-
-  // Filter Date handler
-  const handleFilterDate = () => {
-    setFilterDate(tempDate);
-    if (tempDate === "0") {
-      setNotification("Filtre réinitialisé : Tous les flipbooks sont affichés.");
-    } else {
-      const monthLabel = tempDate === "202606" ? "Juin 2026" : tempDate === "202605" ? "Mai 2026" : "Avril 2026";
-      setNotification(`Filtre activé : Flipbooks publiés en ${monthLabel}.`);
-    }
   };
 
   const handlePdfDragOver = (e) => {
@@ -2283,13 +2241,6 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
 
   const displayedFlipbooks = flipbooks
     .filter(fb => activeCategory === "Accueil" || fb.category === activeCategory)
-    .filter(fb => {
-      if (!filterDate || filterDate === "0") return true;
-      const month = filterDate.substring(4, 6);
-      const year = filterDate.substring(0, 4);
-      const dateStr = fb.date || "";
-      return dateStr.includes(`${month}/${year}`);
-    })
     .filter(fb =>
       (fb.title && fb.title.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (fb.description && fb.description.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -3020,220 +2971,24 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
 
 
                   {activeSection === "Mes Flipbooks" && (
-                    <div className="space-y-6">
-                      <div className="ae-toolbar-header-responsive">
-                        <div>
-                          <h4 className="ae-card-title-lg">
-                            Bibliothèque de Flipbooks interactifs
-                          </h4>
-                          <p className="ae-body-secondary-sm">
-                            Gérez les flipbooks PDF de la plateforme de publication en toute simplicité.
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => {
-                            setUploadStep(0);
-                            setUploadProgress(0);
-                            setNewFlipbookTitle("");
-                            setNewFlipbookDesc("");
-                            setNewFlipbookCategory("Outils");
-                            setSelectedPdfFile(null);
-                            setShowAddFlipbookModal(true);
-                          }}
-                          className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-4 py-2.5 rounded-lg cursor-pointer transition-colors inline-flex items-center gap-1.5 self-start md:self-auto shadow-sm"
-                        >
-                          <Plus className="ae-icon-size-sm" /> Ajouter un flipbook
-                        </button>
-                      </div>
-
-                      <div className="db-panel-card">
-                        {/* Filtres et actions groupées */}
-                        <div className="flex flex-wrap items-center justify-between gap-4 mb-4 pb-4 border-b border-slate-100 dark:border-slate-800">
-                          <div className="ae-tag-container">
-                            <select 
-                              value={bulkActionTop}
-                              onChange={(e) => setBulkActionTop(e.target.value)}
-                              className="db-select text-xs py-1.5 h-auto min-w-[150px]"
-                            >
-                              <option value="-1">Actions groupées</option>
-                              <option value="edit">Modifier</option>
-                              <option value="trash">Déplacer dans la corbeille</option>
-                            </select>
-                            <button 
-                              type="button" 
-                              className="bg-slate-105 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold px-3 py-1.5 rounded-lg cursor-pointer transition-colors border border-slate-200 dark:border-slate-700" 
-                              onClick={() => handleBulkAction(bulkActionTop)}
-                            >
-                              Appliquer
-                            </button>
-
-                            <select 
-                              value={tempDate}
-                              onChange={(e) => setTempDate(e.target.value)}
-                              className="db-select text-xs py-1.5 h-auto min-w-[150px] ml-2"
-                            >
-                              <option value="0">Toutes les dates</option>
-                              <option value="202606">Juin 2026</option>
-                              <option value="202605">Mai 2026</option>
-                              <option value="202604">Avril 2026</option>
-                            </select>
-                            <button 
-                              type="button" 
-                              className="bg-slate-105 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold px-3 py-1.5 rounded-lg cursor-pointer transition-colors border border-slate-200 dark:border-slate-700" 
-                              onClick={handleFilterDate}
-                            >
-                              Filtrer
-                            </button>
-                          </div>
-
-                          <div className="ae-text-caption-semibold">
-                            {displayedFlipbooks.length} élément{displayedFlipbooks.length > 1 ? 's' : ''} trouvé{displayedFlipbooks.length > 1 ? 's' : ''}
-                          </div>
-                        </div>
-
-                        {/* Le tableau des posts (Flipbooks) */}
-                        <div className="overflow-x-auto">
-                          <table className="db-table">
-                            <thead>
-                              <tr>
-                                <th className="ae-fixed-width-10">
-                                  <input 
-                                    type="checkbox" 
-                                    checked={displayedFlipbooks.length > 0 && selectedFlipbookIds.length === displayedFlipbooks.length}
-                                    onChange={(e) => {
-                                      if (e.target.checked) {
-                                        setSelectedFlipbookIds(displayedFlipbooks.map(fb => fb.id));
-                                      } else {
-                                        setSelectedFlipbookIds([]);
-                                      }
-                                    }}
-                                    className="ae-form-checkbox"
-                                  />
-                                </th>
-                                <th>Flipbook</th>
-                                <th className="hidden md:table-cell">Intégration React.js</th>
-                                <th>Fichier PDF</th>
-                                <th className="hidden lg:table-cell">Date de publication</th>
-                                <th className="text-right">Actions</th>
-                              </tr>
-                            </thead>
-
-                            <tbody>
-                              {displayedFlipbooks.map((fb) => (
-                                <tr key={fb.id}>
-                                  <td>
-                                    <input 
-                                      type="checkbox" 
-                                      checked={selectedFlipbookIds.includes(fb.id)}
-                                      onChange={() => {
-                                        setSelectedFlipbookIds(prev => 
-                                          prev.includes(fb.id) ? prev.filter(id => id !== fb.id) : [...prev, fb.id]
-                                        );
-                                      }}
-                                      className="ae-form-checkbox"
-                                    />
-                                  </td>
-                                  <td>
-                                    <div className="ae-section-heading-row">
-                                      <span>{fb.title}</span>
-                                      <span className="px-2.5 py-0.5 text-[9px] font-extrabold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 rounded-full border border-blue-100 dark:border-blue-900/40 uppercase tracking-wider">
-                                        {fb.category || "Outils"}
-                                      </span>
-                                    </div>
-                                    <p className="text-xs text-slate-505 mt-1 max-w-md line-clamp-2">{fb.description}</p>
-                                  </td>
-                                  <td className="hidden md:table-cell">
-                                    <div className="ae-flex-row-gap-md">
-                                      <code className="ae-code-badge-selectable">
-                                        {`<PdfFlipbookReader book={book} />`}
-                                      </code>
-                                      <button
-                                        onClick={() => {
-                                          navigator.clipboard.writeText(`<PdfFlipbookReader book={flipbooks.find(f => f.id === "${fb.id}")} onClose={handleClose} />`);
-                                          setNotification("Snippet React copié avec succès !");
-                                        }}
-                                        className="ae-icon-btn-muted"
-                                        title="Copier le code d'intégration React"
-                                      >
-                                        <Copy className="ae-icon-sm" />
-                                      </button>
-                                    </div>
-                                  </td>
-                                  <td>
-                                    <a 
-                                      href={`#pdf-${fb.id}`} 
-                                      className="ae-action-link-sm"
-                                      onClick={(e) => { 
-                                        e.preventDefault(); 
-                                        setNotification(`Téléchargement du PDF pour : ${fb.title}`); 
-                                      }}
-                                    >
-                                      {fb.pdfFile || "secrets_vignoble_angevin.pdf"}
-                                    </a>
-                                  </td>
-                                  <td className="ae-table-cell-muted-desktop">
-                                    {fb.date || "14/04/2026 à 20h02"}
-                                  </td>
-                                  <td className="text-right">
-                                    <div className="ae-actions-right">
-                                      <button
-                                        onClick={() => handleViewFlipbookClick(fb)}
-                                        className="ae-btn-emerald-ghost"
-                                        title="Afficher le flipbook interactif"
-                                      >
-                                        <BookOpen className="ae-icon-md" />
-                                      </button>
-                                      <button
-                                        onClick={() => handleEditFlipbookClick(fb)}
-                                        className="ae-btn-action-icon-blue-md"
-                                        title="Modifier le flipbook"
-                                      >
-                                        <Edit3 className="ae-icon-md" />
-                                      </button>
-                                      <button
-                                        onClick={() => handleDeleteFlipbook(fb.id, fb.title)}
-                                        className="ae-btn-danger-ghost"
-                                        title="Supprimer le flipbook"
-                                      >
-                                        <Trash2 className="ae-icon-md" />
-                                      </button>
-                                    </div>
-                                  </td>
-                                </tr>
-                              ))}
-                              {displayedFlipbooks.length === 0 && (
-                                <tr>
-                                  <td colSpan="6" className="text-center py-6 text-slate-400 italic">
-                                    Aucun flipbook trouvé dans la bibliothèque.
-                                  </td>
-                                </tr>
-                              )}
-                            </tbody>
-                          </table>
-                        </div>
-
-                        {/* Actions groupées en bas */}
-                        <div className="flex items-center gap-2 mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-                          <select 
-                            value={bulkActionBottom}
-                            onChange={(e) => setBulkActionBottom(e.target.value)}
-                            className="db-select text-xs py-1.5 h-auto min-w-[150px]"
-                          >
-                            <option value="-1">Actions groupées</option>
-                            <option value="edit">Modifier</option>
-                            <option value="trash">Déplacer dans la corbeille</option>
-                          </select>
-                          <button 
-                            type="button" 
-                            className="bg-slate-105 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold px-3 py-1.5 rounded-lg cursor-pointer transition-colors border border-slate-200 dark:border-slate-700" 
-                            onClick={() => handleBulkAction(bulkActionBottom)}
-                          >
-                            Appliquer
-                          </button>
-                        </div>
-
-                      </div>
-                    </div>
+                    <FlipbookManager
+                      flipbooks={flipbooks}
+                      onAddFlipbook={() => {
+                        setUploadStep(0);
+                        setUploadProgress(0);
+                        setNewFlipbookTitle("");
+                        setNewFlipbookDesc("");
+                        setNewFlipbookCategory("Outils");
+                        setSelectedPdfFile(null);
+                        setShowAddFlipbookModal(true);
+                      }}
+                      onViewFlipbook={handleViewFlipbookClick}
+                      onEditFlipbook={handleEditFlipbookClick}
+                      onDeleteFlipbook={handleDeleteFlipbook}
+                      onBulkDelete={handleBulkDeleteFlipbooks}
+                      onBackToMain={() => setActiveSection(null)}
+                      setNotification={setNotification}
+                    />
                   )}
 
                   {activeSection === "Mes Comptes" && (
@@ -4321,234 +4076,17 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
 
             {/* Edit Flipbook Modal */}
             {showEditFlipbookModal && editingFlipbook && (
-              <div className="ae-modal-overlay" onClick={() => { setShowEditFlipbookModal(false); setEditingFlipbook(null); setEditPdfFile(null); }}>
-                <div className="ae-modal-container max-w-5xl animate-fade-in" onClick={(e) => e.stopPropagation()}>
-                  <div className="ae-modal-header">
-                    <h3 className="ae-modal-header-title">
-                      <BookOpen className="ae-icon-navy-accent" />
-                      Modifier le Flipbook : {editingFlipbook.title}
-                    </h3>
-                    <button 
-                      onClick={() => { setShowEditFlipbookModal(false); setEditingFlipbook(null); setEditPdfFile(null); }} 
-                      className="ae-modal-close-btn"
-                    >
-                      <X className="ae-icon-md" />
-                    </button>
-                  </div>
-                  
-                  <form onSubmit={handleEditFlipbookSubmit} className="ae-modal-body space-y-4 max-h-[70vh] overflow-y-auto">
-                    <div>
-                      <label className="ae-modal-label">Titre <span className="ae-text-danger">*</span></label>
-                      <input 
-                        type="text" 
-                        required 
-                        value={editingFlipbook.title} 
-                        onChange={(e) => setEditingFlipbook({ ...editingFlipbook, title: e.target.value })} 
-                        className="db-input"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="ae-modal-label">Description <span className="ae-text-danger">*</span></label>
-                      <textarea 
-                        required 
-                        rows={3} 
-                        value={editingFlipbook.description} 
-                        onChange={(e) => setEditingFlipbook({ ...editingFlipbook, description: e.target.value })} 
-                        className="db-textarea"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="ae-modal-label">Catégorie littéraire <span className="ae-text-danger">*</span></label>
-                      <select 
-                        value={editingFlipbook.category || "Outils"} 
-                        onChange={(e) => setEditingFlipbook({ ...editingFlipbook, category: e.target.value })} 
-                        className="db-input w-full"
-                      >
-                        <option value="Outils">Outils</option>
-                        <option value="Poésies">Poésies</option>
-                        <option value="Nouvelles">Nouvelles</option>
-                        <option value="Romans">Romans</option>
-                        <option value="Contes et légendes">Contes et légendes</option>
-                        <option value="Essais">Essais</option>
-                        <option value="Sciences">Sciences</option>
-                        <option value="Cursus scolaire">Cursus scolaire</option>
-                        <option value="Art">Art</option>
-                      </select>
-                    </div>
-
-                     <div>
-                      <label className="ae-modal-label">Fichier PDF actuellement associé</label>
-                      <div className="ae-list-item-card-row">
-                        <div className="ae-danger-icon-badge">
-                          <FileText className="ae-icon-size-sm" />
-                        </div>
-                        <span className="ae-truncated-nav-label">
-                          {editingFlipbook.pdfFile || "Aucun PDF"}
-                        </span>
-                        
-                        <label className="cursor-pointer bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 px-3 py-1.5 rounded text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors shrink-0">
-                          Modifier / remplacer le PDF
-                          <input 
-                            type="file" 
-                            accept=".pdf" 
-                            className="hidden" 
-                            onChange={(e) => {
-                              const file = e.target.files[0];
-                              if (file) {
-                                if (file.type === "application/pdf" || file.name.endsWith(".pdf")) {
-                                  setEditPdfFile(file);
-                                } else {
-                                  alert("Veuillez sélectionner un fichier PDF valide.");
-                                }
-                              }
-                            }}
-                          />
-                        </label>
-                      </div>
-
-                      {editPdfFile && (
-                        <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-lg flex items-center justify-between transition-all">
-                          <div className="ae-flex-col-clipped">
-                            <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold mb-1 uppercase tracking-wider">Nouveau PDF sélectionné :</span>
-                            <div className="ae-flex-row-gap-sm">
-                              <FileText className="ae-icon-fixed-blue" />
-                              <span className="ae-item-title-singleline">
-                                {editPdfFile.name}
-                              </span>
-                            </div>
-                          </div>
-                          <button 
-                            type="button" 
-                            onClick={() => setEditPdfFile(null)}
-                            className="text-xs text-red-500 hover:text-red-600 bg-white dark:bg-slate-800 border border-red-200 dark:border-red-900/50 px-2 py-1 rounded transition-colors shrink-0"
-                          >
-                            Annuler
-                          </button>
-                        </div>
-                      )}
-                      
-                      <details className="mt-2">
-                        <summary className="ae-action-link-muted-xs">Options avancées (URL externe)</summary>
-                        <div className="mt-2">
-                          <label className="ae-modal-label text-xs">URL du fichier PDF</label>
-                          <input 
-                            type="text" 
-                            value={editingFlipbook.pdfUrl || ""} 
-                            onChange={(e) => setEditingFlipbook({ ...editingFlipbook, pdfUrl: e.target.value })} 
-                            className="db-input text-xs"
-                            placeholder="https://firebasestorage.googleapis.com/..."
-                          />
-                        </div>
-                      </details>
-                    </div>
-
-                    <div className="border-t border-slate-200 pt-4 mt-4 dark:border-slate-800">
-                      <div className="flex justify-between items-center mb-3">
-                        <h4 className="ae-heading-sm">Gestion des Pages ({editingFlipbook.pages.length})</h4>
-                        <button 
-                          type="button" 
-                          onClick={handleAddPageToEditing}
-                          className="bg-blue-50 text-blue-605 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-400 dark:hover:bg-blue-900/40 text-xs px-3 py-1.5 rounded font-bold transition-colors cursor-pointer border border-blue-100 dark:border-blue-900/30"
-                        >
-                          + Ajouter une page
-                        </button>
-                      </div>
-                      
-                      <div className="space-y-3">
-                        {editingFlipbook.pages.map((page, idx) => (
-                          <div key={idx} className="ae-panel-subtle">
-                            <div className="flex justify-between items-center mb-2">
-                              <span className="ae-section-label-bold">Page {page.pageNum || idx + 1}</span>
-                              <button 
-                                type="button" 
-                                onClick={() => {
-                                  const newPages = editingFlipbook.pages.filter((_, pIdx) => pIdx !== idx)
-                                    .map((p, pIdx) => ({ ...p, pageNum: pIdx + 1 }));
-                                  setEditingFlipbook({ ...editingFlipbook, pages: newPages });
-                                }}
-                                className="ae-action-btn-danger-micro"
-                              >
-                                Supprimer la page
-                              </button>
-                            </div>
-                            <div className="space-y-2">
-                              <input 
-                                type="text" 
-                                value={page.title || ""} 
-                                onChange={(e) => {
-                                  const newPages = [...editingFlipbook.pages];
-                                  newPages[idx].title = e.target.value;
-                                  setEditingFlipbook({ ...editingFlipbook, pages: newPages });
-                                }}
-                                onFocus={() => setLastFocusedField({ type: "flipbook", pageIdx: idx, field: "title" })}
-                                className="db-input text-xs"
-                                placeholder="Titre de la page"
-                              />
-                              <textarea 
-                                value={page.content || ""} 
-                                onChange={(e) => {
-                                  const newPages = [...editingFlipbook.pages];
-                                  newPages[idx].content = e.target.value;
-                                  setEditingFlipbook({ ...editingFlipbook, pages: newPages });
-                                }}
-                                onFocus={() => setLastFocusedField({ type: "flipbook", pageIdx: idx, field: "content" })}
-                                className="db-textarea text-xs"
-                                rows={2}
-                                placeholder="Contenu de la page..."
-                              />
-                            </div>
-                          </div>
-                        ))}
-                        {editingFlipbook.pages.length === 0 && (
-                          <p className="text-xs text-slate-400 text-center italic py-2">Aucune page dans ce flipbook. Veuillez en ajouter.</p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Section: Barres latérales du Flipbook */}
-                    <div className="border-t border-slate-200 pt-4 mt-4 dark:border-slate-800">
-                      <div className="flex items-center gap-2 mb-1.5">
-                        <PanelLeft className="text-blue-600 dark:text-blue-400" size={18} />
-                        <h4 className="ae-heading-sm">Barres latérales du Flipbook</h4>
-                      </div>
-                      <p className="text-xs text-slate-500 mb-3">
-                        Personnalisez les colonnes d'accompagnement affichées à gauche et à droite de ce flipbook sur le site public (images, vidéos locales ou YouTube, textes, boutons, PDF).
-                      </p>
-                      <FlipbookSidebarEditor 
-                        flipbook={editingFlipbook}
-                        onChange={(updated) => setEditingFlipbook(updated)}
-                      />
-                    </div>
-
-                    <div className="ae-modal-footer">
-                      <button 
-                        type="button" 
-                        onClick={() => { setShowEditFlipbookModal(false); setEditingFlipbook(null); setEditPdfFile(null); }} 
-                        className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-4 py-2 rounded-lg cursor-pointer transition-colors text-sm border-none"
-                        disabled={isEditingSaving}
-                      >
-                        Annuler
-                      </button>
-                      <button 
-                        type="submit" 
-                        disabled={isEditingSaving}
-                        className={`font-bold px-4 py-2 rounded-lg cursor-pointer transition-colors text-sm border-none flex items-center gap-2 ${isEditingSaving ? 'bg-[#1e3a8a]/50 text-white cursor-not-allowed' : 'bg-[#1e3a8a] hover:bg-[#172554] text-white'}`}
-                      >
-                        {isEditingSaving ? (
-                          <>
-                            <div className="ae-spinner-btn-white"></div>
-                            {geminiProgressMsg || "Enregistrement..."}
-                          </>
-                        ) : (
-                          "Enregistrer"
-                        )}
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </div>
+              <FlipbookEditModal
+                isOpen={showEditFlipbookModal}
+                flipbook={editingFlipbook}
+                onClose={() => {
+                  setShowEditFlipbookModal(false);
+                  setEditingFlipbook(null);
+                }}
+                onSave={handleSaveFlipbook}
+                isSaving={isEditingSaving}
+                saveProgressMsg={geminiProgressMsg}
+              />
             )}
 
             {/* Viewer/Reader Flipbook Modal */}
