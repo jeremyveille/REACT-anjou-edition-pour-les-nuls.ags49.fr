@@ -1,4 +1,5 @@
 /* styles/dashboard.css - Anjou Edition Dashboard Theme CSS */
+@import "./flipbook-admin.css";
 
 :root {
   --blue-primary: #336ddc;
