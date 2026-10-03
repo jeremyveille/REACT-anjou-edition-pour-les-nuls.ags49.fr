@@ -31,7 +31,7 @@ Ce document sert de guide et de référence pour tout agent ou développeur trav
     > [!IMPORTANT]
     > **RÈGLE STRICTE** : **NE JAMAIS UTILISER TAILWIND**. Le projet repose à 100% sur du Vanilla CSS écrit à la main et sur Bootstrap 5 pour les blocs du Page Builder.
 *   **Bibliothèque d'Icônes** : [lucide-react v1.17.0](https://lucide.dev/)
-*   **Tests** : Jest et [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/) (22 suites de tests complètes et 173 tests unitaires/d'intégration, 100% de réussite).
+*   **Tests** : Jest et [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/) (27 suites de tests complètes et 204 tests unitaires/d'intégration, 100% de réussite).
 
 ### 2. Page Builder Visuel (page-builder-react)
 *   **Framework Frontend** : [React v18.3.1](https://react.dev/)
@@ -166,6 +166,16 @@ Se déplacer dans le dossier : `cd page-builder-react`
 *   **Modale de déplacement & Prévention des cycles (`MoveItemModal`)** : Sélection d'un nouveau parent avec calcul d'exclusion prévenant toute boucle infinie (`descendantIds`).
 *   **Persistance & Compatibilité totale** : 100% rétrocompatible avec la structure Firestore / LocalStorage existante, zéro dépendance Tailwind, styling 100% Vanilla CSS (`menu-manager.css`).
 
+### 12. Administration Ergonomique des Flipbooks (`FlipbookManager`, `FlipbookEditModal`, `flipbook-admin.css`)
+*   **Tableau compact & Hauteur réduite** : Remplacement de l'ancien tableau encombré par une vue moderne à faible hauteur de ligne. Le titre du flipbook est mis en valeur avec sa catégorie en badge subtil, la longue description est masquée de la table (consultable en édition), et le code technique React n'encombre plus les colonnes.
+*   **Recherche, Filtres et Tri instantanés** : Recherche en temps réel (titre, catégorie, fichier PDF, description), filtre dynamique par catégorie (« Toutes les catégories »), et tri multicritères (Plus récent, Plus ancien, Titre A → Z, Titre Z → A) sans requête Firestore intempestive.
+*   **Pagination intelligente** : 10 éléments par page par défaut (avec sélecteur 10 / 20 / 50), contrôles ‹ Précédent / 1 2 3 / Suivant ›, et retour automatique en page 1 lors de l'application d'un filtre ou d'une recherche.
+*   **Barre d'actions groupées haute** : Dès qu'un élément est coché, la barre d'actions groupées s'affiche immédiatement en haut de la liste pour éviter tout défilement vertical inutile.
+*   **Actions compréhensibles & Accessibilité WCAG AA** : Boutons d'action explicites (Voir, Modifier, Copier code d'intégration, Supprimer) avec cibles tactiles >= 40-44px, info-bulles et attributs `aria-label`.
+*   **Grande Modale d'Édition Responsive** : Dimensions desktop `width: min(1100px, 94vw); max-height: 90vh;` avec un seul défilement interne (fin des scrolls imbriqués), en-tête et pied d'enregistrement fixes (`position: sticky`), gestion des pages sous forme d'accordéon compact, et pleine exploitation de la largeur pour les colonnes de barres latérales (Barre gauche / Barre droite).
+*   **Vue Mobile Adaptée** : Transformation fluide en cartes verticales condensées sur mobile pour éliminer tout défilement horizontal forcé.
+*   **Tests & Qualité** : 27 suites de tests automatisées et 204 tests unitaires/d'intégration réussis à 100%, 0 avertissements de compilation de production.
+
 ---
 
-*Dernière mise à jour du contexte par l'agent : 2 octobre 2026.*
+*Dernière mise à jour du contexte par l'agent : 3 octobre 2026.*
