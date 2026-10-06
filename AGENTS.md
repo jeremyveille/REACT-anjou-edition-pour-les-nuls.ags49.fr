@@ -174,8 +174,27 @@ Se déplacer dans le dossier : `cd page-builder-react`
 *   **Actions compréhensibles & Accessibilité WCAG AA** : Boutons d'action explicites (Voir, Modifier, Copier code d'intégration, Supprimer) avec cibles tactiles >= 40-44px, info-bulles et attributs `aria-label`.
 *   **Grande Modale d'Édition Responsive** : Dimensions desktop `width: min(1100px, 94vw); max-height: 90vh;` avec un seul défilement interne (fin des scrolls imbriqués), en-tête et pied d'enregistrement fixes (`position: sticky`), gestion des pages sous forme d'accordéon compact, et pleine exploitation de la largeur pour les colonnes de barres latérales (Barre gauche / Barre droite).
 *   **Vue Mobile Adaptée** : Transformation fluide en cartes verticales condensées sur mobile pour éliminer tout défilement horizontal forcé.
-*   **Tests & Qualité** : 27 suites de tests automatisées et 204 tests unitaires/d'intégration réussis à 100%, 0 avertissements de compilation de production.
+*   **Tests & Qualité** : 29 suites de tests automatisées et 219 tests unitaires/d'intégration réussis à 100%, 0 avertissements de compilation de production.
+
+### 13. Authentification Google, Contrôle Administrateur & Sécurité Firebase (`authService.js`, `firebase.js`, `firestore.rules`)
+*   **Connexion Google Firebase native (`GoogleAuthProvider`)** : Bouton clair et accessible « Continuer avec Google » avec le logo Google officiel, utilisant en priorité `signInWithPopup` et basculant sur `signInWithRedirect` en cas de blocage navigateur.
+*   **Contrôle strict des privilèges Administrateur (`verifyAdminStatus`)** : Tout compte Google connecté ne bénéficie pas automatiquement des privilèges admin. L'accès au tableau de bord (`/ae-dashboard`) est conditionné à :
+    1. Custom Claims Firebase Auth (`claims.admin === true`),
+    2. Enregistrement en tant qu'administrateur actif dans la collection Firestore `accounts` (`role === "Administrateur"` et `status === "Actif"`),
+    3. Liste blanche des administrateurs du portail (`jeremy.veille@hotmail.fr`, `pveille@ymail.com`, `admin@anjou-edition.fr`).
+*   **États de session sans clignotement** : Gestion explicite des 4 états d'authentification (`loading`, `authenticated`, `unauthenticated`, `unauthorized`) via `onAuthStateChanged`. Au rafraîchissement d'une session valide sur `/ae-dashboard`, un indicateur de chargement propre empêche toute éviction prématurée vers l'écran de connexion.
+*   **Écran d'accès non autorisé explicite** : En cas de tentative de connexion avec un compte Google non administrateur, l'accès est refusé avec un message clair affichant l'e-mail du compte connecté et un bouton d'action « Se connecter avec un autre compte ».
+*   **Déconnexion complète (`logoutAdmin`)** : Appel Firebase `signOut()`, suppression immédiate de l'accès administratif, purge du cache local et redirection vers la page d'accueil avec verrouillage strict du retour au dashboard.
+*   **Domaines autorisés & Déploiement** : Domaines configurés dans Firebase Authentication (`localhost`, `react-anjou-edition.firebaseapp.com`, `react-anjou-edition.web.app`, `anjou-edition-pour-les-nuls.ags49.fr`).
+*   **Règles de sécurité Firestore renforcées (`firestore.rules`)** : Toutes les écritures administratives (`pages`, `articles`, `flipbooks`, `medias`, `gallery`, `videos`, `news`, `menus`, `settings`, `accounts`) sont protégées côté serveur par la fonction `isAdmin()` vérifiant le token d'authentification (`request.auth.token.admin == true` ou liste des e-mails admin).
+
+### 14. Écran de Déconnexion Ergonomique & Sécurisé (`AdminLogoutSuccess`, `GoogleIcon`, `App.css`)
+*   **Design rassurant et équilibré** : Écran sobre et élégant affiché après la déconnexion avec bouclier de sécurité orange dans un halo subtil, titre `<h1>Déconnexion réussie</h1>`, messages espacés confirmant la fermeture sécurisée de la session administrative.
+*   **Bouton CTA Principal** : Bouton bleu marine (`#0b2348`) stylisé en Vanilla CSS avec logo officiel Google SVG « Se reconnecter avec Google », effet hover doux (`translateY(-2px)`), outline d'accessibilité visible au focus et gestion des états asynchrones de reconnexion.
+*   **Lien secondaire vers le site public** : Action « Retourner sur Anjou Édition » permettant de quitter immédiatement l'espace d'administration sans avoir à se reconnecter.
+*   **Responsive & WCAG AA** : Carte centrée verticalement (`min-height: 100dvh`), largeurs fluides avec marges de sécurité sur smartphone (`padding: 34px 22px; border-radius: 18px;`), cibles tactiles >= 44-52px, compatibilité totale mode sombre.
 
 ---
 
-*Dernière mise à jour du contexte par l'agent : 3 octobre 2026.*
+*Dernière mise à jour du contexte par l'agent : 6 octobre 2026.*
+
