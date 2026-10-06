@@ -13,8 +13,35 @@ jest.mock('./components/Dashboard', () => {
 // Mock firebase/auth
 jest.mock('firebase/auth', () => ({
   getAuth: jest.fn(() => ({})),
-  signInWithEmailAndPassword: jest.fn(() => Promise.resolve({ user: { email: 'admin@anjou-edition.fr' } })),
-  createUserWithEmailAndPassword: jest.fn(() => Promise.resolve({ user: { email: 'admin@anjou-edition.fr' } })),
+  GoogleAuthProvider: jest.fn().mockImplementation(() => ({
+    setCustomParameters: jest.fn()
+  })),
+  signInWithPopup: jest.fn(() => Promise.resolve({
+    user: {
+      email: 'jeremy.veille@hotmail.fr',
+      displayName: 'Jeremy Veille',
+      getIdTokenResult: () => Promise.resolve({ claims: { admin: true } })
+    }
+  })),
+  signInWithRedirect: jest.fn(() => Promise.resolve()),
+  getRedirectResult: jest.fn(() => Promise.resolve(null)),
+  signOut: jest.fn(() => Promise.resolve()),
+  signInWithEmailAndPassword: jest.fn(() => Promise.resolve({
+    user: {
+      email: 'admin@anjou-edition.fr',
+      getIdTokenResult: () => Promise.resolve({ claims: { admin: true } })
+    }
+  })),
+  createUserWithEmailAndPassword: jest.fn(() => Promise.resolve({
+    user: {
+      email: 'admin@anjou-edition.fr',
+      getIdTokenResult: () => Promise.resolve({ claims: { admin: true } })
+    }
+  })),
+  onAuthStateChanged: jest.fn((auth, cb) => {
+    cb(null);
+    return jest.fn();
+  })
 }));
 
 // Mock services/pageService

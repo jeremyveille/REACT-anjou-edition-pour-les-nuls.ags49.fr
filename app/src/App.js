@@ -15,6 +15,7 @@ import {
   Eye,
   EyeOff,
   AlertCircle,
+  ShieldAlert,
   Sparkles,
   Users,
   Feather,
@@ -32,7 +33,15 @@ import {
 } from './data';
 import { db, auth } from './firebase';
 import { collection, getDocs, doc, deleteDoc } from 'firebase/firestore';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
+import { 
+  loginWithGoogle, 
+  logoutAdmin, 
+  verifyAdminStatus, 
+  getFriendlyAuthErrorMessage, 
+  checkRedirectAuthResult, 
+  loginWithEmail 
+} from './services/authService';
 import PdfFlipbookReader from './components/PdfFlipbookReader';
 import FlipbookLayout from './components/FlipbookLayout';
 
@@ -45,6 +54,9 @@ import { ContactForm } from './components/ContactForm';
 import { PrivacyPolicy } from './components/PrivacyPolicy';
 import { OptimizedImage } from './utils/imageOptimizer';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { GoogleIcon } from './components/GoogleIcon';
+import { AdminLogoutSuccess } from './components/AdminLogoutSuccess';
+
 
 // Resilient dynamic import with retry on chunk loading failure
 const lazyWithRetry = (componentImport) =>
@@ -84,10 +96,66 @@ function App() {
   const [availableVoices, setAvailableVoices] = useState([]);
   const [selectedVoiceName, setSelectedVoiceName] = useState(() => localStorage.getItem('ae_speech_voice') || '');
   const [speechRate, setSpeechRate] = useState(() => parseFloat(localStorage.getItem('ae_speech_rate') || '1.0'));
+  const [authStatus, setAuthStatus] = useState(() => localStorage.getItem('ae_authenticated') === 'true' ? 'loading' : 'unauthenticated');
+  const [adminUser, setAdminUser] = useState(null);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(() => localStorage.getItem('ae_authenticated') === 'true');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    // Traiter un éventuel retour de redirection OAuth
+    checkRedirectAuthResult().catch(() => {});
+
+    // Surveillance réactive de l'état d'authentification Firebase
+    const unsubscribe = typeof onAuthStateChanged === 'function'
+      ? onAuthStateChanged(auth, async (firebaseUser) => {
+          if (!isMounted) return;
+
+          if (!firebaseUser) {
+            setIsAuthenticated(false);
+            setAdminUser(null);
+            setAuthStatus((prev) => (prev === 'logged_out' ? 'logged_out' : 'unauthenticated'));
+            localStorage.removeItem('ae_authenticated');
+            return;
+          }
+
+          try {
+            const check = await verifyAdminStatus(firebaseUser);
+            if (!isMounted) return;
+
+            if (check.isAdmin) {
+              setAdminUser(firebaseUser);
+              setIsAuthenticated(true);
+              setAuthStatus('authenticated');
+              localStorage.setItem('ae_authenticated', 'true');
+            } else {
+              setAdminUser(firebaseUser);
+              setIsAuthenticated(false);
+              setAuthStatus('unauthorized');
+              localStorage.removeItem('ae_authenticated');
+            }
+          } catch (err) {
+            if (!isMounted) return;
+            console.error("Erreur de vérification des droits administrateur :", err);
+            setAdminUser(firebaseUser);
+            setIsAuthenticated(false);
+            setAuthStatus('unauthorized');
+            localStorage.removeItem('ae_authenticated');
+          }
+        })
+      : null;
+
+    return () => {
+      isMounted = false;
+      if (typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
+    };
+  }, []);
   
   const [articles, setArticles] = useState(() => {
     try {
@@ -945,36 +1013,196 @@ function App() {
     navigateTo({ type: 'home' }, '/', "Anjou Édition — Pour les Nuls");
   };
 
+  const handleGoogleLogin = async () => {
+    setLoginError('');
+    setIsLoggingIn(true);
+    try {
+      const res = await loginWithGoogle();
+      if (res && res.user) {
+        const check = await verifyAdminStatus(res.user);
+        if (check.isAdmin) {
+          setAdminUser(res.user);
+          setIsAuthenticated(true);
+          setAuthStatus('authenticated');
+          localStorage.setItem('ae_authenticated', 'true');
+        } else {
+          setAdminUser(res.user);
+          setIsAuthenticated(false);
+          setAuthStatus('unauthorized');
+          localStorage.removeItem('ae_authenticated');
+        }
+      }
+    } catch (err) {
+      console.error("Erreur connexion Google :", err);
+      setLoginError(getFriendlyAuthErrorMessage(err));
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  const handleSwitchGoogleAccount = async () => {
+    setLoginError('');
+    setIsLoggingIn(true);
+    try {
+      await logoutAdmin();
+      const res = await loginWithGoogle();
+      if (res && res.user) {
+        const check = await verifyAdminStatus(res.user);
+        if (check.isAdmin) {
+          setAdminUser(res.user);
+          setIsAuthenticated(true);
+          setAuthStatus('authenticated');
+          localStorage.setItem('ae_authenticated', 'true');
+        } else {
+          setAdminUser(res.user);
+          setIsAuthenticated(false);
+          setAuthStatus('unauthorized');
+          localStorage.removeItem('ae_authenticated');
+        }
+      }
+    } catch (err) {
+      console.error("Erreur changement de compte Google :", err);
+      setLoginError(getFriendlyAuthErrorMessage(err));
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logoutAdmin();
+    } catch (err) {
+      console.error("Erreur lors de la déconnexion :", err);
+    }
+    setIsAuthenticated(false);
+    setAdminUser(null);
+    setAuthStatus('logged_out');
+    localStorage.removeItem('ae_authenticated');
+  };
+
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
+    setIsLoggingIn(true);
     try {
-      await signInWithEmailAndPassword(auth, 'admin@anjou-edition.fr', loginPassword);
-      setIsAuthenticated(true);
-      localStorage.setItem('ae_authenticated', 'true');
-      setLoginError('');
+      const user = await loginWithEmail('admin@anjou-edition.fr', loginPassword);
+      const check = await verifyAdminStatus(user);
+      if (check.isAdmin) {
+        setAdminUser(user);
+        setIsAuthenticated(true);
+        setAuthStatus('authenticated');
+        localStorage.setItem('ae_authenticated', 'true');
+        setLoginError('');
+      } else {
+        setAdminUser(user);
+        setIsAuthenticated(false);
+        setAuthStatus('unauthorized');
+        localStorage.removeItem('ae_authenticated');
+      }
     } catch (err) {
       if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
         // Fallback pour le premier lancement avec le mot de passe par défaut
         if (loginPassword === 'admin2026') {
           try {
-            await createUserWithEmailAndPassword(auth, 'admin@anjou-edition.fr', loginPassword);
+            const cred = await createUserWithEmailAndPassword(auth, 'admin@anjou-edition.fr', loginPassword);
+            setAdminUser(cred.user);
             setIsAuthenticated(true);
+            setAuthStatus('authenticated');
             localStorage.setItem('ae_authenticated', 'true');
             setLoginError('');
           } catch (createErr) {
-            setLoginError('Erreur de création du compte admin : ' + createErr.message);
+            setLoginError(getFriendlyAuthErrorMessage(createErr));
           }
         } else {
           setLoginError('Mot de passe incorrect.');
         }
       } else {
-        setLoginError('Erreur de connexion : ' + err.message);
+        setLoginError(getFriendlyAuthErrorMessage(err));
       }
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
   if (view.type === 'dashboard') {
-    if (!isAuthenticated) {
+    // 1. État de chargement : vérification Firebase de la session
+    if (authStatus === 'loading') {
+      return (
+        <div className={`admin-login-page ${darkMode ? 'dark-mode' : ''}`}>
+          <div className="admin-login-card fade-in admin-loading-card">
+            <div className="admin-login-spinner" aria-label="Chargement"></div>
+            <h2 className="admin-login-subtitle" style={{ marginTop: '1.25rem', fontSize: '1.2rem' }}>
+              Vérification de la session
+            </h2>
+            <p className="admin-login-desc">Validation de vos accès administrateur en cours...</p>
+          </div>
+        </div>
+      );
+    }
+
+    // 2. Compte connecté avec Google mais non autorisé
+    if (authStatus === 'unauthorized') {
+      return (
+        <div className={`admin-login-page ${darkMode ? 'dark-mode' : ''}`}>
+          <div className="admin-login-card fade-in admin-unauthorized-card">
+            <div className="admin-unauthorized-icon-wrapper">
+              <ShieldAlert size={32} />
+            </div>
+            <h1 className="admin-login-title">Anjou Édition</h1>
+            <h2 className="admin-login-subtitle" style={{ color: '#dc2626' }}>Accès Non Autorisé</h2>
+            <p className="admin-login-desc" style={{ marginTop: '0.5rem' }}>
+              Le compte suivant n'a pas les privilèges requis pour administrer ce site :
+            </p>
+            <div className="admin-unauthorized-email-badge">
+              {adminUser?.email || 'Compte Google'}
+            </div>
+            <p className="admin-login-desc" style={{ marginBottom: '1.5rem', fontSize: '0.85rem' }}>
+              Seuls les administrateurs officiels d'Anjou Édition sont habilités à gérer cette plateforme.
+            </p>
+
+            {loginError && (
+              <div className="admin-login-error fade-in" style={{ marginBottom: '1rem' }} role="alert">
+                <AlertCircle size={18} />
+                <span>{loginError}</span>
+              </div>
+            )}
+
+            <div className="admin-login-actions">
+              <button 
+                type="button" 
+                onClick={handleSwitchGoogleAccount} 
+                disabled={isLoggingIn}
+                className="admin-google-btn"
+              >
+                <GoogleIcon />
+                <span>{isLoggingIn ? "Connexion..." : "Se connecter avec un autre compte"}</span>
+              </button>
+              <button 
+                type="button" 
+                onClick={handleBackToSite} 
+                className="admin-login-back"
+              >
+                <ArrowLeft size={16} /> Retour au site public
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // 3. Écran élégant affiché après la déconnexion
+    if (authStatus === 'logged_out') {
+      return (
+        <AdminLogoutSuccess
+          onReconnect={handleGoogleLogin}
+          onBackToSite={handleBackToSite}
+          isReconnecting={isLoggingIn}
+          errorMessage={loginError}
+        />
+      );
+    }
+
+    // 4. Utilisateur non connecté : écran d'authentification avec bouton Google mis en avant
+    if (authStatus === 'unauthenticated' || !isAuthenticated) {
       return (
         <div className={`admin-login-page ${darkMode ? 'dark-mode' : ''}`}>
           <div className="admin-login-card fade-in">
@@ -993,6 +1221,24 @@ function App() {
                 <span>{loginError}</span>
               </div>
             )}
+
+            {/* Bouton de connexion Google principal */}
+            <div style={{ marginBottom: '1rem' }}>
+              <button
+                type="button"
+                onClick={handleGoogleLogin}
+                disabled={isLoggingIn}
+                className="admin-google-btn"
+                aria-label="Continuer avec Google"
+              >
+                <GoogleIcon />
+                <span>{isLoggingIn ? "Connexion en cours..." : "Continuer avec Google"}</span>
+              </button>
+            </div>
+
+            <div className="admin-login-divider">
+              <span>ou mot de passe administrateur</span>
+            </div>
             
             <form onSubmit={handleLoginSubmit} className="admin-login-form">
               <div className="admin-login-field">
@@ -1019,7 +1265,7 @@ function App() {
                 </div>
               </div>
               <div className="admin-login-actions">
-                <button type="submit" className="admin-login-submit">
+                <button type="submit" disabled={isLoggingIn} className="admin-login-submit">
                   Connexion
                 </button>
                 <button type="button" onClick={handleBackToSite} className="admin-login-back">
@@ -1032,11 +1278,18 @@ function App() {
       );
     }
     
+    // 4. Utilisateur authentifié et autorisé : affichage du tableau de bord
     return (
       <div className="min-h-screen">
         <ErrorBoundary>
           <React.Suspense fallback={<div className="ae-empty-state-container">Chargement de l'administration...</div>}>
-            <Dashboard onBackToSite={handleBackToSite} flipbooks={flipbooks} setFlipbooks={setFlipbooks} />
+            <Dashboard 
+              onBackToSite={handleBackToSite} 
+              onLogout={handleLogout}
+              currentUser={adminUser}
+              flipbooks={flipbooks} 
+              setFlipbooks={setFlipbooks} 
+            />
           </React.Suspense>
         </ErrorBoundary>
       </div>
