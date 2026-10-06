@@ -36,6 +36,8 @@ import { flipbooksData, textsData, articlesData, generateDefaultMenus } from "..
 import { PageBuilder } from "./page-builder/PageBuilder";
 import { pageService } from "../services/pageService";
 import MenuManager from "./menu-manager/MenuManager";
+import AdminLogoutSuccess from "./AdminLogoutSuccess";
+import { loginWithGoogle, verifyAdminStatus, getFriendlyAuthErrorMessage } from "../services/authService";
 import '../styles/page-builder.css';
 import '../styles/dashboard.css';
 import '../styles/menu-manager.css';
@@ -110,7 +112,7 @@ const ROUTE_MAP = {
   'parametres': 'Paramètres'
 };
 
-export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setFlipbooks: propSetFlipbooks }) {
+export default function Dashboard({ onBackToSite, onLogout, currentUser, flipbooks: propFlipbooks, setFlipbooks: propSetFlipbooks }) {
   // Local fallback state if props are not provided
   const [localFlipbooks, setLocalFlipbooks] = useState(() => {
     try {
@@ -144,7 +146,16 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
   const flipbooks = propFlipbooks || localFlipbooks;
   const setFlipbooks = propSetFlipbooks || setLocalFlipbooks;
 
-  const [userName, setUserName] = useState("JEREMY VEILLE");
+  const [userName, setUserName] = useState(() => currentUser?.displayName || currentUser?.email || "JEREMY VEILLE");
+
+  useEffect(() => {
+    if (currentUser?.displayName) {
+      setUserName(currentUser.displayName);
+    } else if (currentUser?.email) {
+      setUserName(currentUser.email);
+    }
+  }, [currentUser]);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("Accueil");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -196,6 +207,8 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
   }, [activeSection]);
 
   const [isLoggedOut, setIsLoggedOut] = useState(false);
+  const [isReconnecting, setIsReconnecting] = useState(false);
+  const [reconnectError, setReconnectError] = useState("");
   const [notification, setNotification] = useState(
     "Connexion à la base de données Firebase en cours..."
   );
@@ -1441,17 +1454,42 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setIsLoggedOut(true);
     setNotification(null);
+    if (typeof onLogout === 'function') {
+      try {
+        await onLogout();
+      } catch (err) {
+        console.error("Erreur lors de la déconnexion :", err);
+      }
+    }
   };
 
-  const handleRestartSession = () => {
-    setIsLoggedOut(false);
-    setActiveSection(null);
-    setSearchQuery("");
-    setActiveCategory("Accueil");
-    setNotification("Session restaurée avec Jeremy Veille.");
+  const handleRestartSession = async () => {
+    setReconnectError("");
+    setIsReconnecting(true);
+    try {
+      const res = await loginWithGoogle();
+      if (res && res.user) {
+        const check = await verifyAdminStatus(res.user);
+        if (check.isAdmin) {
+          setIsLoggedOut(false);
+          setActiveSection(null);
+          setSearchQuery("");
+          setActiveCategory("Accueil");
+          if (check.displayName) setUserName(check.displayName);
+          setNotification("Session restaurée avec succès.");
+        } else {
+          setReconnectError("Ce compte Google n'est pas autorisé en tant qu'administrateur.");
+        }
+      }
+    } catch (err) {
+      console.error("Erreur de reconnexion Google :", err);
+      setReconnectError(getFriendlyAuthErrorMessage(err));
+    } finally {
+      setIsReconnecting(false);
+    }
   };
 
   // --- New Handlers for Section Interactions ---
@@ -2249,24 +2287,12 @@ export default function Dashboard({ onBackToSite, flipbooks: propFlipbooks, setF
 
   if (isLoggedOut) {
     return (
-      <div className="ae-fullscreen-center-wrapper">
-        <div className="ae-modal-card-dialog">
-          <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <ShieldCheck className="ae-icon-warning-bounce" />
-          </div>
-          <h1 className="text-2xl font-black text-slate-800 mb-2">Déconnexion Réussie</h1>
-          <p className="text-slate-600 text-sm mb-6">
-            Votre session administrative a été fermée de manière sécurisée. À bientôt sur Anjou Edition !
-          </p>
-          <button
-            id="btn-reconnect"
-            onClick={handleRestartSession}
-            className="w-full bg-[#336ddc] hover:bg-[#1e52be] text-white font-bold py-3 px-6 rounded-xl transition-all cursor-pointer shadow-md inline-flex items-center justify-center gap-2"
-          >
-            Se reconnecter en tant que Jeremy
-          </button>
-        </div>
-      </div>
+      <AdminLogoutSuccess
+        onReconnect={handleRestartSession}
+        onBackToSite={onBackToSite}
+        isReconnecting={isReconnecting}
+        errorMessage={reconnectError}
+      />
     );
   }
 
