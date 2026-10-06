@@ -23,12 +23,59 @@ jest.mock('firebase/app', () => ({
 
 jest.mock('firebase/auth', () => ({
   getAuth: jest.fn().mockReturnValue({
-    currentUser: { uid: 'admin-123' },
+    currentUser: {
+      uid: 'admin-123',
+      email: 'jeremy.veille@hotmail.fr',
+      displayName: 'Jeremy Veille',
+      getIdTokenResult: () => Promise.resolve({ claims: { admin: true } })
+    },
     onAuthStateChanged: jest.fn((auth, cb) => {
-      cb({ uid: 'admin-123' });
+      cb({
+        uid: 'admin-123',
+        email: 'jeremy.veille@hotmail.fr',
+        displayName: 'Jeremy Veille',
+        getIdTokenResult: () => Promise.resolve({ claims: { admin: true } })
+      });
       return jest.fn();
     })
   }),
+  GoogleAuthProvider: jest.fn().mockImplementation(() => ({
+    setCustomParameters: jest.fn()
+  })),
+  signInWithPopup: jest.fn(() => Promise.resolve({
+    user: {
+      uid: 'admin-123',
+      email: 'jeremy.veille@hotmail.fr',
+      displayName: 'Jeremy Veille',
+      getIdTokenResult: () => Promise.resolve({ claims: { admin: true } })
+    }
+  })),
+  signInWithRedirect: jest.fn(() => Promise.resolve()),
+  getRedirectResult: jest.fn(() => Promise.resolve(null)),
+  signOut: jest.fn(() => Promise.resolve()),
+  signInWithEmailAndPassword: jest.fn(() => Promise.resolve({
+    user: {
+      uid: 'admin-email-123',
+      email: 'admin@anjou-edition.fr',
+      getIdTokenResult: () => Promise.resolve({ claims: { admin: true } })
+    }
+  })),
+  createUserWithEmailAndPassword: jest.fn(() => Promise.resolve({
+    user: {
+      uid: 'admin-email-123',
+      email: 'admin@anjou-edition.fr',
+      getIdTokenResult: () => Promise.resolve({ claims: { admin: true } })
+    }
+  })),
+  onAuthStateChanged: jest.fn((auth, cb) => {
+    cb({
+      uid: 'admin-123',
+      email: 'jeremy.veille@hotmail.fr',
+      displayName: 'Jeremy Veille',
+      getIdTokenResult: () => Promise.resolve({ claims: { admin: true } })
+    });
+    return jest.fn();
+  })
 }));
 
 jest.mock('firebase/firestore', () => {
