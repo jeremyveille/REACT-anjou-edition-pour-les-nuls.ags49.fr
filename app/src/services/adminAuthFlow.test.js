@@ -95,11 +95,13 @@ describe('Admin Authentication & Authorization End-to-End Scenarios', () => {
     // Dashboard should not be rendered
     expect(screen.queryByTestId('mock-dashboard')).not.toBeInTheDocument();
 
-    // Login header and Google Sign In button must be visible
+    // Login header, Google Sign In button, and Email/Password fields must be visible
     expect(screen.getByRole('heading', { name: /Accès Administration/i })).toBeInTheDocument();
     const googleBtn = screen.getByRole('button', { name: /Continuer avec Google/i });
     expect(googleBtn).toBeInTheDocument();
     expect(googleBtn).not.toBeDisabled();
+    expect(screen.getByLabelText(/Adresse e-mail/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Saisissez votre mot de passe/i)).toBeInTheDocument();
   });
 
   // TEST B : Connexion avec le compte Google administrateur autorisé
@@ -354,5 +356,41 @@ describe('Admin Authentication & Authorization End-to-End Scenarios', () => {
 
     expect(await screen.findByTestId('mock-dashboard')).toBeInTheDocument();
     expect(localStorage.getItem('ae_authenticated')).toBe('true');
+  });
+
+  // TEST I : Saisie d'une autre adresse e-mail (ex: pveille@ymail.com) et mot de passe
+  test('Test I: Entering custom email (e.g. pveille@ymail.com) and password signs in successfully', async () => {
+    const pveilleUser = {
+      uid: 'admin-pat-ymail',
+      email: 'pveille@ymail.com',
+      displayName: 'Pat V.',
+      getIdTokenResult: jest.fn().mockResolvedValue({ claims: { admin: true } })
+    };
+
+    const signInWithEmailAndPassword = require('firebase/auth').signInWithEmailAndPassword;
+    signInWithEmailAndPassword.mockResolvedValueOnce({ user: pveilleUser });
+
+    await act(async () => {
+      render(<App />);
+    });
+
+    const emailInput = screen.getByLabelText(/Adresse e-mail/i);
+    const pwdInput = screen.getByPlaceholderText(/Saisissez votre mot de passe/i);
+    const submitBtn = screen.getByRole('button', { name: /^Connexion$/i });
+
+    await act(async () => {
+      fireEvent.change(emailInput, { target: { value: 'pveille@ymail.com' } });
+      fireEvent.change(pwdInput, { target: { value: 'admin2026' } });
+      fireEvent.click(submitBtn);
+    });
+
+    expect(signInWithEmailAndPassword).toHaveBeenCalledWith(
+      expect.anything(),
+      'pveille@ymail.com',
+      'admin2026'
+    );
+    expect(await screen.findByTestId('mock-dashboard')).toBeInTheDocument();
+    expect(localStorage.getItem('ae_authenticated')).toBe('true');
+    expect(localStorage.getItem('ae_last_login_email')).toBe('pveille@ymail.com');
   });
 });

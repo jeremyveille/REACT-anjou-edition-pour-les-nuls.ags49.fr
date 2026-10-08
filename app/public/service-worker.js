@@ -1,7 +1,7 @@
 /* eslint-disable no-restricted-globals */
 
 // Cache versioning
-const CACHE_VERSION = 'v9';
+const CACHE_VERSION = 'v10';
 const STATIC_CACHE = `anjou-edition-static-${CACHE_VERSION}`;
 const MEDIA_CACHE = `anjou-edition-media-${CACHE_VERSION}`;
 const PDF_CACHE = `anjou-edition-pdf-${CACHE_VERSION}`;

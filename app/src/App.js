@@ -41,7 +41,8 @@ import {
   verifyAdminStatus, 
   getFriendlyAuthErrorMessage, 
   checkRedirectAuthResult, 
-  loginWithEmail 
+  loginWithEmail,
+  AUTHORIZED_ADMIN_EMAILS
 } from './services/authService';
 import PdfFlipbookReader from './components/PdfFlipbookReader';
 import FlipbookLayout from './components/FlipbookLayout';
@@ -101,6 +102,7 @@ function App() {
   const [adminUser, setAdminUser] = useState(null);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(() => localStorage.getItem('ae_authenticated') === 'true');
+  const [loginEmail, setLoginEmail] = useState(() => localStorage.getItem('ae_last_login_email') || 'pveille@ymail.com');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -1082,15 +1084,22 @@ function App() {
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
+    if (!loginEmail || !loginEmail.trim()) {
+      setLoginError("Veuillez renseigner votre adresse e-mail.");
+      return;
+    }
+    const cleanEmail = loginEmail.trim().toLowerCase();
     setIsLoggingIn(true);
+    setLoginError('');
     try {
-      const user = await loginWithEmail('admin@anjou-edition.fr', loginPassword);
+      const user = await loginWithEmail(cleanEmail, loginPassword);
       const check = await verifyAdminStatus(user);
       if (check.isAdmin) {
         setAdminUser(user);
         setIsAuthenticated(true);
         setAuthStatus('authenticated');
         localStorage.setItem('ae_authenticated', 'true');
+        localStorage.setItem('ae_last_login_email', cleanEmail);
         setLoginError('');
       } else {
         setAdminUser(user);
@@ -1100,20 +1109,21 @@ function App() {
       }
     } catch (err) {
       if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
-        // Fallback pour le premier lancement avec le mot de passe par défaut
-        if (loginPassword === 'admin2026') {
+        // Fallback sécurisé pour l'initialisation initiale d'un compte administrateur autorisé avec mot de passe par défaut
+        if (loginPassword === 'admin2026' && (AUTHORIZED_ADMIN_EMAILS.includes(cleanEmail) || cleanEmail === 'admin@anjou-edition.fr' || cleanEmail === 'pveille@ymail.com')) {
           try {
-            const cred = await createUserWithEmailAndPassword(auth, 'admin@anjou-edition.fr', loginPassword);
+            const cred = await createUserWithEmailAndPassword(auth, cleanEmail, loginPassword);
             setAdminUser(cred.user);
             setIsAuthenticated(true);
             setAuthStatus('authenticated');
             localStorage.setItem('ae_authenticated', 'true');
+            localStorage.setItem('ae_last_login_email', cleanEmail);
             setLoginError('');
           } catch (createErr) {
             setLoginError(getFriendlyAuthErrorMessage(createErr));
           }
         } else {
-          setLoginError('Mot de passe incorrect.');
+          setLoginError('Adresse e-mail ou mot de passe incorrect.');
         }
       } else {
         setLoginError(getFriendlyAuthErrorMessage(err));
@@ -1270,10 +1280,26 @@ function App() {
             </div>
 
             <div className="admin-login-divider">
-              <span>ou mot de passe administrateur</span>
+              <span>ou identifiants administrateur</span>
             </div>
             
             <form onSubmit={handleLoginSubmit} className="admin-login-form">
+              <div className="admin-login-field">
+                <label htmlFor="admin-email" className="admin-login-label">Adresse e-mail</label>
+                <div className="admin-login-input-wrapper">
+                  <input 
+                    id="admin-email"
+                    type="email" 
+                    className="admin-login-input" 
+                    value={loginEmail}
+                    onChange={(e) => { setLoginEmail(e.target.value); if (loginError) setLoginError(''); }}
+                    placeholder="nom@exemple.fr"
+                    autoComplete="username"
+                    required
+                  />
+                </div>
+              </div>
+
               <div className="admin-login-field">
                 <label htmlFor="admin-pwd" className="admin-login-label">Mot de passe</label>
                 <div className="admin-login-input-wrapper">

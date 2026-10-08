@@ -3251,6 +3251,10 @@ textarea:focus-visible,
   font-family: inherit;
 }
 
+.admin-login-input:not([type="password"]) {
+  padding-right: 1rem;
+}
+
 .admin-login-input:focus {
   outline: none;
   border-color: var(--secondary);
