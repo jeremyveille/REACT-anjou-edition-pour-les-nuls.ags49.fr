@@ -3377,6 +3377,77 @@ textarea:focus-visible,
   border-color: #475569;
 }
 
+/* Changer de compte Google */
+.admin-switch-account-wrapper {
+  margin-top: 0.625rem;
+  margin-bottom: 0.875rem;
+  text-align: center;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.admin-switch-account-prompt {
+  color: var(--text-muted, #64748b);
+  font-size: 0.825rem;
+  font-weight: 500;
+}
+
+.admin-switch-account-btn {
+  background: transparent;
+  border: none;
+  padding: 0.25rem 0.625rem;
+  color: var(--primary, #004b7a);
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  border-radius: 4px;
+  transition: all 0.15s ease-in-out;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.admin-switch-account-btn:hover:not(:disabled) {
+  color: #002d4a;
+  background-color: rgba(0, 75, 122, 0.08);
+}
+
+.admin-switch-account-btn:focus-visible {
+  outline: 2px solid var(--primary, #004b7a);
+  outline-offset: 2px;
+}
+
+.admin-switch-account-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+.dark-mode .admin-switch-account-prompt {
+  color: #94a3b8;
+}
+
+.dark-mode .admin-switch-account-btn {
+  color: #38bdf8;
+}
+
+.dark-mode .admin-switch-account-btn:hover:not(:disabled) {
+  color: #7dd3fc;
+  background-color: rgba(56, 189, 248, 0.12);
+}
+
+.admin-logout-switch-wrapper {
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
 .admin-login-divider {
   display: flex;
   align-items: center;

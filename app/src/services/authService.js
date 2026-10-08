@@ -8,7 +8,8 @@ import {
   reauthenticateWithCredential,
   EmailAuthProvider,
   sendPasswordResetEmail,
-  updateProfile
+  updateProfile,
+  GoogleAuthProvider
 } from 'firebase/auth';
 import { collection, getDocs } from 'firebase/firestore';
 import { auth, googleProvider, db } from '../firebase';
@@ -151,16 +152,37 @@ export async function verifyAdminStatus(user) {
 }
 
 /**
- * Lance la connexion via Google avec popup ou bascule sur redirection si la popup est bloquée
+ * Lance la connexion via Google avec sélection explicite du compte (prompt: 'select_account')
+ * Bascule sur redirection si la popup est bloquée par le navigateur.
  */
-export async function loginWithGoogle() {
+export async function loginWithGoogle(options = {}) {
   try {
-    const result = await signInWithPopup(auth, googleProvider);
+    const provider = typeof GoogleAuthProvider === 'function' 
+      ? new GoogleAuthProvider() 
+      : (googleProvider || {});
+
+    if (provider && typeof provider.setCustomParameters === 'function') {
+      provider.setCustomParameters({ 
+        prompt: 'select_account',
+        ...(options.customParameters || {})
+      });
+    }
+    const result = await signInWithPopup(auth, provider);
     return { user: result.user };
   } catch (error) {
     if (error.code === 'auth/popup-blocked') {
       try {
-        await signInWithRedirect(auth, googleProvider);
+        const provider = typeof GoogleAuthProvider === 'function' 
+          ? new GoogleAuthProvider() 
+          : (googleProvider || {});
+
+        if (provider && typeof provider.setCustomParameters === 'function') {
+          provider.setCustomParameters({ 
+            prompt: 'select_account',
+            ...(options.customParameters || {})
+          });
+        }
+        await signInWithRedirect(auth, provider);
         return { redirect: true };
       } catch (redirectError) {
         throw redirectError;
@@ -168,6 +190,17 @@ export async function loginWithGoogle() {
     }
     throw error;
   }
+}
+
+/**
+ * Permet à l'administrateur de changer de compte Google :
+ * 1. Déconnecte la session Firebase active éventuelle pour éviter toute réutilisation automatique
+ * 2. Force l'affichage de l'écran de sélection de compte Google ('select_account')
+ * 3. Réalise la connexion OAuth Google
+ */
+export async function switchGoogleAccount() {
+  await logoutAdmin();
+  return await loginWithGoogle({ customParameters: { prompt: 'select_account' } });
 }
 
 /**

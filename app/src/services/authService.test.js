@@ -5,6 +5,7 @@ import {
   AUTHORIZED_ADMIN_EMAILS,
   logoutAdmin,
   loginWithGoogle,
+  switchGoogleAccount,
   isGoogleUser,
   evaluatePasswordStrength,
   changeCurrentUserPassword,
@@ -20,7 +21,8 @@ import {
   reauthenticateWithCredential,
   EmailAuthProvider,
   sendPasswordResetEmail,
-  updateProfile
+  updateProfile,
+  GoogleAuthProvider
 } from 'firebase/auth';
 
 jest.mock('../firebase', () => ({
@@ -30,6 +32,9 @@ jest.mock('../firebase', () => ({
 }));
 
 jest.mock('firebase/auth', () => ({
+  GoogleAuthProvider: jest.fn().mockImplementation(function() {
+    this.setCustomParameters = jest.fn();
+  }),
   signInWithPopup: jest.fn(),
   signInWithRedirect: jest.fn(),
   getRedirectResult: jest.fn(),
@@ -184,6 +189,17 @@ describe('authService - Actions login & logout', () => {
     await logoutAdmin();
     expect(signOut).toHaveBeenCalled();
     expect(localStorage.getItem('ae_authenticated')).toBeNull();
+  });
+
+  test('switchGoogleAccount logs out first then launches login with prompt select_account', async () => {
+    const mockUser = { email: 'pveille49@gmail.com' };
+    signOut.mockResolvedValueOnce();
+    signInWithPopup.mockResolvedValueOnce({ user: mockUser });
+
+    const result = await switchGoogleAccount();
+    expect(signOut).toHaveBeenCalled();
+    expect(signInWithPopup).toHaveBeenCalled();
+    expect(result.user).toBe(mockUser);
   });
 });
 

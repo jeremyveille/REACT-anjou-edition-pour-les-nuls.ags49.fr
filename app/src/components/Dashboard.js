@@ -2345,6 +2345,7 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
     return (
       <AdminLogoutSuccess
         onReconnect={handleRestartSession}
+        onSwitchAccount={handleRestartSession}
         onBackToSite={onBackToSite}
         isReconnecting={isReconnecting}
         errorMessage={reconnectError}

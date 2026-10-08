@@ -231,4 +231,128 @@ describe('Admin Authentication & Authorization End-to-End Scenarios', () => {
     expect(screen.getByText('visiteur.inconnu@gmail.com')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Se connecter avec un autre compte/i })).toBeInTheDocument();
   });
+
+  // TEST F : Option « Changer de compte Google » sur l'écran de connexion
+  test('Test F: Login screen displays "Changer de compte Google" and allows signing in with another authorized admin', async () => {
+    const secondAdminUser = {
+      uid: 'admin-pat-gmail',
+      email: 'pveille49@gmail.com',
+      displayName: 'Pat V.',
+      getIdTokenResult: jest.fn().mockResolvedValue({
+        claims: {}
+      })
+    };
+
+    const signInWithPopup = require('firebase/auth').signInWithPopup;
+    signInWithPopup.mockResolvedValueOnce({ user: secondAdminUser });
+
+    await act(async () => {
+      render(<App />);
+    });
+
+    // Verify switch prompt & button presence
+    expect(screen.getByText(/Vous souhaitez utiliser une autre adresse e-mail \?/i)).toBeInTheDocument();
+    const switchBtn = screen.getByRole('button', { name: /Changer de compte Google/i });
+    expect(switchBtn).toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.click(switchBtn);
+    });
+
+    // Dashboard must be accessible because pveille49@gmail.com is an authorized admin
+    expect(await screen.findByTestId('mock-dashboard')).toBeInTheDocument();
+    expect(localStorage.getItem('ae_authenticated')).toBe('true');
+  });
+
+  // TEST G : Écran de déconnexion avec option « Changer de compte Google »
+  test('Test G: Logout screen provides "Changer de compte Google" to switch account immediately', async () => {
+    localStorage.setItem('ae_authenticated', 'true');
+
+    const adminUser = {
+      uid: 'admin-jeremy',
+      email: 'jeremy.veille@hotmail.fr',
+      displayName: 'Jeremy Veille',
+      getIdTokenResult: jest.fn().mockResolvedValue({ claims: { admin: true } })
+    };
+
+    await act(async () => {
+      render(<App />);
+    });
+
+    const { onAuthStateChanged } = require('firebase/auth');
+    const authCallback = onAuthStateChanged.mock.calls[0][1];
+    await act(async () => {
+      await authCallback(adminUser);
+    });
+
+    // Trigger logout
+    const logoutBtn = screen.getByTestId('dashboard-logout-btn');
+    await act(async () => {
+      fireEvent.click(logoutBtn);
+    });
+
+    expect(screen.getByRole('heading', { level: 1, name: /Déconnexion réussie/i })).toBeInTheDocument();
+
+    // Verify switch account button is present on logout screen
+    expect(screen.getByText(/Vous souhaitez utiliser une autre adresse e-mail \?/i)).toBeInTheDocument();
+    const switchAccountBtn = screen.getByRole('button', { name: /Changer de compte Google/i });
+    expect(switchAccountBtn).toBeInTheDocument();
+
+    // Clicking switch account reconnects with new account
+    const secondAdminUser = {
+      uid: 'admin-pat',
+      email: 'pveille@ymail.com',
+      displayName: 'Pat V.',
+      getIdTokenResult: jest.fn().mockResolvedValue({ claims: { admin: true } })
+    };
+    const signInWithPopup = require('firebase/auth').signInWithPopup;
+    signInWithPopup.mockResolvedValueOnce({ user: secondAdminUser });
+
+    await act(async () => {
+      fireEvent.click(switchAccountBtn);
+    });
+
+    expect(await screen.findByTestId('mock-dashboard')).toBeInTheDocument();
+  });
+
+  // TEST H : Transition de compte non-autorisé vers compte autorisé via « Changer de compte Google »
+  test('Test H: Unauthorized screen lets user switch to an authorized admin account and enter dashboard', async () => {
+    const nonAdminUser = {
+      uid: 'random-123',
+      email: 'inconnu@test.com',
+      displayName: 'Inconnu',
+      getIdTokenResult: jest.fn().mockResolvedValue({ claims: {} })
+    };
+
+    const signInWithPopup = require('firebase/auth').signInWithPopup;
+    signInWithPopup.mockResolvedValueOnce({ user: nonAdminUser });
+
+    await act(async () => {
+      render(<App />);
+    });
+
+    const googleBtn = screen.getByRole('button', { name: /Continuer avec Google/i });
+    await act(async () => {
+      fireEvent.click(googleBtn);
+    });
+
+    expect(await screen.findByText(/Accès Non Autorisé/i)).toBeInTheDocument();
+
+    // User chooses to switch account from unauthorized screen
+    const authorizedAdmin = {
+      uid: 'admin-jeremy',
+      email: 'admin@anjou-edition.fr',
+      displayName: 'Admin Principal',
+      getIdTokenResult: jest.fn().mockResolvedValue({ claims: { admin: true } })
+    };
+    signInWithPopup.mockResolvedValueOnce({ user: authorizedAdmin });
+
+    const switchBtn = screen.getByRole('button', { name: /Se connecter avec un autre compte/i });
+    await act(async () => {
+      fireEvent.click(switchBtn);
+    });
+
+    expect(await screen.findByTestId('mock-dashboard')).toBeInTheDocument();
+    expect(localStorage.getItem('ae_authenticated')).toBe('true');
+  });
 });

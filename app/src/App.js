@@ -36,6 +36,7 @@ import { collection, getDocs, doc, deleteDoc } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
 import { 
   loginWithGoogle, 
+  switchGoogleAccount,
   logoutAdmin, 
   verifyAdminStatus, 
   getFriendlyAuthErrorMessage, 
@@ -1044,8 +1045,7 @@ function App() {
     setLoginError('');
     setIsLoggingIn(true);
     try {
-      await logoutAdmin();
-      const res = await loginWithGoogle();
+      const res = await switchGoogleAccount();
       if (res && res.user) {
         const check = await verifyAdminStatus(res.user);
         if (check.isAdmin) {
@@ -1172,6 +1172,7 @@ function App() {
                 onClick={handleSwitchGoogleAccount} 
                 disabled={isLoggingIn}
                 className="admin-google-btn"
+                aria-label="Se connecter avec un autre compte"
               >
                 <GoogleIcon />
                 <span>{isLoggingIn ? "Connexion..." : "Se connecter avec un autre compte"}</span>
@@ -1184,6 +1185,21 @@ function App() {
                 <ArrowLeft size={16} /> Retour au site public
               </button>
             </div>
+
+            <div className="admin-switch-account-wrapper" style={{ marginTop: '1.25rem', marginBottom: '0.25rem' }}>
+              <span className="admin-switch-account-prompt">
+                Vous souhaitez utiliser une autre adresse e-mail ?
+              </span>
+              <button
+                type="button"
+                onClick={handleSwitchGoogleAccount}
+                disabled={isLoggingIn}
+                className="admin-switch-account-btn"
+                aria-label="Changer de compte Google"
+              >
+                Changer de compte Google
+              </button>
+            </div>
           </div>
         </div>
       );
@@ -1194,6 +1210,7 @@ function App() {
       return (
         <AdminLogoutSuccess
           onReconnect={handleGoogleLogin}
+          onSwitchAccount={handleSwitchGoogleAccount}
           onBackToSite={handleBackToSite}
           isReconnecting={isLoggingIn}
           errorMessage={loginError}
@@ -1223,7 +1240,7 @@ function App() {
             )}
 
             {/* Bouton de connexion Google principal */}
-            <div style={{ marginBottom: '1rem' }}>
+            <div style={{ marginBottom: '0.625rem' }}>
               <button
                 type="button"
                 onClick={handleGoogleLogin}
@@ -1233,6 +1250,22 @@ function App() {
               >
                 <GoogleIcon />
                 <span>{isLoggingIn ? "Connexion en cours..." : "Continuer avec Google"}</span>
+              </button>
+            </div>
+
+            {/* Option pour changer de compte Google */}
+            <div className="admin-switch-account-wrapper">
+              <span className="admin-switch-account-prompt">
+                Vous souhaitez utiliser une autre adresse e-mail ?
+              </span>
+              <button
+                type="button"
+                onClick={handleSwitchGoogleAccount}
+                disabled={isLoggingIn}
+                className="admin-switch-account-btn"
+                aria-label="Changer de compte Google"
+              >
+                Changer de compte Google
               </button>
             </div>
 

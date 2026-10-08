@@ -8,6 +8,7 @@ import { GoogleIcon } from './GoogleIcon';
  */
 export function AdminLogoutSuccess({
   onReconnect,
+  onSwitchAccount,
   onBackToSite,
   isReconnecting = false,
   errorMessage = ''
@@ -59,6 +60,22 @@ export function AdminLogoutSuccess({
           >
             <GoogleIcon />
             <span>{isReconnecting ? "Connexion en cours..." : "Se reconnecter avec Google"}</span>
+          </button>
+        </div>
+
+        {/* 5. Option pour changer de compte Google */}
+        <div className="admin-switch-account-wrapper admin-logout-switch-wrapper">
+          <span className="admin-switch-account-prompt">
+            Vous souhaitez utiliser une autre adresse e-mail ?
+          </span>
+          <button
+            type="button"
+            onClick={onSwitchAccount || onReconnect}
+            disabled={isReconnecting}
+            className="admin-switch-account-btn"
+            aria-label="Changer de compte Google"
+          >
+            Changer de compte Google
           </button>
         </div>
 
