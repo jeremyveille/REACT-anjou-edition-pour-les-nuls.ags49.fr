@@ -9,7 +9,8 @@ service cloud.firestore {
         request.auth.token.email in [
           'jeremy.veille@hotmail.fr',
           'admin@anjou-edition.fr',
-          'pveille@ymail.com'
+          'pveille@ymail.com',
+          'pveille49@gmail.com'
         ]
       );
     }
