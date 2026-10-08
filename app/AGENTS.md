@@ -147,6 +147,16 @@ Se déplacer dans le dossier : `cd app`
 *   **Activité & Métadonnées d'Audit** : Consultation de l'identifiant système, du mode d'authentification, de la date de création, de la date de dernière connexion et de la date de dernière modification administrative.
 *   **Qualité & Tests** : 31 suites de tests et 242 tests automatisés réussis à 100%, 0 avertissements de compilation.
 
+### 16. Sélecteur Dynamique et Changement de Compte Google OAuth (`authService.js`, `AdminLogoutSuccess.js`, `App.js`)
+*   **Sélecteur de Compte Explicite (`prompt: 'select_account'`)** : Configuration systématique du paramètre standard OAuth 2.0 `select_account` sur le `GoogleAuthProvider`. Même lorsqu'un compte Google est déjà mémorisé dans le navigateur, Google affiche systématiquement l'écran de sélection de compte (« Choisir un compte » ou « Utiliser un autre compte ») sans reconnexion silencieuse au mauvais compte.
+*   **Fonction `switchGoogleAccount()`** : Assure la purge préalable de la session active Firebase Auth (`signOut(auth)` + nettoyage du cache local `ae_authenticated`) avant de déclencher la popup OAuth avec sélection forcée.
+*   **Interface Intuitive & Accessible** :
+    *   Sous le bouton principal « Continuer avec Google », affichage de la question « Vous souhaitez utiliser une autre adresse e-mail ? » suivie de l'action « Changer de compte Google ».
+    *   Intégration harmonieuse sur la page de connexion, l'écran de déconnexion (`AdminLogoutSuccess`) et l'écran de refus d'accès (`unauthorized`).
+    *   Contraste WCAG AAA (bleu Anjou `#004b7a` sur fond clair, `#38bdf8` en dark mode), cible tactile accessible et outline focus visible.
+*   **Contrôle Strict des Droits Administrateurs** : Seuls les comptes explicitement autorisés (claims `admin: true`, collection Firestore `accounts` avec rôle `Administrateur` et statut `Actif`, ou liste blanche sécurisée) peuvent accéder au dashboard. Toute tentative avec une autre adresse Google affiche l'écran de refus d'accès avec l'e-mail connecté et l'action pour changer de compte.
+*   **Qualité & Tests** : 31 suites de tests et 246 tests automatisés validés à 100%, 0 avertissements de compilation.
+
 ---
 
 *Dernière mise à jour du contexte par l'agent : 8 octobre 2026.*
