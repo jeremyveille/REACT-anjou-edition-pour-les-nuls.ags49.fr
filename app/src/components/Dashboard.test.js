@@ -480,5 +480,79 @@ describe('Dashboard Layout & Ergonomics Tests', () => {
   });
 });
 
+describe('Dashboard Accounts Management Tests', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    window.history.pushState(null, '', '/ae-dashboard');
+  });
+
+  test('navigates to Mes Comptes, opens account sheet on card click or pencil button, and toggles status', async () => {
+    const mockAccounts = [
+      { id: "u1", name: "JEREMY VEILLE", email: "jeremy.veille@hotmail.fr", role: "Administrateur", status: "Actif", color: "#004b7a" },
+      { id: "u1790502715612", name: "Pat V.", email: "pveille@ymail.com", role: "Administrateur", status: "Inactif", color: "#ec4899" }
+    ];
+    localStorage.setItem("ae_accounts", JSON.stringify(mockAccounts));
+
+    render(<Dashboard onBackToSite={() => {}} currentUser={{ email: "jeremy.veille@hotmail.fr" }} />);
+
+    // Naviguer vers Comptes / Écrivains
+    const accountsSidebarBtn = screen.getByRole('button', { name: /Comptes \/ Écrivains/i });
+    fireEvent.click(accountsSidebarBtn);
+
+    // Vérifier l'en-tête de section
+    expect(await screen.findByText(/Comptes & Écrivains d'Anjou/i)).toBeInTheDocument();
+
+    // Vérifier la présence des cartes des comptes
+    expect(screen.getByText("JEREMY VEILLE")).toBeInTheDocument();
+    expect(screen.getByText("Pat V.")).toBeInTheDocument();
+    expect(screen.getByText("pveille@ymail.com")).toBeInTheDocument();
+
+    // Vérifier les boutons d'actions sur la carte
+    const editBtn = screen.getByRole('button', { name: /Modifier le compte de Pat V\./i });
+    expect(editBtn).toBeInTheDocument();
+
+    const shieldToggleBtn = screen.getByRole('button', { name: /^Activer le compte$/i });
+    expect(shieldToggleBtn).toBeInTheDocument();
+
+    // 1. Clic sur la carte utilisateur -> ouvre la fiche AccountEditModal
+    const patCard = screen.getByRole('button', { name: /Gérer le compte de Pat V\./i });
+    fireEvent.click(patCard);
+
+    // Vérifier l'ouverture du modal
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 3, name: /Pat V\./i })).toBeInTheDocument();
+
+    // Fermer le modal
+    fireEvent.click(screen.getByRole('button', { name: /Fermer la fenêtre/i }));
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    // 2. Clic sur le bouton crayon -> ouvre aussi le modal
+    fireEvent.click(editBtn);
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
+
+    // Modifier le nom dans le modal
+    const nameInput = screen.getByLabelText(/Nom complet affiché/i);
+    fireEvent.change(nameInput, { target: { value: "Patrice Veillé" } });
+
+    // Enregistrer
+    fireEvent.click(screen.getByRole('button', { name: /Enregistrer les modifications/i }));
+
+    // Vérifier la mise à jour de la carte
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(screen.getByText("Patrice Veillé")).toBeInTheDocument();
+    });
+
+    // 3. Basculer le statut via le bouclier
+    fireEvent.click(shieldToggleBtn);
+    await waitFor(() => {
+      expect(screen.getAllByRole('button', { name: /^Désactiver le compte$/i }).length).toBeGreaterThan(0);
+    });
+  });
+});
+
+
 
 

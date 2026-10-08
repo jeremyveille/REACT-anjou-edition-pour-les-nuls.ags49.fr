@@ -5,7 +5,7 @@ import InfoCard from "./InfoCard";
 import { 
   ArrowLeft, FileText, Image, Newspaper, Play, 
   Users, Layers, MessageSquare, Plus, 
-  Trash2, ShieldCheck, Sparkles, BookOpen,
+  Trash2, ShieldCheck, ShieldOff, Sparkles, BookOpen,
   Megaphone, X,
   Copy, Edit3, Eye, UploadCloud, Menu, Star, Check
 } from "lucide-react";
@@ -17,6 +17,7 @@ import PdfFlipbookReader from "./PdfFlipbookReader";
 import FlipbookLayout from "./FlipbookLayout";
 import FlipbookManager from "./FlipbookManager";
 import FlipbookEditModal from "./FlipbookEditModal";
+import AccountEditModal from "./AccountEditModal";
 import { 
   collection, 
   getDocs, 
@@ -37,10 +38,16 @@ import { PageBuilder } from "./page-builder/PageBuilder";
 import { pageService } from "../services/pageService";
 import MenuManager from "./menu-manager/MenuManager";
 import AdminLogoutSuccess from "./AdminLogoutSuccess";
-import { loginWithGoogle, verifyAdminStatus, getFriendlyAuthErrorMessage } from "../services/authService";
+import { 
+  loginWithGoogle, 
+  verifyAdminStatus, 
+  getFriendlyAuthErrorMessage,
+  updateCurrentUserProfile
+} from "../services/authService";
 import '../styles/page-builder.css';
 import '../styles/dashboard.css';
 import '../styles/menu-manager.css';
+import '../styles/account-admin.css';
 
 
 const normalizeParentId = (id) => {
@@ -365,6 +372,9 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
   const [newAccountRole, setNewAccountRole] = useState("Écrivain");
   const [newAccountStatus, setNewAccountStatus] = useState("Actif");
   const [showAddAccountModal, setShowAddAccountModal] = useState(false);
+  const [selectedAccountForEdit, setSelectedAccountForEdit] = useState(null);
+  const [showEditAccountModal, setShowEditAccountModal] = useState(false);
+  const [isSavingAccount, setIsSavingAccount] = useState(false);
 
   // Initial Loading State
   const [isInitializing, setIsInitializing] = useState(true);
@@ -2226,6 +2236,52 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
     setShowAddAccountModal(false);
   };
 
+  const handleOpenAccountModal = (account) => {
+    setSelectedAccountForEdit(account);
+    setShowEditAccountModal(true);
+  };
+
+  const handleCloseAccountModal = () => {
+    setShowEditAccountModal(false);
+    setSelectedAccountForEdit(null);
+  };
+
+  const handleSaveAccountFromModal = async (updatedData) => {
+    setIsSavingAccount(true);
+    try {
+      const updatedList = accountsList.map(a => a.id === updatedData.id ? updatedData : a);
+      setAccountsList(updatedList);
+      localStorage.setItem("ae_accounts", JSON.stringify(updatedList));
+
+      // Synchronisation Firestore
+      await setDoc(doc(db, "accounts", updatedData.id), updatedData, { merge: true });
+
+      // Si l'utilisateur connecté modifie son propre profil
+      const currentEmail = (currentUser?.email || "").toLowerCase().trim();
+      const updatedEmail = (updatedData.email || "").toLowerCase().trim();
+      if ((currentEmail && currentEmail === updatedEmail) || (updatedData.id === "u1")) {
+        setUserName(updatedData.name);
+        try {
+          await updateCurrentUserProfile({
+            displayName: updatedData.name,
+            photoURL: updatedData.photoURL
+          });
+        } catch (profileErr) {
+          console.warn("Échec synchronisation Firebase Auth profile:", profileErr);
+        }
+      }
+
+      setNotification(`Compte de "${updatedData.name}" mis à jour avec succès.`);
+      handleCloseAccountModal();
+    } catch (err) {
+      console.error("Erreur mise à jour compte:", err);
+      setNotification(`Compte mis à jour localement.`);
+      handleCloseAccountModal();
+    } finally {
+      setIsSavingAccount(false);
+    }
+  };
+
   const handleToggleAccountStatus = async (id) => {
     const updated = accountsList.map(u => {
       if (u.id === id) {
@@ -3044,9 +3100,30 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
 
                       <div className="accounts-grid animate-fade-in">
                         {accountsList.map((account) => (
-                          <div key={account.id} className="account-card">
+                          <div 
+                            key={account.id} 
+                            className="account-card"
+                            onClick={() => handleOpenAccountModal(account)}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                handleOpenAccountModal(account);
+                              }
+                            }}
+                            aria-label={`Gérer le compte de ${account.name}`}
+                          >
                             <div className="account-avatar-large" style={{ backgroundColor: account.color || "#336ddc" }}>
-                              {account.name ? account.name.charAt(0).toUpperCase() : "U"}
+                              {account.photoURL ? (
+                                <img 
+                                  src={account.photoURL} 
+                                  alt={account.name || 'Avatar'} 
+                                  onError={(e) => { e.currentTarget.style.display = 'none'; }} 
+                                />
+                              ) : (
+                                account.name ? account.name.charAt(0).toUpperCase() : "U"
+                              )}
                             </div>
                             <div className="account-info">
                               <p className="account-name">{account.name}</p>
@@ -3062,18 +3139,48 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
                             </div>
                             
                             <div className="account-actions">
+                              {/* Bouton Modifier le compte (icône de crayon) */}
                               <button
-                                onClick={() => handleToggleAccountStatus(account.id)}
-                                className="account-btn border-none"
-                                title="Activer / Désactiver le compte"
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenAccountModal(account);
+                                }}
+                                className="account-btn account-btn-edit border-none"
+                                title="Modifier le compte"
+                                aria-label={`Modifier le compte de ${account.name}`}
                               >
-                                <ShieldCheck className="ae-icon-emerald" />
+                                <Edit3 className="ae-icon-md" />
                               </button>
-                              {account.name !== "JEREMY VEILLE" && (
+
+                              {/* Bouton Statut (bouclier dynamique) */}
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleToggleAccountStatus(account.id);
+                                }}
+                                className="account-btn border-none"
+                                title={account.status === "Actif" ? "Désactiver le compte (actuellement Actif)" : "Activer le compte (actuellement Inactif)"}
+                                aria-label={account.status === "Actif" ? "Désactiver le compte" : "Activer le compte"}
+                              >
+                                {account.status === "Actif" ? (
+                                  <ShieldCheck className="ae-icon-emerald" />
+                                ) : (
+                                  <ShieldOff style={{ color: "#f59e0b" }} className="ae-icon-md" />
+                                )}
+                              </button>
+
+                              {account.name !== "JEREMY VEILLE" && account.email !== "jeremy.veille@hotmail.fr" && (
                                 <button
-                                  onClick={() => handleDeleteAccount(account.id, account.name)}
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteAccount(account.id, account.name);
+                                  }}
                                   className="account-btn account-btn-danger border-none bg-transparent"
                                   title="Supprimer le profil"
+                                  aria-label={`Supprimer le compte de ${account.name}`}
                                 >
                                   <Trash2 className="ae-icon-md" />
                                 </button>
@@ -4725,6 +4832,19 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
                   </form>
                 </div>
               </div>
+            )}
+
+            {/* 8.bis Edit / Manage Account Modal */}
+            {showEditAccountModal && selectedAccountForEdit && (
+              <AccountEditModal
+                isOpen={showEditAccountModal}
+                account={selectedAccountForEdit}
+                currentUser={currentUser}
+                onClose={handleCloseAccountModal}
+                onSave={handleSaveAccountFromModal}
+                onToggleStatus={handleToggleAccountStatus}
+                isSaving={isSavingAccount}
+              />
             )}
 
             {/* 9. Add/Edit Menu/Shortcode Item Modal */}
