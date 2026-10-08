@@ -1,0 +1,678 @@
+/* ==========================================================================
+   ANJOU ÉDITION - GESTION DES COMPTES ADMINISTRATEURS & ÉCRIVAINS
+   Styles Vanilla CSS purs - Conformes WCAG 2.2 AA - Zéro Tailwind
+   ========================================================================== */
+
+/* --- Modal Overlay & Conteneur Principal --- */
+.ae-account-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10050;
+  padding: 1rem;
+  overflow-y: auto;
+  animation: aeFadeIn 0.2s ease-out;
+}
+
+@keyframes aeFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes aeSlideUp {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.ae-account-modal-container {
+  background: var(--bg-card, #ffffff);
+  color: var(--text-main, #0f172a);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 16px;
+  width: min(780px, 96vw);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.08);
+  position: relative;
+  overflow: hidden;
+  animation: aeSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* --- Header Modal --- */
+.ae-account-modal-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border, #e2e8f0);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: var(--bg-page, #f8fafc);
+  flex-shrink: 0;
+}
+
+.ae-account-modal-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  min-width: 0;
+}
+
+.ae-account-modal-header-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.ae-account-modal-header-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ae-account-modal-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-main, #0f172a);
+  margin: 0;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ae-account-modal-subtitle {
+  font-size: 0.8125rem;
+  color: var(--text-muted, #64748b);
+  margin: 0;
+}
+
+.ae-account-modal-close-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+  color: var(--text-muted, #64748b);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  min-width: 38px;
+  min-height: 38px;
+}
+
+.ae-account-modal-close-btn:hover {
+  background-color: var(--border, #e2e8f0);
+  color: var(--text-main, #0f172a);
+}
+
+.ae-account-modal-close-btn:focus-visible {
+  outline: 2px solid var(--blue-primary, #004b7a);
+  outline-offset: 2px;
+}
+
+/* --- Onglets de Navigation --- */
+.ae-account-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border, #e2e8f0);
+  background: var(--bg-card, #ffffff);
+  padding: 0 1.5rem;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  overflow-x: auto;
+}
+
+.ae-account-tab-btn {
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: 0.875rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-muted, #64748b);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  min-height: 44px;
+}
+
+.ae-account-tab-btn:hover {
+  color: var(--text-main, #0f172a);
+}
+
+.ae-account-tab-btn.active {
+  color: var(--blue-primary, #004b7a);
+  border-bottom-color: var(--blue-primary, #004b7a);
+  font-weight: 700;
+}
+
+.ae-account-tab-btn:focus-visible {
+  outline: 2px solid var(--blue-primary, #004b7a);
+  outline-offset: -2px;
+}
+
+/* --- Corps du Modal (Scrollable) --- */
+.ae-account-modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* --- Sections & Cartes Internes --- */
+.ae-account-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.ae-account-section-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main, #0f172a);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ae-account-card-box {
+  background: var(--bg-page, #f8fafc);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 12px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* --- Grille Formulaire --- */
+.ae-form-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.ae-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.ae-form-label {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--text-main, #0f172a);
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.ae-form-input,
+.ae-form-select {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  border: 1px solid var(--border, #cbd5e1);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: var(--text-main, #0f172a);
+  background-color: var(--bg-card, #ffffff);
+  box-sizing: border-box;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  min-height: 42px;
+}
+
+.ae-form-input:focus,
+.ae-form-select:focus {
+  outline: none;
+  border-color: var(--blue-primary, #004b7a);
+  box-shadow: 0 0 0 3px rgba(0, 75, 122, 0.15);
+}
+
+.ae-form-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted, #64748b);
+  margin-top: 0.125rem;
+}
+
+/* --- Sélecteur de Couleur d'Avatar --- */
+.ae-avatar-config-row {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.ae-avatar-preview-wrapper {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 1.5rem;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.ae-avatar-preview-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ae-palette-presets {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.ae-color-circle-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+}
+
+.ae-color-circle-btn:hover {
+  transform: scale(1.15);
+}
+
+.ae-color-circle-btn.selected {
+  outline: 2px solid var(--blue-primary, #004b7a);
+  outline-offset: 2px;
+  transform: scale(1.1);
+}
+
+/* --- Sélecteur de Statut Administratif --- */
+.ae-status-selector {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.ae-status-option-btn {
+  flex: 1;
+  min-width: 140px;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  border: 1px solid var(--border, #cbd5e1);
+  background: var(--bg-card, #ffffff);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-align: left;
+  transition: all 0.2s ease;
+  min-height: 48px;
+}
+
+.ae-status-option-btn:hover {
+  border-color: var(--blue-primary, #004b7a);
+  background: rgba(0, 75, 122, 0.03);
+}
+
+.ae-status-option-btn.active {
+  border-color: var(--blue-primary, #004b7a);
+  background: rgba(0, 75, 122, 0.08);
+  box-shadow: 0 0 0 1px var(--blue-primary, #004b7a);
+}
+
+.ae-status-option-btn.active.is-inactive {
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.08);
+  box-shadow: 0 0 0 1px #f59e0b;
+}
+
+.ae-status-option-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 700;
+  font-size: 0.875rem;
+}
+
+.ae-status-option-desc {
+  font-size: 0.75rem;
+  color: var(--text-muted, #64748b);
+  line-height: 1.3;
+}
+
+/* --- Bannière d'Information Pédagogique --- */
+.ae-info-banner {
+  background: rgba(2, 132, 199, 0.08);
+  border: 1px solid rgba(2, 132, 199, 0.25);
+  border-radius: 10px;
+  padding: 0.875rem 1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  font-size: 0.8125rem;
+  color: #0369a1;
+  line-height: 1.4;
+}
+
+.ae-warning-banner {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 10px;
+  padding: 0.875rem 1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  font-size: 0.8125rem;
+  color: #b45309;
+  line-height: 1.4;
+}
+
+.ae-success-banner {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 10px;
+  padding: 0.875rem 1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  font-size: 0.8125rem;
+  color: #047857;
+  line-height: 1.4;
+}
+
+/* --- Carte Compte Google OAuth --- */
+.ae-google-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.ae-google-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ae-google-badge {
+  background: #f1f5f9;
+  color: #334155;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.625rem;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+/* --- Gestion Mot de Passe (Champs & Jauge) --- */
+.ae-password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.ae-password-input-wrapper .ae-form-input {
+  padding-right: 2.75rem;
+}
+
+.ae-password-toggle-btn {
+  position: absolute;
+  right: 6px;
+  background: transparent;
+  border: none;
+  padding: 6px;
+  color: var(--text-muted, #64748b);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: color 0.15s ease;
+}
+
+.ae-password-toggle-btn:hover {
+  color: var(--text-main, #0f172a);
+}
+
+.ae-password-strength-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin-top: 0.25rem;
+}
+
+.ae-strength-bar-bg {
+  width: 100%;
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.ae-strength-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.ae-strength-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+}
+
+.ae-strength-label {
+  font-weight: 700;
+}
+
+.ae-strength-tips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.ae-strength-tip-pill {
+  font-size: 0.6875rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: #f1f5f9;
+  color: #475569;
+}
+
+/* --- Historique & Métadonnées d'Audit --- */
+.ae-metadata-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.ae-metadata-item {
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 8px;
+  padding: 0.875rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.ae-metadata-label {
+  font-size: 0.75rem;
+  color: var(--text-muted, #64748b);
+  font-weight: 600;
+}
+
+.ae-metadata-value {
+  font-size: 0.875rem;
+  color: var(--text-main, #0f172a);
+  font-weight: 700;
+  word-break: break-all;
+}
+
+/* --- Footer Modal --- */
+.ae-account-modal-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border, #e2e8f0);
+  background: var(--bg-page, #f8fafc);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.ae-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  min-height: 42px;
+  text-decoration: none;
+}
+
+.ae-btn-secondary {
+  background: #e2e8f0;
+  color: #334155;
+  border: 1px solid transparent;
+}
+
+.ae-btn-secondary:hover {
+  background: #cbd5e1;
+  color: #0f172a;
+}
+
+.ae-btn-primary {
+  background: var(--blue-primary, #004b7a);
+  color: #ffffff;
+  border: 1px solid transparent;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.ae-btn-primary:hover {
+  background: var(--blue-hover, #003657);
+}
+
+.ae-btn-primary:focus-visible,
+.ae-btn-secondary:focus-visible {
+  outline: 2px solid var(--blue-primary, #004b7a);
+  outline-offset: 2px;
+}
+
+.ae-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* --- Badge de Rôle & Statut sur les Cartes Utilisateur --- */
+.account-card {
+  cursor: pointer;
+  user-select: none;
+}
+
+.account-card:focus-visible {
+  outline: 2px solid var(--blue-primary, #004b7a);
+  outline-offset: 2px;
+}
+
+.account-avatar-large img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* Bouton Modifier le compte avec icône de crayon */
+.account-btn-edit {
+  color: var(--blue-primary, #004b7a);
+}
+
+.account-btn-edit:hover {
+  background-color: rgba(0, 75, 122, 0.1);
+  color: var(--blue-hover, #003657);
+}
+
+/* Bouton bouclier avec état dynamique */
+.account-btn-shield-active {
+  color: #10b981;
+}
+
+.account-btn-shield-inactive {
+  color: #f59e0b;
+}
+
+/* --- Adaptations Mobiles & Tablettes (Responsive) --- */
+@media (max-width: 680px) {
+  .ae-form-grid-2 {
+    grid-template-columns: 1fr;
+  }
+  
+  .ae-metadata-list {
+    grid-template-columns: 1fr;
+  }
+  
+  .ae-status-selector {
+    flex-direction: column;
+  }
+  
+  .ae-account-modal-footer {
+    flex-direction: column-reverse;
+  }
+  
+  .ae-account-modal-footer .ae-btn {
+    width: 100%;
+  }
+
+  .ae-account-tabs {
+    padding: 0 1rem;
+  }
+
+  .ae-account-tab-btn {
+    padding: 0.75rem 0.625rem;
+    font-size: 0.8125rem;
+  }
+}
