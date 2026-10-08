@@ -4,10 +4,24 @@ import {
   getFriendlyAuthErrorMessage, 
   AUTHORIZED_ADMIN_EMAILS,
   logoutAdmin,
-  loginWithGoogle
+  loginWithGoogle,
+  isGoogleUser,
+  evaluatePasswordStrength,
+  changeCurrentUserPassword,
+  sendAdminPasswordResetEmail,
+  updateCurrentUserProfile
 } from './authService';
 import { auth, googleProvider } from '../firebase';
-import { signInWithPopup, signInWithRedirect, signOut } from 'firebase/auth';
+import { 
+  signInWithPopup, 
+  signInWithRedirect, 
+  signOut,
+  updatePassword,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
+  sendPasswordResetEmail,
+  updateProfile
+} from 'firebase/auth';
 
 jest.mock('../firebase', () => ({
   auth: { currentUser: null },
@@ -20,7 +34,14 @@ jest.mock('firebase/auth', () => ({
   signInWithRedirect: jest.fn(),
   getRedirectResult: jest.fn(),
   signOut: jest.fn(),
-  signInWithEmailAndPassword: jest.fn()
+  signInWithEmailAndPassword: jest.fn(),
+  updatePassword: jest.fn(),
+  reauthenticateWithCredential: jest.fn(),
+  EmailAuthProvider: {
+    credential: jest.fn((email, pass) => ({ email, pass }))
+  },
+  sendPasswordResetEmail: jest.fn(),
+  updateProfile: jest.fn()
 }));
 
 jest.mock('firebase/firestore', () => ({
@@ -165,3 +186,98 @@ describe('authService - Actions login & logout', () => {
     expect(localStorage.getItem('ae_authenticated')).toBeNull();
   });
 });
+
+describe('authService - isGoogleUser detection', () => {
+  test('detects Google user from providerData array', () => {
+    expect(isGoogleUser({ providerData: [{ providerId: 'google.com' }] })).toBe(true);
+    expect(isGoogleUser({ providerData: [{ providerId: 'password' }] })).toBe(false);
+  });
+
+  test('detects Google user from provider property', () => {
+    expect(isGoogleUser({ provider: 'google' })).toBe(true);
+    expect(isGoogleUser({ providerId: 'google.com' })).toBe(true);
+  });
+
+  test('detects Google user from known emails in project', () => {
+    expect(isGoogleUser({ email: 'jeremy.veille@hotmail.fr' })).toBe(true);
+    expect(isGoogleUser({ email: 'pveille49@gmail.com' })).toBe(true);
+    expect(isGoogleUser({ email: 'autre@domaine.fr' })).toBe(false);
+    expect(isGoogleUser(null)).toBe(false);
+  });
+});
+
+describe('authService - evaluatePasswordStrength', () => {
+  test('returns default non renseigné for empty password', () => {
+    const res = evaluatePasswordStrength('');
+    expect(res.score).toBe(0);
+    expect(res.isStrong).toBe(false);
+    expect(res.label).toBe('Non renseigné');
+  });
+
+  test('evaluates weak passwords', () => {
+    const res = evaluatePasswordStrength('abc');
+    expect(res.score).toBe(0);
+    expect(res.isStrong).toBe(false);
+    expect(res.feedback).toContain('Au moins 8 caractères.');
+  });
+
+  test('evaluates strong passwords with mixed case, digits and special chars', () => {
+    const res = evaluatePasswordStrength('AnjouEd!tion49#2026');
+    expect(res.score).toBeGreaterThanOrEqual(3);
+    expect(res.isStrong).toBe(true);
+    expect(res.label).toMatch(/Robuste|Excellent/);
+  });
+});
+
+describe('authService - Password & Profile Actions', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('changeCurrentUserPassword throws error when no user logged in', async () => {
+    auth.currentUser = null;
+    await expect(changeCurrentUserPassword('old', 'newpass123')).rejects.toThrow('Aucune session');
+  });
+
+  test('changeCurrentUserPassword rejects passwords shorter than 6 characters', async () => {
+    auth.currentUser = { email: 'test@anjou.fr' };
+    await expect(changeCurrentUserPassword('old', '123')).rejects.toThrow('au moins 6 caractères');
+  });
+
+  test('changeCurrentUserPassword re-authenticates and updates password', async () => {
+    auth.currentUser = { email: 'test@anjou.fr' };
+    updatePassword.mockResolvedValueOnce();
+    reauthenticateWithCredential.mockResolvedValueOnce();
+
+    const result = await changeCurrentUserPassword('oldPass123', 'newPassSecure49!');
+    expect(EmailAuthProvider.credential).toHaveBeenCalledWith('test@anjou.fr', 'oldPass123');
+    expect(reauthenticateWithCredential).toHaveBeenCalled();
+    expect(updatePassword).toHaveBeenCalledWith(auth.currentUser, 'newPassSecure49!');
+    expect(result.success).toBe(true);
+  });
+
+  test('sendAdminPasswordResetEmail validates email and sends reset email', async () => {
+    sendPasswordResetEmail.mockResolvedValueOnce();
+    const result = await sendAdminPasswordResetEmail(' Pat.V@ymail.com ');
+    expect(sendPasswordResetEmail).toHaveBeenCalledWith(auth, 'pat.v@ymail.com');
+    expect(result.success).toBe(true);
+    expect(result.email).toBe('pat.v@ymail.com');
+  });
+
+  test('sendAdminPasswordResetEmail rejects empty email', async () => {
+    await expect(sendAdminPasswordResetEmail('')).rejects.toThrow('adresse e-mail');
+  });
+
+  test('updateCurrentUserProfile updates profile in Firebase Auth', async () => {
+    auth.currentUser = { displayName: 'Old', photoURL: '' };
+    updateProfile.mockResolvedValueOnce();
+
+    const res = await updateCurrentUserProfile({ displayName: 'Nouveau Nom', photoURL: 'https://img.fr/avatar.jpg' });
+    expect(updateProfile).toHaveBeenCalledWith(auth.currentUser, {
+      displayName: 'Nouveau Nom',
+      photoURL: 'https://img.fr/avatar.jpg'
+    });
+    expect(res.success).toBe(true);
+  });
+});
+
