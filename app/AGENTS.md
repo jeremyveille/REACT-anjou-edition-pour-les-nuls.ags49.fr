@@ -136,7 +136,19 @@ Se déplacer dans le dossier : `cd app`
 *   **Lien secondaire vers le site public** : Action « Retourner sur Anjou Édition » permettant de quitter immédiatement l'espace d'administration sans avoir à se reconnecter.
 *   **Responsive & WCAG AA** : Carte centrée verticalement (`min-height: 100dvh`), largeurs fluides avec marges de sécurité sur smartphone (`padding: 34px 22px; border-radius: 18px;`), cibles tactiles >= 44-52px, compatibilité totale mode sombre.
 
+### 15. Gestion Complète des Comptes Administrateurs & Sécurité des Mots de Passe (`AccountEditModal`, `authService.js`, `account-admin.css`)
+*   **Fiche de Gestion Utilisateur Interactive** : Ouverture au clic sur la carte utilisateur ou sur le bouton « Modifier le compte » (icône crayon `<Edit3 />`), avec fermeture par touche `Échap`, clic sur le fond et navigation par onglets accessibles.
+*   **Profil & Droits** : Modification en direct du nom affiché, de l'adresse e-mail, de la photo de profil (`photoURL` ou palette de 8 couleurs Anjou Édition), du rôle (`Administrateur`, `Écrivain`, `Éditeur`) et du statut administratif (`Actif` / `Inactif`). Protection contre la rétrogradation du compte super-administrateur principal.
+*   **Sécurité selon la Méthode d'Authentification** :
+    *   **Compte Google OAuth** : Détection automatique avec logo Google officiel. Aucune saisie directe de mot de passe n'est proposée : message clair expliquant la délégation d'authentification à Google et lien sécurisé vers les paramètres de sécurité Google.
+    *   **Son Propre Compte (E-mail / Mot de passe)** : Formulaire de modification sécurisé avec mot de passe actuel (ré-authentification Firebase `reauthenticateWithCredential`), nouveau mot de passe, confirmation, boutons œil afficher/masquer, et jauge visuelle de robustesse dynamique en temps réel (barre colorée, score 0-4 et checklist des critères).
+    *   **Compte d'un Autre Utilisateur (ex: Pat V.)** : Respect strict de la confidentialité (aucun affichage ni saisie de mot de passe par un tiers). Bouton d'envoi d'un e-mail officiel de réinitialisation sécurisé via Firebase Authentication (`sendPasswordResetEmail`).
+*   **Distinction Statut Administratif vs Connexion Technique** : Clarification pédagogique expliquant que le statut `Inactif` est un verrou administratif stocké dans Firestore et localement, indépendant de la présence d'une session technique Firebase Auth ou d'une inactivité temporelle.
+*   **Activité & Métadonnées d'Audit** : Consultation de l'identifiant système, du mode d'authentification, de la date de création, de la date de dernière connexion et de la date de dernière modification administrative.
+*   **Qualité & Tests** : 31 suites de tests et 242 tests automatisés réussis à 100%, 0 avertissements de compilation.
+
 ---
 
-*Dernière mise à jour du contexte par l'agent : 6 octobre 2026.*
+*Dernière mise à jour du contexte par l'agent : 8 octobre 2026.*
+
 
