@@ -102,13 +102,18 @@ function App() {
   const [adminUser, setAdminUser] = useState(null);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(() => localStorage.getItem('ae_authenticated') === 'true');
-  const [loginEmail, setLoginEmail] = useState(() => localStorage.getItem('ae_last_login_email') || 'pveille@ymail.com');
+  const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
+
+    // S'assurer qu'aucun e-mail n'est pré-rempli ou forcé en cache local
+    try {
+      localStorage.removeItem('ae_last_login_email');
+    } catch (e) {}
 
     // Traiter un éventuel retour de redirection OAuth
     checkRedirectAuthResult().catch(() => {});
@@ -1045,6 +1050,8 @@ function App() {
 
   const handleSwitchGoogleAccount = async () => {
     setLoginError('');
+    setLoginEmail('');
+    setLoginPassword('');
     setIsLoggingIn(true);
     try {
       const res = await switchGoogleAccount();
@@ -1079,7 +1086,13 @@ function App() {
     setIsAuthenticated(false);
     setAdminUser(null);
     setAuthStatus('logged_out');
+    setLoginEmail('');
+    setLoginPassword('');
+    setLoginError('');
     localStorage.removeItem('ae_authenticated');
+    try {
+      localStorage.removeItem('ae_last_login_email');
+    } catch (e) {}
   };
 
   const handleLoginSubmit = async (e) => {
@@ -1099,7 +1112,6 @@ function App() {
         setIsAuthenticated(true);
         setAuthStatus('authenticated');
         localStorage.setItem('ae_authenticated', 'true');
-        localStorage.setItem('ae_last_login_email', cleanEmail);
         setLoginError('');
       } else {
         setAdminUser(user);
@@ -1110,14 +1122,13 @@ function App() {
     } catch (err) {
       if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
         // Fallback sécurisé pour l'initialisation initiale d'un compte administrateur autorisé avec mot de passe par défaut
-        if (loginPassword === 'admin2026' && (AUTHORIZED_ADMIN_EMAILS.includes(cleanEmail) || cleanEmail === 'admin@anjou-edition.fr' || cleanEmail === 'pveille@ymail.com')) {
+        if (loginPassword === 'admin2026' && (AUTHORIZED_ADMIN_EMAILS.includes(cleanEmail) || cleanEmail === 'admin@anjou-edition.fr')) {
           try {
             const cred = await createUserWithEmailAndPassword(auth, cleanEmail, loginPassword);
             setAdminUser(cred.user);
             setIsAuthenticated(true);
             setAuthStatus('authenticated');
             localStorage.setItem('ae_authenticated', 'true');
-            localStorage.setItem('ae_last_login_email', cleanEmail);
             setLoginError('');
           } catch (createErr) {
             setLoginError(getFriendlyAuthErrorMessage(createErr));

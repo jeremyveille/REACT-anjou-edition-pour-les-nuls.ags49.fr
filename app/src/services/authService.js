@@ -162,10 +162,13 @@ export async function loginWithGoogle(options = {}) {
       : (googleProvider || {});
 
     if (provider && typeof provider.setCustomParameters === 'function') {
-      provider.setCustomParameters({ 
+      const customParams = {
         prompt: 'select_account',
         ...(options.customParameters || {})
-      });
+      };
+      // Ne jamais présélectionner d'adresse e-mail ni imposer login_hint
+      delete customParams.login_hint;
+      provider.setCustomParameters(customParams);
     }
     const result = await signInWithPopup(auth, provider);
     return { user: result.user };
@@ -177,10 +180,12 @@ export async function loginWithGoogle(options = {}) {
           : (googleProvider || {});
 
         if (provider && typeof provider.setCustomParameters === 'function') {
-          provider.setCustomParameters({ 
+          const customParams = {
             prompt: 'select_account',
             ...(options.customParameters || {})
-          });
+          };
+          delete customParams.login_hint;
+          provider.setCustomParameters(customParams);
         }
         await signInWithRedirect(auth, provider);
         return { redirect: true };

@@ -391,6 +391,55 @@ describe('Admin Authentication & Authorization End-to-End Scenarios', () => {
     );
     expect(await screen.findByTestId('mock-dashboard')).toBeInTheDocument();
     expect(localStorage.getItem('ae_authenticated')).toBe('true');
-    expect(localStorage.getItem('ae_last_login_email')).toBe('pveille@ymail.com');
+  });
+
+  // TEST J : Aucun compte e-mail pré-sélectionné ou imposé par défaut
+  test('Test J: Login page starts with a completely blank email input and does not pre-select pveille@ymail.com', async () => {
+    await act(async () => {
+      render(<App />);
+    });
+
+    const emailInput = screen.getByLabelText(/Adresse e-mail/i);
+    expect(emailInput).toHaveValue('');
+    expect(emailInput.value).toBe('');
+    expect(localStorage.getItem('ae_last_login_email')).toBeNull();
+  });
+
+  // TEST K : Après déconnexion, aucun e-mail n'est prérempli
+  test('Test K: After logging out, login page displays blank email and password inputs', async () => {
+    localStorage.setItem('ae_authenticated', 'true');
+
+    const adminUser = {
+      uid: 'admin-jeremy',
+      email: 'jeremy.veille@hotmail.fr',
+      displayName: 'Jeremy Veille',
+      getIdTokenResult: jest.fn().mockResolvedValue({ claims: { admin: true } })
+    };
+
+    await act(async () => {
+      render(<App />);
+    });
+
+    const { onAuthStateChanged } = require('firebase/auth');
+    const authCallback = onAuthStateChanged.mock.calls[0][1];
+    await act(async () => {
+      await authCallback(adminUser);
+    });
+
+    // Trigger logout
+    const logoutBtn = screen.getByTestId('dashboard-logout-btn');
+    await act(async () => {
+      fireEvent.click(logoutBtn);
+    });
+
+    // Go back to login
+    const backBtn = screen.getByRole('button', { name: /Retourner sur Anjou Édition/i });
+    await act(async () => {
+      fireEvent.click(backBtn);
+    });
+
+    // Navigate to dashboard login view
+    expect(screen.queryByTestId('mock-dashboard')).not.toBeInTheDocument();
+    expect(localStorage.getItem('ae_last_login_email')).toBeNull();
   });
 });
