@@ -221,6 +221,23 @@ Se déplacer dans le dossier : `cd page-builder-react`
     *   Après déconnexion, réinitialisation systématique des champs d'authentification sans adresse résiduelle.
 *   **Qualité & Tests** : 31 suites de tests et 248 tests automatisés validés à 100%, 0 avertissements de compilation.
 
+### 17. Mise en Page Optimisée de la Fenêtre de Connexion Administrateur (`App.js`, `App.css`)
+*   **Dimensions Élargies & Hauteur Réduite** : Carte de connexion desktop configurée à `width: min(90vw, 760px); max-width: 760px; height: auto;` pour exploiter au mieux la largeur des écrans desktop tout en éliminant tout défilement vertical inutile sur les résolutions courantes (1920×1080, 1440×900, 1366×768, 1024×768).
+*   **Grille 2 Colonnes pour les Identifiants (`.admin-login-row`)** : Champs « Adresse e-mail » et « Mot de passe » disposés côte à côte sur une seule ligne via CSS Grid (`display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;`), diminuant la hauteur de la carte d'environ 90px.
+*   **Hiérarchie et Espacements Équilibrés** :
+    *   En-tête centré compact avec icône cadenas 48px, typographie soignée (`ANJOU ÉDITION` / `Accès Administration`),
+    *   Bouton « Continuer avec Google » pleine largeur utile (hauteur accessible ≥ 44px),
+    *   Bloc « Vous souhaitez utiliser une autre adresse e-mail ? / Changer de compte Google » harmonisé,
+    *   Séparateur net `──────── OU IDENTIFIANTS ADMINISTRATEUR ────────`,
+    *   Bouton « Connexion » pleine largeur en dessous des champs,
+    *   Lien « ← Retour au site » centré au bas de la carte,
+    *   Respiration visuelle équilibrée (16 à 24px entre blocs) sans aucun tassement ni débordement.
+*   **Responsive Multi-Palier Strict** :
+    *   **Desktop (≥ 900px)** : Largeur jusqu'à 760px, 2 colonnes pour e-mail et mot de passe, centrage vertical dans `min-height: 100dvh`, zéro scrollbar.
+    *   **Tablette (600px à 899px)** : Largeur `min(92vw, 650px)`, grille 2 colonnes conservée avec marges adaptées.
+    *   **Mobile (< 600px)** : Basculement fluide en 1 colonne (e-mail au-dessus du mot de passe), largeur `100%` (max 440px), cibles tactiles ≥ 44px.
+*   **Qualité & Tests** : 31 suites de tests et 249 tests validés à 100%, 0 avertissements de build.
+
 ---
 
 *Dernière mise à jour du contexte par l'agent : 8 octobre 2026.*
