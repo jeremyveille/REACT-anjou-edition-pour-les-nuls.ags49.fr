@@ -1295,45 +1295,48 @@ function App() {
             </div>
             
             <form onSubmit={handleLoginSubmit} className="admin-login-form">
-              <div className="admin-login-field">
-                <label htmlFor="admin-email" className="admin-login-label">Adresse e-mail</label>
-                <div className="admin-login-input-wrapper">
-                  <input 
-                    id="admin-email"
-                    type="email" 
-                    className="admin-login-input" 
-                    value={loginEmail}
-                    onChange={(e) => { setLoginEmail(e.target.value); if (loginError) setLoginError(''); }}
-                    placeholder="nom@exemple.fr"
-                    autoComplete="username"
-                    required
-                  />
+              <div className="admin-login-row">
+                <div className="admin-login-field">
+                  <label htmlFor="admin-email" className="admin-login-label">Adresse e-mail</label>
+                  <div className="admin-login-input-wrapper">
+                    <input 
+                      id="admin-email"
+                      type="email" 
+                      className="admin-login-input" 
+                      value={loginEmail}
+                      onChange={(e) => { setLoginEmail(e.target.value); if (loginError) setLoginError(''); }}
+                      placeholder="nom@exemple.fr"
+                      autoComplete="username"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="admin-login-field">
+                  <label htmlFor="admin-pwd" className="admin-login-label">Mot de passe</label>
+                  <div className="admin-login-input-wrapper">
+                    <input 
+                      id="admin-pwd"
+                      type={showPassword ? "text" : "password"} 
+                      className="admin-login-input" 
+                      value={loginPassword}
+                      onChange={(e) => { setLoginPassword(e.target.value); if (loginError) setLoginError(''); }}
+                      placeholder="Saisissez votre mot de passe"
+                      autoComplete="current-password"
+                      required
+                    />
+                    <button 
+                      type="button" 
+                      className="admin-login-toggle-pwd"
+                      onClick={() => setShowPassword(!showPassword)}
+                      aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              <div className="admin-login-field">
-                <label htmlFor="admin-pwd" className="admin-login-label">Mot de passe</label>
-                <div className="admin-login-input-wrapper">
-                  <input 
-                    id="admin-pwd"
-                    type={showPassword ? "text" : "password"} 
-                    className="admin-login-input" 
-                    value={loginPassword}
-                    onChange={(e) => { setLoginPassword(e.target.value); if (loginError) setLoginError(''); }}
-                    placeholder="Saisissez votre mot de passe"
-                    autoComplete="current-password"
-                    required
-                  />
-                  <button 
-                    type="button" 
-                    className="admin-login-toggle-pwd"
-                    onClick={() => setShowPassword(!showPassword)}
-                    aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
-                  >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-              </div>
               <div className="admin-login-actions">
                 <button type="submit" disabled={isLoggingIn} className="admin-login-submit">
                   Connexion
