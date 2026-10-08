@@ -155,7 +155,13 @@ Se déplacer dans le dossier : `cd app`
     *   Intégration harmonieuse sur la page de connexion, l'écran de déconnexion (`AdminLogoutSuccess`) et l'écran de refus d'accès (`unauthorized`).
     *   Contraste WCAG AAA (bleu Anjou `#004b7a` sur fond clair, `#38bdf8` en dark mode), cible tactile accessible et outline focus visible.
 *   **Contrôle Strict des Droits Administrateurs** : Seuls les comptes explicitement autorisés (claims `admin: true`, collection Firestore `accounts` avec rôle `Administrateur` et statut `Actif`, ou liste blanche sécurisée) peuvent accéder au dashboard. Toute tentative avec une autre adresse Google affiche l'écran de refus d'accès avec l'e-mail connecté et l'action pour changer de compte.
-*   **Qualité & Tests** : 31 suites de tests et 246 tests automatisés validés à 100%, 0 avertissements de compilation.
+*   **Neutralité et Absence Totale de Présélection (`App.js`, `authService.js`)** :
+    *   La page de connexion `/ae-dashboard` démarre avec un champ e-mail entièrement vierge (`loginEmail = ''`).
+    *   Aucun compte (notamment `pveille@ymail.com`) n'est imposé ou présélectionné par défaut.
+    *   Suppression de toute mémorisation d'e-mail dans `localStorage` (`ae_last_login_email` purgé au montage et à la déconnexion).
+    *   Interdiction stricte de tout paramètre `login_hint` sur `GoogleAuthProvider` : seul `prompt: 'select_account'` est transmis, laissant l'administrateur entièrement libre de choisir ou de taper l'adresse de son choix.
+    *   Après déconnexion, réinitialisation systématique des champs d'authentification sans adresse résiduelle.
+*   **Qualité & Tests** : 31 suites de tests et 248 tests automatisés validés à 100%, 0 avertissements de compilation.
 
 ---
 
