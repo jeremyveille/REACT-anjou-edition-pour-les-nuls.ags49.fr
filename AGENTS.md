@@ -4,11 +4,19 @@ Ce document sert de guide et de référence pour tout agent ou développeur trav
 
 ---
 
-## 📋 Présentation du Projet
+## 📋 Présentation du Projet & Identité Fondamentale
 
-**Anjou Édition** est un portail culturel dédié au patrimoine littéraire, historique, poétique et scientifique de l'Anjou. L'application se compose de plusieurs grandes parties :
-1. **Le site grand public** : Permet la lecture de textes et poésies (avec synthèse vocale), le feuilletage de flipbooks numériques interactifs, la consultation d'une galerie de photos et de vidéos HD sur la Loire et l'Anjou, ainsi qu'un formulaire de contact sécurisé et conforme au RGPD.
-2. **Le Tableau de Bord d'Administration (`/ae-dashboard`)** : Permet de gérer les pages du site, de publier des articles, de lire les messages de contact reçus, et de générer du contenu assisté par IA grâce à l'intégration de Gemini.
+**Anjou Édition** est une **maison et plateforme d'édition dédiée à la publication de créations et d'écrits inédits**.
+
+> [!IMPORTANT]
+> **RÈGLE FONDAMENTALE D'IDENTITÉ** :
+> Le nom « Anjou Édition » ne signifie en aucun cas que le site est consacré à l'histoire de l'Anjou, à son terroir ou à son patrimoine historique.
+> **NE JAMAIS générer automatiquement de contenu historique, touristique ou patrimonial concernant l'Anjou pour remplir le site.**
+> Le contenu éditorial publié relève de la **souveraineté exclusive de l'administrateur**. Aucun contenu fictif ou mocké ne doit être publié automatiquement sans action explicite de l'administrateur.
+
+L'application se compose de plusieurs grandes parties :
+1. **Le site grand public** : Permet la lecture d'écrits et créations littéraires (avec synthèse vocale), le feuilletage de flipbooks numériques interactifs, la consultation de médias validés et un formulaire de contact sécurisé conforme au RGPD.
+2. **Le Tableau de Bord d'Administration (`/ae-dashboard`)** : Centre de gestion permettant à l'administrateur de contrôler, modifier, publier ou supprimer tous les éléments du site (pages, articles, flipbooks, médias, messages) sans toucher au code React.
 3. **Le Page Builder Visuel (`/page-builder-react`)** : Un éditeur autonome drag-and-drop permettant de concevoir visuellement des structures de pages (sections, lignes, colonnes, texte, images, vidéos, boutons, cartes, alertes) et d'exporter du code HTML propre prêt à l'intégration avec Bootstrap 5.
 
 > [!NOTE]
@@ -238,8 +246,65 @@ Se déplacer dans le dossier : `cd page-builder-react`
     *   **Mobile (< 600px)** : Basculement fluide en 1 colonne (e-mail au-dessus du mot de passe), largeur `100%` (max 440px), cibles tactiles ≥ 44px.
 *   **Qualité & Tests** : 31 suites de tests et 249 tests validés à 100%, 0 avertissements de build.
 
+### 18. Déplacement du Bouton de Réduction de la Sidebar dans la Topbar (`DashboardHeader.js`, `DashboardSidebar.js`, `dashboard.css`)
+*   **Emplacement Topbar (`.topbar-left`)** : Déplacement de `sidebar-collapse-toggle-btn` directement dans `DashboardHeader.js`, immédiatement à droite du bouton hamburger mobile `.topbar-menu-toggle` et avant le titre/fil d'Ariane.
+*   **Dimensions & Harmonie Visuelle** : Dimensions unifiées 36×36px, verre dépoli avec bordure translucide, états `:hover`, `:focus-visible`, `:active`, infobulle accessible repositionnée sous le bouton sans tronquage.
+*   **Préservation Fonctionnelle** : Rétractation/expansion préservée avec bascule `isCollapsed`, persistance `localStorage` (`ae_sidebar_collapsed`), et 0 régression mobile.
+
+### 19. Améliorations Ergonomiques & Fonctionnelles Complètes du Dashboard (`CommandPalette.js`, `Dashboard.js`, `dashboard.css`)
+*   **Palette de Commandes Universelle (`Ctrl + K` / `Cmd + K`)** : Composant modal dédié `CommandPalette.js` accessible au clavier et via le bouton de recherche dans la Topbar. Recherche instantanée filtrant tous les écrits, flipbooks, pages, formulaires de contact et raccourcis d'administration rapide, avec navigation flèches Haut/Bas, validation Entrée et fermeture Échap.
+*   **Cartes KPIs Cliquables & Interactives** : Transformation des 4 cartes de statistiques (`Pages existantes`, `Articles de blog`, `Boîte de Réception`, `Base de données`) en boutons interactifs avec micro-interactions au survol (`.ae-stat-card--interactive`, élévation, liseré bleu, indice d'action visuel) naviguant instantanément vers leur section respective.
+*   **Fil d'Ariane Contextuel dans la Topbar** : Navigation hiérarchique dynamique (`Tableau de bord > Gestion des Articles`, etc.) avec lien cliquable permettant de revenir d'un clic à l'accueil du dashboard.
+*   **Toasts de Notification Riches & Suppression des `alert()` bloquants** : Remplacement de l'ensemble des `alert()` natifs par un système de bannières/toasts non-bloquants Vanilla CSS supportant 4 niveaux sémantiques (`success`, `error`, `warning`, `info`) avec icônes Lucide correspondantes et disparition automatique (4 secondes) ou manuelle.
+*   **Corbeille Temporaire Sécurisée & Statuts Éditoriaux Rapides** :
+    *   Filtrage par onglets dans les articles : `Tous`, `Publiés`, `Brouillons`, `🗑️ Corbeille`.
+    *   Mise en corbeille temporaire (soft delete) évitant toute perte accidentelle, avec actions *Restaurer* et *Supprimer définitivement*.
+    *   Sélecteur de statut 1 clic directement dans chaque ligne d'article pour basculer entre `Publié`, `Approuvé`, `En attente` et `Brouillon`.
+*   **Gestion Avancée des Messages & Purge RGPD** :
+    *   Filtres d'affichage `Tous`, `Non lus` (avec badge visuel « Nouveau »), `Traités`.
+    *   Bouton d'action directe *« Répondre »* via `mailto:` pré-rempli avec l'objet sécurisé.
+    *   Bouton *« Purge RGPD (> 3 ans) »* nettoyant les messages expirés conformément à la réglementation.
+*   **Sélecteur de Média Universel Intégré (`MediaLibraryModal`)** : Bouton d'accès direct à la médiathèque dans la modale d'édition d'article permettant de sélectionner une image existante ou de téléverser un nouvel asset sans quitter le formulaire.
+
+### 20. Harmonisation & Ergonomie Avancée de la Topbar (`DashboardHeader.js`, `dashboard.css`)
+*   **Réorganisation Flexbox sans positionnement absolu parasite** :
+    *   `.topbar-left` héberge exclusivement les boutons de navigation et le titre : `.topbar-menu-toggle`, `.sidebar-collapse-toggle-btn` et `.topbar-title-wrapper`.
+    *   Espacement précis : 8px entre les deux boutons de navigation, 16px entre le groupe de boutons et le titre.
+    *   Le déclencheur de recherche universelle rapide (`.topbar-search-trigger`) est intégré dans `.topbar-right`, libérant tout l'espace utile pour le titre.
+*   **Design Harmonisé des Boutons** :
+    *   Dimensions unifiées : 42×42px (40×40px sur smartphone), coins arrondis à 10px (`border-radius: 10px;`).
+    *   Fond bleu lumineux subtil (`rgba(255, 255, 255, 0.18)`), bordure fine (`rgba(255, 255, 255, 0.28)`), icônes blanches 20px centrées (`color: #ffffff; stroke: #ffffff;`).
+    *   Micro-interactions fluides : élévation au survol (`translateY(-1px)`, ombre 0 3px 8px), focus clavier accessible (`outline: 2px solid #ffffff; box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.35)`), compression active (`scale(0.96)`), transitions 150-180ms avec respect de `prefers-reduced-motion`.
+*   **Typographie Responsive (`clamp()`) & Lisibilité Optimale** :
+    *   Titre « Tableau de bord » adaptatif avec `clamp(1.05rem, 1.8vw, 1.35rem)`, `min-width: 0`, et troncature propre sans aucun chevauchement ni masquage.
+    *   Sous-titre « Administration Anjou Édition » : `clamp(0.7rem, 1.1vw, 0.8rem)` lisible sur tous les terminaux.
+    *   Fil d'Ariane responsive (`clamp(0.95rem, 1.6vw, 1.15rem)`) avec `flex-wrap: nowrap`.
+*   **Correction du Débordement sous la Topbar à la Source** :
+    *   Identification de l'élément sombre : infobulle `.sidebar-tooltip` (`#0f172a`) de `.sidebar-collapse-toggle-btn` et pseudo-élément latéral `::before` résiduel qui dépassait sous l'en-tête.
+    *   Suppression à la source de la flèche parasite `::before` (`display: none !important;`).
+    *   Positionnement propre, neutralisation totale sur écran tactile (`@media (hover: none) { display: none !important; }`) évitant tout blocage au toucher, et apparition contrôlée uniquement au survol réel à la souris (`@media (hover: hover)`) ou focus clavier spécifique.
+    *   Règle globale `.sidebar-overlay { display: none; }` par défaut sur desktop pour éliminer tout élément fantôme.
+*   **Responsive Multi-Palier (320px, 375px, 600px, 768px, 1024px, 1440px)** :
+    *   Grand écran & Ordinateur : deux boutons côte à côte, titre complet, actions étendues.
+    *   Tablette : Masquage sélectif du bouton d'agrandissement (`display: none !important;`) car la sidebar utilise le mode drawer off-canvas, bouton menu mobile conservé avec marge 12px vers le titre.
+    *   Smartphone (< 600px et jusqu'à 320px) : Zéro débordement horizontal (`flex-wrap: nowrap`), bouton hamburger compact 40×40px, titre fluide, boutons d'actions compacts avec icônes accessibles.
+### 21. Correction & Rétablissement du Bouton Hamburger du Dashboard (`DashboardHeader.js`, `DashboardSidebar.js`, `Dashboard.js`, `dashboard.css`)
+*   **Diagnostic & Résolution de la Cause Racine** :
+    *   *Cause 1 (CSS Desktop)* : `.dashboard-sidebar` était affiché en dur sur desktop (largeur fixe 250px/68px) sans règle CSS réagissant à l'état React `sidebarOpen`. Le clic modifiait bien l'état, mais aucun effet visuel ne se produisait sur écran >= 900px. Résolu avec les classes `.sidebar-closed` et `.is-closed` masquant la sidebar (`width: 0 !important; transform: translateX(-100%); opacity: 0; pointer-events: none;`) et étendant la zone de contenu (`flex: 1 1 100%`).
+    *   *Cause 2 (État initial)* : `sidebarOpen` était initialisé à `false` dans `Dashboard.js`. Résolu avec une initialisation dynamique basée sur la largeur d'écran (`() => typeof window !== "undefined" && window.innerWidth >= 900`), alignant l'état React avec l'affichage réel.
+    *   *Cause 3 (Blocage de scroll du body)* : `document.body.style.overflow = "hidden"` s'exécutait inconditionnellement sur desktop. Résolu en le restreignant strictement au tiroir mobile (`window.innerWidth < 900`).
+    *   *Cause 4 (Fermeture intempestive en navigation)* : Les clics sur les liens du menu refermaient la sidebar sur grand écran. Résolu en ne fermant que si `window.innerWidth < 900`.
+*   **Différenciation Claire des Deux Commandes de Navigation** :
+    *   **Bouton Hamburger (`.topbar-menu-toggle`)** : Masquage ou affichage complet de la barre latérale. Sur desktop, fait disparaître la barre et maximise la zone de travail. Sur mobile, ouvre/ferme le tiroir latéral (drawer). Icône dynamique Lucide `<Menu />` (fermé) / `<X />` (ouvert).
+    *   **Bouton Chevron (`.sidebar-collapse-toggle-btn`)** : Bascule indépendante entre mode large (250px) et compact (68px). Si la barre est masquée, un clic sur le chevron la ré-affiche immédiatement. Masqué sur mobile/tablette (< 900px) où le mode compact n'est pas applicable.
+*   **Expérience Mobile & Tiroir (Drawer)** :
+    *   Élévation de `.dashboard-topbar` à `z-index: 1001` au-dessus de l'overlay (`z-index: 999`), garantissant qu'un 2ème clic sur le hamburger referme instantanément le tiroir.
+    *   Fermeture au clic sur l'overlay sombre, sur le bouton croix interne `<X />`, ou par la touche `Échap`.
+    *   Rétablissement systématique du défilement du corps (`overflow = ""`) et restitution du focus clavier au bouton déclencheur.
+*   **Accessibilité & Qualité** :
+    *   Attributs `aria-expanded`, `aria-controls="dashboard-sidebar"` et `title` dynamiques selon l'état réel.
+    *   33 suites de tests automatisées et 270 tests unitaires/d'intégration réussis à 100%, 0 avertissements de compilation (`npm run build`).
+
 ---
 
-*Dernière mise à jour du contexte par l'agent : 8 octobre 2026.*
-
-
+*Dernière mise à jour du contexte par l'agent : 9 octobre 2026.*
