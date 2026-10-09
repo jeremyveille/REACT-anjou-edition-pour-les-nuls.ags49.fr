@@ -88,28 +88,19 @@ describe("DashboardSidebar Component Tests", () => {
     expect(menusBtn).toHaveClass("active");
   });
 
-  test("toggles collapsible compact mode and stores state in localStorage", () => {
-    render(<DashboardSidebar {...defaultProps} />);
-
-    const collapseBtn = screen.getByRole("button", { name: /Réduire le menu latéral/i });
-    expect(collapseBtn).toBeInTheDocument();
-    expect(screen.getByRole("complementary")).not.toHaveClass("is-collapsed");
-
-    // Click to collapse
-    fireEvent.click(collapseBtn);
-
+  test("renders in compact collapsed mode or full mode according to isCollapsed prop without duplicate toggle button", () => {
+    const { rerender } = render(<DashboardSidebar {...defaultProps} isCollapsed={false} />);
     const aside = screen.getByRole("complementary");
-    expect(aside).toHaveClass("is-collapsed");
-    expect(localStorage.getItem("ae_sidebar_collapsed")).toBe("true");
-
-    // Toggle button changes label to expand
-    const expandBtn = screen.getByRole("button", { name: /Agrandir le menu latéral/i });
-    expect(expandBtn).toBeInTheDocument();
-
-    // Click to expand again
-    fireEvent.click(expandBtn);
     expect(aside).not.toHaveClass("is-collapsed");
-    expect(localStorage.getItem("ae_sidebar_collapsed")).toBe("false");
+
+    // Vérifier que le bouton n'est plus présent dans son ancien emplacement
+    expect(screen.queryByRole("button", { name: /Réduire le menu latéral/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Agrandir le menu latéral/i })).not.toBeInTheDocument();
+
+    // Mode réduit
+    rerender(<DashboardSidebar {...defaultProps} isCollapsed={true} />);
+    expect(aside).toHaveClass("is-collapsed");
+    expect(screen.getByRole("button", { name: /Tableau de bord/i })).toBeInTheDocument();
   });
 
   test("navigates on item click and closes mobile sidebar if open", () => {
@@ -162,8 +153,11 @@ describe("DashboardSidebar Component Tests", () => {
 
     const { rerender } = render(<DashboardSidebar {...defaultProps} sidebarOpen={true} />);
 
-    // Close button in drawer
+    // Close button in drawer header
     const closeBtn = screen.getByRole("button", { name: /Fermer le menu latéral/i });
+    expect(closeBtn).toHaveClass("sidebar-header-close-btn");
+    expect(closeBtn).toHaveClass("sidebar-mobile-close-btn");
+    expect(closeBtn).toHaveAttribute("type", "button");
     fireEvent.click(closeBtn);
 
     expect(mockSetSidebarOpen).toHaveBeenCalledWith(false);

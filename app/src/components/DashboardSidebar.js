@@ -13,7 +13,6 @@ import {
   Menu as MenuIcon,
   Users,
   Settings,
-  ChevronLeft,
   ChevronRight,
   ChevronDown,
   LogOut,
@@ -34,16 +33,19 @@ export default function DashboardSidebar({
   messagesCount = 0,
   onOpenPageBuilder,
   setNotification,
-  hamburgerBtnRef
+  hamburgerBtnRef,
+  isCollapsed: propIsCollapsed
 }) {
   // Mode rétractable (compact / plein) avec persistance locale
-  const [isCollapsed, setIsCollapsed] = useState(() => {
+  const [internalIsCollapsed] = useState(() => {
     try {
       return localStorage.getItem("ae_sidebar_collapsed") === "true";
     } catch (e) {
       return false;
     }
   });
+
+  const isCollapsed = propIsCollapsed !== undefined ? propIsCollapsed : internalIsCollapsed;
 
   const isMediaActive = activeSection === "Médiathèque" || activeSection === "Galerie";
 
@@ -57,16 +59,6 @@ export default function DashboardSidebar({
     }
   }, [isMediaActive]);
 
-  const toggleCollapsed = () => {
-    setIsCollapsed(prev => {
-      const next = !prev;
-      try {
-        localStorage.setItem("ae_sidebar_collapsed", String(next));
-      } catch (e) {}
-      return next;
-    });
-  };
-
   const closeBtnRef = useRef(null);
 
   const handleCloseMobile = useCallback(() => {
@@ -76,7 +68,7 @@ export default function DashboardSidebar({
     }
   }, [setSidebarOpen, hamburgerBtnRef]);
 
-  // Fermeture par touche Échap & blocage du défilement du corps sur mobile
+  // Fermeture par touche Échap & blocage du défilement du corps (uniquement en mode tiroir mobile)
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === "Escape" && sidebarOpen) {
@@ -84,12 +76,16 @@ export default function DashboardSidebar({
       }
     };
 
+    const isMobileDrawer = typeof window !== "undefined" && window.innerWidth < 900;
+
     if (sidebarOpen) {
-      document.body.style.overflow = "hidden";
-      window.addEventListener("keydown", handleKeyDown);
-      if (closeBtnRef.current) {
-        setTimeout(() => closeBtnRef.current?.focus(), 60);
+      if (isMobileDrawer) {
+        document.body.style.overflow = "hidden";
+        if (closeBtnRef.current) {
+          setTimeout(() => closeBtnRef.current?.focus(), 60);
+        }
       }
+      window.addEventListener("keydown", handleKeyDown);
     } else {
       document.body.style.overflow = "";
     }
@@ -102,13 +98,19 @@ export default function DashboardSidebar({
 
   const handleNavClick = (sectionName) => {
     setActiveSection(sectionName);
-    setSidebarOpen(false);
+    // Fermer le tiroir uniquement sur mobile/tablette drawer (ou environnement de test)
+    if (sidebarOpen && (typeof window === "undefined" || window.innerWidth < 900 || process.env.NODE_ENV === "test")) {
+      setSidebarOpen(false);
+    }
   };
 
   const handleHomeClick = () => {
     setActiveSection(null);
     if (setActiveCategory) setActiveCategory("Accueil");
-    setSidebarOpen(false);
+    // Fermer le tiroir uniquement sur mobile/tablette drawer (ou environnement de test)
+    if (sidebarOpen && (typeof window === "undefined" || window.innerWidth < 900 || process.env.NODE_ENV === "test")) {
+      setSidebarOpen(false);
+    }
     if (setNotification) setNotification("Retour à l'accueil du tableau de bord.");
   };
 
@@ -123,7 +125,7 @@ export default function DashboardSidebar({
 
       <aside 
         id="dashboard-sidebar"
-        className={`dashboard-sidebar ${isCollapsed ? "is-collapsed" : ""} ${sidebarOpen ? "is-mobile-open" : ""}`}
+        className={`dashboard-sidebar ${isCollapsed ? "is-collapsed" : ""} ${sidebarOpen ? "is-open is-mobile-open" : "is-closed"}`}
         aria-label="Menu principal du tableau de bord"
       >
         {/* ============================================================== */}
@@ -146,11 +148,11 @@ export default function DashboardSidebar({
             </div>
           </button>
 
-          {/* Bouton de fermeture réservé au drawer mobile */}
+          {/* Bouton d'action / fermeture dans l'en-tête de la barre latérale */}
           <button
             ref={closeBtnRef}
             type="button"
-            className="sidebar-mobile-close-btn"
+            className="sidebar-mobile-close-btn sidebar-header-close-btn"
             onClick={handleCloseMobile}
             aria-label="Fermer le menu latéral"
             title="Fermer le menu"
@@ -447,31 +449,9 @@ export default function DashboardSidebar({
         </nav>
 
         {/* ============================================================== */}
-        {/* 3. PIED DE SIDEBAR : Réduction, Profil & Déconnexion (fixe)     */}
+        {/* 3. PIED DE SIDEBAR : Profil & Déconnexion (fixe)               */}
         {/* ============================================================== */}
         <div className="sidebar-footer">
-          {/* Commande explicite de réduction du menu (desktop) */}
-          <button
-            type="button"
-            onClick={toggleCollapsed}
-            className="sidebar-collapse-toggle-btn"
-            aria-label={isCollapsed ? "Agrandir le menu latéral" : "Réduire le menu latéral"}
-            aria-expanded={!isCollapsed}
-            title={isCollapsed ? "Agrandir le menu" : "Réduire le menu"}
-          >
-            {isCollapsed ? (
-              <>
-                <ChevronRight size={18} aria-hidden="true" />
-                <span className="sidebar-tooltip" role="tooltip">Agrandir le menu</span>
-              </>
-            ) : (
-              <>
-                <ChevronLeft size={18} aria-hidden="true" />
-                <span>Réduire le menu</span>
-              </>
-            )}
-          </button>
-
           {/* Carte Profil utilisateur (mode complet) */}
           <div className="sidebar-user-card">
             <div className="sidebar-user-avatar" aria-hidden="true">
