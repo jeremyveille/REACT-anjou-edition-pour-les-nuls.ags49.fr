@@ -2,12 +2,15 @@ import React, { useState, useEffect, useRef } from "react";
 import DashboardHeader from "./DashboardHeader";
 import DashboardSidebar from "./DashboardSidebar";
 import InfoCard from "./InfoCard";
+import CommandPalette from "./CommandPalette";
+import { MediaLibraryModal } from "./MediaLibraryModal";
 import { 
   ArrowLeft, FileText, Image, Newspaper, Play, 
   Users, Layers, MessageSquare, Plus, 
   Trash2, ShieldCheck, ShieldOff, Sparkles, BookOpen,
   Megaphone, X,
-  Copy, Edit3, Eye, UploadCloud, Menu, Star, Check
+  Copy, Edit3, Eye, UploadCloud, Menu, Star, Check,
+  CheckCircle2, AlertCircle, AlertTriangle, Info, Mail, RotateCcw
 } from "lucide-react";
 import { db, storage } from "../firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -165,8 +168,35 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
 
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("Accueil");
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    try {
+      if (typeof window !== "undefined") {
+        return window.innerWidth >= 900;
+      }
+    } catch (e) {}
+    return true;
+  });
   const hamburgerBtnRef = useRef(null);
+
+  // Mode rétractable (compact / plein) avec persistance locale
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem("ae_sidebar_collapsed") === "true";
+    } catch (e) {
+      return false;
+    }
+  });
+
+  const toggleSidebarCollapsed = () => {
+    setIsSidebarCollapsed(prev => {
+      const next = !prev;
+      try {
+        localStorage.setItem("ae_sidebar_collapsed", String(next));
+      } catch (e) {}
+      return next;
+    });
+  };
+
   const [newPageCategory, setNewPageCategory] = useState("Outils");
   const [newArticleCategory, setNewArticleCategory] = useState("Outils");
 
@@ -216,9 +246,128 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
   const [isLoggedOut, setIsLoggedOut] = useState(false);
   const [isReconnecting, setIsReconnecting] = useState(false);
   const [reconnectError, setReconnectError] = useState("");
-  const [notification, setNotification] = useState(
+  const [notification, setNotificationRaw] = useState(
     "Connexion à la base de données Firebase en cours..."
   );
+
+  // Rich Toast Notification State
+  const [toast, setToast] = useState({
+    id: Date.now(),
+    message: "Connexion à la base de données Firebase en cours...",
+    type: "info",
+    duration: 3500
+  });
+
+  const showToast = (message, type = "info", duration = 4000) => {
+    setToast({ id: Date.now(), message, type, duration });
+    setNotificationRaw(message);
+  };
+
+  const setNotification = (msg) => {
+    setNotificationRaw(msg);
+    if (msg) {
+      setToast({ id: Date.now(), message: msg, type: "info", duration: 4000 });
+    } else {
+      setToast(null);
+    }
+  };
+
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => {
+        setToast(null);
+      }, toast.duration || 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
+
+  // Command Palette (Ctrl + K) State & Shortcut
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  useEffect(() => {
+    const handleGlobalShortcuts = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setIsCommandPaletteOpen(prev => !prev);
+      }
+    };
+    window.addEventListener("keydown", handleGlobalShortcuts);
+    return () => window.removeEventListener("keydown", handleGlobalShortcuts);
+  }, []);
+
+  // Universal Media Picker Modal State
+  const [isMediaPickerOpen, setIsMediaPickerOpen] = useState(false);
+  const [mediaPickerCallback, setMediaPickerCallback] = useState(null);
+  const openMediaPicker = (callback) => {
+    setMediaPickerCallback(() => callback);
+    setIsMediaPickerOpen(true);
+  };
+
+  // Messages Filter & Read Tracking
+  const [messagesFilter, setMessagesFilter] = useState("all"); // 'all' | 'unread' | 'read'
+  const handleToggleMessageRead = (msgId) => {
+    setMessagesList(prev => prev.map(m => m.id === msgId ? { ...m, isRead: !m.isRead } : m));
+    showToast("Statut de lecture du message mis à jour", "info");
+  };
+
+  // RGPD Purge: Supprimer les messages de contact de plus de 3 ans
+  const handlePurgeOldMessagesRGPD = () => {
+    const now = Date.now();
+    const threeYearsMs = 3 * 365.25 * 24 * 60 * 60 * 1000;
+    const initialCount = messagesList.length;
+    const filtered = messagesList.filter(m => {
+      const msgDate = m.timestamp ? (m.timestamp.seconds ? m.timestamp.seconds * 1000 : new Date(m.timestamp).getTime()) : (m.date ? new Date(m.date).getTime() : now);
+      return (now - msgDate) < threeYearsMs;
+    });
+    const purgedCount = initialCount - filtered.length;
+    if (purgedCount > 0) {
+      setMessagesList(filtered);
+      showToast(`${purgedCount} message(s) de plus de 3 ans purgé(s) (Conformité RGPD).`, "success");
+    } else {
+      showToast("Aucun message expiré (> 3 ans). Registre de contact conforme au RGPD.", "info");
+    }
+  };
+
+  // Articles Status Filter & Corbeille (Soft Delete)
+  const [articlesStatusFilter, setArticlesStatusFilter] = useState("all"); // 'all' | 'published' | 'draft' | 'trash'
+  const [trashedArticles, setTrashedArticles] = useState([]);
+
+  const handleTrashArticle = (artId) => {
+    const articleToTrash = articlesList.find(a => a.id === artId);
+    if (!articleToTrash) return;
+    setArticlesList(prev => prev.filter(a => a.id !== artId));
+    setTrashedArticles(prev => [articleToTrash, ...prev]);
+    showToast(`Article "${articleToTrash.title}" déplacé dans la corbeille.`, "warning");
+  };
+
+  const handleRestoreArticle = (artId) => {
+    const restored = trashedArticles.find(a => a.id === artId);
+    if (!restored) return;
+    setTrashedArticles(prev => prev.filter(a => a.id !== artId));
+    setArticlesList(prev => [restored, ...prev]);
+    showToast(`Article "${restored.title}" restauré avec succès.`, "success");
+  };
+
+  const handlePermanentDeleteArticle = async (artId) => {
+    setTrashedArticles(prev => prev.filter(a => a.id !== artId));
+    setArticlesList(prev => prev.filter(a => a.id !== artId));
+    try {
+      await pageService.deletePage(artId, 'articles');
+      showToast("Article définitivement supprimé.", "info");
+    } catch (e) {
+      showToast("Article supprimé de la liste.", "info");
+    }
+  };
+
+  const handleUpdateArticleStatus = async (artId, newStatus) => {
+    try {
+      await pageService.savePage({ status: newStatus }, artId, 'articles');
+      setArticlesList(prev => prev.map(a => a.id === artId ? { ...a, status: newStatus } : a));
+      showToast(`Statut mis à jour : ${newStatus === 'published' ? 'Publié' : newStatus === 'draft' ? 'Brouillon' : newStatus}`, "success");
+    } catch (e) {
+      setArticlesList(prev => prev.map(a => a.id === artId ? { ...a, status: newStatus } : a));
+      showToast("Statut mis à jour localement.", "info");
+    }
+  };
 
   // Firestore & local states
   const [pagesList, setPagesList] = useState([]);
@@ -945,7 +1094,7 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
 
   const handleSaveFlipbook = async (updatedData, newPdfFile) => {
     if (!updatedData.title?.trim() || !updatedData.description?.trim()) {
-      alert("Le titre et la description ne peuvent pas être vides.");
+      showToast("Le titre et la description ne peuvent pas être vides.", "error");
       return;
     }
 
@@ -1054,7 +1203,7 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
       if (file.type === "application/pdf" || file.name.endsWith(".pdf")) {
         setSelectedPdfFile(file);
       } else {
-        alert("Veuillez sélectionner un fichier PDF valide.");
+        showToast("Veuillez sélectionner un fichier PDF valide.", "error");
       }
     }
   };
@@ -1065,7 +1214,7 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
       if (file.type === "application/pdf" || file.name.endsWith(".pdf")) {
         setSelectedPdfFile(file);
       } else {
-        alert("Veuillez sélectionner un fichier PDF valide.");
+        showToast("Veuillez sélectionner un fichier PDF valide.", "error");
       }
     }
   };
@@ -1203,7 +1352,7 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
     } catch (error) {
       console.error(error);
       clearInterval(progressInterval);
-      alert("Une erreur est survenue lors de la création du flipbook.");
+      showToast("Une erreur est survenue lors de la création du flipbook.", "error");
       setUploadStep(0);
     }
   };
@@ -1322,7 +1471,7 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
       setNotification(`Article "${payload.title}" mis à jour avec succès.`);
     } catch (err) {
       console.error("Erreur sauvegarde article:", err);
-      alert("Erreur lors de l'enregistrement de l'article.");
+      showToast("Erreur lors de l'enregistrement de l'article.", "error");
     } finally {
       setIsSavingArticle(false);
     }
@@ -1342,17 +1491,8 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
     }
   };
 
-  const handleDeleteArticle = async (id) => {
-    const target = articlesList.find(a => a.id === id);
-    if (!window.confirm(`Supprimer définitivement l'article "${target?.title || 'sélectionné'}" ?`)) return;
-    try {
-      await pageService.deletePage(id, 'articles');
-      setArticlesList(articlesList.filter(a => a.id !== id));
-      setNotification("Article supprimé avec succès.");
-    } catch (err) {
-      console.error("Error deleting article:", err);
-      setArticlesList(articlesList.filter(a => a.id !== id));
-    }
+  const handleDeleteArticle = (id) => {
+    handleTrashArticle(id);
   };
 
   const handleDeduplicate = async (collectionName = 'pages') => {
@@ -1807,7 +1947,7 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
 
     const yId = getYoutubeId(newVideoUrl);
     if (!yId) {
-      alert("Veuillez saisir un lien YouTube valide (ex: https://www.youtube.com/watch?v=kGgY9fG3g80).");
+      showToast("Veuillez saisir un lien YouTube valide (ex: https://www.youtube.com/watch?v=kGgY9fG3g80).", "error");
       return;
     }
 
@@ -1966,7 +2106,7 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
     // 1. Validation and Sanitization
     const sanitizedTitle = sanitizeInput(newMenuItemTitle);
     if (!sanitizedTitle) {
-      alert("L'intitulé est obligatoire.");
+      showToast("L'intitulé est obligatoire.", "error");
       return;
     }
     
@@ -1976,7 +2116,7 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
       
       const isShortcodeValid = validateShortcode(rawSc);
       if (!isShortcodeValid) {
-        alert("Erreur de validation : Le shortcode saisi n'est pas autorisé.");
+        showToast("Erreur de validation : Le shortcode saisi n'est pas autorisé.", "error");
         return;
       }
       
@@ -2323,14 +2463,28 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
     .filter(p => activeCategory === "Accueil" || p.category === activeCategory || (p.title && p.title.toLowerCase().includes(activeCategory.toLowerCase())))
     .filter(p => p.title.toLowerCase().includes(searchQuery.toLowerCase()));
 
-  const displayedArticles = articlesList
+  const sourceArticles = articlesStatusFilter === "trash" 
+    ? trashedArticles 
+    : articlesList.filter(a => {
+        if (articlesStatusFilter === "published") return a.status === "published";
+        if (articlesStatusFilter === "draft") return a.status !== "published";
+        return true;
+      });
+
+  const displayedArticles = sourceArticles
     .filter(a => activeCategory === "Accueil" || a.category === activeCategory || (a.title && a.title.toLowerCase().includes(activeCategory.toLowerCase())))
     .filter(a => a.title.toLowerCase().includes(searchQuery.toLowerCase()));
 
-  const displayedMessages = messagesList.filter(m => 
-    m.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    m.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    m.message.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredByReadMessages = messagesList.filter(m => {
+    if (messagesFilter === "unread") return !m.isRead;
+    if (messagesFilter === "read") return !!m.isRead;
+    return true;
+  });
+
+  const displayedMessages = filteredByReadMessages.filter(m => 
+    (m.name && m.name.toLowerCase().includes(searchQuery.toLowerCase())) || 
+    (m.subject && m.subject.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (m.message && m.message.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   const displayedFlipbooks = flipbooks
@@ -2544,7 +2698,7 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
       )}
 
       {/* SaaS Dashboard Layout: Sidebar | Main Content Area */}
-      <div className={`dashboard-layout-container ${sidebarOpen ? "sidebar-open" : ""}`}>
+      <div className={`dashboard-layout-container ${sidebarOpen ? "sidebar-open" : "sidebar-closed"}`}>
           
           {/* Left Sidebar */}
           <DashboardSidebar
@@ -2564,10 +2718,14 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
               setBuilderEditingId(homePage ? homePage.id : null);
               setBuilderEditingType('page');
               setActiveSection("Constructeur de Page");
-              setSidebarOpen(false);
+              if (typeof window !== "undefined" && window.innerWidth < 900) {
+                setSidebarOpen(false);
+              }
             }}
             setNotification={setNotification}
             hamburgerBtnRef={hamburgerBtnRef}
+            isCollapsed={isSidebarCollapsed}
+            toggleCollapsed={toggleSidebarCollapsed}
           />
 
           {/* 2. Right Content Area */}
@@ -2580,7 +2738,9 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
               onDashboardClick={() => {
                 setActiveSection(null);
                 setActiveCategory("Accueil");
-                setSidebarOpen(false);
+                if (typeof window !== "undefined" && window.innerWidth < 900) {
+                  setSidebarOpen(false);
+                }
                 setNotification("Retour à l'accueil du tableau de bord.");
               }}
               onBackToSiteClick={onBackToSite}
@@ -2589,6 +2749,9 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
               sidebarOpen={sidebarOpen}
               setSidebarOpen={setSidebarOpen}
               hamburgerBtnRef={hamburgerBtnRef}
+              isCollapsed={isSidebarCollapsed}
+              toggleCollapsed={toggleSidebarCollapsed}
+              onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
             />
 
             {/* Main Area Content */}
@@ -2784,6 +2947,40 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
                             </div>
                           </div>
 
+                          {/* Filter Tabs for Articles: Tous, Publiés, Brouillons, Corbeille */}
+                          <div className="ae-messages-filter-bar mb-3">
+                            <div className="ae-messages-tabs">
+                              <button
+                                type="button"
+                                onClick={() => setArticlesStatusFilter("all")}
+                                className={`ae-tab-btn ${articlesStatusFilter === "all" ? "ae-tab-btn--active" : ""}`}
+                              >
+                                Tous <span className="ae-badge-count">{articlesList.length}</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setArticlesStatusFilter("published")}
+                                className={`ae-tab-btn ${articlesStatusFilter === "published" ? "ae-tab-btn--active" : ""}`}
+                              >
+                                Publiés <span className="ae-badge-count">{articlesList.filter(a => a.status === 'published').length}</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setArticlesStatusFilter("draft")}
+                                className={`ae-tab-btn ${articlesStatusFilter === "draft" ? "ae-tab-btn--active" : ""}`}
+                              >
+                                Brouillons <span className="ae-badge-count">{articlesList.filter(a => a.status !== 'published').length}</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setArticlesStatusFilter("trash")}
+                                className={`ae-tab-btn ${articlesStatusFilter === "trash" ? "ae-tab-btn--active" : ""}`}
+                              >
+                                🗑️ Corbeille <span className="ae-badge-count">{trashedArticles.length}</span>
+                              </button>
+                            </div>
+                          </div>
+
                           <div className="space-y-3">
                             {displayedArticles.map(a => {
                               const isCurrentlyFeatured = (a.id === featuredArticleId) || (a.isFeatured === true);
@@ -2797,9 +2994,23 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
                                           <Star size={12} fill="#d97706" color="#d97706" /> Article Principal (Accueil)
                                         </span>
                                       )}
-                                      <span className="text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-medium">
-                                        {a.status === 'published' ? 'Publié' : a.status === 'approved' ? 'Approuvé' : a.status === 'pending_review' ? 'En attente' : 'Brouillon'}
-                                      </span>
+                                      {articlesStatusFilter !== 'trash' ? (
+                                        <select
+                                          value={a.status || 'draft'}
+                                          onChange={(e) => handleUpdateArticleStatus(a.id, e.target.value)}
+                                          className="db-select text-xs"
+                                          style={{ padding: '2px 6px', height: '24px', fontSize: '11px', borderRadius: '4px', maxWidth: '115px' }}
+                                          title="Changer le statut éditorial en 1 clic"
+                                          aria-label={`Modifier le statut de l'article ${a.title}`}
+                                        >
+                                          <option value="published">Publié</option>
+                                          <option value="approved">Approuvé</option>
+                                          <option value="pending_review">En attente</option>
+                                          <option value="draft">Brouillon</option>
+                                        </select>
+                                      ) : (
+                                        <span className="ae-status-badge ae-status-badge--trash">Corbeille</span>
+                                      )}
                                     </div>
                                     <p className="ae-meta-muted-sm mb-1">
                                       Slug: <code style={{ fontSize: '11px', color: '#64748b' }}>{a.slug || a.id}</code> | Catégorie: <span className="ae-text-subtitle-semibold">{a.category || "Outils"}</span> | Date: {a.date || '2026-09-20'}
@@ -2812,57 +3023,83 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
                                   </div>
 
                                   <div className="ae-flex-row-gap-md" style={{ alignItems: 'center' }}>
-                                    {!isCurrentlyFeatured ? (
-                                      <button
-                                        type="button"
-                                        onClick={() => handleSetFeaturedArticle(a.id)}
-                                        className="ae-btn-secondary-sm d-flex align-items-center gap-1 text-xs"
-                                        title="Afficher cet article en priorité sur la page d'accueil"
-                                        style={{ padding: '5px 9px', borderRadius: '6px' }}
-                                      >
-                                        <Star size={13} />
-                                        <span>Mettre à la une</span>
-                                      </button>
+                                    {articlesStatusFilter === 'trash' ? (
+                                      <>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleRestoreArticle(a.id)}
+                                          className="ae-btn-secondary-sm d-flex align-items-center gap-1 text-xs"
+                                          title="Restaurer cet article depuis la corbeille"
+                                          style={{ padding: '5px 10px', borderRadius: '6px' }}
+                                        >
+                                          <RotateCcw size={13} />
+                                          <span>Restaurer</span>
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => handlePermanentDeleteArticle(a.id)}
+                                          className="ae-btn-danger-ghost"
+                                          title="Supprimer définitivement cet article"
+                                          aria-label={`Supprimer définitivement l'article ${a.title}`}
+                                        >
+                                          <Trash2 className="ae-icon-md text-red-600" />
+                                        </button>
+                                      </>
                                     ) : (
-                                      <span className="text-xs text-amber-600 font-bold d-flex align-items-center gap-1" style={{ padding: '4px 6px' }}>
-                                        <Star size={13} fill="#d97706" color="#d97706" /> En avant
-                                      </span>
-                                    )}
+                                      <>
+                                        {!isCurrentlyFeatured ? (
+                                          <button
+                                            type="button"
+                                            onClick={() => handleSetFeaturedArticle(a.id)}
+                                            className="ae-btn-secondary-sm d-flex align-items-center gap-1 text-xs"
+                                            title="Afficher cet article en priorité sur la page d'accueil"
+                                            style={{ padding: '5px 9px', borderRadius: '6px' }}
+                                          >
+                                            <Star size={13} />
+                                            <span>Mettre à la une</span>
+                                          </button>
+                                        ) : (
+                                          <span className="text-xs text-amber-600 font-bold d-flex align-items-center gap-1" style={{ padding: '4px 6px' }}>
+                                            <Star size={13} fill="#d97706" color="#d97706" /> En avant
+                                          </span>
+                                        )}
 
-                                    <button
-                                      type="button"
-                                      onClick={() => handleOpenEditArticle(a)}
-                                      className="ae-action-btn-blue"
-                                      title="Modifier tous les champs de l'article"
-                                      aria-label={`Modifier l'article ${a.title}`}
-                                    >
-                                      <Edit3 className="ae-icon-md" />
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleLoadArticleToBuilder(a)}
-                                      className="ae-action-btn-blue"
-                                      title="Éditer avec le constructeur visuel"
-                                      aria-label={`Éditer visuellement l'article ${a.title}`}
-                                    >
-                                      <Layers className="ae-icon-md" />
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleDeleteArticle(a.id)}
-                                      className="ae-btn-danger-ghost"
-                                      title="Supprimer l'article"
-                                      aria-label={`Supprimer l'article ${a.title}`}
-                                    >
-                                      <Trash2 className="ae-icon-md" />
-                                    </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleOpenEditArticle(a)}
+                                          className="ae-action-btn-blue"
+                                          title="Modifier tous les champs de l'article"
+                                          aria-label={`Modifier l'article ${a.title}`}
+                                        >
+                                          <Edit3 className="ae-icon-md" />
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleLoadArticleToBuilder(a)}
+                                          className="ae-action-btn-blue"
+                                          title="Éditer avec le constructeur visuel"
+                                          aria-label={`Éditer visuellement l'article ${a.title}`}
+                                        >
+                                          <Layers className="ae-icon-md" />
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleDeleteArticle(a.id)}
+                                          className="ae-btn-danger-ghost"
+                                          title="Placer l'article dans la corbeille"
+                                          aria-label={`Supprimer l'article ${a.title}`}
+                                        >
+                                          <Trash2 className="ae-icon-md" />
+                                        </button>
+                                      </>
+                                    )}
                                   </div>
                                 </div>
                               );
                             })}
                             {displayedArticles.length === 0 && (
                               <div className="text-center py-6 text-slate-400 italic">
-                                Aucun article trouvé.
+                                {articlesStatusFilter === 'trash' ? "La corbeille est vide." : "Aucun article trouvé."}
                               </div>
                             )}
                           </div>
@@ -2998,6 +3235,43 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
                   {activeSection === "Messages" && (
                     <div className="space-y-6">
                       <div className="db-panel-card">
+                        <div className="ae-messages-filter-bar">
+                          <div className="ae-messages-tabs">
+                            <button
+                              type="button"
+                              onClick={() => setMessagesFilter("all")}
+                              className={`ae-tab-btn ${messagesFilter === "all" ? "ae-tab-btn--active" : ""}`}
+                            >
+                              Tous <span className="ae-badge-count">{messagesList.length}</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setMessagesFilter("unread")}
+                              className={`ae-tab-btn ${messagesFilter === "unread" ? "ae-tab-btn--active" : ""}`}
+                            >
+                              Non lus <span className="ae-badge-count">{messagesList.filter(m => !m.isRead).length}</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setMessagesFilter("read")}
+                              className={`ae-tab-btn ${messagesFilter === "read" ? "ae-tab-btn--active" : ""}`}
+                            >
+                              Traités <span className="ae-badge-count">{messagesList.filter(m => m.isRead).length}</span>
+                            </button>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={handlePurgeOldMessagesRGPD}
+                            className="ae-btn-secondary-sm d-inline-flex align-items-center gap-1.5 text-xs"
+                            title="Supprimer les formulaires de plus de 3 ans conformément aux exigences RGPD"
+                            style={{ padding: '5px 11px', borderRadius: '6px' }}
+                          >
+                            <ShieldCheck size={14} className="text-emerald-600" />
+                            <span>Purge RGPD (&gt; 3 ans)</span>
+                          </button>
+                        </div>
+
                         <h4 className="text-md font-bold text-slate-700 mb-4 flex items-center gap-1.5">
                           <MessageSquare className="ae-icon-md-blue" />
                           Messages de contact (Formulaires reçus)
@@ -3022,21 +3296,51 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
                               <tbody>
                                 {displayedMessages.map((m) => (
                                   <tr key={m.id} className="ae-table-row">
-                                    <td className="py-3 font-semibold text-slate-805">{m.name}</td>
+                                    <td className="py-3 font-semibold text-slate-805">
+                                      <div className="d-flex align-items-center gap-1.5">
+                                        {!m.isRead && (
+                                          <span className="badge bg-primary text-white text-xs px-1.5 py-0.5 rounded" style={{ fontSize: '10px' }}>
+                                            Nouveau
+                                          </span>
+                                        )}
+                                        <span>{m.name}</span>
+                                      </div>
+                                    </td>
                                     <td className="py-3 text-slate-500">
-                                      <a href={`mailto:${m.email}`} className="ae-link-primary-underline">{m.email}</a>
+                                      <a href={`mailto:${m.email}`} className="ae-link-primary-underline" title="Écrire à cette adresse">{m.email}</a>
                                     </td>
                                     <td className="py-3 text-slate-700 font-bold">{m.subject}</td>
                                     <td className="py-3 text-slate-600 max-w-xs truncate" title={m.message}>{m.message}</td>
                                     <td className="py-3 text-slate-400 text-xs">{m.date}</td>
                                     <td className="py-3 text-right">
-                                      <button
-                                        onClick={() => handleDeleteMessage(m.id)}
-                                        className="ae-btn-danger-icon"
-                                        title="Supprimer le message"
-                                      >
-                                        <Trash2 className="ae-icon-md" />
-                                      </button>
+                                      <div className="d-flex align-items-center justify-content-end gap-1.5">
+                                        <a
+                                          href={`mailto:${m.email}?subject=Re: ${encodeURIComponent(m.subject || 'Votre message à Anjou Édition')}`}
+                                          className="ae-btn-secondary-sm d-inline-flex align-items-center gap-1 text-xs"
+                                          title="Répondre par e-mail direct"
+                                          style={{ padding: '4px 8px', borderRadius: '5px', textDecoration: 'none' }}
+                                        >
+                                          <Mail size={13} />
+                                          <span>Répondre</span>
+                                        </a>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleToggleMessageRead(m.id)}
+                                          className="ae-btn-secondary-sm d-inline-flex align-items-center gap-1 text-xs"
+                                          title={m.isRead ? "Marquer comme non lu" : "Marquer comme traité"}
+                                          style={{ padding: '4px 6px', borderRadius: '5px' }}
+                                        >
+                                          <Check size={13} className={m.isRead ? "text-emerald-600" : "text-slate-400"} />
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleDeleteMessage(m.id)}
+                                          className="ae-btn-danger-icon"
+                                          title="Supprimer le message"
+                                        >
+                                          <Trash2 className="ae-icon-md" />
+                                        </button>
+                                      </div>
                                     </td>
                                   </tr>
                                 ))}
@@ -3779,49 +4083,73 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
                 <div className="ae-dashboard-home-content">
                   {/* KPI Cards Row (Responsive Grid: 4 columns desktop, 2 tablet, 1 mobile) */}
                   <div className="ae-stats-grid">
-                    <div className="ae-card ae-stat-card">
+                    <button
+                      type="button"
+                      onClick={() => setActiveSection("Page")}
+                      className="ae-card ae-stat-card ae-stat-card--interactive"
+                      aria-label="Accéder à la gestion des pages"
+                    >
                       <div className="ae-stat-content">
                         <span className="ae-stat-title">Pages existantes</span>
                         <span className="ae-stat-value">{pagesList.length}</span>
                         <span className="ae-stat-desc">En ligne & Brouillons</span>
+                        <span className="ae-stat-action-hint">Gérer les pages ➔</span>
                       </div>
                       <div className="ae-stat-icon-wrapper ae-stat-icon--green">
                         <FileText size={22} aria-hidden="true" />
                       </div>
-                    </div>
+                    </button>
 
-                    <div className="ae-card ae-stat-card">
+                    <button
+                      type="button"
+                      onClick={() => setActiveSection("Article")}
+                      className="ae-card ae-stat-card ae-stat-card--interactive"
+                      aria-label="Accéder à la gestion des articles et écrits"
+                    >
                       <div className="ae-stat-content">
                         <span className="ae-stat-title">Articles de blog</span>
                         <span className="ae-stat-value">{articlesList.length}</span>
                         <span className="ae-stat-desc">Lectorat & Poésies</span>
+                        <span className="ae-stat-action-hint">Gérer les écrits ➔</span>
                       </div>
                       <div className="ae-stat-icon-wrapper ae-stat-icon--blue">
                         <Newspaper size={22} aria-hidden="true" />
                       </div>
-                    </div>
+                    </button>
 
-                    <div className="ae-card ae-stat-card">
+                    <button
+                      type="button"
+                      onClick={() => setActiveSection("Messages")}
+                      className="ae-card ae-stat-card ae-stat-card--interactive"
+                      aria-label="Accéder à la boîte de réception des messages"
+                    >
                       <div className="ae-stat-content">
                         <span className="ae-stat-title">Boîte de Réception</span>
                         <span className="ae-stat-value">{messagesList.length}</span>
                         <span className="ae-stat-desc">Messages de contact</span>
+                        <span className="ae-stat-action-hint">Consulter les messages ➔</span>
                       </div>
                       <div className="ae-stat-icon-wrapper ae-stat-icon--amber">
                         <MessageSquare size={22} aria-hidden="true" />
                       </div>
-                    </div>
+                    </button>
 
-                    <div className="ae-card ae-stat-card">
+                    <button
+                      type="button"
+                      onClick={() => setActiveSection("Paramètres")}
+                      className="ae-card ae-stat-card ae-stat-card--interactive"
+                      aria-label="Accéder aux configurations système"
+                    >
                       <div className="ae-stat-content">
                         <span className="ae-stat-title">Base de données</span>
                         <span className="ae-stat-value">Active</span>
                         <span className="ae-stat-desc">Mode Cloud Firestore</span>
+                        <span className="ae-stat-action-hint">Configurer ➔</span>
                       </div>
                       <div className="ae-stat-icon-wrapper ae-stat-icon--emerald">
                         <ShieldCheck size={22} aria-hidden="true" />
                       </div>
-                    </div>
+                    </button>
                   </div>
 
                   {/* Main Grid: Coherent 2-Column Responsive Grid directly aligned with stats */}
@@ -4981,10 +5309,22 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                       <div>
-                        <label className="ae-modal-label">Image principale (URL)</label>
+                        <div className="d-flex align-items-center justify-content-between mb-1">
+                          <label className="ae-modal-label mb-0">Image principale (URL)</label>
+                          <button
+                            type="button"
+                            onClick={() => openMediaPicker((url) => setEditingArticle(prev => ({ ...prev, image: url })))}
+                            className="ae-btn-secondary-sm d-inline-flex align-items-center gap-1 text-xs"
+                            style={{ padding: '2px 8px', fontSize: '11px', borderRadius: '4px' }}
+                            title="Choisir une image existante depuis la médiathèque"
+                          >
+                            <Image size={12} />
+                            <span>Médiathèque</span>
+                          </button>
+                        </div>
                         <input 
                           type="url" 
-                          value={editingArticle.image} 
+                          value={editingArticle.image || ''} 
                           onChange={(e) => setEditingArticle({ ...editingArticle, image: e.target.value })} 
                           className="db-input w-full"
                           placeholder="https://..."
@@ -5065,14 +5405,29 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
               </div>
             )}
 
-            {/* Notification Toast */}
-            {notification && (
-              <div className="ae-toast" role="status" aria-live="polite">
-                <span className="ae-toast-indicator" aria-hidden="true"></span>
-                <span className="ae-toast-message">{notification}</span>
+            {/* Rich Notification Toast */}
+            {(toast || notification) && (
+              <div 
+                className={`ae-toast ae-toast--${toast?.type || 'info'}`} 
+                role={toast?.type === 'error' ? "alert" : "status"} 
+                aria-live="polite"
+              >
+                {toast?.type === 'success' ? (
+                  <CheckCircle2 size={18} className="ae-toast-icon ae-toast-icon--success" aria-hidden="true" />
+                ) : toast?.type === 'error' ? (
+                  <AlertCircle size={18} className="ae-toast-icon ae-toast-icon--error" aria-hidden="true" />
+                ) : toast?.type === 'warning' ? (
+                  <AlertTriangle size={18} className="ae-toast-icon ae-toast-icon--warning" aria-hidden="true" />
+                ) : (
+                  <Info size={18} className="ae-toast-icon ae-toast-icon--info" aria-hidden="true" />
+                )}
+                <span className="ae-toast-message">{toast?.message || notification}</span>
                 <button 
                   type="button"
-                  onClick={() => setNotification(null)}
+                  onClick={() => {
+                    setToast(null);
+                    setNotificationRaw(null);
+                  }}
                   className="ae-toast-close"
                   title="Fermer la notification"
                   aria-label="Fermer la notification"
@@ -5081,6 +5436,56 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
                 </button>
               </div>
             )}
+
+            {/* Sélecteur de média universel */}
+            <MediaLibraryModal
+              isOpen={isMediaPickerOpen}
+              onClose={() => setIsMediaPickerOpen(false)}
+              filterType="image"
+              onSelect={(item) => {
+                const url = typeof item === 'string' ? item : (item.url || item.dataUrl || '');
+                if (mediaPickerCallback) {
+                  mediaPickerCallback(url);
+                }
+                setIsMediaPickerOpen(false);
+                showToast("Média sélectionné depuis la médiathèque", "success");
+              }}
+            />
+
+            {/* Palette de commandes universelle (Ctrl + K) */}
+            <CommandPalette
+              isOpen={isCommandPaletteOpen}
+              onClose={() => setIsCommandPaletteOpen(false)}
+              onNavigateSection={(sec) => {
+                setActiveSection(sec);
+                setSidebarOpen(false);
+              }}
+              onAction={(actionType, payload) => {
+                if (actionType === "new-article") {
+                  setActiveSection("Article");
+                } else if (actionType === "new-flipbook") {
+                  setActiveSection("Mes Flipbooks");
+                  setUploadStep(0);
+                  setUploadProgress(0);
+                  setNewFlipbookTitle("");
+                  setNewFlipbookDesc("");
+                  setNewFlipbookCategory("Outils");
+                  setSelectedPdfFile(null);
+                  setShowAddFlipbookModal(true);
+                } else if (actionType === "new-page") {
+                  setActiveSection("Page");
+                } else if (actionType === "open-article" && payload) {
+                  setActiveSection("Article");
+                  handleOpenEditArticle(payload);
+                }
+              }}
+              articles={articlesList}
+              flipbooks={flipbooks}
+              pages={pagesList}
+              messages={messagesList}
+              onBackToSite={onBackToSite}
+              onLogout={handleLogout}
+            />
 
           </div>
         </div>

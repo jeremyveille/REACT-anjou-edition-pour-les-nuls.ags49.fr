@@ -553,6 +553,94 @@ describe('Dashboard Accounts Management Tests', () => {
   });
 });
 
+describe('Dashboard Modern Enhancements Tests', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    window.history.pushState(null, '', '/ae-dashboard');
+  });
+
+  test('opens Command Palette when clicking search trigger or pressing Ctrl+K', async () => {
+    render(<Dashboard />);
+
+    // 1. Ouvrir via le bouton de recherche dans la topbar
+    const searchTrigger = screen.getByRole('button', { name: /Recherche universelle et commandes rapides/i });
+    expect(searchTrigger).toBeInTheDocument();
+    fireEvent.click(searchTrigger);
+
+    // La modale CommandPalette doit être ouverte
+    expect(await screen.findByRole('dialog', { name: /Palette de commandes/i })).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Rechercher un écrit/i)).toBeInTheDocument();
+
+    // Fermer avec Échap
+    const modal = screen.getByRole('dialog', { name: /Palette de commandes/i }).firstChild;
+    fireEvent.keyDown(modal, { key: 'Escape' });
+
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog', { name: /Palette de commandes/i })).not.toBeInTheDocument();
+    });
+
+    // 2. Ouvrir avec Ctrl + K
+    fireEvent.keyDown(window, { key: 'k', ctrlKey: true });
+    expect(await screen.findByRole('dialog', { name: /Palette de commandes/i })).toBeInTheDocument();
+  });
+
+  test('clicking interactive KPI card navigates directly to corresponding section', async () => {
+    render(<Dashboard />);
+
+    // Attendre la fin du chargement initial
+    await screen.findByText(/Pages existantes/i);
+    const pagesKpiBtn = screen.getByRole('button', { name: /Accéder à la gestion des pages/i });
+    expect(pagesKpiBtn).toBeInTheDocument();
+
+    // Clic sur le KPI Pages
+    fireEvent.click(pagesKpiBtn);
+
+    // Vérifier que la section Page est active
+    expect(await screen.findByText(/Gestion des Pages/i)).toBeInTheDocument();
+  });
+
+  test('filters messages and triggers RGPD purge in Messages section', async () => {
+    render(<Dashboard />);
+
+    // Attendre la fin du chargement initial
+    await screen.findByText(/Pages existantes/i);
+
+    // Ouvrir la section Messages via le KPI
+    const messagesKpiBtn = screen.getByRole('button', { name: /Accéder à la boîte de réception des messages/i });
+    fireEvent.click(messagesKpiBtn);
+
+    // Vérifier l'en-tête et les filtres
+    expect(await screen.findByText(/Messages de contact/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Non lus/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Traités/i })).toBeInTheDocument();
+
+    // Bouton Purge RGPD
+    const purgeBtn = screen.getByRole('button', { name: /Purge RGPD/i });
+    expect(purgeBtn).toBeInTheDocument();
+    fireEvent.click(purgeBtn);
+
+    // Vérifier qu'un toast de confirmation RGPD s'affiche
+    expect(await screen.findByText(/Registre de contact conforme au RGPD/i)).toBeInTheDocument();
+  });
+
+  test('provides articles status filter tabs including Corbeille soft-delete', async () => {
+    render(<Dashboard />);
+
+    // Attendre la fin du chargement initial
+    await screen.findByText(/Pages existantes/i);
+
+    // Ouvrir la section Articles
+    const articlesKpiBtn = screen.getByRole('button', { name: /Accéder à la gestion des articles et écrits/i });
+    fireEvent.click(articlesKpiBtn);
+
+    // Vérifier la présence des onglets de statut
+    expect(await screen.findByRole('button', { name: /Publiés/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Brouillons/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Corbeille/i })).toBeInTheDocument();
+  });
+});
+
+
 
 
 
