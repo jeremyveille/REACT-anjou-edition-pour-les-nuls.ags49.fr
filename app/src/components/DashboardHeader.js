@@ -68,7 +68,6 @@ export default function DashboardHeader({
           className="sidebar-collapse-toggle-btn"
           aria-label={isCollapsed ? "Agrandir le menu latéral" : "Réduire le menu latéral"}
           aria-expanded={!isCollapsed}
-          title={isCollapsed ? "Agrandir le menu" : "Réduire le menu"}
         >
           {isCollapsed ? (
             <ChevronRight size={20} aria-hidden="true" />

@@ -56,7 +56,7 @@ describe("DashboardHeader Component Tests", () => {
     expect(collapseBtn).toBeInTheDocument();
     expect(collapseBtn).toHaveClass("sidebar-collapse-toggle-btn");
     expect(collapseBtn).toHaveAttribute("aria-expanded", "true");
-    expect(collapseBtn).toHaveAttribute("title", "Réduire le menu");
+    expect(collapseBtn).not.toHaveAttribute("title");
     expect(screen.getByRole("tooltip")).toHaveTextContent("Réduire le menu");
 
     // Clic déclenche toggleCollapsed
@@ -71,7 +71,7 @@ describe("DashboardHeader Component Tests", () => {
     expect(expandBtn).toBeInTheDocument();
     expect(expandBtn).toHaveClass("sidebar-collapse-toggle-btn");
     expect(expandBtn).toHaveAttribute("aria-expanded", "false");
-    expect(expandBtn).toHaveAttribute("title", "Agrandir le menu");
+    expect(expandBtn).not.toHaveAttribute("title");
     expect(screen.getByRole("tooltip")).toHaveTextContent("Agrandir le menu");
 
     // Clic déclenche toggleCollapsed
