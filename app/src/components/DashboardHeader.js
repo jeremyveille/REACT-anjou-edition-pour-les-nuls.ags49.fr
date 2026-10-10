@@ -36,7 +36,7 @@ export default function DashboardHeader({
   };
 
   return (
-    <header className="dashboard-topbar ae-card">
+    <header className="dashboard-topbar">
       {/* LEFT: Toggle, Collapse & Title/Breadcrumbs */}
       <div className="topbar-left">
         <button
@@ -50,9 +50,9 @@ export default function DashboardHeader({
           title={sidebarOpen ? "Masquer le menu latéral" : "Afficher le menu latéral"}
         >
           {sidebarOpen ? (
-            <X size={20} aria-hidden="true" />
+            <X size={18} aria-hidden="true" />
           ) : (
-            <Menu size={20} aria-hidden="true" />
+            <Menu size={18} aria-hidden="true" />
           )}
         </button>
 
@@ -70,9 +70,9 @@ export default function DashboardHeader({
           aria-expanded={!isCollapsed}
         >
           {isCollapsed ? (
-            <ChevronRight size={20} aria-hidden="true" />
+            <ChevronRight size={18} aria-hidden="true" />
           ) : (
-            <ChevronLeft size={20} aria-hidden="true" />
+            <ChevronLeft size={18} aria-hidden="true" />
           )}
           <span className="sidebar-tooltip" role="tooltip">
             {isCollapsed ? "Agrandir le menu" : "Réduire le menu"}
@@ -80,7 +80,14 @@ export default function DashboardHeader({
         </button>
 
         <div className="topbar-title-wrapper">
-          {activeSection ? (
+          <div className="topbar-heading-group">
+            <h2 className="topbar-title">
+              Tableau de bord
+            </h2>
+            <span className="topbar-subtitle">Administration Anjou Édition</span>
+          </div>
+
+          {activeSection && (
             <nav aria-label="Fil d'Ariane" className="topbar-breadcrumb">
               <button
                 type="button"
@@ -91,16 +98,11 @@ export default function DashboardHeader({
                 Tableau de bord
               </button>
               <ChevronRight size={14} className="topbar-breadcrumb-separator" aria-hidden="true" />
-              <h2 className="topbar-title topbar-breadcrumb-current">
+              <span className="topbar-breadcrumb-current">
                 {getSectionTitle()}
-              </h2>
+              </span>
             </nav>
-          ) : (
-            <h2 className="topbar-title">
-              Tableau de bord
-            </h2>
           )}
-          <span className="topbar-subtitle">Administration Anjou Édition</span>
         </div>
       </div>
 
