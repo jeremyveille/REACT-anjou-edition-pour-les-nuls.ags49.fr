@@ -256,6 +256,41 @@ Se déplacer dans le dossier : `cd app`
 *   **Préservation intégrale des styles et interactions** : Le bouton chevron conserve son apparence bleue, son icône blanche, ses effets `:hover`, `:focus-visible`, `:active` et sa commande d'agrandissement/réduction du menu latéral. Toutes les infobulles des autres boutons du dashboard (barre latérale compacte) restent intactes.
 *   **Tests & Qualité** : 33 suites de tests et 270 tests automatisés validés à 100%, compilation de production réussie avec 0 avertissement.
 
+### 23. Restauration de l'En-tête du Dashboard & Suppression du Bandeau Indésirable (`App.css`, `dashboard.css`, `DashboardHeader.js`)
+*   **Identification précise de la cause racine** :
+    *   *Sélecteur CSS générique `nav` dans `App.css`* : La règle globale `nav { border-radius: 999px; background: var(--glass-bg); width: 92%; ... }` conçue pour la barre publique s'appliquait à tout élément `<nav>` dans le DOM, y compris `<nav className="topbar-breadcrumb">` dans l'en-tête du dashboard. Cela générait un énorme conteneur ovale bleu très clair/verre dépoli entourant les titres, rendait le texte blanc illisible sur fond clair, tronquait « Gestion des Pages » et rejetait le sous-titre en dessous.
+*   **Résolution ciblée & Fin de la pollution CSS** :
+    *   *Scoping strict dans `App.css`* : Remplacement de tous les sélecteurs génériques `nav` par `nav.public-nav` (lignes 315, 2326, 2388, 2490, 6163, 6194).
+    *   *Reset strict de sécurité* : Règle ciblée `.dashboard-topbar nav, .dashboard-topbar .topbar-breadcrumb` réinitialisant `background: transparent !important`, `border: none !important`, `border-radius: 0 !important`, `box-shadow: none !important`, `backdrop-filter: none !important`.
+*   **Restauration de la Hiérarchie Visuelle & Fil d'Ariane Distinct** :
+    *   *Titre principal* : `<h2 className="topbar-title">Tableau de bord</h2>` en blanc pur avec fort contraste (> 12:1), taille équilibrée et non tronqué.
+    *   *Sous-titre* : `<span className="topbar-subtitle">Administration Anjou Édition</span>` aligné à gauche immédiatement sous le titre en blanc doux (`rgba(255, 255, 255, 0.88)`).
+    *   *Fil d'Ariane distinct* : `<nav className="topbar-breadcrumb">` séparé avec un liseré fin translucide à gauche, lien cliquable `Tableau de bord`, chevron discret et nom complet de la page active (ex: « Gestion des Pages ») sans troncature `ellipsis`.
+    *   *Responsive harmonieux (320px, 375px, 768px, 1024px, 1440px)* : Réorganisation fluide en colonne sur petits écrans sans débordement horizontal ni conflit avec les boutons hamburger et chevron.
+*   **Tests & Qualité** : 33 suites de tests et 270 tests automatisés validés à 100%, compilation de production réussie avec 0 avertissement.
+
+### 24. Navigation Sticky & Refonte Ergonomique de la Topbar du Dashboard (`DashboardHeader.js`, `dashboard.css`, `App.css`)
+*   **Navigation Sticky Permanente & Résolution d'Overflow** :
+    *   La barre `.dashboard-topbar` reste visible en haut de l'écran lors du défilement vertical (`position: sticky; top: 0; z-index: 100;` sur desktop, `z-index: 1001;` sur tablette et mobile).
+    *   Remplacement de `overflow-x: hidden;` par `overflow-x: clip;` sur `.App` et `.dashboard-content-area` pour garantir le fonctionnement natif de `position: sticky` sur le défilement de la fenêtre sans générer de barre de scroll horizontale intempestive.
+    *   Fond bleu dégradé opaque avec ombre douce (`box-shadow: 0 3px 12px rgba(0, 75, 122, 0.22);`) assurant une parfaite lisibilité sans transparence ni chevauchement du contenu qui défile.
+*   **Hauteur Compacte SaaS (~52px) & Alignement Harmonieux** :
+    *   Réduction de la hauteur excessive à une dimension SaaS standardisée de 52px (`min-height: 52px; padding: 8px 18px;`).
+    *   Harmonisation de tous les boutons interactifs à une hauteur uniforme de 36px avec `border-radius: 8px;` : bouton hamburger mobile (`36×36px`), bouton chevron collapse (`36×36px`, icônes 18px), déclencheur de recherche universelle Ctrl+K (`height: 36px`), bouton « Voir le site » (`height: 36px`) et bouton « Déconnexion » (`height: 36px`).
+*   **Hiérarchie Visuelle Équilibrée & Fil d'Ariane Sobre** :
+    *   *Gauche* : Titre principal « Tableau de bord » (`1.1rem`, police Outfit) avec sous-titre « Administration Anjou Édition » (`0.72rem`) immédiatement en dessous.
+    *   *Centre / Espace fluide* : Fil d'Ariane discret `<nav aria-label="Fil d’Ariane">` avec bouton racine « Tableau de bord » souligné avec élégance, chevron 14px et nom complet de la page active (ex: « Gestion des Pages ») séparé par un liseré fin translucide sans aucun bandeau bleu clair ni arrondi encombrant.
+    *   *Droite* : Actions rapides prioritaires avec raccourci clavier `Ctrl K`, retour au site grand public et déconnexion administrative.
+*   **Hiérarchie des Z-Index Respectée** :
+    *   Modales et fenêtres de confirmation à `z-index: 9999 / 10000` au-dessus de tout.
+    *   Topbar sticky à `z-index: 100` sur desktop et `z-index: 1001` sur mobile pour permettre la fermeture du menu par re-clic sur le hamburger.
+    *   Sidebar mobile à `z-index: 1000` et backdrop flouté à `z-index: 999`.
+*   **Responsive en 4 Paliers (S / M / L / XL)** :
+    *   *S (≤ 599px)* : Topbar compacte (48px, padding 6px 10px), boutons à 36px, masquage automatique des libellés textuels sous 420px (`.header-btn-text`) pour transformer les boutons en icônes carrées sans aucun débordement horizontal.
+    *   *M (600px - 899px)* : Espacements réduits (8px 14px), bascule du fil d'Ariane sous le titre en flux vertical sans rupture.
+    *   *L & XL (≥ 900px)* : Disposition horizontale fluide sur 52px avec alignement parfait et fil d'Ariane étendu.
+*   **Tests & Qualité** : 33 suites de tests et 270 tests automatisés validés à 100%, 0 avertissements de compilation de production (`npm run build`).
+
 ---
 
 *Dernière mise à jour du contexte par l'agent : 10 octobre 2026.*
