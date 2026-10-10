@@ -305,6 +305,13 @@ Se déplacer dans le dossier : `cd page-builder-react`
     *   Attributs `aria-expanded`, `aria-controls="dashboard-sidebar"` et `title` dynamiques selon l'état réel.
     *   33 suites de tests automatisées et 270 tests unitaires/d'intégration réussis à 100%, 0 avertissements de compilation (`npm run build`).
 
+### 22. Suppression Définitive de l'Infobulle Noire du Bouton Chevron (`App.css`, `dashboard.css`, `DashboardHeader.js`, `DashboardHeader.test.js`)
+*   **Identification de la cause racine** : L'infobulle noire sous le bouton chevron `.sidebar-collapse-toggle-btn` provenait du composant enfant `.sidebar-tooltip` (fond sombre `rgba(15, 23, 42, 0.96)` avec pointeur `::after` noir) configuré pour s'afficher au survol et au focus, combiné à l'attribut natif `title` pouvant afficher une infobulle OS/navigateur sombre.
+*   **Suppression ciblée dans `App.css` et `dashboard.css`** : Application stricte de `display: none !important;` sur `.dashboard-topbar .sidebar-collapse-toggle-btn .sidebar-tooltip` et désactivation des pseudo-éléments `::before` et `::after`.
+*   **Suppression de l'attribut `title` sur le bouton chevron** : Élimination de tout risque d'infobulle native du navigateur, tout en préservant l'attribut dynamique `aria-label` (`aria-label={isCollapsed ? "Agrandir le menu latéral" : "Réduire le menu latéral"}`) pour une accessibilité WCAG AA irréprochable.
+*   **Préservation intégrale des styles et interactions** : Le bouton chevron conserve son apparence bleue, son icône blanche, ses effets `:hover`, `:focus-visible`, `:active` et sa commande d'agrandissement/réduction du menu latéral. Toutes les infobulles des autres boutons du dashboard (barre latérale compacte) restent intactes.
+*   **Tests & Qualité** : 33 suites de tests et 270 tests automatisés validés à 100%, compilation de production réussie avec 0 avertissement.
+
 ---
 
-*Dernière mise à jour du contexte par l'agent : 9 octobre 2026.*
+*Dernière mise à jour du contexte par l'agent : 10 octobre 2026.*
