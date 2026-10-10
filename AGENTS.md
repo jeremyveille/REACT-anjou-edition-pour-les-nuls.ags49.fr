@@ -347,6 +347,42 @@ Se déplacer dans le dossier : `cd page-builder-react`
     *   *L & XL (≥ 900px)* : Disposition horizontale fluide sur 52px avec alignement parfait et fil d'Ariane étendu.
 *   **Tests & Qualité** : 33 suites de tests et 270 tests automatisés validés à 100%, 0 avertissements de compilation de production (`npm run build`).
 
+### 25. Refonte Visuelle & Optimisation Ergonomique de la Page d'Accueil (`App.css`)
+*   **Header Panoramique Rééquilibré** :
+    *   Préservation intégrale de la photographie panoramique historique de l'Anjou sans altération ni remplacement.
+    *   Cadrage optimisé via `object-position: center 32%` sur grand écran et `72% 28%` sur smartphone/tablette, mettant en valeur les détails architecturaux et paysagers sans coupure disgracieuse.
+    *   Hauteur proportionnée `clamp(160px, 14vw, 195px)` sur grand écran, évitant l'encombrement vertical excessif.
+    *   Cartouche de titre en verre dépoli (`backdrop-filter: blur(8px)`) avec typographie soignée et contraste renforcé protégeant la lisibilité du logo et du titre.
+*   **Navigation Publique Sticky Permanente** :
+    *   Barre de navigation fixée en haut lors du défilement (`position: sticky; top: 10px; z-index: 1000;`) avec glassmorphism subtil (`backdrop-filter: blur(14px)`).
+    *   Suppression radicale de tous les fonds noirs parasites au survol ou au focus au profit de teintes bleues translucides douces (`rgba(0, 92, 230, 0.08)` / dark mode `rgba(59, 130, 246, 0.18)`).
+    *   Ajout de `scroll-padding-top: 75px` sur `html` et `scroll-margin-top: 75px` sur `:target` pour empêcher la barre sticky de masquer les titres de section lors de la navigation par ancres.
+    *   Bouton hamburger mobile harmonisé et centré avec cible tactile >= 44px.
+*   **Section Hero Allégée & Lumineuse** :
+    *   Conservation stricte de l'illustration originale (livre ouvert, oiseaux et paysage) sans remplacement ni déformation.
+    *   Hauteur minimale réduite (de 470px à 380px) et espacements intérieurs proportionnés.
+    *   Largeur de texte calibrée (~55% max) laissant la scène visuelle s'exprimer naturellement à droite sur écran large.
+    *   Dégradé protecteur vertical sur mobile préservant la netteté des typographies et la visibilité de l'œuvre.
+    *   Boutons d'action harmonisés avec transitions douces (150-250ms).
+*   **Section « À la Une » Rééquilibrée** :
+    *   Conservation de la composition avec l'image du livre Anjou Édition.
+    *   Fin des zones de vide béantes : grille à 2 colonnes équilibrée (`minmax(280px, 42%) 1fr`) supprimant la hauteur fixe excessive.
+    *   Typographie des métadonnées et du résumé valorisée avec fort contraste.
+    *   Bouton « Lire l'article » modernisé sans fond noir au survol.
+*   **Piliers d'Engagement « L'Édition pour tous »** :
+    *   Uniformisation de la hauteur des trois cartes (*Accueillir*, *Expliquer*, *Guider & Transmettre*).
+    *   Préservation de leur identité chromatique respective (bleu, ocre, vert).
+    *   Filigrane décoratif d'arrière-plan atténué (`opacity: 0.04`) avec `pointer-events: none` pour une lisibilité parfaite du texte.
+*   **Raccourcis Catalogue & Découverte** :
+    *   Hauteur harmonisée (min 190px) avec dégradé subtil protégeant le fond artistique pastel et les typographies.
+    *   Interactions fluides et chevrons d'indication animés au survol.
+*   **Élimination Définitive des Espaces Verticaux Artificiels & Footer** :
+    *   Élimination du gouffre vertical de 160px avant le pied de page : annulation du `margin-bottom` sur le dernier conteneur de section et calibrage de la marge haute du footer (`clamp(1.75rem, 3vw, 2.5rem)`).
+    *   Footer réaligné en capsule centrée avec liens accessibles (cibles tactiles >= 44px) et vignette d'Angers arrondie.
+*   **Responsive sur 4 Paliers & Tests** :
+    *   Adaptation fluide sur S (≤ 599px), M (600–899px), L (900–1399px) et XL (≥ 1400px) sans débordement horizontal ni déformation d'image.
+    *   33 suites de tests Jest et 270 tests automatisés validés à 100%, compilation `npm run build` réussie avec 0 erreur.
+
 ---
 
 *Dernière mise à jour du contexte par l'agent : 10 octobre 2026.*
