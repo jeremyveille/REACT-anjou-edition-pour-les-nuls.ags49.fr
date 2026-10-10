@@ -3236,69 +3236,22 @@ header.dashboard-header {
   pointer-events: none;
 }
 
-/* Infobulle accessible dans la Topbar (conçue sans débordement parasite) */
-.sidebar-collapse-toggle-btn .sidebar-tooltip {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: rgba(15, 23, 42, 0.96);
-  backdrop-filter: blur(6px);
-  color: #ffffff;
-  font-size: 0.72rem;
-  font-weight: 500;
-  padding: 5px 10px;
-  border-radius: 6px;
-  white-space: nowrap;
-  pointer-events: none;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 150ms ease, transform 150ms ease;
-  z-index: 1000;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-/* Neutraliser l'ancienne flèche latérale héritée du menu compact */
-.sidebar-collapse-toggle-btn .sidebar-tooltip::before {
+/* Désactivation définitive de l'infobulle noire du bouton chevron dans la Topbar */
+.sidebar-collapse-toggle-btn .sidebar-tooltip,
+.dashboard-topbar .sidebar-collapse-toggle-btn .sidebar-tooltip {
   display: none !important;
 }
 
+.sidebar-collapse-toggle-btn::before,
+.sidebar-collapse-toggle-btn::after,
+.sidebar-collapse-toggle-btn .sidebar-tooltip::before,
 .sidebar-collapse-toggle-btn .sidebar-tooltip::after {
-  content: "";
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border-width: 4px;
-  border-style: solid;
-  border-color: transparent transparent rgba(15, 23, 42, 0.96) transparent;
-}
-
-/* Affichage uniquement au survol réel à la souris ou focus clavier */
-@media (hover: hover) and (pointer: fine) {
-  .sidebar-collapse-toggle-btn:hover .sidebar-tooltip {
-    opacity: 1;
-    visibility: visible;
-    transform: translateX(-50%) translateY(0);
-  }
-}
-.sidebar-collapse-toggle-btn:focus-visible .sidebar-tooltip {
-  opacity: 1;
-  visibility: visible;
-  transform: translateX(-50%) translateY(0);
-}
-
-/* Désactiver l'infobulle sur écran tactile pour éviter tout affichage persistant */
-@media (hover: none) {
-  .sidebar-collapse-toggle-btn .sidebar-tooltip {
-    display: none !important;
-  }
+  display: none !important;
+  content: none !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .sidebar-collapse-toggle-btn,
-  .sidebar-collapse-toggle-btn .sidebar-tooltip,
   .topbar-menu-toggle {
     transition: none !important;
     transform: none !important;

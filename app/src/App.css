@@ -7369,6 +7369,19 @@ nav.public-nav {
   }
 }
 
+/* ==========================================================================
+   TABLEAU DE BORD - SUPPRESSION DÉFINITIVE INFOBULLE BOUTON CHEVRON TOPBAR
+   ========================================================================== */
+.dashboard-topbar
+.sidebar-collapse-toggle-btn
+.sidebar-tooltip {
+  display: none !important;
+}
 
-
-
+.dashboard-topbar
+.sidebar-collapse-toggle-btn::before,
+.dashboard-topbar
+.sidebar-collapse-toggle-btn::after {
+  display: none !important;
+  content: none !important;
+}
