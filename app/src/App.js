@@ -44,8 +44,7 @@ import {
   loginWithEmail,
   AUTHORIZED_ADMIN_EMAILS
 } from './services/authService';
-import PdfFlipbookReader from './components/PdfFlipbookReader';
-import FlipbookLayout from './components/FlipbookLayout';
+import FlipbookModal from './components/FlipbookModal';
 
 import { pageService } from './services/pageService';
 import { BlockRenderer } from './components/page-builder/BlockRenderer';
@@ -314,6 +313,11 @@ function App() {
 
   // Lightbox State for Gallery
   const [lightbox, setLightbox] = useState({ isOpen: false, currentIndex: 0, zoom: false });
+
+  // Flipbook Modal State (Consultation superposée sans quitter la page)
+  const [activeFlipbookModal, setActiveFlipbookModal] = useState(null);
+  const flipbookTriggerRef = useRef(null);
+  const scrollPositionRef = useRef(0);
 
   // Dynamic Flipbooks State
   const [flipbooks, setFlipbooks] = useState(() => {
@@ -756,13 +760,78 @@ function App() {
     );
   };
 
-  const handleOpenFlipbook = (id) => {
-    navigateTo(
-      { type: 'flipbooks', selectedId: id },
-      id ? `/flipbooks/${id}` : '/flipbooks',
-      "Nos Flipbooks Interactifs — Anjou Édition"
-    );
-  };
+  const handleOpenFlipbook = useCallback((bookOrId, triggerEl = null) => {
+    // 1. Sauvegarder la position de défilement actuelle (zéro saut au retour)
+    scrollPositionRef.current = window.scrollY || window.pageYOffset || 0;
+
+    // 2. Mémoriser l'élément déclencheur pour restituer le focus clavier à la fermeture (WCAG AA)
+    flipbookTriggerRef.current = triggerEl || document.activeElement;
+
+    // 3. Résoudre l'objet Flipbook correspondant
+    let targetBook = null;
+    if (bookOrId && typeof bookOrId === 'object') {
+      targetBook = bookOrId;
+    } else if (bookOrId) {
+      targetBook = flipbooks.find(f => String(f.id) === String(bookOrId)) || null;
+    }
+    if (!targetBook && flipbooks.length > 0) {
+      targetBook = flipbooks[0];
+    }
+
+    if (targetBook) {
+      setActiveFlipbookModal(targetBook);
+    }
+  }, [flipbooks]);
+
+  const handleCloseFlipbookModal = useCallback(() => {
+    setActiveFlipbookModal(null);
+
+    // Nettoyer discrètement l'URL /flipbooks/:id si présente sans rechargement
+    if (typeof window !== 'undefined' && window.location.pathname.startsWith('/flipbooks/')) {
+      try {
+        window.history.replaceState({}, '', '/flipbooks');
+      } catch (e) {}
+    }
+
+    // Restaurer instantanément la position de scroll d'origine
+    const savedY = scrollPositionRef.current;
+    if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
+      try {
+        window.scrollTo({ top: savedY, behavior: 'instant' });
+      } catch (err) {
+        window.scrollTo(0, savedY);
+      }
+    }
+
+    // Restituer le focus sur l'élément d'origine (WCAG AA)
+    if (flipbookTriggerRef.current && typeof flipbookTriggerRef.current.focus === 'function') {
+      try {
+        flipbookTriggerRef.current.focus();
+      } catch (e) {}
+    }
+  }, []);
+
+  // Écouteur global pour l'ouverture des Flipbooks depuis n'importe quel composant
+  useEffect(() => {
+    const handleCustomOpen = (e) => {
+      const bookOrId = e.detail?.book || e.detail?.id;
+      if (bookOrId) {
+        handleOpenFlipbook(bookOrId, e.detail?.triggerEl || null);
+      }
+    };
+    window.addEventListener('ae-open-flipbook', handleCustomOpen);
+    return () => window.removeEventListener('ae-open-flipbook', handleCustomOpen);
+  }, [handleOpenFlipbook]);
+
+  // Si l'utilisateur charge initialement l'URL directe /flipbooks/:id
+  useEffect(() => {
+    if (view.type === 'flipbooks' && view.selectedId && !activeFlipbookModal) {
+      const target = flipbooks.find(f => String(f.id) === String(view.selectedId));
+      if (target) {
+        setActiveFlipbookModal(target);
+      }
+    }
+  }, [view, flipbooks, activeFlipbookModal]);
 
   const handleOpenVideo = (id) => {
     navigateTo(
@@ -925,7 +994,7 @@ function App() {
         }
 
         if (flipbookId) {
-          navigateTo({ type: 'flipbooks', selectedId: flipbookId }, `/flipbooks/${flipbookId}`, "Nos Flipbooks Interactifs — Anjou Édition");
+          handleOpenFlipbook(flipbookId);
           return;
         }
       }
@@ -1441,6 +1510,16 @@ function App() {
 
       <CookieConsentBanner setView={setView} />
 
+      {/* Consultation superposée des Flipbooks (sans quitter la page) */}
+      {activeFlipbookModal && (
+        <FlipbookModal
+          isOpen={!!activeFlipbookModal}
+          book={activeFlipbookModal}
+          onClose={handleCloseFlipbookModal}
+          triggerRef={flipbookTriggerRef}
+        />
+      )}
+
       <PublicHeader darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
 
       <PublicNav 
@@ -1465,7 +1544,7 @@ function App() {
               <div className="ae-page-builder-canvas-panel">
                 {previewData?.blocks && previewData.blocks.length > 0 ? (
                   previewData.blocks.map((block) => (
-                    <BlockRenderer key={block.id} block={block} isEditing={false} />
+                    <BlockRenderer key={block.id} block={block} isEditing={false} onOpenFlipbook={handleOpenFlipbook} />
                   ))
                 ) : (
                   <div className="text-center py-5 text-muted">
@@ -1629,7 +1708,7 @@ function App() {
                     }
                     if (view.article.blocks && view.article.blocks.length > 0) {
                       return view.article.blocks.map(block => (
-                        <BlockRenderer key={block.id} block={block} isEditing={false} />
+                        <BlockRenderer key={block.id} block={block} isEditing={false} onOpenFlipbook={handleOpenFlipbook} />
                       ));
                     }
                     return null;
@@ -1926,7 +2005,7 @@ function App() {
                       </svg>
                     </div>
                     {filteredBlocks.map((block) => (
-                      <BlockRenderer key={block.id} block={block} isEditing={false} />
+                      <BlockRenderer key={block.id} block={block} isEditing={false} onOpenFlipbook={handleOpenFlipbook} />
                     ))}
                   </>
                 );
@@ -2101,7 +2180,7 @@ function App() {
               <div className="ae-page-builder-canvas-panel">
                 {view.page.blocks && view.page.blocks.length > 0 ? (
                   view.page.blocks.map((block) => (
-                    <BlockRenderer key={block.id} block={block} isEditing={false} />
+                    <BlockRenderer key={block.id} block={block} isEditing={false} onOpenFlipbook={handleOpenFlipbook} />
                   ))
                 ) : (
                   <div className="text-center py-5 text-muted">
@@ -2123,62 +2202,80 @@ function App() {
                 <ArrowLeft size={16} /> Retour à l'accueil
               </button>
 
-              {!view.selectedId ? (
-                // Flipbooks list
-                <div>
-                  <h2 className="view-title">Nos Flipbooks Interactifs</h2>
-                  <p className="view-description">Sélectionnez un ouvrage ci-dessous pour le consulter en ligne dans notre lecteur interactif.</p>
-                  
-                  {flipbooks.length === 0 ? (
-                    <div className="text-center py-5 text-muted">
-                      <BookOpen size={48} className="mx-auto mb-3 text-slate-400" />
-                      <h4 className="text-lg font-bold text-slate-700 dark:text-slate-200">Aucun flipbook publié</h4>
-                      <p className="text-sm text-slate-500">Les publications et ouvrages à feuilleter paraîtront prochainement.</p>
-                    </div>
-                  ) : (
-                    <div className="flipbooks-grid">
-                      {flipbooks.map((fb) => (
-                        <div key={fb.id} className="flipbook-card">
-                          <div className="flipbook-cover-mock">
-                            <BookOpen size={48} color="white" />
-                            <h3>{fb.title}</h3>
-                          </div>
-                          <div className="flipbook-details">
-                            <h4>{fb.title}</h4>
-                            <p>{fb.description}</p>
-                            <button type="button" onClick={() => handleOpenFlipbook(fb.id)} className="btn-primary">
-                              Ouvrir le livre
-                            </button>
-                          </div>
+              {/* Flipbooks list */}
+              <div>
+                <h2 className="view-title">Nos Flipbooks Interactifs</h2>
+                <p className="view-description">Sélectionnez un ouvrage ci-dessous pour le consulter en ligne dans notre lecteur interactif.</p>
+                
+                {flipbooks.length === 0 ? (
+                  <div className="text-center py-5 text-muted">
+                    <BookOpen size={48} className="mx-auto mb-3 text-slate-400" />
+                    <h4 className="text-lg font-bold text-slate-700 dark:text-slate-200">Aucun flipbook publié</h4>
+                    <p className="text-sm text-slate-500">Les publications et ouvrages à feuilleter paraîtront prochainement.</p>
+                  </div>
+                ) : (
+                  <div className="flipbooks-grid">
+                    {flipbooks.map((fb) => (
+                      <div key={fb.id} className="flipbook-card">
+                        <div 
+                          className="flipbook-cover-mock flipbook-clickable"
+                          onClick={(e) => handleOpenFlipbook(fb, e.currentTarget)}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              handleOpenFlipbook(fb, e.currentTarget);
+                            }
+                          }}
+                          aria-label={`Consulter l'ouvrage : ${fb.title}`}
+                          title={`Feuilleter l'ouvrage : ${fb.title}`}
+                          data-testid={`flipbook-cover-${fb.id}`}
+                        >
+                          {fb.coverImage || fb.cover ? (
+                            <img src={fb.coverImage || fb.cover} alt={`Couverture de ${fb.title}`} className="flipbook-cover-img" />
+                          ) : (
+                            <>
+                              <BookOpen size={48} color="white" aria-hidden="true" />
+                              <h3>{fb.title}</h3>
+                            </>
+                          )}
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                // Selected flipbook interactive reader
-                (() => {
-                  const book = flipbooks.find(f => f.id === view.selectedId) || flipbooks[0];
-                  if (!book) {
-                    return (
-                      <div className="text-center py-5 text-muted">
-                        <p>Ouvrage introuvable.</p>
-                        <button type="button" onClick={() => navigateTo({ type: 'flipbooks', selectedId: null }, '/flipbooks', "Nos Flipbooks Interactifs — Anjou Édition")} className="btn-primary mt-3">
-                          Retour à la liste des flipbooks
-                        </button>
+                        <div className="flipbook-details">
+                          <h4 
+                            className="flipbook-title-clickable"
+                            onClick={(e) => handleOpenFlipbook(fb, e.currentTarget)}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                handleOpenFlipbook(fb, e.currentTarget);
+                              }
+                            }}
+                            aria-label={`Consulter le flipbook : ${fb.title}`}
+                            title={`Consulter : ${fb.title}`}
+                            data-testid={`flipbook-title-${fb.id}`}
+                          >
+                            {fb.title}
+                          </h4>
+                          <p>{fb.description}</p>
+                          <button 
+                            type="button" 
+                            onClick={(e) => handleOpenFlipbook(fb, e.currentTarget)} 
+                            className="btn-primary"
+                            aria-label={`Consulter le flipbook : ${fb.title}`}
+                            title={`Ouvrir : ${fb.title}`}
+                            data-testid={`flipbook-btn-${fb.id}`}
+                          >
+                            Consulter l'ouvrage
+                          </button>
+                        </div>
                       </div>
-                    );
-                  }
-                  return (
-                    <FlipbookLayout book={book}>
-                      <PdfFlipbookReader 
-                        book={book} 
-                        onClose={() => navigateTo({ type: 'flipbooks', selectedId: null }, '/flipbooks', "Nos Flipbooks Interactifs — Anjou Édition")} 
-                      />
-                    </FlipbookLayout>
-                  );
-                })()
-              )}
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
