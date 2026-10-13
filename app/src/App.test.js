@@ -585,6 +585,70 @@ describe('Deep Routing, Navigation and Accessibility Enhancements', () => {
     expect(skipLink.getAttribute('href')).toBe('#main-content');
     expect(document.getElementById('main-content')).toBeInTheDocument();
   });
+
+  it('opens flipbook in overlay modal when clicking title without changing URL or page', async () => {
+    window.location.pathname = '/flipbooks';
+    await renderApp();
+
+    // Verify catalog title is in document
+    expect(screen.getByRole('heading', { name: /Nos Flipbooks Interactifs/i })).toBeInTheDocument();
+
+    // Click on flipbook title
+    const titleBtn = screen.getByTestId('flipbook-title-4455');
+    await act(async () => {
+      fireEvent.click(titleBtn);
+    });
+
+    // Modal dialog should be open
+    const modalDialog = screen.getByTestId('flipbook-modal-dialog');
+    expect(modalDialog).toBeInTheDocument();
+
+    // Page catalog should still be present in background
+    expect(screen.getByRole('heading', { name: /Nos Flipbooks Interactifs/i })).toBeInTheDocument();
+
+    // Close modal via close button
+    const closeBtn = screen.getByTestId('flipbook-modal-close-btn');
+    await act(async () => {
+      fireEvent.click(closeBtn);
+    });
+
+    // Modal is closed
+    expect(screen.queryByTestId('flipbook-modal-dialog')).toBeNull();
+    // Catalog is still there
+    expect(screen.getByRole('heading', { name: /Nos Flipbooks Interactifs/i })).toBeInTheDocument();
+  });
+
+  it('opens flipbook in overlay modal when clicking cover with identical result', async () => {
+    window.location.pathname = '/flipbooks';
+    await renderApp();
+
+    const coverBtn = screen.getByTestId('flipbook-cover-4455');
+    await act(async () => {
+      fireEvent.click(coverBtn);
+    });
+
+    // Modal should be open
+    expect(screen.getByTestId('flipbook-modal-dialog')).toBeInTheDocument();
+
+    // Close via Escape key
+    await act(async () => {
+      fireEvent.keyDown(window, { key: 'Escape' });
+    });
+
+    expect(screen.queryByTestId('flipbook-modal-dialog')).toBeNull();
+  });
+
+  it('opens flipbook in overlay modal when clicking action button with identical result', async () => {
+    window.location.pathname = '/flipbooks';
+    await renderApp();
+
+    const actionBtn = screen.getByTestId('flipbook-btn-4455');
+    await act(async () => {
+      fireEvent.click(actionBtn);
+    });
+
+    expect(screen.getByTestId('flipbook-modal-dialog')).toBeInTheDocument();
+  });
 });
 
 
