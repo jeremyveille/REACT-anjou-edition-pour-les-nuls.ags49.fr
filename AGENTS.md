@@ -383,6 +383,27 @@ Se déplacer dans le dossier : `cd page-builder-react`
     *   Adaptation fluide sur S (≤ 599px), M (600–899px), L (900–1399px) et XL (≥ 1400px) sans débordement horizontal ni déformation d'image.
     *   33 suites de tests Jest et 270 tests automatisés validés à 100%, compilation `npm run build` réussie avec 0 erreur.
 
+### 23. Consultation Fluide des Flipbooks en Fenêtre Superposée sans Changement de Page (`FlipbookModal.js`, `App.js`, `ContentWidgets.js`, `BlockRenderer.js`, `App.css`)
+*   **Suppression des Redirections Intempestives** :
+    *   *Cause racine identifiée* : `handleOpenFlipbook` appelait précédemment `navigateTo({ type: 'flipbooks', selectedId: id }, ...)`, modifiant l'URL, remplaçant la vue active et forçant un défilement vers le haut (`window.scrollTo({ top: 0 })`).
+    *   *Correction* : Remplacement par une ouverture en modale superposée sans modification d'URL ni rechargement.
+*   **Unification du Clic (Titre, Couverture, Bouton)** :
+    *   Le clic sur le titre de l'ouvrage (`h4`), sur la couverture (image ou maquette stylisée) ou sur le bouton d'action (« Consulter l'ouvrage » / « Ouvrir le livre » / « Feuilleter l'ouvrage ») produit rigoureusement le même résultat : ouverture instantanée du lecteur existant.
+    *   Gestion accessible au clavier (touches Entrée et Espace) avec attributs `role="button"` et `tabIndex={0}`.
+*   **Fenêtre de Lecture Superposée Accessible (`FlipbookModal.js`, WCAG 2.2 AA)** :
+    *   Fond de page préservé derrière la fenêtre avec arrière-plan assombri subtil (`rgba(15, 23, 42, 0.72)`) et flou moderne (`backdrop-filter: blur(6px)`).
+    *   Réutilisation exclusive et intégrale du lecteur existant `PdfFlipbookReader` et de sa disposition `FlipbookLayout` (avec barres latérales configurées).
+    *   Fermeture multi-canal : bouton accessible « Fermer », touche `Échap`, ou clic extérieur sur l'overlay.
+    *   Verrouillage temporaire du défilement du corps avec compensation dynamique de scrollbar.
+    *   Restauration exacte et instantanée de la position de défilement d'origine (`window.scrollTo({ top: savedY, behavior: 'instant' })`).
+    *   Restauration automatique du focus clavier sur l'élément déclencheur d'origine.
+*   **Intégration Universelle (Page Flipbooks, PageBuilder, Accueil)** :
+    *   Sur la page `/flipbooks`, le catalogue reste affiché en permanence en arrière-plan sous la modale.
+    *   Dans le Page Builder et sur la page d'accueil, le widget `FlipbookFeatured` supporte le clic direct sur les icônes, titres et boutons en mode grille pour ouvrir le lecteur superposé via `onOpenFlipbook` ou l'événement global `ae-open-flipbook`.
+*   **Tests & Qualité** :
+    *   34 suites de tests Jest et 282 tests automatisés validés à 100%.
+    *   Compilation de production réussie (`npm run build`) avec 0 avertissement.
+
 ---
 
-*Dernière mise à jour du contexte par l'agent : 10 octobre 2026.*
+*Dernière mise à jour du contexte par l'agent : 13 octobre 2026.*
