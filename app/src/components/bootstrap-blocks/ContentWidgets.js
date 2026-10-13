@@ -516,7 +516,7 @@ export const FeaturedPoems = ({ settings = {}, isEditing = false }) => {
 /**
  * Widget Flipbooks à la une ou Lecteur intégré (FlipbookFeatured)
  */
-export const FlipbookFeatured = ({ settings = {}, isEditing = false }) => {
+export const FlipbookFeatured = ({ settings = {}, isEditing = false, onOpenFlipbook = null }) => {
   const title = settings.title || 'À la une : Flipbooks Interactifs';
   const mode = settings.mode || 'grid'; // 'reader' ou 'grid'
   
@@ -531,6 +531,15 @@ export const FlipbookFeatured = ({ settings = {}, isEditing = false }) => {
   const selectedBookId = settings.selectedBookId;
   const customClasses = settings.classes || '';
   const style = settings.style || {};
+
+  const handleOpenBook = (fb, triggerEl = null) => {
+    if (isEditing) return;
+    if (typeof onOpenFlipbook === 'function') {
+      onOpenFlipbook(fb, triggerEl);
+    } else if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('ae-open-flipbook', { detail: { book: fb, id: fb.id, triggerEl } }));
+    }
+  };
 
   if (!currentFlipbooks || currentFlipbooks.length === 0) {
     if (isEditing) {
@@ -589,12 +598,47 @@ export const FlipbookFeatured = ({ settings = {}, isEditing = false }) => {
       <div className="featured-grid">
         {currentFlipbooks.map((fb) => (
           <div key={fb.id} className="featured-card">
-            <div className="featured-card-icon">
+            <div 
+              className="featured-card-icon"
+              onClick={(e) => handleOpenBook(fb, e.currentTarget)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleOpenBook(fb, e.currentTarget);
+                }
+              }}
+              style={{ cursor: isEditing ? 'default' : 'pointer' }}
+              aria-label={`Feuilleter l'ouvrage : ${fb.title}`}
+              title={`Consulter le flipbook : ${fb.title}`}
+            >
               <BookOpen size={36} color="var(--primary)" />
             </div>
-            <h4>{fb.title}</h4>
+            <h4
+              onClick={(e) => handleOpenBook(fb, e.currentTarget)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleOpenBook(fb, e.currentTarget);
+                }
+              }}
+              style={{ cursor: isEditing ? 'default' : 'pointer' }}
+              aria-label={`Feuilleter l'ouvrage : ${fb.title}`}
+              title={`Consulter : ${fb.title}`}
+            >
+              {fb.title}
+            </h4>
             <p>{fb.description}</p>
-            <button type="button" className="btn-card" aria-label={`Feuilleter l'ouvrage : ${fb.title}`}>
+            <button 
+              type="button" 
+              className="btn-card" 
+              onClick={(e) => handleOpenBook(fb, e.currentTarget)}
+              aria-label={`Feuilleter l'ouvrage : ${fb.title}`}
+              title={`Feuilleter : ${fb.title}`}
+            >
               {fb.buttonText || "Feuilleter l'ouvrage"} <ChevronRight size={16} />
             </button>
           </div>

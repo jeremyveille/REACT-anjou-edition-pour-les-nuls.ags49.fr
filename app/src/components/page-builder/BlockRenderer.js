@@ -86,6 +86,7 @@ export const BlockRenderer = ({
   onToggleHideBlock = () => {},
   onAddChild = () => {},
   onOpenMediaPicker = null,
+  onOpenFlipbook = null,
   parentBlock = null,
   indexInParent = 0,
   siblingCount = 0
@@ -131,6 +132,7 @@ export const BlockRenderer = ({
       onToggleHideBlock={onToggleHideBlock}
       onAddChild={onAddChild}
       onOpenMediaPicker={onOpenMediaPicker}
+      onOpenFlipbook={onOpenFlipbook}
       parentBlock={block}
       indexInParent={idx}
       siblingCount={children.length}
@@ -204,7 +206,7 @@ export const BlockRenderer = ({
   // Rendu brut si on n'est pas en mode édition (site public ou preview)
   if (!isEditing) {
     return (
-      <Component settings={settings} isEditing={false}>
+      <Component settings={settings} isEditing={false} onOpenFlipbook={onOpenFlipbook}>
         {renderedChildren}
       </Component>
     );
