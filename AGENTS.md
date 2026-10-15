@@ -404,6 +404,34 @@ Se déplacer dans le dossier : `cd page-builder-react`
     *   34 suites de tests Jest et 282 tests automatisés validés à 100%.
     *   Compilation de production réussie (`npm run build`) avec 0 avertissement.
 
+### 26. Modèle Global de Barres Latérales pour tous les Flipbooks (« Modèle global — Anjou Édition ») (`flipbookSidebarService.js`, `GlobalFlipbookSidebarEditor.js`, `FlipbookSidebarAssignment.js`, `FlipbookLayout.js`, `FlipbookManager.js`, `FlipbookEditModal.js`, `flipbook-sidebars.css`, `flipbook-admin.css`)
+*   **Centralisation & Ergonomie du Dashboard** :
+    *   Bouton d'accès direct « Gérer le modèle global des barres latérales » en tête de la section « Gestion de mes Flipbooks ».
+    *   Organisation de l'interface en 3 espaces clairs :
+        *   **A. Mes Flipbooks** : Tableau optimisé, recherche, filtres et pagination préservés, enrichis de badges d'état clairs (« Modèle global actif » en bleu doux / « Configuration personnalisée » en ambre).
+        *   **B. Modèle global des barres latérales** : Éditeur visuel interactif complet avec 3 onglets (*Contenu des barres*, *Apparence & Styles*, *Prévisualisation en direct*), barre d'état avec détection des modifications non enregistrées, bouton d'enregistrement persistant et confirmation d'application générale.
+        *   **C. Paramètres individuels** : Vue de synthèse avec indicateurs clés (Total, Utilisant le modèle global, Personnalisés), filtres instantanés, bascule de mode en un clic avec dialogue de confirmation sécurisé et action d'application groupée.
+*   **Deux Modes Distincts & Conservation Intégrale de l'Existant** :
+    *   **Mode A — Utiliser le modèle global** (par défaut pour les nouveaux Flipbooks) : Héritage automatique des barres latérales définies dans le modèle global. Toute mise à jour du modèle global se répercute instantanément sur l'ensemble des Flipbooks en mode global sans intervention manuelle.
+    *   **Mode B — Personnaliser ce Flipbook** : Permet à l'administrateur de définir une configuration sur-mesure propre à un Flipbook sans qu'elle ne soit écrasée lors des mises à jour du modèle global.
+    *   **Rétrocompatibilité Garantie** : Les Flipbooks existants possédant déjà des blocs latéraux conservent leur mode individuel jusqu'à ce que l'administrateur choisisse explicitement de les faire basculer vers le modèle global.
+*   **Éditeur Visuel et Personnalisation Complète** :
+    *   *Contenu* : Réutilisation du système de blocs existant (Textes, Titres, Images, Vidéos, Liens, Boutons d'action, Fichiers PDF).
+    *   *Apparence & Styles* : Contrôle fin des largeurs de barres (de 15% à 30%), couleur de texte, couleur de titre, typographie (Outfit, Inter, Playfair Display, Cinzel, Merriweather, Lora), fond de carte, rayon des bordures (`border-radius`), espacement (`gap`) et ombres portées.
+    *   *Visibilité Responsive Granulaire* : Cases à cocher pour afficher ou masquer chaque barre latérale sur Ordinateur (`>= 900px`), Tablette (`600px - 899px`) et Mobile (`< 600px`).
+*   **Prévisualisation Fidèle Multi-Formats & Intégrité du Lecteur** :
+    *   Aperçu public réel `[ BARRE GAUCHE ] [ LECTEUR FLIPBOOK ] [ BARRE DROITE ]` avec sélecteur de format responsive en 4 paliers : **XL** (Grand écran >1200px), **L** (Bureau 1024px), **M** (Tablette 768px) et **S** (Mobile 390px).
+    *   Préservation stricte du lecteur central `PdfFlipbookReader` : lecture des pages PDF, contrôles de navigation, boutons zoom, mode plein écran et changement de page sans perturbation.
+*   **Architecture Firebase & Synchronisation Temps Réel (Offline-First)** :
+    *   Service dédié [app/src/services/flipbookSidebarService.js](file:///C:/Users/jerem/REACT-anjou-edition-pour-les-nuls.ags49.fr/app/src/services/flipbookSidebarService.js).
+    *   Persistance dans Firestore (`settings/flipbook_global_sidebar`) couplée à un cache local `localStorage` (`ae_flipbook_global_sidebar`) pour le fonctionnement 100% hors-ligne.
+    *   Émission de l'événement natif `ae_global_sidebar_updated` permettant l'actualisation dynamique instantanée des composants sans rechargement de page.
+    *   Protection Firebase : Seuls les comptes administrateurs validés peuvent modifier le document selon les règles de sécurité Firestore en vigueur.
+*   **Qualité, Tests & Respect des Règles** :
+    *   37 suites de tests automatisées et 305 tests unitaires et d'intégration validés à 100%.
+    *   100% Vanilla CSS pur (zéro Tailwind, zéro PHP/WordPress).
+    *   Compilation de production `npm run build` réussie avec 0 erreur et 0 avertissement.
+
 ---
 
-*Dernière mise à jour du contexte par l'agent : 13 octobre 2026.*
+*Dernière mise à jour du contexte par l'agent : 15 octobre 2026.*
