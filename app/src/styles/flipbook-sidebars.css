@@ -25,10 +25,18 @@
 /* Colonnes des barres latérales gauche et droite */
 .flipbook-sidebar-column {
   width: 20%;
-  min-width: 220px;
-  max-width: 320px;
+  min-width: 200px;
+  max-width: 380px;
   flex-shrink: 0;
   box-sizing: border-box;
+}
+
+.flipbook-sidebar-left-wrapper {
+  width: var(--sidebar-left-width, 20%);
+}
+
+.flipbook-sidebar-right-wrapper {
+  width: var(--sidebar-right-width, 20%);
 }
 
 /* Zone centrale contenant le lecteur Flipbook */
@@ -80,7 +88,7 @@
 .flipbook-sidebar-inner {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: var(--flipbook-sidebar-gap, 1.25rem);
   width: 100%;
 }
 
@@ -88,7 +96,7 @@
 .flipbook-sidebar-card {
   background: var(--bg-card, #ffffff);
   border: 1px solid var(--border, #e2e8f0);
-  border-radius: 14px;
+  border-radius: var(--flipbook-card-radius, 14px);
   padding: 1.15rem;
   box-shadow: var(--card-shadow, 0 4px 12px -2px rgba(15, 23, 42, 0.05));
   transition: var(--transition, all 0.25s ease);
@@ -416,6 +424,23 @@
 @media (max-width: 540px) {
   .flipbook-sidebar-inner {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Visibilité conditionnelle par palier responsive pour les barres latérales */
+@media (min-width: 900px) {
+  .flipbook-sidebar-column.ae-hide-desktop {
+    display: none !important;
+  }
+}
+@media (min-width: 600px) and (max-width: 899px) {
+  .flipbook-sidebar-column.ae-hide-tablet {
+    display: none !important;
+  }
+}
+@media (max-width: 599px) {
+  .flipbook-sidebar-column.ae-hide-mobile {
+    display: none !important;
   }
 }
 
