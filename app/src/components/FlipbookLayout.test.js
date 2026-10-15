@@ -123,4 +123,79 @@ describe('FlipbookLayout component', () => {
     expect(screen.queryByText('Bloc inactif')).not.toBeInTheDocument();
     expect(screen.getByText('Bloc actif')).toBeInTheDocument();
   });
+
+  test('resolves and displays global sidebar when sidebarMode is "global"', () => {
+    const globalSidebarMock = {
+      name: 'Modèle global — Anjou Édition',
+      styles: {
+        leftWidth: 25,
+        rightWidth: 22,
+        visibility: {
+          left: { desktop: true, tablet: true, mobile: false },
+          right: { desktop: true, tablet: false, mobile: false }
+        }
+      },
+      leftSidebar: [
+        { id: 'gb1', type: 'heading', text: 'Titre Global Gauche', enabled: true }
+      ],
+      rightSidebar: [
+        { id: 'gb2', type: 'text', content: '<p>Contenu Global Droit</p>', enabled: true }
+      ]
+    };
+
+    const bookWithGlobalMode = {
+      id: 'book-global',
+      title: 'Livre Global',
+      sidebarMode: 'global',
+      leftSidebar: [], // Empty individual sidebars
+      rightSidebar: []
+    };
+
+    render(
+      <FlipbookLayout book={bookWithGlobalMode} globalSidebar={globalSidebarMock}>
+        {mockChildren}
+      </FlipbookLayout>
+    );
+
+    const layout = screen.getByTestId('flipbook-layout-wrapper');
+    expect(layout).toHaveAttribute('data-sidebar-mode', 'global');
+    expect(layout).toHaveClass('has-both-sidebars');
+
+    expect(screen.getByText('Titre Global Gauche')).toBeInTheDocument();
+    expect(screen.getByText('Contenu Global Droit')).toBeInTheDocument();
+
+    const leftCol = screen.getByTestId('flipbook-left-sidebar-col');
+    expect(leftCol).toHaveClass('ae-hide-mobile');
+    expect(leftCol).not.toHaveClass('ae-hide-tablet');
+
+    const rightCol = screen.getByTestId('flipbook-right-sidebar-col');
+    expect(rightCol).toHaveClass('ae-hide-mobile');
+    expect(rightCol).toHaveClass('ae-hide-tablet');
+  });
+
+  test('prioritizes custom individual sidebar when sidebarMode is "custom"', () => {
+    const globalSidebarMock = {
+      leftSidebar: [{ id: 'g1', type: 'heading', text: 'Titre Global', enabled: true }],
+      rightSidebar: []
+    };
+
+    const bookCustom = {
+      id: 'book-custom',
+      title: 'Livre Spécifique',
+      sidebarMode: 'custom',
+      leftSidebar: [{ id: 'c1', type: 'heading', text: 'Titre Spécifique Individuel', enabled: true }],
+      rightSidebar: []
+    };
+
+    render(
+      <FlipbookLayout book={bookCustom} globalSidebar={globalSidebarMock}>
+        {mockChildren}
+      </FlipbookLayout>
+    );
+
+    const layout = screen.getByTestId('flipbook-layout-wrapper');
+    expect(layout).toHaveAttribute('data-sidebar-mode', 'custom');
+    expect(screen.getByText('Titre Spécifique Individuel')).toBeInTheDocument();
+    expect(screen.queryByText('Titre Global')).not.toBeInTheDocument();
+  });
 });
