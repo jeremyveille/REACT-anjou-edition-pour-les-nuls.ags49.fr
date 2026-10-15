@@ -21,6 +21,7 @@ import FlipbookLayout from "./FlipbookLayout";
 import FlipbookManager from "./FlipbookManager";
 import FlipbookEditModal from "./FlipbookEditModal";
 import AccountEditModal from "./AccountEditModal";
+import { getLocalGlobalSidebar, fetchGlobalSidebarTemplate } from "../services/flipbookSidebarService";
 import { 
   collection, 
   getDocs, 
@@ -221,6 +222,9 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
   // States for Reading/Viewing a flipbook
   const [showViewFlipbookModal, setShowViewFlipbookModal] = useState(false);
   const [viewingFlipbook, setViewingFlipbook] = useState(null);
+
+  // Modèle global de barres latérales pour les flipbooks
+  const [globalSidebar, setGlobalSidebar] = useState(() => getLocalGlobalSidebar());
 
   const fileInputRef = useRef(null);
   
@@ -547,7 +551,8 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
           fetchVideos(),
           fetchNews(),
           fetchAccounts(),
-          fetchMenus()
+          fetchMenus(),
+          fetchGlobalSidebarTemplate().then(tmpl => tmpl && setGlobalSidebar(tmpl))
         ]);
         setNotification("Données synchronisées avec Firestore.");
       } catch (err) {
@@ -1343,6 +1348,7 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
         hasFirestoreChunks: hasFirestoreChunks,
         date: new Date().toLocaleDateString("fr-FR") + " à " + new Date().toLocaleTimeString("fr-FR", { hour: '2-digit', minute: '2-digit' }),
         pages: generatedPages,
+        sidebarMode: 'global',
         leftSidebar: [],
         rightSidebar: []
       };
@@ -3375,6 +3381,9 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
                       onBulkDelete={handleBulkDeleteFlipbooks}
                       onBackToMain={() => setActiveSection(null)}
                       setNotification={setNotification}
+                      onUpdateFlipbooks={setFlipbooks}
+                      globalSidebar={globalSidebar}
+                      onSaveGlobalSidebar={setGlobalSidebar}
                     />
                   )}
 
@@ -4555,7 +4564,7 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
             {showViewFlipbookModal && viewingFlipbook && (
               <div className="ae-modal-overlay" onClick={() => { setShowViewFlipbookModal(false); setViewingFlipbook(null); }}>
                 <div className="ae-modal-container" onClick={(e) => e.stopPropagation()} style={{ padding: 0, maxWidth: '1480px', width: '96vw', border: 'none', background: 'transparent', boxShadow: 'none' }}>
-                  <FlipbookLayout book={viewingFlipbook}>
+                  <FlipbookLayout book={viewingFlipbook} globalSidebar={globalSidebar}>
                     <PdfFlipbookReader 
                       book={viewingFlipbook} 
                       onClose={() => { setShowViewFlipbookModal(false); setViewingFlipbook(null); }} 

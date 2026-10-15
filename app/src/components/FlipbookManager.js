@@ -11,8 +11,18 @@ import {
   FileText, 
   Check, 
   Filter, 
-  ArrowUpDown 
+  ArrowUpDown,
+  Sparkles,
+  Sliders
 } from 'lucide-react';
+import GlobalFlipbookSidebarEditor from './GlobalFlipbookSidebarEditor';
+import FlipbookSidebarAssignment from './FlipbookSidebarAssignment';
+import { 
+  getLocalGlobalSidebar, 
+  applyGlobalTemplateToAll
+} from '../services/flipbookSidebarService';
+import { doc, setDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 
 /**
  * Utilitaires pour le tri et le formatage sécurisé des dates
@@ -59,8 +69,18 @@ export default function FlipbookManager({
   onDeleteFlipbook,
   onBulkDelete,
   onBackToMain,
-  setNotification = () => {}
+  setNotification = () => {},
+  onUpdateFlipbooks = null,
+  globalSidebar = null,
+  onSaveGlobalSidebar = null
 }) {
+  // Navigation entre les 3 espaces demandés :
+  // 'list' (A. Mes Flipbooks) | 'global_sidebar' (B. Modèle global) | 'assignment' (C. Paramètres individuels)
+  const [activeManagerTab, setActiveManagerTab] = useState('list');
+  const [currentGlobalTemplate, setCurrentGlobalTemplate] = useState(() => {
+    return globalSidebar || getLocalGlobalSidebar();
+  });
+
   // États de recherche, filtrage et tri
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -74,6 +94,53 @@ export default function FlipbookManager({
   const [selectedFlipbookIds, setSelectedFlipbookIds] = useState([]);
   const [bulkAction, setBulkAction] = useState('-1');
   const [copiedId, setCopiedId] = useState(null);
+
+  // Mise à jour du mode de barre latérale pour un flipbook
+  const handleUpdateFlipbookMode = async (id, newMode) => {
+    const updated = flipbooks.map(fb => {
+      if (String(fb.id) === String(id)) {
+        return {
+          ...fb,
+          sidebarMode: newMode
+        };
+      }
+      return fb;
+    });
+
+    if (onUpdateFlipbooks) {
+      onUpdateFlipbooks(updated);
+    }
+    try {
+      localStorage.setItem("ae_flipbooks", JSON.stringify(updated));
+      const targetFb = updated.find(fb => String(fb.id) === String(id));
+      if (db && targetFb) {
+        await setDoc(doc(db, "flipbooks", String(id)), targetFb);
+      }
+      setNotification(`Mode "${newMode === 'global' ? 'Modèle global actif' : 'Configuration personnalisée'}" enregistré.`);
+    } catch (e) {
+      console.warn("Erreur mise à jour mode flipbook:", e);
+    }
+  };
+
+  // Application du modèle global à tous les flipbooks existants
+  const handleApplyGlobalToAllFlipbooks = async () => {
+    const updated = applyGlobalTemplateToAll(flipbooks);
+    if (onUpdateFlipbooks) {
+      onUpdateFlipbooks(updated);
+    }
+    try {
+      localStorage.setItem("ae_flipbooks", JSON.stringify(updated));
+      if (db) {
+        for (const fb of updated) {
+          await setDoc(doc(db, "flipbooks", String(fb.id)), fb);
+        }
+      }
+      setNotification("Le « Modèle global — Anjou Édition » a été appliqué à tous les Flipbooks !");
+    } catch (e) {
+      console.warn("Erreur application globale Firestore:", e);
+      setNotification("Modèle global appliqué localement à tous les Flipbooks.");
+    }
+  };
 
   // Extraction dynamique des catégories existantes
   const allCategories = useMemo(() => {
@@ -239,16 +306,96 @@ export default function FlipbookManager({
             Gérez les publications numériques et leurs barres latérales d'accompagnement.
           </p>
         </div>
+
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            type="button"
+            onClick={() => setActiveManagerTab('global_sidebar')}
+            className="ae-btn-outline-primary"
+            aria-label="Gérer le modèle global des barres latérales"
+          >
+            <Sparkles size={16} aria-hidden="true" />
+            <span>Gérer le modèle global des barres latérales</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={onAddFlipbook}
+            className="ae-flipbook-btn-primary"
+            aria-label="Ajouter un nouveau Flipbook"
+          >
+            <Plus size={18} aria-hidden="true" />
+            <span>+ Ajouter un Flipbook</span>
+          </button>
+        </div>
+      </div>
+
+      {/* 2.bis NAVIGATION DES 3 ESPACES ERGONOMIQUES (Mes Flipbooks / Modèle global / Paramètres individuels) */}
+      <div className="ae-flipbook-tabs-nav mb-4" role="tablist" aria-label="Espaces de gestion des Flipbooks">
         <button
           type="button"
-          onClick={onAddFlipbook}
-          className="ae-flipbook-btn-primary"
-          aria-label="Ajouter un nouveau Flipbook"
+          role="tab"
+          aria-selected={activeManagerTab === 'list'}
+          onClick={() => setActiveManagerTab('list')}
+          className={`ae-flipbook-tab-item ${activeManagerTab === 'list' ? 'active' : ''}`}
         >
-          <Plus size={18} aria-hidden="true" />
-          <span>+ Ajouter un Flipbook</span>
+          <BookOpen size={16} aria-hidden="true" />
+          <span>A. Mes Flipbooks</span>
+          <span className="ae-tab-count">{flipbooks.length}</span>
+        </button>
+
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeManagerTab === 'global_sidebar'}
+          onClick={() => setActiveManagerTab('global_sidebar')}
+          className={`ae-flipbook-tab-item ${activeManagerTab === 'global_sidebar' ? 'active' : ''}`}
+        >
+          <Sparkles size={16} aria-hidden="true" />
+          <span>B. Modèle global des barres latérales</span>
+        </button>
+
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeManagerTab === 'assignment'}
+          onClick={() => setActiveManagerTab('assignment')}
+          className={`ae-flipbook-tab-item ${activeManagerTab === 'assignment' ? 'active' : ''}`}
+        >
+          <Sliders size={16} aria-hidden="true" />
+          <span>C. Paramètres individuels & Attribution</span>
         </button>
       </div>
+
+      {/* VUE B : MODÈLE GLOBAL DES BARRES LATÉRALES */}
+      {activeManagerTab === 'global_sidebar' && (
+        <GlobalFlipbookSidebarEditor
+          initialTemplate={currentGlobalTemplate}
+          flipbooks={flipbooks}
+          onBack={() => setActiveManagerTab('list')}
+          onSaveSuccess={(saved) => {
+            setCurrentGlobalTemplate(saved);
+            if (onSaveGlobalSidebar) onSaveGlobalSidebar(saved);
+          }}
+          onApplyToAll={handleApplyGlobalToAllFlipbooks}
+          setNotification={setNotification}
+        />
+      )}
+
+      {/* VUE C : PARAMÈTRES INDIVIDUELS & ATTRIBUTION */}
+      {activeManagerTab === 'assignment' && (
+        <FlipbookSidebarAssignment
+          flipbooks={flipbooks}
+          onUpdateFlipbookMode={handleUpdateFlipbookMode}
+          onEditFlipbook={onEditFlipbook}
+          onApplyGlobalToAll={handleApplyGlobalToAllFlipbooks}
+          onBackToMain={() => setActiveManagerTab('list')}
+        />
+      )}
+
+      {/* VUE A : MES FLIPBOOKS (LISTE, RECHERCHE, TABLE ET PAGINATION) */}
+      {activeManagerTab === 'list' && (
+        <>
 
       {/* 3. BARRE DE RECHERCHE, FILTRE PAR CATÉGORIE ET TRI */}
       <div className="ae-flipbook-toolbar" role="search" aria-label="Recherche et filtres de flipbooks">
@@ -395,7 +542,20 @@ export default function FlipbookManager({
                     <td>
                       <div className="ae-flipbook-cell-title-group">
                         <span className="ae-flipbook-row-title">{fb.title}</span>
-                        <span className="ae-flipbook-row-category">{fb.category || "Outils"}</span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="ae-flipbook-row-category">{fb.category || "Outils"}</span>
+                          {fb.sidebarMode === 'global' || (!fb.sidebarMode && (!fb.leftSidebar || fb.leftSidebar.length === 0) && (!fb.rightSidebar || fb.rightSidebar.length === 0)) ? (
+                            <span className="ae-badge-global-active text-[10px] py-0.5 px-1.5" title="Utilise automatiquement le modèle commun">
+                              <Sparkles size={11} aria-hidden="true" />
+                              <span>Modèle global actif</span>
+                            </span>
+                          ) : (
+                            <span className="ae-badge-custom-active text-[10px] py-0.5 px-1.5" title="Configuration de barres spécifique à ce livre">
+                              <Sliders size={11} aria-hidden="true" />
+                              <span>Configuration personnalisée</span>
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </td>
 
@@ -523,7 +683,20 @@ export default function FlipbookManager({
                   />
                   <div className="ae-flipbook-mobile-card-info">
                     <div className="ae-flipbook-row-title">{fb.title}</div>
-                    <div className="ae-flipbook-row-category">{fb.category || "Outils"}</div>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="ae-flipbook-row-category">{fb.category || "Outils"}</span>
+                      {fb.sidebarMode === 'global' || (!fb.sidebarMode && (!fb.leftSidebar || fb.leftSidebar.length === 0) && (!fb.rightSidebar || fb.rightSidebar.length === 0)) ? (
+                        <span className="ae-badge-global-active text-[10px] py-0.5 px-1.5">
+                          <Sparkles size={11} aria-hidden="true" />
+                          <span>Modèle global actif</span>
+                        </span>
+                      ) : (
+                        <span className="ae-badge-custom-active text-[10px] py-0.5 px-1.5">
+                          <Sliders size={11} aria-hidden="true" />
+                          <span>Configuration personnalisée</span>
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -640,6 +813,8 @@ export default function FlipbookManager({
           </div>
         )}
       </div>
+      </>
+      )}
     </div>
   );
 }
