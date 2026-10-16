@@ -3,6 +3,14 @@
 // expect(element).toHaveTextContent(/react/i)
 // learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom';
+const { TextEncoder, TextDecoder } = require('util');
+
+if (typeof global.TextEncoder === 'undefined') {
+  global.TextEncoder = TextEncoder;
+}
+if (typeof global.TextDecoder === 'undefined') {
+  global.TextDecoder = TextDecoder;
+}
 
 // Mock ResizeObserver for environments where it is not defined (e.g. jsdom)
 global.ResizeObserver = class ResizeObserver {
