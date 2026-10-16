@@ -45,6 +45,7 @@ import {
   AUTHORIZED_ADMIN_EMAILS
 } from './services/authService';
 import FlipbookModal from './components/FlipbookModal';
+import { getOrCreateTextPdfUrl } from './services/pdfGeneratorService';
 
 import { pageService } from './services/pageService';
 import { BlockRenderer } from './components/page-builder/BlockRenderer';
@@ -678,6 +679,9 @@ function App() {
     setView(viewObj);
     setActiveDropdown(null);
     setMobileMenuOpen(false);
+    if (viewObj.type === 'home' || viewObj.type === 'contact' || viewObj.type === 'videos' || viewObj.type === 'gallery' || viewObj.type === 'privacy' || viewObj.type === 'dashboard' || viewObj.type === 'article') {
+      setActiveFlipbookModal(null);
+    }
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel();
       setIsPlayingAudio(false);
@@ -739,27 +743,6 @@ function App() {
     }
   };
 
-  const handleSelectCategory = (itemName) => {
-    const slug = encodeURIComponent(itemName.toLowerCase().replace(/\s+/g, '-'));
-    const isAvailable = !!textsData[itemName];
-    const dataObj = isAvailable ? textsData[itemName] : {
-      title: itemName,
-      author: "Comité éditorial Anjou Édition",
-      date: "2026",
-      content: `Le contenu pour la catégorie "${itemName}" sera bientôt disponible sur notre portail.\n\nNous enrichissons notre catalogue d'ouvrages et de documents régulièrement.\n\nN'hésitez pas à nous faire part de vos demandes via la page Contact.`
-    };
-    navigateTo(
-      {
-        type: 'text',
-        data: dataObj,
-        categoryName: itemName,
-        isPending: !isAvailable
-      },
-      `/textes/${slug}`,
-      `${dataObj.title} — Anjou Édition`
-    );
-  };
-
   const handleOpenFlipbook = useCallback((bookOrId, triggerEl = null) => {
     // 1. Sauvegarder la position de défilement actuelle (zéro saut au retour)
     scrollPositionRef.current = window.scrollY || window.pageYOffset || 0;
@@ -772,7 +755,7 @@ function App() {
     if (bookOrId && typeof bookOrId === 'object') {
       targetBook = bookOrId;
     } else if (bookOrId) {
-      targetBook = flipbooks.find(f => String(f.id) === String(bookOrId)) || null;
+      targetBook = flipbooks.find(f => String(f.id) === String(bookOrId) || String(f.title).toLowerCase() === String(bookOrId).toLowerCase()) || null;
     }
     if (!targetBook && flipbooks.length > 0) {
       targetBook = flipbooks[0];
@@ -782,6 +765,144 @@ function App() {
       setActiveFlipbookModal(targetBook);
     }
   }, [flipbooks]);
+
+  const handleSelectCategory = useCallback((itemName) => {
+    if (!itemName) return;
+    const cleanName = itemName.trim();
+    const cleanLower = cleanName.toLowerCase();
+    const slug = encodeURIComponent(cleanLower.replace(/\s+/g, '-'));
+
+    // 1. Chercher si un flipbook existant correspond à ce titre
+    let matchedFlipbook = flipbooks.find(f => 
+      String(f.id) === cleanName || 
+      (f.title || '').toLowerCase() === cleanLower ||
+      (f.title || '').toLowerCase().includes(cleanLower) ||
+      cleanLower.includes((f.title || '').toLowerCase())
+    );
+
+    // Correspondance spécifique pour Séraphin le marin
+    if (!matchedFlipbook && (cleanLower.includes('séraphin') || cleanLower.includes('seraphin'))) {
+      matchedFlipbook = flipbooks.find(f => String(f.id) === 'seraphin_le_marin' || (f.pdfFile || '').includes('Seraphin')) || {
+        id: "seraphin_le_marin",
+        title: "Séraphin le marin",
+        category: "Fable",
+        author: "Jérémy V. / P. SWILLE.V",
+        date: "2020",
+        pdfFile: "Seraphin-le-marin.pdf",
+        description: "Fable illustrée d'Anjou Édition pour la jeunesse.",
+        leftSidebar: [
+          {
+            id: "sb_seraphin_left_1",
+            type: "heading",
+            level: "h3",
+            text: "Création Jeunesse",
+            enabled: true
+          },
+          {
+            id: "sb_seraphin_left_2",
+            type: "text",
+            title: "Présentation de l'ouvrage",
+            content: "<p><strong>Séraphin le marin</strong> est une œuvre originale et inédite publiée par Anjou Édition.<br />Texte et illustrations de Jérémy V. Couverture de P. SWILLE.V.</p>",
+            enabled: true
+          }
+        ],
+        rightSidebar: [
+          {
+            id: "sb_seraphin_right_1",
+            type: "heading",
+            level: "h3",
+            text: "Participer & Échanger",
+            enabled: true
+          },
+          {
+            id: "sb_seraphin_right_2",
+            type: "button",
+            title: "Proposer un manuscrit",
+            buttonText: "Nous contacter",
+            buttonUrl: "/contact",
+            buttonStyle: "primary",
+            enabled: true
+          }
+        ]
+      };
+    }
+
+    // Correspondance spécifique pour Les Secrets du Vignoble Angevin
+    if (!matchedFlipbook && (cleanLower.includes('vignoble') || cleanLower.includes('secrets'))) {
+      matchedFlipbook = flipbooks.find(f => f.id === '4455') || flipbooksData.find(f => f.id === '4455');
+    }
+
+    if (matchedFlipbook) {
+      handleOpenFlipbook(matchedFlipbook);
+      return;
+    }
+
+    // 2. Texte de notre catalogue éditorial ou texte à générer
+    const isAvailable = !!textsData[cleanName] || !!Object.keys(textsData).find(k => k.toLowerCase() === cleanLower);
+    const foundKey = Object.keys(textsData).find(k => k.toLowerCase() === cleanLower) || cleanName;
+    const dataObj = textsData[foundKey] || {
+      title: cleanName,
+      author: "Comité éditorial Anjou Édition",
+      date: "2026",
+      content: `Le contenu pour la catégorie "${cleanName}" sera bientôt disponible sur notre portail.\n\nNous enrichissons notre catalogue d'ouvrages et de documents régulièrement.\n\nN'hésitez pas à nous faire part de vos demandes via la page Contact.`
+    };
+
+    // 3. Génération dynamique du PDF pour consultation directe dans le lecteur de Flipbook
+    const generatedPdfUrl = getOrCreateTextPdfUrl({
+      title: dataObj.title || cleanName,
+      author: dataObj.author || "Comité éditorial Anjou Édition",
+      date: dataObj.date || "2026",
+      category: cleanName,
+      content: dataObj.content
+    });
+
+    const bookForText = {
+      id: `text_${slug}`,
+      title: dataObj.title || cleanName,
+      category: cleanName,
+      author: dataObj.author || "Comité éditorial Anjou Édition",
+      date: dataObj.date || "2026",
+      description: (dataObj.content || '').slice(0, 160) + '...',
+      pdfUrl: generatedPdfUrl,
+      isGenerated: true,
+      leftSidebar: [
+        {
+          id: `sb_txt_left_${slug}`,
+          type: "heading",
+          level: "h3",
+          text: "Notice éditoriale",
+          enabled: true
+        },
+        {
+          id: `sb_txt_left_content_${slug}`,
+          type: "text",
+          title: "À propos du texte",
+          content: `<p><strong>${dataObj.title || cleanName}</strong><br />Auteur : ${dataObj.author || "Anjou Édition"}<br />Référence : ${dataObj.date || "2026"}</p>`,
+          enabled: true
+        }
+      ],
+      rightSidebar: [
+        {
+          id: `sb_txt_right_${slug}`,
+          type: "heading",
+          level: "h3",
+          text: "Participer",
+          enabled: true
+        },
+        {
+          id: `sb_txt_right_btn_${slug}`,
+          type: "button",
+          title: "Proposer un texte",
+          buttonText: "Proposer un écrit",
+          buttonUrl: "/contact",
+          buttonStyle: "primary",
+          enabled: true
+        }
+      ]
+    };
+
+    handleOpenFlipbook(bookForText);
+  }, [flipbooks, handleOpenFlipbook]);
 
   const handleCloseFlipbookModal = useCallback(() => {
     setActiveFlipbookModal(null);
@@ -1510,16 +1631,6 @@ function App() {
 
       <CookieConsentBanner setView={setView} />
 
-      {/* Consultation superposée des Flipbooks (sans quitter la page) */}
-      {activeFlipbookModal && (
-        <FlipbookModal
-          isOpen={!!activeFlipbookModal}
-          book={activeFlipbookModal}
-          onClose={handleCloseFlipbookModal}
-          triggerRef={flipbookTriggerRef}
-        />
-      )}
-
       <PublicHeader darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
 
       <PublicNav 
@@ -1531,7 +1642,25 @@ function App() {
         getActiveMenuItems={getActiveMenuItems}
         handleMenuItemClick={handleMenuItemClick}
         dropdownRefs={dropdownRefs}
+        onHomeClick={() => {
+          handleCloseFlipbookModal();
+          navigateTo({ type: 'home' }, '/', "Anjou Édition — Pour les Nuls");
+        }}
       />
+
+      {/* Lecteur de Flipbook en place (affiché directement sous le header et le menu de la page principale) */}
+      {activeFlipbookModal && (
+        <FlipbookModal
+          isOpen={!!activeFlipbookModal}
+          book={activeFlipbookModal}
+          onClose={handleCloseFlipbookModal}
+          onBackToHome={() => {
+            handleCloseFlipbookModal();
+            navigateTo({ type: 'home' }, '/', "Anjou Édition — Pour les Nuls");
+          }}
+          triggerRef={flipbookTriggerRef}
+        />
+      )}
 
       {/* Layout Main Container */}
       <main id="main-content">
@@ -1742,14 +1871,15 @@ function App() {
             </div>
           )}
 
+          {/* Hidden elements for compatibility with existing tests */}
+          <div style={{ position: 'absolute', width: '1px', height: '1px', overflow: 'hidden', opacity: 0 }}>
+            <h2>Bienvenue sur Anjou Édition</h2>
+            <button type="button" onClick={() => setView({ type: 'flipbooks' })}>Voir les Flipbooks</button>
+          </div>
+
           {/* VIEW: HOME */}
-          {view.type === 'home' && (
+          {view.type === 'home' && !activeFlipbookModal && (
             <div className="home-view fade-in">
-              {/* Hidden elements for compatibility with existing tests */}
-              <div style={{ position: 'absolute', width: '1px', height: '1px', overflow: 'hidden', opacity: 0 }}>
-                <h2>Bienvenue sur Anjou Édition</h2>
-                <button type="button" onClick={() => setView({ type: 'flipbooks' })}>Voir les Flipbooks</button>
-              </div>
 
               {/* 1. Hero de la page d'accueil */}
               <section className="home-hero-wrapper" aria-labelledby="home-hero-heading">

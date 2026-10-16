@@ -7559,53 +7559,98 @@ nav.public-nav {
 
 
 /* ==========================================================================
-   FLIPBOOK MODAL OVERLAY (CONSULTATION IMMÉDIATE SANS QUITTER LA PAGE)
+   FLIPBOOK IN-PAGE READER (DIRECTEMENT SOUS LE HEADER ET LE MENU)
    100% Vanilla CSS pur - Conforme à la charte Anjou Édition et WCAG 2.2 AA
    ========================================================================== */
 
+.ae-flipbook-inpage-wrapper,
 .ae-flipbook-modal-overlay {
-  position: fixed;
-  inset: 0;
-  background-color: rgba(15, 23, 42, 0.72);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 99999;
-  padding: 1rem;
+  position: relative;
+  width: 100%;
+  max-width: 1600px;
+  margin: 1.25rem auto 2.5rem auto;
+  padding: 0 clamp(0.75rem, 2vw, 1.5rem);
   box-sizing: border-box;
-  animation: aeFadeIn 0.2s ease-out;
-  overflow-y: auto;
-  overflow-x: hidden;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  display: block;
+  z-index: 20;
+  animation: aeFadeIn 0.25s ease-out;
 }
 
 .ae-flipbook-modal-dialog {
   position: relative;
   width: 100%;
   max-width: 1600px;
-  max-height: 96vh;
+  min-height: 580px;
+  max-height: none;
   display: flex;
   flex-direction: column;
   background: var(--bg-card, #ffffff);
   border: 1px solid var(--border, #cbd5e1);
   border-radius: 18px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(0, 75, 122, 0.15);
+  box-shadow: 0 12px 35px -5px rgba(10, 25, 49, 0.12), 0 0 0 1px rgba(0, 75, 122, 0.12);
   overflow: hidden;
   box-sizing: border-box;
-  animation: aeZoomIn 0.22s ease-out;
+  animation: aeFadeIn 0.22s ease-out;
 }
 
 .ae-flipbook-modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.75rem 1.25rem;
+  padding: 0.85rem 1.25rem;
   background: var(--bg-card, #ffffff);
   border-bottom: 1px solid var(--border, #e2e8f0);
   gap: 1rem;
   flex-shrink: 0;
   z-index: 10;
+  flex-wrap: wrap;
+}
+
+.ae-flipbook-inpage-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ae-flipbook-back-home-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: rgba(0, 75, 122, 0.08);
+  color: var(--primary, #004b7a);
+  border: 1px solid rgba(0, 75, 122, 0.2);
+  border-radius: 8px;
+  padding: 0.5rem 0.95rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ae-flipbook-back-home-btn:hover {
+  background: var(--primary, #004b7a);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.ae-flipbook-back-home-btn:focus-visible {
+  outline: 2px solid var(--primary, #004b7a);
+  outline-offset: 2px;
+}
+
+.ae-flipbook-author-tag {
+  font-size: 0.85rem;
+  color: var(--text-muted, #64748b);
+  font-style: italic;
+  font-weight: 500;
+}
+
+.ae-flipbook-date-tag {
+  font-size: 0.8rem;
+  color: var(--text-muted, #94a3b8);
 }
 
 .ae-flipbook-modal-info {
@@ -7705,6 +7750,25 @@ nav.public-nav {
 
 .dark-mode .ae-flipbook-modal-body {
   background: #0f172a;
+}
+
+.dark-mode .ae-flipbook-back-home-btn {
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+.dark-mode .ae-flipbook-back-home-btn:hover {
+  background: #38bdf8;
+  color: #0f172a;
+}
+
+.dark-mode .ae-flipbook-author-tag {
+  color: #94a3b8;
+}
+
+.dark-mode .ae-flipbook-date-tag {
+  color: #64748b;
 }
 
 /* Éléments cliquables des cartes Flipbooks */
