@@ -14,13 +14,42 @@ export default function FlipbookSidebarBlock({ block }) {
 
   const { type, title, caption } = block;
 
+  // Construction du style individuel du bloc si personnalisé
+  const customBlockStyle = {};
+  const bStyle = block.style || {};
+  const bg = bStyle.backgroundColor || block.backgroundColor;
+  const txtColor = bStyle.textColor || block.textColor;
+  const bdrColor = bStyle.borderColor || block.borderColor;
+  const align = bStyle.textAlign || block.textAlign;
+  const radius = bStyle.borderRadius || block.borderRadius;
+  const shadow = bStyle.shadow || block.shadow;
+
+  if (bg) customBlockStyle.backgroundColor = bg;
+  if (txtColor) {
+    customBlockStyle.color = txtColor;
+    customBlockStyle['--text-main'] = txtColor;
+    customBlockStyle['--text-muted'] = txtColor;
+  }
+  if (bdrColor) customBlockStyle.borderColor = bdrColor;
+  if (align && ['left', 'center', 'right'].includes(align)) {
+    customBlockStyle.textAlign = align;
+  }
+  if (radius === 'none') customBlockStyle.borderRadius = '0px';
+  else if (radius === 'rounded') customBlockStyle.borderRadius = '8px';
+  else if (radius === 'normal') customBlockStyle.borderRadius = '14px';
+  else if (radius === 'pill') customBlockStyle.borderRadius = '20px';
+
+  if (shadow === 'none') customBlockStyle.boxShadow = 'none';
+  else if (shadow === 'subtle') customBlockStyle.boxShadow = '0 1px 3px rgba(15, 23, 42, 0.05)';
+  else if (shadow === 'elevated') customBlockStyle.boxShadow = '0 12px 24px -4px rgba(15, 23, 42, 0.14)';
+
   switch (type) {
     case 'heading': {
       const level = ['h2', 'h3', 'h4', 'h5'].includes(block.level) ? block.level : 'h3';
       const HeadingTag = level;
       return (
-        <div className="flipbook-sidebar-card flipbook-block-heading-container" data-block-type="heading">
-          <HeadingTag className={`flipbook-block-heading level-${level}`}>
+        <div className="flipbook-sidebar-card flipbook-block-heading-container" style={customBlockStyle} data-block-type="heading">
+          <HeadingTag className={`flipbook-block-heading level-${level}`} style={txtColor ? { color: txtColor } : undefined}>
             {block.text || title || ''}
           </HeadingTag>
         </div>
@@ -30,7 +59,7 @@ export default function FlipbookSidebarBlock({ block }) {
     case 'text': {
       const safeHtml = sanitizeHtml(block.content || '');
       return (
-        <div className="flipbook-sidebar-card flipbook-block-text" data-block-type="text">
+        <div className="flipbook-sidebar-card flipbook-block-text" style={customBlockStyle} data-block-type="text">
           {title && <h4 className="flipbook-block-title">{title}</h4>}
           <div 
             className="flipbook-block-content"
@@ -47,7 +76,7 @@ export default function FlipbookSidebarBlock({ block }) {
       const isExternalLink = block.openNewTab;
 
       return (
-        <div className="flipbook-sidebar-card flipbook-block-image" data-block-type="image">
+        <div className="flipbook-sidebar-card flipbook-block-image" style={customBlockStyle} data-block-type="image">
           {title && <h4 className="flipbook-block-title">{title}</h4>}
           <figure className="flipbook-block-figure">
             {block.linkUrl ? (
@@ -90,7 +119,7 @@ export default function FlipbookSidebarBlock({ block }) {
       const isYoutube = block.videoSourceType === 'youtube' || Boolean(extractYoutubeVideoId(videoUrl));
 
       return (
-        <div className="flipbook-sidebar-card flipbook-block-video" data-block-type="video">
+        <div className="flipbook-sidebar-card flipbook-block-video" style={customBlockStyle} data-block-type="video">
           {title && <h4 className="flipbook-block-title">{title}</h4>}
           <div className="flipbook-video-ratio-container">
             {isYoutube ? (
@@ -126,7 +155,7 @@ export default function FlipbookSidebarBlock({ block }) {
       const buttonStyle = block.buttonStyle || 'primary';
 
       return (
-        <div className="flipbook-sidebar-card flipbook-block-button-container" data-block-type="button">
+        <div className="flipbook-sidebar-card flipbook-block-button-container" style={customBlockStyle} data-block-type="button">
           {title && title !== buttonText && <h4 className="flipbook-block-title">{title}</h4>}
           <a 
             href={buttonUrl}
@@ -147,7 +176,7 @@ export default function FlipbookSidebarBlock({ block }) {
       const pdfUrl = sanitizeUrl(block.pdfUrl || block.pdfFile || '#');
 
       return (
-        <div className="flipbook-sidebar-card flipbook-block-pdf" data-block-type="pdf">
+        <div className="flipbook-sidebar-card flipbook-block-pdf" style={customBlockStyle} data-block-type="pdf">
           <div className="flipbook-pdf-icon-wrap" aria-hidden="true">
             <FileText size={20} />
           </div>
@@ -174,7 +203,7 @@ export default function FlipbookSidebarBlock({ block }) {
       // Fallback simple si type inconnu mais avec du texte
       if (block.content) {
         return (
-          <div className="flipbook-sidebar-card flipbook-block-text">
+          <div className="flipbook-sidebar-card flipbook-block-text" style={customBlockStyle}>
             {title && <h4 className="flipbook-block-title">{title}</h4>}
             <div className="flipbook-block-content">{block.content}</div>
           </div>

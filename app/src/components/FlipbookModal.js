@@ -17,7 +17,8 @@ export default function FlipbookModal({
   isOpen,
   book,
   onClose,
-  triggerRef = null
+  triggerRef = null,
+  globalSidebar = null
 }) {
   const dialogRef = useRef(null);
 
@@ -56,7 +57,7 @@ export default function FlipbookModal({
       >
         {/* Corps du lecteur : barres latérales configurables et lecteur de PDF */}
         <div className="ae-flipbook-modal-body" data-testid="flipbook-modal-body">
-          <FlipbookLayout book={book}>
+          <FlipbookLayout book={book} globalSidebar={globalSidebar}>
             <PdfFlipbookReader 
               book={book} 
               onClose={onClose} 

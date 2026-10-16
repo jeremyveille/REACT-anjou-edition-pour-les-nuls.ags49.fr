@@ -45,6 +45,11 @@ import {
   AUTHORIZED_ADMIN_EMAILS
 } from './services/authService';
 import FlipbookModal from './components/FlipbookModal';
+import {
+  fetchGlobalSidebarTemplate,
+  getLocalGlobalSidebar,
+  GLOBAL_SIDEBAR_EVENT
+} from './services/flipbookSidebarService';
 import { getOrCreateTextPdfUrl } from './services/pdfGeneratorService';
 
 import { pageService } from './services/pageService';
@@ -320,6 +325,37 @@ function App() {
   const flipbookTriggerRef = useRef(null);
   const scrollPositionRef = useRef(0);
 
+  // Modèle global des barres latérales (synchronisé entre Dashboard et Site public)
+  const [globalSidebar, setGlobalSidebar] = useState(() => getLocalGlobalSidebar());
+
+  useEffect(() => {
+    let isMounted = true;
+    fetchGlobalSidebarTemplate().then((tmpl) => {
+      if (isMounted && tmpl) {
+        setGlobalSidebar(tmpl);
+      }
+    }).catch(() => {});
+
+    const handleGlobalSidebarUpdate = (e) => {
+      if (!isMounted) return;
+      if (e && e.detail) {
+        setGlobalSidebar(e.detail);
+      } else {
+        setGlobalSidebar(getLocalGlobalSidebar());
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener(GLOBAL_SIDEBAR_EVENT, handleGlobalSidebarUpdate);
+    }
+    return () => {
+      isMounted = false;
+      if (typeof window !== 'undefined') {
+        window.removeEventListener(GLOBAL_SIDEBAR_EVENT, handleGlobalSidebarUpdate);
+      }
+    };
+  }, []);
+
   // Dynamic Flipbooks State
   const [flipbooks, setFlipbooks] = useState(() => {
     try {
@@ -334,8 +370,8 @@ function App() {
             return {
               ...fb,
               pdfFile: fb.pdfFile || (fb.id === "4455" ? "secrets_vignoble_angevin.pdf" : "Seraphin-le-marin.pdf"),
-              leftSidebar: Array.isArray(fb.leftSidebar) ? fb.leftSidebar : (defaultFb?.leftSidebar || []),
-              rightSidebar: Array.isArray(fb.rightSidebar) ? fb.rightSidebar : (defaultFb?.rightSidebar || [])
+              ...(Array.isArray(fb.leftSidebar) ? { leftSidebar: fb.leftSidebar } : (defaultFb?.leftSidebar ? { leftSidebar: defaultFb.leftSidebar } : {})),
+              ...(Array.isArray(fb.rightSidebar) ? { rightSidebar: fb.rightSidebar } : (defaultFb?.rightSidebar ? { rightSidebar: defaultFb.rightSidebar } : {}))
             };
           });
         }
@@ -345,8 +381,8 @@ function App() {
       ).map(fb => ({
         ...fb,
         pdfFile: fb.pdfFile || (fb.id === "4455" ? "secrets_vignoble_angevin.pdf" : "Seraphin-le-marin.pdf"),
-        leftSidebar: Array.isArray(fb.leftSidebar) ? fb.leftSidebar : [],
-        rightSidebar: Array.isArray(fb.rightSidebar) ? fb.rightSidebar : []
+        ...(Array.isArray(fb.leftSidebar) ? { leftSidebar: fb.leftSidebar } : {}),
+        ...(Array.isArray(fb.rightSidebar) ? { rightSidebar: fb.rightSidebar } : {})
       }));
     } catch (e) {
       return [];
@@ -421,8 +457,8 @@ function App() {
               id: docSnap.id,
               ...data,
               pdfFile: data.pdfFile || (docSnap.id === "4455" ? "secrets_vignoble_angevin.pdf" : "Seraphin-le-marin.pdf"),
-              leftSidebar: Array.isArray(data.leftSidebar) ? data.leftSidebar : (defaultFb?.leftSidebar || []),
-              rightSidebar: Array.isArray(data.rightSidebar) ? data.rightSidebar : (defaultFb?.rightSidebar || [])
+              ...(Array.isArray(data.leftSidebar) ? { leftSidebar: data.leftSidebar } : (defaultFb?.leftSidebar ? { leftSidebar: defaultFb.leftSidebar } : {})),
+              ...(Array.isArray(data.rightSidebar) ? { rightSidebar: data.rightSidebar } : (defaultFb?.rightSidebar ? { rightSidebar: defaultFb.rightSidebar } : {}))
             });
           }
           setFlipbooks(list);
@@ -1651,7 +1687,8 @@ function App() {
       {activeFlipbookModal && (
         <FlipbookModal
           isOpen={!!activeFlipbookModal}
-          book={activeFlipbookModal}
+          book={flipbooks.find(f => String(f.id) === String(activeFlipbookModal.id)) || activeFlipbookModal}
+          globalSidebar={globalSidebar}
           onClose={handleCloseFlipbookModal}
           onBackToHome={() => {
             handleCloseFlipbookModal();
