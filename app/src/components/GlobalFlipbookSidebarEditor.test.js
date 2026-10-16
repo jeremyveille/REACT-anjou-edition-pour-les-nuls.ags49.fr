@@ -203,4 +203,72 @@ describe('GlobalFlipbookSidebarEditor Component Tests', () => {
     fireEvent.click(backBtn);
     expect(handleBack).toHaveBeenCalledTimes(1);
   });
+
+  test('supports independent left and right sidebar customization and cancels unsaved modifications', () => {
+    window.confirm = jest.fn(() => true);
+
+    render(
+      <GlobalFlipbookSidebarEditor
+        initialTemplate={DEFAULT_GLOBAL_SIDEBAR}
+        flipbooks={mockFlipbooks}
+        onBack={jest.fn()}
+        onSaveSuccess={jest.fn()}
+        onApplyToAll={jest.fn()}
+      />
+    );
+
+    // Switch to styles tab
+    fireEvent.click(screen.getByRole('tab', { name: /Apparence, Styles & Visibilité/i }));
+
+    // Verify both left and right independent customization panels are rendered
+    expect(screen.getByTestId('style-config-left')).toBeInTheDocument();
+    expect(screen.getByTestId('style-config-right')).toBeInTheDocument();
+
+    // Change alignment for left sidebar to Centré
+    const alignCenterLeftBtn = screen.getByRole('button', { name: /Alignement Centré pour Barre gauche/i });
+    fireEvent.click(alignCenterLeftBtn);
+    expect(screen.getByText('Modifications non enregistrées')).toBeInTheDocument();
+
+    // Click "Annuler les modifications"
+    const cancelBtn = screen.getByRole('button', { name: /Annuler les modifications/i });
+    fireEvent.click(cancelBtn);
+
+    // Dirty badge should disappear
+    expect(screen.queryByText('Modifications non enregistrées')).not.toBeInTheDocument();
+  });
+
+  test('displays detailed report after applying global model to all Flipbooks', async () => {
+    const handleApplyAll = jest.fn().mockResolvedValue({
+      success: true,
+      totalCount: 2,
+      alreadyGlobalCount: 1,
+      replacedCustomCount: 1,
+      backedUpCount: 1,
+      verifiedCount: 2,
+      errorCount: 0,
+      errors: []
+    });
+
+    render(
+      <GlobalFlipbookSidebarEditor
+        initialTemplate={DEFAULT_GLOBAL_SIDEBAR}
+        flipbooks={[
+          ...mockFlipbooks,
+          { id: 'fb-custom', title: 'Livre Perso', sidebarMode: 'custom', leftSidebar: [{ id: 'b1', text: 'Perso' }] }
+        ]}
+        onBack={jest.fn()}
+        onSaveSuccess={jest.fn()}
+        onApplyToAll={handleApplyAll}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /Appliquer le modèle global à tous/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Confirmer et appliquer/i }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('apply-all-report')).toBeInTheDocument();
+    });
+    expect(screen.getByText(/Bilan de l'application du modèle global/i)).toBeInTheDocument();
+  });
 });
+

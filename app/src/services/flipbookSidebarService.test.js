@@ -1,11 +1,16 @@
 import { 
   DEFAULT_GLOBAL_SIDEBAR, 
   GLOBAL_SIDEBAR_STORAGE_KEY,
+  GLOBAL_SIDEBAR_PREV_STORAGE_KEY,
   getLocalGlobalSidebar, 
   saveGlobalSidebarTemplate, 
   resolveFlipbookSidebar, 
   applyGlobalTemplateToAll, 
-  applyGlobalTemplateToFlipbooks 
+  applyGlobalTemplateToFlipbooks,
+  createCustomSidebarBackup,
+  analyzeFlipbooksSidebarStatus,
+  applyGlobalTemplateToAllAndPersist,
+  restoreLastSavedGlobalSidebar
 } from './flipbookSidebarService';
 
 describe('flipbookSidebarService Tests', () => {
@@ -36,33 +41,53 @@ describe('flipbookSidebarService Tests', () => {
     expect(sidebar.styles.leftWidth).toBe(20);
   });
 
-  test('saveGlobalSidebarTemplate persists in localStorage and dispatches event', async () => {
+  test('saveGlobalSidebarTemplate persists in localStorage, saves previous version and dispatches event', async () => {
     const mockListener = jest.fn();
     window.addEventListener('ae_global_sidebar_updated', mockListener);
 
-    const customTemplate = {
+    const firstTemplate = {
       ...DEFAULT_GLOBAL_SIDEBAR,
       styles: {
         ...DEFAULT_GLOBAL_SIDEBAR.styles,
-        leftWidth: 24,
+        leftWidth: 22
+      }
+    };
+    await saveGlobalSidebarTemplate(firstTemplate);
+
+    const secondTemplate = {
+      ...DEFAULT_GLOBAL_SIDEBAR,
+      styles: {
+        ...DEFAULT_GLOBAL_SIDEBAR.styles,
+        leftWidth: 26,
         primaryColor: '#059669'
       }
     };
 
-    const result = await saveGlobalSidebarTemplate(customTemplate);
+    const result = await saveGlobalSidebarTemplate(secondTemplate);
     expect(result.success).toBe(true);
 
     const storedRaw = localStorage.getItem(GLOBAL_SIDEBAR_STORAGE_KEY);
     expect(storedRaw).toBeTruthy();
     const parsed = JSON.parse(storedRaw);
-    expect(parsed.styles.leftWidth).toBe(24);
+    expect(parsed.styles.leftWidth).toBe(26);
     expect(parsed.styles.primaryColor).toBe('#059669');
 
-    expect(mockListener).toHaveBeenCalledTimes(1);
+    // Previous version must be backed up for restoration
+    const prevRaw = localStorage.getItem(GLOBAL_SIDEBAR_PREV_STORAGE_KEY);
+    expect(prevRaw).toBeTruthy();
+    const parsedPrev = JSON.parse(prevRaw);
+    expect(parsedPrev.styles.leftWidth).toBe(22);
+
+    // Test restoreLastSavedGlobalSidebar
+    const restored = await restoreLastSavedGlobalSidebar();
+    expect(restored.success).toBe(true);
+    expect(restored.data.styles.leftWidth).toBe(22);
+
+    expect(mockListener).toHaveBeenCalled();
     window.removeEventListener('ae_global_sidebar_updated', mockListener);
   });
 
-  test('resolveFlipbookSidebar resolves global template when sidebarMode is "global"', () => {
+  test('resolveFlipbookSidebar resolves global template dynamically when sidebarMode is "global"', () => {
     const globalTmpl = {
       leftSidebar: [{ id: 'g1', type: 'heading', text: 'Global Header', enabled: true }],
       rightSidebar: [{ id: 'g2', type: 'button', buttonText: 'Global Btn', enabled: true }],
@@ -83,6 +108,14 @@ describe('flipbookSidebarService Tests', () => {
     expect(resolved.leftSidebar[0].text).toBe('Global Header');
     expect(resolved.rightSidebar[0].buttonText).toBe('Global Btn');
     expect(resolved.styles.leftWidth).toBe(25);
+
+    // Propagates immediately when globalTmpl is modified without re-saving book
+    const updatedGlobalTmpl = {
+      ...globalTmpl,
+      leftSidebar: [{ id: 'g1', type: 'heading', text: 'Global Header Modifié', enabled: true }]
+    };
+    const resolvedAfterUpdate = resolveFlipbookSidebar(book, updatedGlobalTmpl);
+    expect(resolvedAfterUpdate.leftSidebar[0].text).toBe('Global Header Modifié');
   });
 
   test('resolveFlipbookSidebar preserves custom individual sidebars when sidebarMode is "custom"', () => {
@@ -112,7 +145,6 @@ describe('flipbookSidebarService Tests', () => {
       rightSidebar: []
     };
 
-    // Existing book from initial data (has leftSidebar & rightSidebar, no sidebarMode property)
     const existingBook = {
       id: '4455',
       title: 'Secrets du Vignoble',
@@ -144,25 +176,51 @@ describe('flipbookSidebarService Tests', () => {
     expect(resolved.leftSidebar[0].text).toBe('Global Par Défaut');
   });
 
-  test('applyGlobalTemplateToAll updates all books to sidebarMode: "global"', () => {
+  test('applyGlobalTemplateToAll updates all books to sidebarMode: "global" and backs up custom configs', () => {
     const books = [
-      { id: '1', title: 'Livre 1', sidebarMode: 'custom' },
+      { id: '1', title: 'Livre 1', sidebarMode: 'custom', leftSidebar: [{ id: 'b1', text: 'Mon bloc perso' }] },
       { id: '2', title: 'Livre 2' },
       { id: '3', title: 'Livre 3', sidebarMode: 'global' }
     ];
 
     const updated = applyGlobalTemplateToAll(books);
     expect(updated.every(b => b.sidebarMode === 'global')).toBe(true);
+    // Custom sidebar must be preserved in customSidebarBackup
+    const book1 = updated.find(b => b.id === '1');
+    expect(book1.customSidebarBackup).toBeDefined();
+    expect(book1.customSidebarBackup.leftSidebar[0].text).toBe('Mon bloc perso');
+  });
+
+  test('analyzeFlipbooksSidebarStatus and applyGlobalTemplateToAllAndPersist return accurate report', async () => {
+    const books = [
+      { id: '1', title: 'Livre Global', sidebarMode: 'global' },
+      { id: '2', title: 'Livre Perso', sidebarMode: 'custom', leftSidebar: [{ id: 'c1', text: 'Perso G' }] }
+    ];
+
+    const analysis = analyzeFlipbooksSidebarStatus(books, DEFAULT_GLOBAL_SIDEBAR);
+    expect(analysis.totalCount).toBe(2);
+    expect(analysis.globalCount).toBe(1);
+    expect(analysis.customCount).toBe(1);
+
+    const report = await applyGlobalTemplateToAllAndPersist(books, DEFAULT_GLOBAL_SIDEBAR);
+    expect(report.totalCount).toBe(2);
+    expect(report.alreadyGlobalCount).toBe(1);
+    expect(report.replacedCustomCount).toBe(1);
+    expect(report.backedUpCount).toBe(1);
+    expect(report.verifiedCount).toBe(2);
+    expect(report.updatedFlipbooks[1].customSidebarBackup.leftSidebar[0].text).toBe('Perso G');
   });
 
   test('applyGlobalTemplateToFlipbooks selectively updates specified IDs', () => {
     const books = [
-      { id: '1', title: 'Livre 1', sidebarMode: 'custom' },
+      { id: '1', title: 'Livre 1', sidebarMode: 'custom', leftSidebar: [{ id: 'c1', text: 'Perso' }] },
       { id: '2', title: 'Livre 2', sidebarMode: 'custom' }
     ];
 
     const updated = applyGlobalTemplateToFlipbooks(['1'], books);
     expect(updated.find(b => b.id === '1').sidebarMode).toBe('global');
+    expect(updated.find(b => b.id === '1').customSidebarBackup.leftSidebar[0].text).toBe('Perso');
     expect(updated.find(b => b.id === '2').sidebarMode).toBe('custom');
   });
 });
+

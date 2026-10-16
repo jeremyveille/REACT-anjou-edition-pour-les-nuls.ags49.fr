@@ -121,4 +121,34 @@ describe('FlipbookEditModal Component Tests', () => {
     fireEvent.keyDown(window, { key: 'Escape' });
     expect(handleClose).toHaveBeenCalledTimes(2);
   });
+
+  test('preserves custom sidebar backup when switching to global mode and allows restoring it', () => {
+    const handleSave = jest.fn();
+    render(
+      <FlipbookEditModal
+        isOpen={true}
+        flipbook={mockFlipbook}
+        onClose={jest.fn()}
+        onSave={handleSave}
+      />
+    );
+
+    // Switch from custom to global via selector
+    const modeSelect = screen.getByLabelText(/Mode de barres latérales/i);
+    expect(modeSelect).toHaveValue('custom');
+    fireEvent.change(modeSelect, { target: { value: 'global' } });
+
+    // Confirmation modal should appear because custom blocks exist
+    expect(screen.getByText(/Remplacer par le modèle global \?/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Confirmer et utiliser le modèle global/i }));
+
+    // Now in global mode, restore button must be available
+    const restoreBtn = screen.getByRole('button', { name: /Restaurer la dernière configuration individuelle/i });
+    expect(restoreBtn).toBeInTheDocument();
+
+    // Click restore to return to custom mode with backed up blocks
+    fireEvent.click(restoreBtn);
+    expect(screen.getByLabelText(/Mode de barres latérales/i)).toHaveValue('custom');
+  });
 });
+
