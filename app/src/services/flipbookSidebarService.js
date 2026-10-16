@@ -7,9 +7,30 @@ import { db } from "../firebase";
 export const GLOBAL_SIDEBAR_STORAGE_KEY = 'ae_flipbook_global_sidebar';
 
 /**
+ * Clé de stockage LocalStorage pour la version précédente enregistrée (restauration)
+ */
+export const GLOBAL_SIDEBAR_PREV_STORAGE_KEY = 'ae_flipbook_global_sidebar_previous';
+
+/**
  * Événement personnalisé pour synchronisation instantanée inter-composants
  */
 export const GLOBAL_SIDEBAR_EVENT = 'ae_global_sidebar_updated';
+
+/**
+ * Configuration de style par défaut pour une barre individuelle (gauche ou droite)
+ */
+export const DEFAULT_SIDEBAR_SIDE_STYLE = {
+  backgroundColor: '',
+  cardBackground: '',
+  cardBorderColor: '',
+  cardShadow: 'inherit', // 'inherit' | 'none' | 'subtle' | 'default' | 'elevated'
+  primaryColor: '',
+  textColor: '',
+  textAlign: 'left', // 'left' | 'center' | 'right'
+  gap: 'inherit', // 'inherit' | 'compact' | 'normal' | 'relaxed'
+  cardPadding: 'inherit', // 'inherit' | 'compact' | 'normal' | 'relaxed'
+  borderRadius: 'inherit' // 'inherit' | 'none' | 'rounded' | 'normal' | 'pill'
+};
 
 /**
  * Modèle par défaut « Modèle global — Anjou Édition »
@@ -20,6 +41,7 @@ export const DEFAULT_GLOBAL_SIDEBAR = {
   id: "global-flipbook-sidebars",
   name: "Modèle global — Anjou Édition",
   description: "Modèle commun de barres latérales partagé par l'ensemble des flipbooks du portail.",
+  version: 1,
   updatedAt: new Date().toISOString(),
   styles: {
     leftWidth: 20, // en pourcentage (15% à 30%)
@@ -31,18 +53,23 @@ export const DEFAULT_GLOBAL_SIDEBAR = {
     cardShadow: 'default', // 'none' | 'subtle' | 'default' | 'elevated'
     primaryColor: '#1e3a8a',
     textColor: '',
+    textAlign: 'left', // 'left' | 'center' | 'right'
     fontFamily: 'inherit', // 'inherit' | 'serif' | 'sans-serif' | 'system'
     fontSize: 'normal', // 'compact' | 'normal' | 'relaxed'
     gap: 'normal', // 'compact' | 'normal' | 'relaxed'
     cardPadding: 'normal', // 'compact' | 'normal' | 'relaxed'
-    borderRadius: 'normal', // 'rounded' (8px) | 'normal' (14px) | 'pill' (20px)
+    borderRadius: 'normal', // 'none' (0px) | 'rounded' (8px) | 'normal' (14px) | 'pill' (20px)
+    left: { ...DEFAULT_SIDEBAR_SIDE_STYLE },
+    right: { ...DEFAULT_SIDEBAR_SIDE_STYLE },
     visibility: {
       left: {
+        xl: true,
         desktop: true,
         tablet: true,
         mobile: true
       },
       right: {
+        xl: true,
         desktop: true,
         tablet: true,
         mobile: true
@@ -116,6 +143,50 @@ export const DEFAULT_GLOBAL_SIDEBAR = {
 };
 
 /**
+ * Normalise un modèle de barres latérales en garantissant toutes ses sous-structures
+ */
+export const normalizeSidebarTemplate = (raw) => {
+  if (!raw || typeof raw !== 'object') {
+    return JSON.parse(JSON.stringify(DEFAULT_GLOBAL_SIDEBAR));
+  }
+
+  const rawStyles = raw.styles || {};
+  const rawVisibility = rawStyles.visibility || {};
+
+  return {
+    ...DEFAULT_GLOBAL_SIDEBAR,
+    ...raw,
+    id: "global-flipbook-sidebars",
+    name: raw.name || "Modèle global — Anjou Édition",
+    version: Number(raw.version) || 1,
+    styles: {
+      ...DEFAULT_GLOBAL_SIDEBAR.styles,
+      ...rawStyles,
+      left: {
+        ...DEFAULT_SIDEBAR_SIDE_STYLE,
+        ...(rawStyles.left || {})
+      },
+      right: {
+        ...DEFAULT_SIDEBAR_SIDE_STYLE,
+        ...(rawStyles.right || {})
+      },
+      visibility: {
+        left: {
+          ...DEFAULT_GLOBAL_SIDEBAR.styles.visibility.left,
+          ...(rawVisibility.left || {})
+        },
+        right: {
+          ...DEFAULT_GLOBAL_SIDEBAR.styles.visibility.right,
+          ...(rawVisibility.right || {})
+        }
+      }
+    },
+    leftSidebar: Array.isArray(raw.leftSidebar) ? raw.leftSidebar : DEFAULT_GLOBAL_SIDEBAR.leftSidebar,
+    rightSidebar: Array.isArray(raw.rightSidebar) ? raw.rightSidebar : DEFAULT_GLOBAL_SIDEBAR.rightSidebar
+  };
+};
+
+/**
  * Récupère le modèle global synchrone depuis le localStorage ou la valeur par défaut
  */
 export const getLocalGlobalSidebar = () => {
@@ -124,32 +195,31 @@ export const getLocalGlobalSidebar = () => {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (parsed && typeof parsed === 'object') {
-        return {
-          ...DEFAULT_GLOBAL_SIDEBAR,
-          ...parsed,
-          styles: {
-            ...DEFAULT_GLOBAL_SIDEBAR.styles,
-            ...(parsed.styles || {}),
-            visibility: {
-              left: {
-                ...DEFAULT_GLOBAL_SIDEBAR.styles.visibility.left,
-                ...((parsed.styles && parsed.styles.visibility && parsed.styles.visibility.left) || {})
-              },
-              right: {
-                ...DEFAULT_GLOBAL_SIDEBAR.styles.visibility.right,
-                ...((parsed.styles && parsed.styles.visibility && parsed.styles.visibility.right) || {})
-              }
-            }
-          },
-          leftSidebar: Array.isArray(parsed.leftSidebar) ? parsed.leftSidebar : DEFAULT_GLOBAL_SIDEBAR.leftSidebar,
-          rightSidebar: Array.isArray(parsed.rightSidebar) ? parsed.rightSidebar : DEFAULT_GLOBAL_SIDEBAR.rightSidebar
-        };
+        return normalizeSidebarTemplate(parsed);
       }
     }
   } catch (e) {
     console.warn("Erreur lecture local global sidebar:", e);
   }
-  return DEFAULT_GLOBAL_SIDEBAR;
+  return normalizeSidebarTemplate(DEFAULT_GLOBAL_SIDEBAR);
+};
+
+/**
+ * Récupère la dernière version enregistrée (ou la version précédente sauvegardée)
+ */
+export const getPreviousSavedGlobalSidebar = () => {
+  try {
+    const prevRaw = localStorage.getItem(GLOBAL_SIDEBAR_PREV_STORAGE_KEY);
+    if (prevRaw) {
+      const parsed = JSON.parse(prevRaw);
+      if (parsed && typeof parsed === 'object') {
+        return normalizeSidebarTemplate(parsed);
+      }
+    }
+  } catch (e) {
+    // ignore
+  }
+  return getLocalGlobalSidebar();
 };
 
 /**
@@ -162,28 +232,15 @@ export const fetchGlobalSidebarTemplate = async () => {
       const snap = await getDoc(docRef);
       if (snap && snap.exists()) {
         const data = snap.data();
-        const fullTemplate = {
-          ...DEFAULT_GLOBAL_SIDEBAR,
-          ...data,
-          styles: {
-            ...DEFAULT_GLOBAL_SIDEBAR.styles,
-            ...(data.styles || {}),
-            visibility: {
-              left: {
-                ...DEFAULT_GLOBAL_SIDEBAR.styles.visibility.left,
-                ...((data.styles && data.styles.visibility && data.styles.visibility.left) || {})
-              },
-              right: {
-                ...DEFAULT_GLOBAL_SIDEBAR.styles.visibility.right,
-                ...((data.styles && data.styles.visibility && data.styles.visibility.right) || {})
-              }
-            }
-          },
-          leftSidebar: Array.isArray(data.leftSidebar) ? data.leftSidebar : DEFAULT_GLOBAL_SIDEBAR.leftSidebar,
-          rightSidebar: Array.isArray(data.rightSidebar) ? data.rightSidebar : DEFAULT_GLOBAL_SIDEBAR.rightSidebar
-        };
+        const fullTemplate = normalizeSidebarTemplate(data);
         try {
           localStorage.setItem(GLOBAL_SIDEBAR_STORAGE_KEY, JSON.stringify(fullTemplate));
+          if (data.previousVersion && typeof data.previousVersion === 'object') {
+            localStorage.setItem(
+              GLOBAL_SIDEBAR_PREV_STORAGE_KEY,
+              JSON.stringify(normalizeSidebarTemplate(data.previousVersion))
+            );
+          }
         } catch (e) {
           // ignore quota
         }
@@ -198,17 +255,28 @@ export const fetchGlobalSidebarTemplate = async () => {
 
 /**
  * Enregistre le modèle global de barres latérales (Firestore + LocalStorage)
+ * et conserve une sauvegarde de la version précédente pour restauration.
  */
 export const saveGlobalSidebarTemplate = async (template) => {
+  const currentSaved = getLocalGlobalSidebar();
+  const cleanPrevious = { ...currentSaved };
+  delete cleanPrevious.previousVersion;
+
+  const normalized = normalizeSidebarTemplate(template);
+  const nextVersion = (Number(currentSaved.version) || 1) + 1;
+
   const dataToSave = {
-    ...template,
+    ...normalized,
     id: "global-flipbook-sidebars",
     name: "Modèle global — Anjou Édition",
-    updatedAt: new Date().toISOString()
+    version: nextVersion,
+    updatedAt: new Date().toISOString(),
+    previousVersion: cleanPrevious
   };
 
-  // 1. Sauvegarde locale immédiate (Offline-First)
+  // 1. Sauvegarde de la version précédente + version courante dans LocalStorage (Offline-First)
   try {
+    localStorage.setItem(GLOBAL_SIDEBAR_PREV_STORAGE_KEY, JSON.stringify(cleanPrevious));
     localStorage.setItem(GLOBAL_SIDEBAR_STORAGE_KEY, JSON.stringify(dataToSave));
   } catch (e) {
     console.warn("Impossible d'écrire le modèle global dans localStorage:", e);
@@ -239,14 +307,41 @@ export const saveGlobalSidebarTemplate = async (template) => {
 };
 
 /**
+ * Restaure la dernière version enregistrée (ou la version précédente sauvegardée) du modèle global
+ */
+export const restoreLastSavedGlobalSidebar = async () => {
+  const prevRaw = localStorage.getItem(GLOBAL_SIDEBAR_PREV_STORAGE_KEY);
+  if (prevRaw) {
+    try {
+      const parsedPrev = JSON.parse(prevRaw);
+      if (parsedPrev && typeof parsedPrev === 'object') {
+        const res = await saveGlobalSidebarTemplate(parsedPrev);
+        return { success: true, data: res.data };
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+  const latestSaved = await fetchGlobalSidebarTemplate();
+  if (typeof window !== 'undefined' && window.dispatchEvent) {
+    try {
+      window.dispatchEvent(new CustomEvent(GLOBAL_SIDEBAR_EVENT, { detail: latestSaved }));
+    } catch (e) {
+      // ignore
+    }
+  }
+  return { success: true, data: latestSaved };
+};
+
+/**
  * Résout les barres latérales d'un flipbook selon son mode :
- * - Mode 'global' : utilise le modèle global partagé
+ * - Mode 'global' : utilise une référence dynamique au modèle global partagé
  * - Mode 'custom' : utilise la configuration propre au flipbook
  * - Rétro-compatibilité : si non spécifié, un flipbook existant avec des blocs configurés
  *   reste en mode 'custom', tandis qu'un flipbook sans blocs utilise le modèle global.
  */
 export const resolveFlipbookSidebar = (flipbook, globalTemplate = null) => {
-  const currentGlobal = globalTemplate || getLocalGlobalSidebar();
+  const currentGlobal = globalTemplate ? normalizeSidebarTemplate(globalTemplate) : getLocalGlobalSidebar();
   if (!flipbook) {
     return {
       mode: 'global',
@@ -303,27 +398,166 @@ export const resolveFlipbookSidebar = (flipbook, globalTemplate = null) => {
 };
 
 /**
- * Applique le modèle global à tous les flipbooks fournis
+ * Crée ou met à jour la sauvegarde de secours de la configuration personnalisée d'un Flipbook
+ * afin de ne jamais perdre ses barres latérales individuelles lors du passage au modèle global.
  */
-export const applyGlobalTemplateToAll = (flipbooks = []) => {
-  return flipbooks.map(fb => ({
-    ...fb,
-    sidebarMode: 'global'
-  }));
+export const createCustomSidebarBackup = (flipbook) => {
+  if (!flipbook) return null;
+  const hasLeft = Array.isArray(flipbook.leftSidebar) && flipbook.leftSidebar.length > 0;
+  const hasRight = Array.isArray(flipbook.rightSidebar) && flipbook.rightSidebar.length > 0;
+
+  if (hasLeft || hasRight) {
+    return {
+      backedUpAt: new Date().toISOString(),
+      leftSidebar: JSON.parse(JSON.stringify(flipbook.leftSidebar || [])),
+      rightSidebar: JSON.parse(JSON.stringify(flipbook.rightSidebar || [])),
+      styles: flipbook.styles ? JSON.parse(JSON.stringify(flipbook.styles)) : null
+    };
+  }
+  return flipbook.customSidebarBackup || null;
 };
 
 /**
- * Applique le modèle global à un sous-ensemble de flipbooks par ID
+ * Analyse l'état actuel des Flipbooks par rapport au modèle global et aux configurations individuelles
+ */
+export const analyzeFlipbooksSidebarStatus = (flipbooks = [], globalTemplate = null) => {
+  const list = Array.isArray(flipbooks) ? flipbooks : [];
+  const globalFlipbooks = [];
+  const customFlipbooks = [];
+  const customWithBlocksFlipbooks = [];
+
+  list.forEach((fb) => {
+    if (!fb) return;
+    const resolved = resolveFlipbookSidebar(fb, globalTemplate);
+    if (resolved.mode === 'global') {
+      globalFlipbooks.push(fb);
+    } else {
+      customFlipbooks.push(fb);
+      const hasBlocks =
+        (Array.isArray(fb.leftSidebar) && fb.leftSidebar.length > 0) ||
+        (Array.isArray(fb.rightSidebar) && fb.rightSidebar.length > 0);
+      if (hasBlocks) {
+        customWithBlocksFlipbooks.push(fb);
+      }
+    }
+  });
+
+  return {
+    totalCount: list.length,
+    globalCount: globalFlipbooks.length,
+    customCount: customFlipbooks.length,
+    customWithBlocksCount: customWithBlocksFlipbooks.length,
+    globalFlipbooks,
+    customFlipbooks,
+    customWithBlocksFlipbooks
+  };
+};
+
+/**
+ * Applique le modèle global à tous les flipbooks fournis en préservant les configurations individuelles
+ */
+export const applyGlobalTemplateToAll = (flipbooks = []) => {
+  return flipbooks.map(fb => {
+    const backup = createCustomSidebarBackup(fb);
+    return {
+      ...fb,
+      sidebarMode: 'global',
+      ...(backup ? { customSidebarBackup: backup } : {})
+    };
+  });
+};
+
+/**
+ * Applique le modèle global à un sous-ensemble de flipbooks par ID en préservant les configurations individuelles
  */
 export const applyGlobalTemplateToFlipbooks = (targetIds = [], flipbooks = []) => {
   const idSet = new Set(targetIds.map(String));
   return flipbooks.map(fb => {
     if (idSet.has(String(fb.id))) {
+      const backup = createCustomSidebarBackup(fb);
       return {
         ...fb,
-        sidebarMode: 'global'
+        sidebarMode: 'global',
+        ...(backup ? { customSidebarBackup: backup } : {})
       };
     }
     return fb;
   });
 };
+
+/**
+ * Applique le modèle global à tous les Flipbooks, sauvegarde les configurations individuelles
+ * en backup, persiste les changements dans Firebase & LocalStorage, vérifie la résolution
+ * et renvoie un bilan détaillé de l'opération.
+ */
+export const applyGlobalTemplateToAllAndPersist = async (flipbooks = [], globalTemplate = null) => {
+  const analysis = analyzeFlipbooksSidebarStatus(flipbooks, globalTemplate);
+  const updatedFlipbooks = applyGlobalTemplateToAll(flipbooks);
+
+  // 1. Sauvegarde locale dans LocalStorage
+  try {
+    localStorage.setItem('ae_flipbooks', JSON.stringify(updatedFlipbooks));
+  } catch (e) {
+    console.warn("Impossible de mettre à jour ae_flipbooks dans localStorage:", e);
+  }
+
+  // 2. Enregistrement dans Firebase Firestore pour chaque Flipbook
+  const errors = [];
+  let firestoreSuccessCount = 0;
+
+  for (const fb of updatedFlipbooks) {
+    if (!fb || !fb.id) continue;
+    try {
+      if (db) {
+        const payload = {
+          sidebarMode: 'global',
+          updatedAt: new Date().toISOString()
+        };
+        if (fb.customSidebarBackup) {
+          payload.customSidebarBackup = fb.customSidebarBackup;
+        }
+        await setDoc(doc(db, "flipbooks", String(fb.id)), payload, { merge: true });
+        firestoreSuccessCount++;
+      }
+    } catch (err) {
+      console.warn(`Erreur Firebase lors du passage en mode global pour le flipbook ${fb.id}:`, err);
+      errors.push({
+        id: fb.id,
+        title: fb.title || `Flipbook #${fb.id}`,
+        message: err?.message || "Erreur d'écriture Firestore"
+      });
+    }
+  }
+
+  // 3. Vérification effective que chaque Flipbook résout bien sur le modèle global
+  let verifiedCount = 0;
+  for (const fb of updatedFlipbooks) {
+    const resolved = resolveFlipbookSidebar(fb, globalTemplate);
+    if (resolved.mode === 'global' && resolved.isGlobal === true) {
+      verifiedCount++;
+    } else {
+      errors.push({
+        id: fb?.id,
+        title: fb?.title || 'Flipbook',
+        message: "La vérification du mode global a échoué après application."
+      });
+    }
+  }
+
+  const allSucceeded = errors.length === 0 && verifiedCount === updatedFlipbooks.length;
+
+  return {
+    success: allSucceeded,
+    partial: errors.length > 0 && verifiedCount > 0,
+    totalCount: analysis.totalCount,
+    alreadyGlobalCount: analysis.globalCount,
+    replacedCustomCount: analysis.customCount,
+    backedUpCount: analysis.customWithBlocksCount,
+    verifiedCount,
+    firestoreSuccessCount,
+    errorCount: errors.length,
+    errors,
+    updatedFlipbooks
+  };
+};
+
