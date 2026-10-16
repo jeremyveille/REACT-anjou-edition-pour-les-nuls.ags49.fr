@@ -666,7 +666,7 @@ describe('Deep Routing, Navigation and Accessibility Enhancements', () => {
     // 3. The in-page flipbook reader is displayed under the header and menu
     const readerDialog = screen.getByTestId('flipbook-modal-dialog');
     expect(readerDialog).toBeInTheDocument();
-    expect(screen.getByText("Rappel d'Anjou")).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 3, name: "Rappel d'Anjou" })).toBeInTheDocument();
 
     // 4. Click on another title in the menu, e.g. "ODE"
     const odeBtn = screen.getByRole('button', { name: "ODE" });
@@ -676,7 +676,7 @@ describe('Deep Routing, Navigation and Accessibility Enhancements', () => {
 
     // 5. The reader stays mounted and switches to the new PDF/title
     expect(screen.getByTestId('flipbook-modal-dialog')).toBeInTheDocument();
-    expect(screen.getByText("Ode à la Loire")).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 3, name: "Ode à la Loire" })).toBeInTheDocument();
 
     // 6. Return to home via ACCUEIL button in navigation
     const accueilBtn = screen.getByRole('button', { name: "ACCUEIL" });
