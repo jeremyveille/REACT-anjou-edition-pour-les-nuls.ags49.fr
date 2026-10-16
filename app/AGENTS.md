@@ -2,6 +2,10 @@
 
 Ce document sert de guide et de référence pour tout agent ou développeur travaillant sur l'application **Anjou Édition – Pour les Nuls** (`app/`).
 
+> [!IMPORTANT]
+> **RÈGLE DE LANGUE OBLIGATOIRE** :
+> **Toujours parler, répondre et rédiger la documentation ou les artefacts exclusivement en français**, quelle que soit la langue technique des outils ou des logs.
+
 ---
 
 ## 📋 Présentation du Projet & Identité Fondamentale

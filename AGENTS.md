@@ -2,6 +2,10 @@
 
 Ce document sert de guide et de référence pour tout agent ou développeur travaillant sur le dépôt **Anjou Édition – Pour les Nuls**. Il résume l'architecture, la stack technique, les scripts utiles et les conventions du codebase.
 
+> [!IMPORTANT]
+> **RÈGLE DE LANGUE OBLIGATOIRE** :
+> **Toujours parler, répondre et rédiger la documentation ou les artefacts exclusivement en français**, quelle que soit la langue technique des outils ou des logs.
+
 ---
 
 ## 📋 Présentation du Projet & Identité Fondamentale
