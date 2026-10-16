@@ -1648,3 +1648,32 @@
   background: rgba(2, 132, 199, 0.2);
   box-shadow: 0 0 0 1px #38bdf8;
 }
+
+/* --- 9. Barre d'actions persistante (Sticky) et pied d'ajout immédiat --- */
+.ae-sticky-editor-bar {
+  position: sticky;
+  top: 0.5rem;
+  z-index: 30;
+  backdrop-filter: blur(8px);
+}
+
+.flipbook-add-block-footer {
+  margin-top: 0.75rem;
+}
+
+.ae-admin-pill-global {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.15rem 0.55rem;
+  border-radius: 9999px;
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.dark-mode .ae-admin-pill-global {
+  background: rgba(3, 105, 161, 0.3);
+  color: #7dd3fc;
+}
+

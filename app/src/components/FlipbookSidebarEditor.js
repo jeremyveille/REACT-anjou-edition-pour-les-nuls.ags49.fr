@@ -195,8 +195,8 @@ export default function FlipbookSidebarEditor({ flipbook, onChange }) {
             )}
           </div>
 
-          {/* Bouton Ajouter un bloc à la fin de la liste */}
-          <div className="mt-auto">
+          {/* Bouton Ajouter un bloc à proximité immédiate de la fin de la liste */}
+          <div className="flipbook-add-block-footer">
             {!showAddMenuLeft ? (
               <button
                 type="button"
@@ -298,8 +298,8 @@ export default function FlipbookSidebarEditor({ flipbook, onChange }) {
             )}
           </div>
 
-          {/* Bouton Ajouter un bloc à la fin de la liste */}
-          <div className="mt-auto">
+          {/* Bouton Ajouter un bloc à proximité immédiate de la fin de la liste */}
+          <div className="flipbook-add-block-footer">
             {!showAddMenuRight ? (
               <button
                 type="button"
