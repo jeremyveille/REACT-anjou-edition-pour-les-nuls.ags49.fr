@@ -420,6 +420,56 @@ export const flipbooksData = [
         enabled: true 
       }
     ]
+  },
+  {
+    id: "seraphin_le_marin",
+    title: "Séraphin le marin",
+    category: "Fable",
+    author: "Jérémy V. / P. SWILLE.V",
+    date: "2020",
+    description: "Fable illustrée d'Anjou Édition pour la jeunesse, contant les aventures de Séraphin marin malin à l'œil d'airain, Léon le thon et Titine la sardine.",
+    pdfFile: "Seraphin-le-marin.pdf",
+    pages: [
+      { pageNum: 1, title: "Couverture", content: "Anjou Édition\n\nSéraphin, le marin" },
+      { pageNum: 2, title: "Ohé, les poissons !!!", content: "Un marin marinait dans son bain un verre à la main..." },
+      { pageNum: 3, title: "Léon et Harald le crabe", content: "Léon s'était arrêté un moment pour discuter avec Harald..." },
+      { pageNum: 4, title: "La surprise du crabe", content: "Non pas aujourd'hui, je crois qu'il est chez lui..." },
+      { pageNum: 5, title: "Texte intégral et inédit", content: "Illustrations de Jérémy V. Couverture de P. SWILLE.V" }
+    ],
+    leftSidebar: [
+      {
+        id: "sb_seraphin_left_1",
+        type: "heading",
+        level: "h3",
+        text: "Création Jeunesse",
+        enabled: true
+      },
+      {
+        id: "sb_seraphin_left_2",
+        type: "text",
+        title: "Présentation de l'ouvrage",
+        content: "<p><strong>Séraphin le marin</strong> est une œuvre originale et inédite publiée par Anjou Édition.<br />Texte et illustrations de Jérémy V. Couverture de P. SWILLE.V.<br />Dépôt légal INPI.</p>",
+        enabled: true
+      }
+    ],
+    rightSidebar: [
+      {
+        id: "sb_seraphin_right_1",
+        type: "heading",
+        level: "h3",
+        text: "Participer & Échanger",
+        enabled: true
+      },
+      {
+        id: "sb_seraphin_right_2",
+        type: "button",
+        title: "Proposer un manuscrit",
+        buttonText: "Nous contacter",
+        buttonUrl: "/contact",
+        buttonStyle: "primary",
+        enabled: true
+      }
+    ]
   }
 ];
 
