@@ -838,7 +838,6 @@ function App() {
     }
 
     // 2. Texte de notre catalogue éditorial ou texte à générer
-    const isAvailable = !!textsData[cleanName] || !!Object.keys(textsData).find(k => k.toLowerCase() === cleanLower);
     const foundKey = Object.keys(textsData).find(k => k.toLowerCase() === cleanLower) || cleanName;
     const dataObj = textsData[foundKey] || {
       title: cleanName,
