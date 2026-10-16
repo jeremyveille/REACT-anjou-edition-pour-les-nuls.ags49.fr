@@ -506,6 +506,10 @@ export default function PdfFlipbookReader({ book, onClose }) {
       try {
         setLoading(true);
         setError(null);
+        setCurrentPage(1);
+        setShowToc(false);
+        setShowSearch(false);
+        setShowThumbnails(false);
 
         let pdfSource = null;
 

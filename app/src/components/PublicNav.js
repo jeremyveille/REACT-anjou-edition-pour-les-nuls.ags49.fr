@@ -10,7 +10,8 @@ export const PublicNav = ({
   getActiveMenuItems,
   handleMenuItemClick,
   dropdownRefs,
-  isPreview = false
+  isPreview = false,
+  onHomeClick = null
 }) => {
   const drawerRef = useRef(null);
   const toggleRef = useRef(null);
@@ -153,7 +154,14 @@ export const PublicNav = ({
         <div className="nav-container">
           <button 
             type="button" 
-            onClick={() => { if(!isPreview && setView) { setView({ type: 'home' }); setMobileMenuOpen(false); } }} 
+            onClick={() => {
+              if (onHomeClick) {
+                onHomeClick();
+              } else if (!isPreview && setView) {
+                setView({ type: 'home' });
+                setMobileMenuOpen(false);
+              }
+            }} 
             className="nav-logo"
             style={{ border: 'none', background: 'none', cursor: 'pointer' }}
           >

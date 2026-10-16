@@ -1,95 +1,68 @@
 import React, { useEffect, useRef } from 'react';
-import { X, BookOpen } from 'lucide-react';
+import { X, BookOpen, ArrowLeft } from 'lucide-react';
 import PdfFlipbookReader from './PdfFlipbookReader';
 import FlipbookLayout from './FlipbookLayout';
 
 /**
- * FlipbookModal — Fenêtre de consultation superposée (modal) accessible et responsive.
- * Permet la consultation immédiate d'un Flipbook sans quitter la page actuelle,
- * sans changer l'URL, sans rechargement et sans saut de défilement.
+ * FlipbookModal — Lecteur de Flipbook en place (in-page reader).
+ * S'affiche directement sous le header et le menu de navigation de la page principale
+ * sans modifier la mise en page générale du site.
  * 
  * Conforme WCAG 2.2 AA :
- * - Gestion du focus (restauration automatique sur l'élément déclencheur à la fermeture)
- * - Navigation clavier (touche Échap)
- * - Verrouillage temporaire du défilement d'arrière-plan avec compensation de largeur
- * - Préservation stricte de la position de défilement d'origine
+ * - Navigation fluide sans verrouillage invasif du scrollbar
+ * - Header et menu principal restent 100% accessibles et interactifs
+ * - Changement instantané du PDF lors du clic sur un nouveau titre
+ * - Bouton explicite pour revenir à la page d'accueil à tout moment
+ * - Fermeture possible via la touche Échap
  */
 export default function FlipbookModal({
   isOpen,
   book,
   onClose,
+  onBackToHome = null,
   triggerRef = null
 }) {
   const overlayRef = useRef(null);
   const dialogRef = useRef(null);
   const closeBtnRef = useRef(null);
-  const savedScrollY = useRef(0);
-  const savedActiveElement = useRef(null);
 
+  // Défilement doux vers le lecteur lors de l'ouverture ou du changement d'ouvrage
   useEffect(() => {
     if (!isOpen || !book) return;
 
-    // 1. Sauvegarder la position de défilement actuelle (zéro saut au retour)
-    savedScrollY.current = window.scrollY || window.pageYOffset || 0;
-
-    // 2. Mémoriser l'élément déclencheur pour restituer le focus
-    savedActiveElement.current = triggerRef?.current || document.activeElement;
-
-    // 3. Verrouiller le défilement du fond (body) avec compensation de scrollbar
-    const originalOverflow = document.body.style.overflow;
-    const originalPaddingRight = document.body.style.paddingRight;
-    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-
-    if (scrollbarWidth > 0) {
-      document.body.style.paddingRight = `${scrollbarWidth}px`;
-    }
-    document.body.style.overflow = 'hidden';
-
-    // 4. Positionner le focus initial sur le bouton de fermeture accessible
     const timer = setTimeout(() => {
-      if (closeBtnRef.current) {
+      if (dialogRef.current && typeof dialogRef.current.scrollIntoView === 'function') {
         try {
-          closeBtnRef.current.focus();
+          dialogRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
         } catch (e) {
-          // Safe catch
+          // Fallback
         }
       }
-    }, 50);
+    }, 80);
 
-    return () => {
-      clearTimeout(timer);
+    return () => clearTimeout(timer);
+  }, [isOpen, book?.id]);
 
-      // Restaurer le défilement du body
-      document.body.style.overflow = originalOverflow;
-      document.body.style.paddingRight = originalPaddingRight;
+  // Écoute de la touche Échap pour fermer le lecteur
+  useEffect(() => {
+    if (!isOpen) return;
 
-      // Restaurer exactement la position de scroll initiale
-      const y = savedScrollY.current;
-      if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
-        try {
-          window.scrollTo({ top: y, behavior: 'instant' });
-        } catch (err) {
-          window.scrollTo(0, y);
-        }
-      }
-
-      // Restituer le focus sur l'élément d'origine (WCAG 2.2 AA)
-      const elToFocus = savedActiveElement.current;
-      if (elToFocus && typeof elToFocus.focus === 'function') {
-        try {
-          elToFocus.focus();
-        } catch (e) {
-          // Ignorer si l'élément n'est plus présent
-        }
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && onClose) {
+        onClose();
       }
     };
-  }, [isOpen, book, onClose, triggerRef]);
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen || !book) return null;
 
-  // Clic sécurisé sur l'arrière-plan assombri (sur mousedown pour éviter les faux-positifs lors d'une sélection de texte)
-  const handleOverlayMouseDown = (e) => {
-    if (e.target === overlayRef.current) {
+  const handleReturnHome = () => {
+    if (onBackToHome) {
+      onBackToHome();
+    } else if (onClose) {
       onClose();
     }
   };
@@ -97,22 +70,19 @@ export default function FlipbookModal({
   return (
     <div
       ref={overlayRef}
-      className="ae-flipbook-modal-overlay"
-      onMouseDown={handleOverlayMouseDown}
+      className="ae-flipbook-inpage-wrapper"
       role="presentation"
       data-testid="flipbook-modal-overlay"
     >
       <div
         ref={dialogRef}
-        className="ae-flipbook-modal-dialog"
-        role="dialog"
-        aria-modal="true"
+        className="ae-flipbook-modal-dialog ae-flipbook-inpage-dialog"
+        role="region"
         aria-label={`Consultation de l'ouvrage : ${book.title || 'Flipbook'}`}
         data-testid="flipbook-modal-dialog"
-        onClick={(e) => e.stopPropagation()}
       >
-        {/* Barre d'en-tête de la fenêtre superposée */}
-        <header className="ae-flipbook-modal-header">
+        {/* Barre d'en-tête de la consultation intégrée */}
+        <header className="ae-flipbook-modal-header ae-flipbook-inpage-header">
           <div className="ae-flipbook-modal-info">
             <span className="ae-flipbook-modal-badge">
               <BookOpen size={14} aria-hidden="true" />
@@ -121,23 +91,48 @@ export default function FlipbookModal({
             <h2 id="ae-flipbook-modal-title" className="ae-flipbook-modal-title">
               {book.title}
             </h2>
+            {book.author && (
+              <span className="ae-flipbook-author-tag">
+                • Par {book.author}
+              </span>
+            )}
+            {book.date && (
+              <span className="ae-flipbook-date-tag">
+                ({book.date})
+              </span>
+            )}
           </div>
 
-          <button
-            ref={closeBtnRef}
-            type="button"
-            onClick={onClose}
-            className="ae-flipbook-modal-close-btn"
-            aria-label={`Fermer la consultation de ${book.title}`}
-            title="Fermer le lecteur (Échap)"
-            data-testid="flipbook-modal-close-btn"
-          >
-            <X size={18} aria-hidden="true" />
-            <span className="ae-flipbook-modal-close-text">Fermer</span>
-          </button>
+          <div className="ae-flipbook-inpage-actions">
+            {/* Bouton pour revenir à la page d'accueil */}
+            <button
+              type="button"
+              onClick={handleReturnHome}
+              className="ae-flipbook-back-home-btn"
+              aria-label="Revenir à la page d'accueil"
+              title="Fermer le lecteur et revenir à l'accueil"
+            >
+              <ArrowLeft size={16} aria-hidden="true" />
+              <span>Retour à l'accueil</span>
+            </button>
+
+            {/* Bouton Fermer accessible */}
+            <button
+              ref={closeBtnRef}
+              type="button"
+              onClick={onClose}
+              className="ae-flipbook-modal-close-btn"
+              aria-label={`Fermer la consultation de ${book.title}`}
+              title="Fermer le lecteur (Échap)"
+              data-testid="flipbook-modal-close-btn"
+            >
+              <X size={18} aria-hidden="true" />
+              <span className="ae-flipbook-modal-close-text">Fermer</span>
+            </button>
+          </div>
         </header>
 
-        {/* Corps de la modale : lecteur Flipbook existant et barres latérales */}
+        {/* Corps du lecteur : barres latérales configurables et lecteur de PDF */}
         <div className="ae-flipbook-modal-body" data-testid="flipbook-modal-body">
           <FlipbookLayout book={book}>
             <PdfFlipbookReader 
