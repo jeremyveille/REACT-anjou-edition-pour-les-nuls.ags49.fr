@@ -19,7 +19,8 @@ import GlobalFlipbookSidebarEditor from './GlobalFlipbookSidebarEditor';
 import FlipbookSidebarAssignment from './FlipbookSidebarAssignment';
 import { 
   getLocalGlobalSidebar, 
-  applyGlobalTemplateToAll
+  applyGlobalTemplateToAllAndPersist,
+  createCustomSidebarBackup
 } from '../services/flipbookSidebarService';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -95,13 +96,15 @@ export default function FlipbookManager({
   const [bulkAction, setBulkAction] = useState('-1');
   const [copiedId, setCopiedId] = useState(null);
 
-  // Mise à jour du mode de barre latérale pour un flipbook
+  // Mise à jour du mode de barre latérale pour un flipbook avec préservation du backup personnalisé
   const handleUpdateFlipbookMode = async (id, newMode) => {
     const updated = flipbooks.map(fb => {
       if (String(fb.id) === String(id)) {
+        const backup = newMode === 'global' ? (createCustomSidebarBackup(fb) || fb.customSidebarBackup) : fb.customSidebarBackup;
         return {
           ...fb,
-          sidebarMode: newMode
+          sidebarMode: newMode,
+          ...(backup ? { customSidebarBackup: backup } : {})
         };
       }
       return fb;
@@ -116,30 +119,25 @@ export default function FlipbookManager({
       if (db && targetFb) {
         await setDoc(doc(db, "flipbooks", String(id)), targetFb);
       }
-      setNotification(`Mode "${newMode === 'global' ? 'Modèle global actif' : 'Configuration personnalisée'}" enregistré.`);
+      setNotification(`Mode "${newMode === 'global' ? 'Modèle global — Anjou Édition' : 'Configuration personnalisée'}" enregistré.`);
     } catch (e) {
       console.warn("Erreur mise à jour mode flipbook:", e);
     }
   };
 
-  // Application du modèle global à tous les flipbooks existants
-  const handleApplyGlobalToAllFlipbooks = async () => {
-    const updated = applyGlobalTemplateToAll(flipbooks);
-    if (onUpdateFlipbooks) {
-      onUpdateFlipbooks(updated);
+  // Application du modèle global à tous les flipbooks existants avec sauvegarde de secours et vérification
+  const handleApplyGlobalToAllFlipbooks = async (templateOverride = null) => {
+    const activeTemplate = (templateOverride && templateOverride.id) ? templateOverride : currentGlobalTemplate;
+    const report = await applyGlobalTemplateToAllAndPersist(flipbooks, activeTemplate);
+    if (onUpdateFlipbooks && Array.isArray(report.updatedFlipbooks)) {
+      onUpdateFlipbooks(report.updatedFlipbooks);
     }
-    try {
-      localStorage.setItem("ae_flipbooks", JSON.stringify(updated));
-      if (db) {
-        for (const fb of updated) {
-          await setDoc(doc(db, "flipbooks", String(fb.id)), fb);
-        }
-      }
+    if (report.errorCount > 0) {
+      setNotification(`Modèle global appliqué (${report.verifiedCount}/${report.totalCount} vérifiés, ${report.errorCount} erreur(s)).`);
+    } else {
       setNotification("Le « Modèle global — Anjou Édition » a été appliqué à tous les Flipbooks !");
-    } catch (e) {
-      console.warn("Erreur application globale Firestore:", e);
-      setNotification("Modèle global appliqué localement à tous les Flipbooks.");
     }
+    return report;
   };
 
   // Extraction dynamique des catégories existantes

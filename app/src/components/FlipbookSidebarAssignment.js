@@ -24,6 +24,15 @@ export default function FlipbookSidebarAssignment({
   const [searchQuery, setSearchQuery] = useState('');
   const [filterMode, setFilterMode] = useState('all'); // 'all' | 'global' | 'custom'
   const [confirmTarget, setConfirmTarget] = useState(null); // { fb, targetMode }
+  const [applyReport, setApplyReport] = useState(null);
+
+  const handleTriggerApplyGlobalToAll = async () => {
+    if (!onApplyGlobalToAll) return;
+    const res = await onApplyGlobalToAll();
+    if (res && typeof res === 'object' && typeof res.totalCount === 'number') {
+      setApplyReport(res);
+    }
+  };
 
   // Calcul du mode de chaque Flipbook
   const flipbooksWithMode = useMemo(() => {
@@ -104,7 +113,7 @@ export default function FlipbookSidebarAssignment({
 
           <button
             type="button"
-            onClick={onApplyGlobalToAll}
+            onClick={handleTriggerApplyGlobalToAll}
             className="ae-flipbook-btn-primary text-xs"
             aria-label="Appliquer le modèle global à tous les flipbooks"
           >
@@ -112,6 +121,21 @@ export default function FlipbookSidebarAssignment({
             <span>Appliquer le modèle global à tous</span>
           </button>
         </div>
+
+        {applyReport && (
+          <div className="mt-3 p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-lg text-xs text-emerald-900 dark:text-emerald-200 flex items-center justify-between gap-2">
+            <div>
+              <strong>Bilan de l'application :</strong> {applyReport.verifiedCount}/{applyReport.totalCount} Flipbooks synchronisés sur le « Modèle global — Anjou Édition » ({applyReport.replacedCustomCount} personnalisé(s) basculé(s), {applyReport.backedUpCount} configuration(s) individuelle(s) préservée(s) en sauvegarde).
+            </div>
+            <button
+              type="button"
+              onClick={() => setApplyReport(null)}
+              className="text-xs underline bg-transparent border-none cursor-pointer text-emerald-800 dark:text-emerald-300"
+            >
+              Fermer
+            </button>
+          </div>
+        )}
 
         {/* Indicateurs de répartition */}
         <div className="ae-assignment-kpi-row mt-4">

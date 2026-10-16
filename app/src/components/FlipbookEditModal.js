@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { 
   X, 
   BookOpen, 
@@ -13,10 +13,16 @@ import {
   Layers,
   Sparkles,
   Sliders,
-  AlertTriangle
+  AlertTriangle,
+  Eye,
+  RotateCcw
 } from 'lucide-react';
 import FlipbookSidebarEditor from './FlipbookSidebarEditor';
-import { getLocalGlobalSidebar } from '../services/flipbookSidebarService';
+import FlipbookLayout from './FlipbookLayout';
+import { 
+  getLocalGlobalSidebar, 
+  createCustomSidebarBackup 
+} from '../services/flipbookSidebarService';
 
 /**
  * Grande Modale d'Édition Responsive d'un Flipbook
@@ -32,9 +38,11 @@ export default function FlipbookEditModal({
   saveProgressMsg = ''
 }) {
   const [editingData, setEditingData] = useState(null);
+  const [initialSnapshot, setInitialSnapshot] = useState('');
   const [newPdfFile, setNewPdfFile] = useState(null);
   const [copiedSnippet, setCopiedSnippet] = useState(false);
   const [expandedPageIdx, setExpandedPageIdx] = useState(0); // Première page ouverte par défaut
+  const [showLocalPreview, setShowLocalPreview] = useState(false);
   const modalRef = useRef(null);
   const fileInputRef = useRef(null);
 
@@ -46,26 +54,51 @@ export default function FlipbookEditModal({
       if (!Array.isArray(copy.leftSidebar)) copy.leftSidebar = [];
       if (!Array.isArray(copy.rightSidebar)) copy.rightSidebar = [];
       
-      // Initialisation du mode de barre latérale (A = global, B = custom)
+      // Initialisation du mode de barre latérale (préservation de l'existant)
       if (!copy.sidebarMode) {
         const hasCustomBlocks = copy.leftSidebar.length > 0 || copy.rightSidebar.length > 0;
         copy.sidebarMode = hasCustomBlocks ? 'custom' : 'global';
       }
 
       setEditingData(copy);
+      setInitialSnapshot(JSON.stringify(copy));
       setNewPdfFile(null);
       setCopiedSnippet(false);
+      setShowLocalPreview(false);
       setExpandedPageIdx(copy.pages.length > 0 ? 0 : null);
     }
   }, [flipbook, isOpen]);
 
+  // Détection des modifications non enregistrées
+  const isDirty = useMemo(() => {
+    if (!editingData || !initialSnapshot) return false;
+    if (newPdfFile) return true;
+    return JSON.stringify(editingData) !== initialSnapshot;
+  }, [editingData, initialSnapshot, newPdfFile]);
+
   // État pour confirmation avant de remplacer une personnalisation par le modèle global
   const [showSwitchModeConfirm, setShowSwitchModeConfirm] = useState(false);
+
+  // Fermeture sécurisée avec avertissement en cas de modifications non enregistrées
+  const handleSafeClose = () => {
+    if (isSaving) return;
+    if (isDirty) {
+      if (!window.confirm("Attention : vous avez des modifications non enregistrées sur ce Flipbook. Voulez-vous vraiment fermer sans enregistrer ?")) {
+        return;
+      }
+    }
+    onClose();
+  };
 
   // Fermeture par touche Échap
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape' && isOpen && !isSaving) {
+        if (isDirty) {
+          if (!window.confirm("Attention : vous avez des modifications non enregistrées sur ce Flipbook. Voulez-vous vraiment fermer sans enregistrer ?")) {
+            return;
+          }
+        }
         onClose();
       }
     };
@@ -73,7 +106,7 @@ export default function FlipbookEditModal({
       window.addEventListener('keydown', handleKeyDown);
     }
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, isSaving, onClose]);
+  }, [isOpen, isSaving, isDirty, onClose]);
 
   if (!isOpen || !editingData) return null;
 
@@ -123,6 +156,32 @@ export default function FlipbookEditModal({
     }
   };
 
+  // Copier le modèle global comme base de personnalisation individuelle
+  const handleCopyFromGlobalTemplate = () => {
+    const globalData = getLocalGlobalSidebar();
+    const backup = createCustomSidebarBackup(editingData) || editingData.customSidebarBackup;
+    setEditingData(prev => ({
+      ...prev,
+      sidebarMode: 'custom',
+      leftSidebar: JSON.parse(JSON.stringify(globalData.leftSidebar || [])),
+      rightSidebar: JSON.parse(JSON.stringify(globalData.rightSidebar || [])),
+      ...(backup ? { customSidebarBackup: backup } : {})
+    }));
+  };
+
+  // Restaurer la dernière configuration individuelle sauvegardée
+  const handleRestoreCustomBackup = () => {
+    const backup = editingData.customSidebarBackup;
+    if (!backup) return;
+    setEditingData(prev => ({
+      ...prev,
+      sidebarMode: 'custom',
+      leftSidebar: JSON.parse(JSON.stringify(backup.leftSidebar || [])),
+      rightSidebar: JSON.parse(JSON.stringify(backup.rightSidebar || [])),
+      ...(backup.sidebarStyles ? { sidebarStyles: JSON.parse(JSON.stringify(backup.sidebarStyles)) } : {})
+    }));
+  };
+
   // Validation et soumission
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -136,7 +195,7 @@ export default function FlipbookEditModal({
   return (
     <div 
       className="ae-modal-overlay" 
-      onClick={!isSaving ? onClose : undefined}
+      onClick={!isSaving ? handleSafeClose : undefined}
       role="presentation"
     >
       <div 
@@ -149,15 +208,23 @@ export default function FlipbookEditModal({
       >
         {/* EN-TÊTE FIXE (Sticky top: 0) */}
         <header className="ae-flipbook-modal-header">
-          <h3 id="edit-flipbook-modal-title" className="ae-flipbook-modal-title">
-            <BookOpen className="ae-flipbook-modal-title-icon" size={22} aria-hidden="true" />
-            <span className="ae-flipbook-modal-title-text">
-              Modifier le Flipbook : <strong>{editingData.title}</strong>
-            </span>
-          </h3>
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <h3 id="edit-flipbook-modal-title" className="ae-flipbook-modal-title">
+              <BookOpen className="ae-flipbook-modal-title-icon" size={22} aria-hidden="true" />
+              <span className="ae-flipbook-modal-title-text">
+                Modifier le Flipbook : <strong>{editingData.title}</strong>
+              </span>
+            </h3>
+            {isDirty && (
+              <span className="ae-badge-dirty" role="status" aria-live="polite">
+                <AlertTriangle size={12} aria-hidden="true" />
+                <span>Modifications non enregistrées</span>
+              </span>
+            )}
+          </div>
           <button 
             type="button"
-            onClick={onClose} 
+            onClick={handleSafeClose} 
             className="ae-flipbook-modal-close-btn"
             aria-label="Fermer"
             disabled={isSaving}
@@ -436,25 +503,67 @@ export default function FlipbookEditModal({
                 <h4 className="ae-flipbook-section-heading mb-0">Barres latérales du Flipbook</h4>
               </div>
 
-              {/* Badge d'indication visuelle claire */}
-              {editingData.sidebarMode === 'global' ? (
-                <span className="ae-badge-global-active">
-                  <Sparkles size={13} aria-hidden="true" />
-                  <span>Modèle global actif</span>
-                </span>
-              ) : (
-                <span className="ae-badge-custom-active">
-                  <Sliders size={13} aria-hidden="true" />
-                  <span>Configuration personnalisée</span>
-                </span>
-              )}
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => setShowLocalPreview(prev => !prev)}
+                  className="ae-flipbook-btn-secondary text-xs py-1 px-2.5"
+                  aria-label="Prévisualiser les barres latérales de ce Flipbook"
+                >
+                  <Eye size={14} aria-hidden="true" />
+                  <span>{showLocalPreview ? "Masquer l'aperçu" : "Prévisualiser le résultat"}</span>
+                </button>
+
+                {/* Badge d'indication visuelle claire */}
+                {editingData.sidebarMode === 'global' ? (
+                  <span className="ae-badge-global-active">
+                    <Sparkles size={13} aria-hidden="true" />
+                    <span>Modèle global — Anjou Édition</span>
+                  </span>
+                ) : (
+                  <span className="ae-badge-custom-active">
+                    <Sliders size={13} aria-hidden="true" />
+                    <span>Configuration personnalisée</span>
+                  </span>
+                )}
+              </div>
             </div>
 
             <p className="text-xs text-slate-500 mb-3">
-              Choisissez entre le <strong>modèle commun partagé</strong> (recommandé pour une cohérence éditoriale) ou une <strong>configuration individuelle</strong> propre à cet ouvrage.
+              Choisissez entre le <strong>Modèle global — Anjou Édition</strong> (recommandé pour une cohérence éditoriale) ou une <strong>Configuration personnalisée</strong> propre à cet ouvrage.
             </p>
 
-            {/* SÉLECTEUR DE MODE A / MODE B */}
+            {/* Sélecteur direct : Mode de barres latérales */}
+            <div className="mb-3">
+              <label htmlFor="select-flipbook-sidebar-mode" className="ae-modal-label text-xs">
+                Mode de barres latérales :
+              </label>
+              <select
+                id="select-flipbook-sidebar-mode"
+                value={editingData.sidebarMode || 'global'}
+                onChange={(e) => {
+                  const nextMode = e.target.value;
+                  if (nextMode === 'global' && editingData.sidebarMode !== 'global') {
+                    const hasCustom = (editingData.leftSidebar && editingData.leftSidebar.length > 0) || 
+                                      (editingData.rightSidebar && editingData.rightSidebar.length > 0);
+                    if (hasCustom) {
+                      setShowSwitchModeConfirm(true);
+                    } else {
+                      handleFieldChange('sidebarMode', 'global');
+                    }
+                  } else if (nextMode === 'custom' && editingData.sidebarMode !== 'custom') {
+                    handleFieldChange('sidebarMode', 'custom');
+                  }
+                }}
+                className="db-input w-full text-xs font-semibold"
+                aria-label="Mode de barres latérales"
+              >
+                <option value="global">Modèle global — Anjou Édition</option>
+                <option value="custom">Configuration personnalisée</option>
+              </select>
+            </div>
+
+            {/* SÉLECTEUR VISUEL DE MODE A / MODE B */}
             <div className="ae-sidebar-mode-selector mb-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {/* Option Mode A : Modèle global */}
@@ -494,10 +603,10 @@ export default function FlipbookEditModal({
                     <div>
                       <label htmlFor="mode-choice-global" className="font-bold text-xs text-slate-800 dark:text-slate-100 flex items-center gap-1.5 cursor-pointer">
                         <Sparkles size={14} className="text-blue-600" />
-                        <span>Mode A — Utiliser le modèle global (Recommandé)</span>
+                        <span>Modèle global — Anjou Édition (Recommandé)</span>
                       </label>
                       <p className="text-[11px] text-slate-500 mt-1 leading-snug">
-                        Ce Flipbook hérite automatiquement du « Modèle global — Anjou Édition ». Les futures modifications globales y sont immédiatement répercutées.
+                        Ce Flipbook hérite par référence dynamique du « Modèle global — Anjou Édition ». Les modifications globales y sont immédiatement répercutées.
                       </p>
                     </div>
                   </div>
@@ -534,7 +643,7 @@ export default function FlipbookEditModal({
                     <div>
                       <label htmlFor="mode-choice-custom" className="font-bold text-xs text-slate-800 dark:text-slate-100 flex items-center gap-1.5 cursor-pointer">
                         <Sliders size={14} className="text-indigo-600" />
-                        <span>Mode B — Personnaliser ce Flipbook</span>
+                        <span>Configuration personnalisée</span>
                       </label>
                       <p className="text-[11px] text-slate-500 mt-1 leading-snug">
                         Configurez des barres latérales spécifiques pour cet ouvrage. Elles ne seront pas écrasées lors des modifications du modèle global.
@@ -555,23 +664,35 @@ export default function FlipbookEditModal({
                       Synchronisé avec le « Modèle global — Anjou Édition »
                     </span>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      // Initialiser avec les blocs du modèle global si vide pour faciliter la personnalisation
-                      const globalData = getLocalGlobalSidebar();
-                      const currentHasBlocks = (editingData.leftSidebar?.length || 0) + (editingData.rightSidebar?.length || 0) > 0;
-                      setEditingData(prev => ({
-                        ...prev,
-                        sidebarMode: 'custom',
-                        leftSidebar: currentHasBlocks ? prev.leftSidebar : JSON.parse(JSON.stringify(globalData.leftSidebar || [])),
-                        rightSidebar: currentHasBlocks ? prev.rightSidebar : JSON.parse(JSON.stringify(globalData.rightSidebar || []))
-                      }));
-                    }}
-                    className="text-xs font-bold text-blue-700 hover:text-blue-900 bg-white dark:bg-slate-800 border border-blue-300 dark:border-blue-700 px-3 py-1.5 rounded-lg cursor-pointer transition-colors"
-                  >
-                    Personnaliser uniquement ce Flipbook (Passer en Mode B)
-                  </button>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {editingData.customSidebarBackup && (
+                      <button
+                        type="button"
+                        onClick={handleRestoreCustomBackup}
+                        className="text-xs font-bold text-indigo-700 hover:text-indigo-900 bg-white dark:bg-slate-800 border border-indigo-300 dark:border-indigo-700 px-3 py-1.5 rounded-lg cursor-pointer transition-colors inline-flex items-center gap-1.5"
+                      >
+                        <RotateCcw size={13} aria-hidden="true" />
+                        <span>Restaurer la dernière configuration individuelle</span>
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const globalData = getLocalGlobalSidebar();
+                        const currentHasBlocks = (editingData.leftSidebar?.length || 0) + (editingData.rightSidebar?.length || 0) > 0;
+                        setEditingData(prev => ({
+                          ...prev,
+                          sidebarMode: 'custom',
+                          leftSidebar: currentHasBlocks ? prev.leftSidebar : JSON.parse(JSON.stringify(globalData.leftSidebar || [])),
+                          rightSidebar: currentHasBlocks ? prev.rightSidebar : JSON.parse(JSON.stringify(globalData.rightSidebar || []))
+                        }));
+                      }}
+                      className="text-xs font-bold text-blue-700 hover:text-blue-900 bg-white dark:bg-slate-800 border border-blue-300 dark:border-blue-700 px-3 py-1.5 rounded-lg cursor-pointer transition-colors"
+                    >
+                      Personnaliser uniquement ce Flipbook (Partir d'une copie du modèle global)
+                    </button>
+                  </div>
                 </div>
                 <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed mb-0">
                   Ce flipbook affiche les barres latérales communes partagées. Pour modifier le contenu ou le design commun pour l'ensemble des flipbooks, utilisez la section <strong>« Modèle global des barres latérales »</strong> dans la bibliothèque.
@@ -582,15 +703,94 @@ export default function FlipbookEditModal({
               <div>
                 <div className="flex items-center justify-between flex-wrap gap-2 p-2.5 bg-indigo-50/60 dark:bg-indigo-950/20 border border-indigo-200 dark:border-indigo-900/40 rounded-lg mb-3">
                   <span className="text-xs font-medium text-indigo-900 dark:text-indigo-200">
-                    Configuration individuelle active pour cet ouvrage.
+                    Configuration personnalisée active pour cet ouvrage.
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => setShowSwitchModeConfirm(true)}
-                    className="text-xs font-bold text-indigo-700 hover:text-indigo-900 underline bg-transparent border-none cursor-pointer"
-                  >
-                    Revenir au modèle global
-                  </button>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={handleCopyFromGlobalTemplate}
+                      className="text-xs font-semibold text-blue-700 hover:text-blue-900 underline bg-transparent border-none cursor-pointer"
+                    >
+                      Copier le modèle global comme base
+                    </button>
+
+                    {editingData.customSidebarBackup && (
+                      <button
+                        type="button"
+                        onClick={handleRestoreCustomBackup}
+                        className="text-xs font-semibold text-emerald-700 hover:text-emerald-900 underline bg-transparent border-none cursor-pointer"
+                      >
+                        Restaurer ma sauvegarde individuelle
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => setShowSwitchModeConfirm(true)}
+                      className="text-xs font-bold text-indigo-700 hover:text-indigo-900 underline bg-transparent border-none cursor-pointer"
+                    >
+                      Revenir au modèle global
+                    </button>
+                  </div>
+                </div>
+
+                {/* Réglage des largeurs individuelles des barres latérales */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 mb-3">
+                  <div>
+                    <div className="flex justify-between text-xs font-semibold mb-1">
+                      <label htmlFor="custom-left-width">Largeur Barre gauche (%)</label>
+                      <span className="text-blue-600 font-mono">
+                        {editingData.sidebarStyles?.leftWidth || 20}%
+                      </span>
+                    </div>
+                    <input
+                      id="custom-left-width"
+                      type="range"
+                      min="15"
+                      max="30"
+                      step="1"
+                      value={editingData.sidebarStyles?.leftWidth || 20}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        setEditingData(prev => ({
+                          ...prev,
+                          sidebarStyles: {
+                            ...(prev.sidebarStyles || {}),
+                            leftWidth: val
+                          }
+                        }));
+                      }}
+                      className="ae-range-input"
+                    />
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between text-xs font-semibold mb-1">
+                      <label htmlFor="custom-right-width">Largeur Barre droite (%)</label>
+                      <span className="text-blue-600 font-mono">
+                        {editingData.sidebarStyles?.rightWidth || 20}%
+                      </span>
+                    </div>
+                    <input
+                      id="custom-right-width"
+                      type="range"
+                      min="15"
+                      max="30"
+                      step="1"
+                      value={editingData.sidebarStyles?.rightWidth || 20}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        setEditingData(prev => ({
+                          ...prev,
+                          sidebarStyles: {
+                            ...(prev.sidebarStyles || {}),
+                            rightWidth: val
+                          }
+                        }));
+                      }}
+                      className="ae-range-input"
+                    />
+                  </div>
                 </div>
 
                 {/* Éditeur complet des barres exploitant toute la largeur min(1100px, 94vw) */}
@@ -598,6 +798,26 @@ export default function FlipbookEditModal({
                   flipbook={editingData}
                   onChange={(updated) => setEditingData(updated)}
                 />
+              </div>
+            )}
+
+            {/* Aperçu local immédiat du Flipbook et de ses barres */}
+            {showLocalPreview && (
+              <div className="mt-4 p-3 bg-slate-100 dark:bg-slate-900 rounded-xl border border-slate-300 dark:border-slate-700" data-testid="modal-local-preview">
+                <div className="text-xs font-bold text-slate-700 dark:text-slate-200 mb-2 flex items-center justify-between">
+                  <span>Aperçu local en direct ({editingData.sidebarMode === 'global' ? 'Modèle global — Anjou Édition' : 'Configuration personnalisée'})</span>
+                  <span className="text-[11px] text-slate-500">Non publié tant que non enregistré</span>
+                </div>
+                <FlipbookLayout
+                  book={editingData}
+                  globalSidebar={getLocalGlobalSidebar()}
+                >
+                  <div className="p-6 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 text-center">
+                    <BookOpen size={28} className="mx-auto mb-2 text-blue-600" />
+                    <div className="font-bold text-sm text-slate-800 dark:text-slate-100">{editingData.title}</div>
+                    <div className="text-xs text-slate-500 mt-1">{editingData.pdfFile || 'Document PDF'}</div>
+                  </div>
+                </FlipbookLayout>
               </div>
             )}
           </section>
@@ -620,9 +840,9 @@ export default function FlipbookEditModal({
                 </div>
 
                 <p className="text-xs text-slate-600 dark:text-slate-300 mb-4 leading-relaxed">
-                  Ce Flipbook utilise actuellement une configuration individuelle. En basculant sur le <strong>« Modèle global — Anjou Édition »</strong>, il utilisera désormais les colonnes communes partagées.
+                  Ce Flipbook utilise actuellement une configuration individuelle. En basculant sur le <strong>« Modèle global — Anjou Édition »</strong>, l'affichage utilisera désormais le modèle commun partagé.
                   <br /><br />
-                  Vos blocs personnalisés existants pour ce Flipbook ne seront plus affichés.
+                  Votre dernière configuration individuelle sera automatiquement <strong>conservée en sauvegarde</strong> afin de permettre un retour ultérieur sans perte de données.
                 </p>
 
                 <div className="flex justify-end gap-2">
@@ -636,7 +856,12 @@ export default function FlipbookEditModal({
                   <button
                     type="button"
                     onClick={() => {
-                      handleFieldChange('sidebarMode', 'global');
+                      const backup = createCustomSidebarBackup(editingData) || editingData.customSidebarBackup;
+                      setEditingData(prev => ({
+                        ...prev,
+                        sidebarMode: 'global',
+                        ...(backup ? { customSidebarBackup: backup } : {})
+                      }));
                       setShowSwitchModeConfirm(false);
                     }}
                     className="ae-flipbook-btn-primary"
@@ -654,7 +879,7 @@ export default function FlipbookEditModal({
         <footer className="ae-flipbook-modal-footer">
           <button 
             type="button" 
-            onClick={onClose} 
+            onClick={handleSafeClose} 
             className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-4 py-2 rounded-lg cursor-pointer transition-colors text-sm border-none min-h-[40px]"
             disabled={isSaving}
           >
@@ -672,7 +897,7 @@ export default function FlipbookEditModal({
           >
             {isSaving ? (
               <>
-                <div className="ae-spinner-btn-white" aria-hidden="true"></div>
+                <div className="ae-spinner-btn-white" aria-hidden="true" />
                 <span>{saveProgressMsg || "Enregistrement..."}</span>
               </>
             ) : (
