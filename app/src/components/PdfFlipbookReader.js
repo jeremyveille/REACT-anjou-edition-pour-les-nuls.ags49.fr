@@ -979,10 +979,13 @@ export default function PdfFlipbookReader({ book, onClose }) {
             <button 
               type="button" 
               onClick={onClose} 
-              className="bg-red-650 hover:bg-red-700 text-white font-bold text-xs px-3 py-1.5 rounded-lg flex items-center gap-1 cursor-pointer transition-colors"
+              className="ae-close-button ae-close-button--toolbar"
               aria-label="Fermer le lecteur de flipbook et retourner à la liste"
+              title="Fermer le lecteur"
+              data-testid="flipbook-modal-close-btn"
             >
-              Fermer
+              <X className="ae-close-button-icon" size={15} aria-hidden="true" />
+              <span className="ae-close-button-text">Fermer</span>
             </button>
           )}
         </div>

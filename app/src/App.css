@@ -7583,192 +7583,133 @@ nav.public-nav {
   position: relative;
   width: 100%;
   max-width: 1600px;
-  min-height: 580px;
-  max-height: none;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  background: var(--bg-card, #ffffff);
-  border: 1px solid var(--border, #cbd5e1);
-  border-radius: 18px;
-  box-shadow: 0 12px 35px -5px rgba(10, 25, 49, 0.12), 0 0 0 1px rgba(0, 75, 122, 0.12);
-  overflow: hidden;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
   box-sizing: border-box;
   animation: aeFadeIn 0.22s ease-out;
 }
 
-.ae-flipbook-modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.85rem 1.25rem;
-  background: var(--bg-card, #ffffff);
-  border-bottom: 1px solid var(--border, #e2e8f0);
-  gap: 1rem;
-  flex-shrink: 0;
-  z-index: 10;
-  flex-wrap: wrap;
-}
+/* ==========================================================================
+   BOUTON DE FERMETURE UNIFIÉ (.ae-close-button)
+   Modèle graphique de référence inspiré de la fenêtre de lecture d'article :
+   - Fond : rouge vif #DC2626
+   - Texte : blanc, en gras
+   - Icône : croix blanche (X) à gauche du texte
+   - Libellé : « Fermer »
+   - Coins : arrondis (~12px)
+   - Hauteur : environ 52px (adaptable aux barres d'outils via modificateurs)
+   - Espacement : confortable entre l'icône et le texte
+   - Bordure : aucune bordure visible
+   - Alignement : icône et texte parfaitement centrés
+   - 100% Vanilla CSS pur - Conforme WCAG 2.2 AA (contraste > 4.5:1 sur blanc)
+   ========================================================================== */
 
-.ae-flipbook-inpage-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.ae-flipbook-back-home-btn {
+.ae-close-button {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  background: rgba(0, 75, 122, 0.08);
-  color: var(--primary, #004b7a);
-  border: 1px solid rgba(0, 75, 122, 0.2);
-  border-radius: 8px;
-  padding: 0.5rem 0.95rem;
-  font-size: 0.85rem;
+  justify-content: center;
+  gap: 0.65rem;
+  background-color: #dc2626;
+  color: #ffffff !important;
+  font-family: inherit;
+  font-size: 1rem;
   font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.ae-flipbook-back-home-btn:hover {
-  background: var(--primary, #004b7a);
-  color: #ffffff;
-  transform: translateY(-1px);
-}
-
-.ae-flipbook-back-home-btn:focus-visible {
-  outline: 2px solid var(--primary, #004b7a);
-  outline-offset: 2px;
-}
-
-.ae-flipbook-author-tag {
-  font-size: 0.85rem;
-  color: var(--text-muted, #64748b);
-  font-style: italic;
-  font-weight: 500;
-}
-
-.ae-flipbook-date-tag {
-  font-size: 0.8rem;
-  color: var(--text-muted, #94a3b8);
-}
-
-.ae-flipbook-modal-info {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  min-width: 0;
-  flex: 1;
-}
-
-.ae-flipbook-modal-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.25rem 0.65rem;
-  background: rgba(0, 75, 122, 0.08);
-  color: var(--primary, #004b7a);
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.ae-flipbook-modal-title {
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--text-main, #0f172a);
-  margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.ae-flipbook-modal-close-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  background: #dc2626;
-  color: #ffffff;
+  line-height: 1;
+  text-decoration: none;
+  height: 52px;
+  min-height: 52px;
+  padding: 0 1.5rem;
   border: none;
-  border-radius: 8px;
-  padding: 0.5rem 0.95rem;
-  font-size: 0.85rem;
-  font-weight: 700;
+  border-radius: 12px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  white-space: nowrap;
+  box-sizing: border-box;
   flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.28);
+  transition: background-color 0.18s ease, transform 0.15s ease, box-shadow 0.18s ease;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
-.ae-flipbook-modal-close-btn:hover {
-  background: #b91c1c;
-  transform: translateY(-1px);
+.ae-close-button-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #ffffff;
+  stroke-width: 2.5;
 }
 
-.ae-flipbook-modal-close-btn:focus-visible {
+.ae-close-button-text {
+  color: #ffffff;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.ae-close-button:hover:not(:disabled) {
+  background-color: #b91c1c;
+  color: #ffffff !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(185, 28, 28, 0.38);
+}
+
+.ae-close-button:active:not(:disabled) {
+  background-color: #991b1b;
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(153, 27, 27, 0.35);
+}
+
+.ae-close-button:focus-visible {
   outline: 2px solid #ffffff;
   outline-offset: 2px;
-  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.4);
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.45);
 }
 
-.ae-flipbook-modal-close-text {
-  font-size: 0.85rem;
+.ae-close-button:disabled,
+.ae-close-button[disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+/* Variante pour barre d'outils compacte (Toolbar PdfFlipbookReader) */
+.ae-close-button--toolbar {
+  height: 34px;
+  min-height: 34px;
+  padding: 0 0.85rem;
+  font-size: 0.8rem;
+  border-radius: 8px;
+  gap: 0.4rem;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.22);
+}
+
+.ae-close-button--toolbar .ae-close-button-icon {
+  width: 15px;
+  height: 15px;
+}
+
+.ae-close-button--toolbar .ae-close-button-text {
+  font-size: 0.8rem;
+}
+
+.ae-close-button--toolbar:hover:not(:disabled) {
+  transform: translateY(-1px);
 }
 
 .ae-flipbook-modal-body {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 0.75rem;
-  background: var(--bg-body, #f8fafc);
+  width: 100%;
+  padding: 0;
+  background: transparent;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  min-height: 0;
-}
-
-/* Mode sombre */
-.dark-mode .ae-flipbook-modal-dialog {
-  background: #1e293b;
-  border-color: #334155;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(56, 189, 248, 0.2);
-}
-
-.dark-mode .ae-flipbook-modal-header {
-  background: #1e293b;
-  border-bottom-color: #334155;
-}
-
-.dark-mode .ae-flipbook-modal-badge {
-  background: rgba(56, 189, 248, 0.15);
-  color: #38bdf8;
-}
-
-.dark-mode .ae-flipbook-modal-title {
-  color: #f1f5f9;
-}
-
-.dark-mode .ae-flipbook-modal-body {
-  background: #0f172a;
-}
-
-.dark-mode .ae-flipbook-back-home-btn {
-  background: rgba(56, 189, 248, 0.12);
-  color: #38bdf8;
-  border-color: rgba(56, 189, 248, 0.3);
-}
-
-.dark-mode .ae-flipbook-back-home-btn:hover {
-  background: #38bdf8;
-  color: #0f172a;
-}
-
-.dark-mode .ae-flipbook-author-tag {
-  color: #94a3b8;
-}
-
-.dark-mode .ae-flipbook-date-tag {
-  color: #64748b;
 }
 
 /* Éléments cliquables des cartes Flipbooks */
@@ -7820,35 +7761,47 @@ nav.public-nav {
 
 /* Paliers Responsive */
 @media (max-width: 899px) {
-  .ae-flipbook-modal-dialog {
-    max-height: 98vh;
-    border-radius: 14px;
+  .ae-close-button {
+    height: 46px;
+    min-height: 46px;
+    padding: 0 1.25rem;
+    font-size: 0.92rem;
+    border-radius: 10px;
+    gap: 0.5rem;
   }
-  .ae-flipbook-modal-header {
-    padding: 0.65rem 1rem;
+  .ae-close-button--toolbar {
+    height: 30px;
+    min-height: 30px;
+    padding: 0 0.65rem;
+    font-size: 0.75rem;
+    border-radius: 6px;
+    gap: 0.3rem;
   }
 }
 
 @media (max-width: 599px) {
+  .ae-flipbook-inpage-wrapper,
   .ae-flipbook-modal-overlay {
-    padding: 0.25rem;
+    padding: 0 0.25rem;
   }
-  .ae-flipbook-modal-dialog {
-    max-height: 99vh;
-    border-radius: 10px;
+  .ae-close-button {
+    height: 40px;
+    min-height: 40px;
+    padding: 0 0.9rem;
+    font-size: 0.85rem;
+    border-radius: 8px;
+    gap: 0.4rem;
   }
-  .ae-flipbook-modal-header {
-    padding: 0.5rem 0.75rem;
-    gap: 0.5rem;
+  .ae-close-button--toolbar {
+    height: 26px;
+    min-height: 26px;
+    padding: 0 0.45rem;
+    font-size: 0.7rem;
+    border-radius: 6px;
+    gap: 0.25rem;
   }
-  .ae-flipbook-modal-title {
-    font-size: 0.9rem;
-  }
-  .ae-flipbook-modal-close-btn {
-    padding: 0.4rem 0.7rem;
-    font-size: 0.75rem;
-  }
-  .ae-flipbook-modal-body {
-    padding: 0.25rem;
+  .ae-close-button--toolbar .ae-close-button-icon {
+    width: 13px;
+    height: 13px;
   }
 }
