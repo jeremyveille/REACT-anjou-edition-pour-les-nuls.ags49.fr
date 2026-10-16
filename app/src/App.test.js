@@ -649,6 +649,45 @@ describe('Deep Routing, Navigation and Accessibility Enhancements', () => {
 
     expect(screen.getByTestId('flipbook-modal-dialog')).toBeInTheDocument();
   });
+
+  it('displays the in-page flipbook reader below the header and menu when a menu title is clicked, changes PDF when a new title is clicked, and allows returning to home', async () => {
+    await renderApp();
+
+    // 1. Initial state: homepage is rendered with hero
+    expect(screen.getByRole('heading', { level: 1, name: /Anjou Édition, la maison d['’]édition ouverte à tous/i })).toBeInTheDocument();
+    expect(screen.queryByTestId('flipbook-modal-dialog')).toBeNull();
+
+    // 2. Click on a menu item e.g. "RAPPEL"
+    const rappelBtn = screen.getByRole('button', { name: "RAPPEL" });
+    await act(async () => {
+      fireEvent.click(rappelBtn);
+    });
+
+    // 3. The in-page flipbook reader is displayed under the header and menu
+    const readerDialog = screen.getByTestId('flipbook-modal-dialog');
+    expect(readerDialog).toBeInTheDocument();
+    expect(screen.getByText("Rappel d'Anjou")).toBeInTheDocument();
+
+    // 4. Click on another title in the menu, e.g. "ODE"
+    const odeBtn = screen.getByRole('button', { name: "ODE" });
+    await act(async () => {
+      fireEvent.click(odeBtn);
+    });
+
+    // 5. The reader stays mounted and switches to the new PDF/title
+    expect(screen.getByTestId('flipbook-modal-dialog')).toBeInTheDocument();
+    expect(screen.getByText("Ode à la Loire")).toBeInTheDocument();
+
+    // 6. Return to home via ACCUEIL button in navigation
+    const accueilBtn = screen.getByRole('button', { name: "ACCUEIL" });
+    await act(async () => {
+      fireEvent.click(accueilBtn);
+    });
+
+    // 7. The reader is closed and homepage is restored
+    expect(screen.queryByTestId('flipbook-modal-dialog')).toBeNull();
+    expect(await screen.findByRole('heading', { level: 1, name: /Anjou Édition, la maison d['’]édition ouverte à tous/i })).toBeInTheDocument();
+  });
 });
 
 
