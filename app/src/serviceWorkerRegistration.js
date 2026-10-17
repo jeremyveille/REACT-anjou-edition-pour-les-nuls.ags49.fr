@@ -9,8 +9,15 @@ const isLocalhost = Boolean(
 export function register(config) {
   if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator && navigator.serviceWorker) {
     if (typeof navigator.serviceWorker.addEventListener === 'function') {
+      let hadController = Boolean(navigator.serviceWorker.controller);
       let refreshing = false;
       navigator.serviceWorker.addEventListener('controllerchange', () => {
+        // Ne recharger que si la page était déjà contrôlée par une version précédente du SW (mise à jour réelle).
+        // Au tout premier enregistrement, le SW prend le relais en douceur sans recharger la page.
+        if (!hadController) {
+          hadController = true;
+          return;
+        }
         if (!refreshing && typeof window !== 'undefined' && window.location) {
           refreshing = true;
           window.location.reload();

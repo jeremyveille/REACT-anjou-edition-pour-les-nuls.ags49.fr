@@ -67,4 +67,46 @@ describe('serviceWorkerRegistration', () => {
     expect(addEventListenerSpy).toHaveBeenCalledWith('load', expect.any(Function));
     addEventListenerSpy.mockRestore();
   });
+
+  it('handles controllerchange gracefully without reloading on initial activation', () => {
+    let controllerChangeHandler = null;
+    const addEventListenerMock = jest.fn((event, handler) => {
+      if (event === 'controllerchange') {
+        controllerChangeHandler = handler;
+      }
+    });
+
+    const originalLocation = window.location;
+    delete window.location;
+    window.location = {
+      href: 'http://localhost/',
+      origin: 'http://localhost',
+      hostname: 'localhost',
+      reload: jest.fn()
+    };
+
+    Object.defineProperty(navigator, 'serviceWorker', {
+      value: {
+        controller: null,
+        addEventListener: addEventListenerMock
+      },
+      writable: true,
+      configurable: true
+    });
+
+    serviceWorkerRegistration.register();
+
+    expect(addEventListenerMock).toHaveBeenCalledWith('controllerchange', expect.any(Function));
+    expect(controllerChangeHandler).toBeInstanceOf(Function);
+
+    // Première activation (prise de contrôle initiale) : pas de rechargement
+    controllerChangeHandler();
+    expect(window.location.reload).not.toHaveBeenCalled();
+
+    // Deuxième activation (mise à jour) : rechargement déclenché
+    controllerChangeHandler();
+    expect(window.location.reload).toHaveBeenCalledTimes(1);
+
+    window.location = originalLocation;
+  });
 });
