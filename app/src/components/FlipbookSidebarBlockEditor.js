@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { pageService } from '../services/pageService';
 import { extractYoutubeVideoId, getYoutubeEmbedUrl } from '../utils/youtubeUtils';
+import FlipbookBlockStyleEditor from './FlipbookBlockStyleEditor';
 
 /**
  * Éditeur pour un bloc individuel de la barre latérale du Flipbook.
@@ -773,100 +774,62 @@ export default function FlipbookSidebarBlockEditor({
             </button>
 
             {showBlockStyles && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '0.5rem', background: '#f8fafc', padding: '0.6rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                <div className="flipbook-editor-field-row">
-                  <label className="flipbook-editor-label" htmlFor={`block-style-align-${position}-${index}`}>
-                    Alignement
-                  </label>
-                  <select
-                    id={`block-style-align-${position}-${index}`}
-                    value={blockStyle.textAlign || ''}
-                    onChange={(e) => handleUpdateBlockStyle('textAlign', e.target.value)}
-                    className="db-select text-xs"
-                  >
-                    <option value="">Par défaut (Barre)</option>
-                    <option value="left">Gauche</option>
-                    <option value="center">Centré</option>
-                    <option value="right">Droite</option>
-                  </select>
+              <div className="space-y-3 mt-2">
+                {/* 1. Propriétés générales du bloc (alignement, fond, texte) */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.5rem', background: '#f8fafc', padding: '0.6rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                  <div className="flipbook-editor-field-row">
+                    <label className="flipbook-editor-label" htmlFor={`block-style-align-${position}-${index}`}>
+                      Alignement
+                    </label>
+                    <select
+                      id={`block-style-align-${position}-${index}`}
+                      value={blockStyle.textAlign || ''}
+                      onChange={(e) => handleUpdateBlockStyle('textAlign', e.target.value)}
+                      className="db-select text-xs"
+                    >
+                      <option value="">Par défaut (Barre)</option>
+                      <option value="left">Gauche</option>
+                      <option value="center">Centré</option>
+                      <option value="right">Droite</option>
+                    </select>
+                  </div>
+
+                  <div className="flipbook-editor-field-row">
+                    <label className="flipbook-editor-label" htmlFor={`block-style-bg-${position}-${index}`}>
+                      Couleur de fond
+                    </label>
+                    <input
+                      id={`block-style-bg-${position}-${index}`}
+                      type="text"
+                      value={blockStyle.backgroundColor || ''}
+                      onChange={(e) => handleUpdateBlockStyle('backgroundColor', e.target.value)}
+                      placeholder="ex: #ffffff"
+                      className="db-input text-xs"
+                    />
+                  </div>
+
+                  <div className="flipbook-editor-field-row">
+                    <label className="flipbook-editor-label" htmlFor={`block-style-color-${position}-${index}`}>
+                      Couleur du texte
+                    </label>
+                    <input
+                      id={`block-style-color-${position}-${index}`}
+                      type="text"
+                      value={blockStyle.textColor || ''}
+                      onChange={(e) => handleUpdateBlockStyle('textColor', e.target.value)}
+                      placeholder="ex: #0f172a"
+                      className="db-input text-xs"
+                    />
+                  </div>
                 </div>
 
-                <div className="flipbook-editor-field-row">
-                  <label className="flipbook-editor-label" htmlFor={`block-style-radius-${position}-${index}`}>
-                    Arrondis
-                  </label>
-                  <select
-                    id={`block-style-radius-${position}-${index}`}
-                    value={blockStyle.borderRadius || ''}
-                    onChange={(e) => handleUpdateBlockStyle('borderRadius', e.target.value)}
-                    className="db-select text-xs"
-                  >
-                    <option value="">Par défaut (Barre)</option>
-                    <option value="none">Carré (0px)</option>
-                    <option value="rounded">Léger (8px)</option>
-                    <option value="normal">Standard (14px)</option>
-                    <option value="pill">Arrondi prononcé (20px)</option>
-                  </select>
-                </div>
-
-                <div className="flipbook-editor-field-row">
-                  <label className="flipbook-editor-label" htmlFor={`block-style-bg-${position}-${index}`}>
-                    Couleur de fond
-                  </label>
-                  <input
-                    id={`block-style-bg-${position}-${index}`}
-                    type="text"
-                    value={blockStyle.backgroundColor || ''}
-                    onChange={(e) => handleUpdateBlockStyle('backgroundColor', e.target.value)}
-                    placeholder="ex: #f8fafc"
-                    className="db-input text-xs"
-                  />
-                </div>
-
-                <div className="flipbook-editor-field-row">
-                  <label className="flipbook-editor-label" htmlFor={`block-style-color-${position}-${index}`}>
-                    Couleur du texte
-                  </label>
-                  <input
-                    id={`block-style-color-${position}-${index}`}
-                    type="text"
-                    value={blockStyle.textColor || ''}
-                    onChange={(e) => handleUpdateBlockStyle('textColor', e.target.value)}
-                    placeholder="ex: #0f172a"
-                    className="db-input text-xs"
-                  />
-                </div>
-
-                <div className="flipbook-editor-field-row">
-                  <label className="flipbook-editor-label" htmlFor={`block-style-border-${position}-${index}`}>
-                    Couleur de bordure
-                  </label>
-                  <input
-                    id={`block-style-border-${position}-${index}`}
-                    type="text"
-                    value={blockStyle.borderColor || ''}
-                    onChange={(e) => handleUpdateBlockStyle('borderColor', e.target.value)}
-                    placeholder="ex: #cbd5e1"
-                    className="db-input text-xs"
-                  />
-                </div>
-
-                <div className="flipbook-editor-field-row">
-                  <label className="flipbook-editor-label" htmlFor={`block-style-shadow-${position}-${index}`}>
-                    Ombre du bloc
-                  </label>
-                  <select
-                    id={`block-style-shadow-${position}-${index}`}
-                    value={blockStyle.shadow || ''}
-                    onChange={(e) => handleUpdateBlockStyle('shadow', e.target.value)}
-                    className="db-select text-xs"
-                  >
-                    <option value="">Par défaut (Barre)</option>
-                    <option value="none">Aucune ombre</option>
-                    <option value="subtle">Discrète</option>
-                    <option value="elevated">Prononcée</option>
-                  </select>
-                </div>
+                {/* 2. Personnalisation avancée des contours, ombres et aperçu immédiat */}
+                <FlipbookBlockStyleEditor
+                  block={block}
+                  position={position}
+                  index={index}
+                  onChange={onUpdate}
+                />
               </div>
             )}
           </div>

@@ -120,4 +120,30 @@ describe('FlipbookSidebarBlockEditor component', () => {
     expect(screen.getByLabelText(/URL YouTube \/ vidéo/i)).toHaveValue('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
     expect(screen.getByTitle('Aperçu YouTube')).toBeInTheDocument();
   });
+
+  test('toggles individual block styles section and reveals Contour, Ombre and Live Preview', () => {
+    render(
+      <FlipbookSidebarBlockEditor
+        block={mockBlock}
+        index={0}
+        totalBlocks={1}
+        position="left"
+        onUpdate={jest.fn()}
+        onDelete={jest.fn()}
+        onMoveUp={jest.fn()}
+        onMoveDown={jest.fn()}
+        onOpenMediaLibrary={jest.fn()}
+      />
+    );
+
+    const toggleStylesBtn = screen.getByRole('button', { name: /Styles individuels du bloc/i });
+    expect(toggleStylesBtn).toBeInTheDocument();
+
+    fireEvent.click(toggleStylesBtn);
+
+    expect(screen.getByText('Contour du bloc')).toBeInTheDocument();
+    expect(screen.getByText('Ombre du bloc')).toBeInTheDocument();
+    expect(screen.getByText('Aperçu immédiat du bloc')).toBeInTheDocument();
+  });
 });
+
