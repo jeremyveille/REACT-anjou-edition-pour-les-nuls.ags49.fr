@@ -1027,3 +1027,270 @@
   color: #2563eb;
 }
 
+/* ==========================================================================
+   10. ÉDITEUR VISUEL DU MODÈLE GLOBAL EN 3 ZONES
+   Zone 1 : Panneau gauche (Personnalisation par accordéons)
+   Zone 2 : Zone centrale (Aperçu en direct [ GAUCHE ] [ FLIPBOOK ] [ DROITE ])
+   Zone 3 : Zone inférieure (Actions sticky : Annuler, Réinitialiser, Enregistrer)
+   ========================================================================== */
+
+.ae-global-editor-unified-layout {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 1.5rem;
+  width: 100%;
+  margin-top: 1rem;
+  margin-bottom: 5rem; /* Espace pour la barre inférieure sticky */
+  box-sizing: border-box;
+}
+
+@media (max-width: 1100px) {
+  .ae-global-editor-unified-layout {
+    flex-direction: column;
+  }
+}
+
+/* Zone 1 : Panneau gauche (Personnalisation) */
+.ae-editor-left-panel {
+  width: 440px;
+  max-width: 100%;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  box-sizing: border-box;
+}
+
+@media (max-width: 1100px) {
+  .ae-editor-left-panel {
+    width: 100%;
+  }
+}
+
+/* Accordéons de personnalisation repliables */
+.ae-editor-accordion {
+  background: #ffffff;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dark-mode .ae-editor-accordion {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.ae-editor-accordion.is-open {
+  border-color: #93c5fd;
+  box-shadow: 0 2px 8px rgba(30, 58, 138, 0.08);
+}
+
+.dark-mode .ae-editor-accordion.is-open {
+  border-color: #2563eb;
+}
+
+.ae-accordion-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1rem;
+  background: #f8fafc;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease;
+  box-sizing: border-box;
+}
+
+.dark-mode .ae-accordion-header {
+  background: #0f172a;
+}
+
+.ae-accordion-header:hover {
+  background: #f1f5f9;
+}
+
+.dark-mode .ae-accordion-header:hover {
+  background: #1e293b;
+}
+
+.ae-accordion-title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-main, #0f172a);
+  margin: 0;
+}
+
+.dark-mode .ae-accordion-title {
+  color: #f1f5f9;
+}
+
+.ae-accordion-content {
+  padding: 1rem;
+  background: #ffffff;
+  border-top: 1px solid var(--border, #e2e8f0);
+  box-sizing: border-box;
+}
+
+.dark-mode .ae-accordion-content {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+/* Zone 2 : Zone centrale (Aperçu en direct) */
+.ae-editor-center-stage {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-sizing: border-box;
+  position: sticky;
+  top: 1rem;
+}
+
+@media (max-width: 1100px) {
+  .ae-editor-center-stage {
+    position: static;
+  }
+}
+
+.ae-center-stage-card {
+  background: #ffffff;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 14px;
+  padding: 1rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
+}
+
+.dark-mode .ae-center-stage-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+/* Bouton spécial : Appliquer ce style à tous les blocs */
+.ae-btn-apply-all-blocks {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.65rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #1e3a8a;
+  background: #eff6ff;
+  border: 1.5px solid #bfdbfe;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-top: 0.75rem;
+}
+
+.dark-mode .ae-btn-apply-all-blocks {
+  background: rgba(30, 58, 138, 0.3);
+  border-color: #2563eb;
+  color: #93c5fd;
+}
+
+.ae-btn-apply-all-blocks:hover {
+  background: #dbeafe;
+  border-color: #3b82f6;
+  color: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.dark-mode .ae-btn-apply-all-blocks:hover {
+  background: rgba(30, 58, 138, 0.5);
+  border-color: #60a5fa;
+  color: #bfdbfe;
+}
+
+/* Zone 3 : Zone inférieure (Actions sticky) */
+.ae-editor-bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-top: 1px solid var(--border, #cbd5e1);
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+  padding: 0.85rem 1.5rem;
+  box-sizing: border-box;
+}
+
+.dark-mode .ae-editor-bottom-bar {
+  background: rgba(15, 23, 42, 0.95);
+  border-color: #334155;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.35);
+}
+
+.ae-bottom-bar-inner {
+  max-width: 1700px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.ae-bottom-bar-status {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.8rem;
+  color: var(--text-main, #475569);
+}
+
+.dark-mode .ae-bottom-bar-status {
+  color: #cbd5e1;
+}
+
+.ae-bottom-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+/* Bouton Réinitialiser */
+.ae-btn-reset-changes {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #b91c1c;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.dark-mode .ae-btn-reset-changes {
+  background: rgba(185, 28, 28, 0.2);
+  border-color: #7f1d1d;
+  color: #fca5a5;
+}
+
+.ae-btn-reset-changes:hover {
+  background: #fee2e2;
+  border-color: #f87171;
+}
+
+

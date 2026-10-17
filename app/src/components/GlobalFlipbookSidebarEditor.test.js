@@ -270,5 +270,121 @@ describe('GlobalFlipbookSidebarEditor Component Tests', () => {
     });
     expect(screen.getByText(/Bilan de l'application du modèle global/i)).toBeInTheDocument();
   });
+
+  test('allows custom border width, radius, style, color and synchronizes sliders and numeric inputs', () => {
+    render(
+      <GlobalFlipbookSidebarEditor
+        initialTemplate={DEFAULT_GLOBAL_SIDEBAR}
+        flipbooks={mockFlipbooks}
+        onBack={jest.fn()}
+        onSaveSuccess={jest.fn()}
+        onApplyToAll={jest.fn()}
+      />
+    );
+
+    // 1. Épaisseur du contour slider
+    const borderSlider = screen.getByRole('slider', { name: /Épaisseur du contour/i });
+    expect(borderSlider).toBeInTheDocument();
+    fireEvent.change(borderSlider, { target: { value: '4' } });
+
+    // Champ numérique synchronisé
+    const borderNumberInput = screen.getByRole('spinbutton', { name: /Épaisseur du contour en pixels/i });
+    expect(borderNumberInput).toHaveValue(4);
+
+    // 2. Arrondi des angles slider & number
+    const radiusSlider = screen.getByRole('slider', { name: /Arrondi des angles/i });
+    fireEvent.change(radiusSlider, { target: { value: '18' } });
+    const radiusNumberInput = screen.getByRole('spinbutton', { name: /Arrondi des angles en pixels/i });
+    expect(radiusNumberInput).toHaveValue(18);
+
+    // 3. Style du contour
+    const styleSelect = screen.getByLabelText(/Style du contour/i);
+    fireEvent.change(styleSelect, { target: { value: 'dashed' } });
+    expect(styleSelect).toHaveValue('dashed');
+
+    // 4. Couleur du contour
+    const colorPicker = screen.getByLabelText(/Couleur du contour/i);
+    fireEvent.change(colorPicker, { target: { value: '#1e3a8a' } });
+    expect(colorPicker).toHaveValue('#1e3a8a');
+  });
+
+  test('allows customizing shadow properties and toggles shadow', () => {
+    render(
+      <GlobalFlipbookSidebarEditor
+        initialTemplate={DEFAULT_GLOBAL_SIDEBAR}
+        flipbooks={mockFlipbooks}
+        onBack={jest.fn()}
+        onSaveSuccess={jest.fn()}
+        onApplyToAll={jest.fn()}
+      />
+    );
+
+    // Vérification des préréglages d'ombre
+    const btnLégère = screen.getByRole('button', { name: /Légère/i });
+    const btnPrononcée = screen.getByRole('button', { name: /Prononcée/i });
+    expect(btnLégère).toBeInTheDocument();
+    expect(btnPrononcée).toBeInTheDocument();
+
+    fireEvent.click(btnPrononcée);
+    expect(btnPrononcée).toHaveClass('active');
+
+    // Test de la bascule intérieure / extérieure
+    const insetBtn = screen.getByRole('button', { name: /Intérieure/i });
+    fireEvent.click(insetBtn);
+    expect(insetBtn).toHaveClass('active');
+  });
+
+  test('applies border and shadow style to all blocks across left and right sidebars when clicking Appliquer ce style à tous les blocs', () => {
+    const setNotification = jest.fn();
+    const templateWithBlocks = {
+      ...DEFAULT_GLOBAL_SIDEBAR,
+      leftSidebar: [
+        { id: 'lb1', type: 'text', title: 'Bloc Gauche 1', style: { borderWidth: 1 } }
+      ],
+      rightSidebar: [
+        { id: 'rb1', type: 'image', title: 'Bloc Droite 1', style: { borderWidth: 0 } }
+      ]
+    };
+
+    render(
+      <GlobalFlipbookSidebarEditor
+        initialTemplate={templateWithBlocks}
+        flipbooks={mockFlipbooks}
+        onBack={jest.fn()}
+        onSaveSuccess={jest.fn()}
+        onApplyToAll={jest.fn()}
+        setNotification={setNotification}
+      />
+    );
+
+    // Changer l'épaisseur globale
+    const borderSlider = screen.getByRole('slider', { name: /Épaisseur du contour/i });
+    fireEvent.change(borderSlider, { target: { value: '6' } });
+
+    // Cliquer sur « Appliquer ce style à tous les blocs »
+    const applyAllBtn = screen.getByRole('button', { name: /Appliquer ce style à tous les blocs/i });
+    expect(applyAllBtn).toBeInTheDocument();
+    fireEvent.click(applyAllBtn);
+
+    expect(setNotification).toHaveBeenCalledWith(
+      expect.stringContaining("appliqué à tous les blocs des deux barres")
+    );
+  });
+
+  test('displays live central preview with BARRE GAUCHE, FLIPBOOK and BARRE DROITE updating immediately', () => {
+    render(
+      <GlobalFlipbookSidebarEditor
+        initialTemplate={DEFAULT_GLOBAL_SIDEBAR}
+        flipbooks={mockFlipbooks}
+        onBack={jest.fn()}
+        onSaveSuccess={jest.fn()}
+        onApplyToAll={jest.fn()}
+      />
+    );
+
+    expect(screen.getByText(/\[ BARRE GAUCHE \] \[ FLIPBOOK \] \[ BARRE DROITE \]/i)).toBeInTheDocument();
+    expect(screen.getByTestId('flipbook-layout-wrapper')).toBeInTheDocument();
+  });
 });
+
 
