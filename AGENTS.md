@@ -436,6 +436,29 @@ Se déplacer dans le dossier : `cd page-builder-react`
     *   100% Vanilla CSS pur (zéro Tailwind, zéro PHP/WordPress).
     *   Compilation de production `npm run build` réussie avec 0 erreur et 0 avertissement.
 
+### 27. Personnalisation des Contours et des Ombres des Blocs de Barres Latérales (`FlipbookBlockStyleEditor.js`, `flipbookBlockStyleUtils.js`, `FlipbookSidebarBlock.js`, `FlipbookSidebarBlockEditor.js`, `flipbook-sidebars.css`)
+*   **Section « Contour » Complète** :
+    *   Épaisseur de 0 à 12 px avec curseur et champ numérique synchronisés (une valeur de 0 px supprime visuellement le contour avec `border: none`).
+    *   Sélecteur de couleur avec champ hexadécimal et pastilles d'échantillons rapides Anjou Édition.
+    *   Styles de bordure CSS natifs : Continu (`solid`), Pointillé (`dotted`), Tirets (`dashed`), Aucun (`none`).
+    *   Arrondi des angles (`border-radius`) de 0 à 40 px avec curseur et champ numérique synchronisés.
+    *   Bascule « Côtés uniformes » / « 4 côtés séparés » permettant d'ajuster indépendamment Haut, Droite, Bas, Gauche de 0 à 12 px.
+*   **Section « Ombre » Précise & Préréglages** :
+    *   Interrupteur pour activer ou désactiver l'ombre (`box-shadow: none` si désactivée).
+    *   4 Préréglages instantanés en un clic : « Aucune », « Légère », « Moyenne », « Prononcée ».
+    *   Réglages fins synchronisés (curseurs et champs numériques) : Décalage horizontal (-30 à +30 px), Décalage vertical (-30 à +30 px), Flou (0 à 60 px), Étendue (-20 à +30 px), Opacité (0 à 100%).
+    *   Palette de couleur de l'ombre avec conversion dynamique en `rgba()`.
+    *   Option d'ombre intérieure (`inset`) ou extérieure.
+*   **Aperçu Immédiat en Temps Réel** :
+    *   Aperçu direct du bloc sélectionné dans le panneau de configuration avant enregistrement, respectant fidèlement le rendu réel public.
+    *   Boîte d'aperçu sans rognage ni débordement d'ombre avec affichage des propriétés CSS exactes calculées (`border`, `border-radius`, `box-shadow`).
+*   **Persistance Hybride & Rétro-compatibilité** :
+    *   Fonctionne sur chaque bloc individuellement, dans le modèle global (`GlobalFlipbookSidebarEditor`) et dans les configurations personnalisées de chaque Flipbook (`FlipbookEditModal`).
+    *   Synchronisation automatique de tous les Flipbooks liés au modèle global lors de l'enregistrement.
+    *   Conservation intégrale des anciennes configurations sans écrasement des personnalisations individuelles.
+    *   39 suites de tests automatisées et 331 tests réussis à 100%, 0 avertissements de compilation.
+
 ---
 
-*Dernière mise à jour du contexte par l'agent : 15 octobre 2026.*
+*Dernière mise à jour du contexte par l'agent : 17 octobre 2026.*
+
