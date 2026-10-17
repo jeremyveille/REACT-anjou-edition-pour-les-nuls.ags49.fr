@@ -158,4 +158,39 @@ describe('FlipbookSidebarBlock component', () => {
     expect(downloadLink).toHaveAttribute('href', '/files/degustation.pdf');
     expect(downloadLink).toHaveAttribute('download');
   });
+
+  test('applies custom border and shadow CSS styles to sidebar card', () => {
+    const styledBlock = {
+      id: 'styled-1',
+      type: 'text',
+      title: 'Bloc Stylé',
+      content: 'Contenu avec contour et ombre',
+      enabled: true,
+      style: {
+        borderWidth: 3,
+        borderStyle: 'dashed',
+        borderColor: '#1e3a8a',
+        borderRadius: 18,
+        shadowEnabled: true,
+        shadowOffsetX: 2,
+        shadowOffsetY: 8,
+        shadowBlur: 16,
+        shadowSpread: -2,
+        shadowOpacity: 15,
+        shadowColor: '#0f172a',
+        shadowInset: false
+      }
+    };
+
+    const { container } = render(<FlipbookSidebarBlock block={styledBlock} />);
+    const card = container.querySelector('.flipbook-sidebar-card');
+    expect(card).toBeInTheDocument();
+    expect(card.style.borderWidth).toBe('3px');
+    expect(card.style.borderStyle).toBe('dashed');
+    expect(card.style.borderColor).toBe('#1e3a8a');
+    expect(card.style.borderRadius).toBe('18px');
+    expect(card.style.boxShadow).toContain('2px 8px 16px -2px');
+    expect(card.style.boxShadow).toContain('rgba(15, 23, 42, 0.15)');
+  });
 });
+

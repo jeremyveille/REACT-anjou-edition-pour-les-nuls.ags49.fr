@@ -3,6 +3,8 @@ import { ExternalLink, FileText, Download } from 'lucide-react';
 import { sanitizeHtml, sanitizeUrl } from '../utils/sanitize';
 import { extractYoutubeVideoId, getYoutubeEmbedUrl } from '../utils/youtubeUtils';
 
+import { computeBlockCustomStyles } from '../utils/flipbookBlockStyleUtils';
+
 /**
  * Composant de rendu individuel d'un bloc de la barre latérale du Flipbook.
  * Supporte : image, vidéo (locale & YouTube), texte/HTML sécurisé, titre, bouton/lien, document PDF.
@@ -14,34 +16,10 @@ export default function FlipbookSidebarBlock({ block }) {
 
   const { type, title, caption } = block;
 
-  // Construction du style individuel du bloc si personnalisé
-  const customBlockStyle = {};
+  // Construction du style individuel du bloc (contours, ombres, couleurs, alignement)
+  const customBlockStyle = computeBlockCustomStyles(block);
   const bStyle = block.style || {};
-  const bg = bStyle.backgroundColor || block.backgroundColor;
   const txtColor = bStyle.textColor || block.textColor;
-  const bdrColor = bStyle.borderColor || block.borderColor;
-  const align = bStyle.textAlign || block.textAlign;
-  const radius = bStyle.borderRadius || block.borderRadius;
-  const shadow = bStyle.shadow || block.shadow;
-
-  if (bg) customBlockStyle.backgroundColor = bg;
-  if (txtColor) {
-    customBlockStyle.color = txtColor;
-    customBlockStyle['--text-main'] = txtColor;
-    customBlockStyle['--text-muted'] = txtColor;
-  }
-  if (bdrColor) customBlockStyle.borderColor = bdrColor;
-  if (align && ['left', 'center', 'right'].includes(align)) {
-    customBlockStyle.textAlign = align;
-  }
-  if (radius === 'none') customBlockStyle.borderRadius = '0px';
-  else if (radius === 'rounded') customBlockStyle.borderRadius = '8px';
-  else if (radius === 'normal') customBlockStyle.borderRadius = '14px';
-  else if (radius === 'pill') customBlockStyle.borderRadius = '20px';
-
-  if (shadow === 'none') customBlockStyle.boxShadow = 'none';
-  else if (shadow === 'subtle') customBlockStyle.boxShadow = '0 1px 3px rgba(15, 23, 42, 0.05)';
-  else if (shadow === 'elevated') customBlockStyle.boxShadow = '0 12px 24px -4px rgba(15, 23, 42, 0.14)';
 
   switch (type) {
     case 'heading': {
