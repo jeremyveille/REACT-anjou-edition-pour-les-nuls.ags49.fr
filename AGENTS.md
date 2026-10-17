@@ -456,7 +456,30 @@ Se déplacer dans le dossier : `cd page-builder-react`
     *   Fonctionne sur chaque bloc individuellement, dans le modèle global (`GlobalFlipbookSidebarEditor`) et dans les configurations personnalisées de chaque Flipbook (`FlipbookEditModal`).
     *   Synchronisation automatique de tous les Flipbooks liés au modèle global lors de l'enregistrement.
     *   Conservation intégrale des anciennes configurations sans écrasement des personnalisations individuelles.
-    *   39 suites de tests automatisées et 331 tests réussis à 100%, 0 avertissements de compilation.
+    *   39 suites de tests automatisées et 337 tests réussis à 100%, 0 avertissements de compilation.
+
+### 28. Modèle Global des Barres Latérales en 3 Zones pour Tous les Flipbooks (`FlipbookManager.js`, `GlobalFlipbookSidebarEditor.js`, `FlipbookLayout.js`, `flipbook-sidebars.css`)
+*   **Bouton d'Accès Clair dans « Gestion de mes Flipbooks »** : Bouton proéminent « Personnaliser les barres latérales » permettant d'accéder instantanément à l'éditeur visuel unifié.
+*   **Architecture Visuelle en 3 Zones Simultanées** :
+    *   **Zone 1 — Panneau Gauche : Personnalisation par accordéons repliables** :
+        1. *Dimensions* : Largeurs des barres gauche et droite (15 à 30%), largeur max totale (1400 / 1680 / 1920 px), afficher/masquer indépendamment la barre gauche et la barre droite (`showLeftSidebar`, `showRightSidebar`).
+        2. *Contours & Bordures* : Épaisseur réglable de 0 à 12 px (0 px supprime visuellement le contour avec `border: none`), sélecteur de couleur + hex, style continu/pointillé/tirets/aucun, arrondi des angles de 0 à 40 px, côtés uniformes ou 4 côtés séparés, section ombre complète (activer/désactiver, 4 préréglages, décalages X/Y -30 à +30 px, flou 0 à 60 px, étendue -20 à +30 px, opacité 0 à 100%, couleur, extérieure/intérieure).
+        3. *Harmonisation Totale* : Bouton « Appliquer ce style à tous les blocs » propageant instantanément les contours, arrondis, couleurs et ombres sur l'ensemble des blocs des deux barres via `applyStyleToAllBlocks`.
+        4. *Couleurs* : Fond des cartes de blocs, arrière-plan des barres, couleur d'accentuation des titres/boutons avec palette Anjou Édition, couleur du texte.
+        5. *Espacements* : Espacement intérieur des cartes (padding) et espacement entre les blocs (gap).
+        6. *Contenu des blocs* : FlipbookSidebarEditor intégré permettant d'ajouter, éditer, réorganiser et masquer les blocs (sans aucun contenu fictif ou patrimonial auto-généré).
+    *   **Zone 2 — Zone Centrale : Aperçu en Direct Temps Réel** :
+        *   Affichage fidèle du rendu public : `[ BARRE GAUCHE ] [ FLIPBOOK ] [ BARRE DROITE ]`.
+        *   Toute modification dans le panneau gauche se répercute instantanément sur l'aperçu sans recharger la page.
+        *   Sélecteur de format d'écran responsive standard : XL (Grand écran >1200px), L (Desktop 1024px), M (Tablette 768px avec flipbook prioritaire), S (Smartphone 390px où les barres s'empilent sous le flipbook sans débordement horizontal).
+        *   Sélecteur de Flipbook test pour évaluer le rendu avec n'importe quelle publication du catalogue.
+    *   **Zone 3 — Zone Inférieure : Actions Sticky Fixes** :
+        *   Bouton « Annuler les modifications » (rétablissement de la version enregistrée).
+        *   Bouton « Réinitialiser les modifications » (valeurs par défaut).
+        *   Bouton « Restaurer version enregistrée » (recharge depuis Firebase/LocalStorage).
+        *   Bouton secondaire « Appliquer à tous les Flipbooks » avec modale de confirmation et bilan analytique détaillé.
+        *   Bouton principal « Enregistrer comme modèle global » (persistance Firestore + LocalStorage + diffusion d'événement `GLOBAL_SIDEBAR_EVENT`).
+*   **Qualité & Tests** : 39 suites de tests automatisées et 337 tests unitaires/d'intégration réussis à 100%, 0 erreurs et 0 avertissements de compilation de production (`Compiled successfully`).
 
 ---
 
