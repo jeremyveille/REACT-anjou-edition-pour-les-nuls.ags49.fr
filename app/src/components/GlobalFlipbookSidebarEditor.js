@@ -12,7 +12,7 @@ import {
   Monitor, 
   Tv, 
   Sparkles,
-  BookOpen,
+  History,
   Info,
   CheckCircle2,
   Undo2,
@@ -43,8 +43,7 @@ import {
 } from '../services/flipbookSidebarService';
 import { 
   applyStyleToAllBlocks, 
-  SHADOW_PRESETS, 
-  BORDER_STYLES 
+  SHADOW_PRESETS 
 } from '../utils/flipbookBlockStyleUtils';
 
 /**
@@ -1053,6 +1052,25 @@ export default function GlobalFlipbookSidebarEditor({
                         </div>
                       </div>
 
+                      {/* Étendue de l'ombre (-20 à +30 px) */}
+                      <div>
+                        <div className="flex justify-between text-[11px] text-slate-600 dark:text-slate-300 font-semibold mb-0.5">
+                          <label htmlFor="input-shadow-spread">Étendue (-20 à +30 px)</label>
+                          <span className="font-mono">{currentShadowSpread}px</span>
+                        </div>
+                        <input
+                          id="input-shadow-spread"
+                          type="range"
+                          min="-20"
+                          max="30"
+                          step="1"
+                          value={currentShadowSpread}
+                          onChange={(e) => handleStyleChange('shadowSpread', Number(e.target.value))}
+                          className="ae-range-input"
+                          aria-label="Étendue de l'ombre en pixels"
+                        />
+                      </div>
+
                       {/* Couleur et Type (Intérieure / Extérieure) */}
                       <div className="grid grid-cols-2 gap-2 items-center">
                         <div>
@@ -1469,6 +1487,18 @@ export default function GlobalFlipbookSidebarEditor({
             >
               <Undo2 size={16} aria-hidden="true" />
               <span>Annuler les modifications</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleRestoreLastSavedVersion}
+              disabled={isSaving}
+              className="ae-flipbook-btn-secondary"
+              aria-label="Restaurer la dernière version enregistrée"
+              title="Restaurer la dernière version enregistrée"
+            >
+              <History size={15} aria-hidden="true" />
+              <span>Restaurer version enregistrée</span>
             </button>
 
             <button
