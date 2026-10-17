@@ -310,10 +310,10 @@ export default function FlipbookManager({
             type="button"
             onClick={() => setActiveManagerTab('global_sidebar')}
             className="ae-btn-outline-primary"
-            aria-label="Gérer le modèle global des barres latérales"
+            aria-label="Personnaliser les barres latérales"
           >
             <Sparkles size={16} aria-hidden="true" />
-            <span>Gérer le modèle global des barres latérales</span>
+            <span>Personnaliser les barres latérales</span>
           </button>
 
           <button

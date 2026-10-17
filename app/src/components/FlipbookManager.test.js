@@ -268,4 +268,25 @@ describe('FlipbookManager Component Tests', () => {
     fireEvent.change(searchInput, { target: { value: 'Livre Test 1' } });
     expect(screen.getAllByText('Livre Test 1').length).toBeGreaterThanOrEqual(1);
   });
+
+  test('opens global sidebar visual editor when clicking Personnaliser les barres latérales', () => {
+    render(
+      <FlipbookManager
+        flipbooks={mockFlipbooks}
+        onAddFlipbook={jest.fn()}
+        onViewFlipbook={jest.fn()}
+        onEditFlipbook={jest.fn()}
+        onDeleteFlipbook={jest.fn()}
+        onBulkDelete={jest.fn()}
+        onBackToMain={jest.fn()}
+      />
+    );
+
+    const customizeBtn = screen.getByRole('button', { name: /Personnaliser les barres latérales/i });
+    expect(customizeBtn).toBeInTheDocument();
+    fireEvent.click(customizeBtn);
+
+    // L'éditeur global doit être affiché
+    expect(screen.getAllByText(/Modèle global des barres latérales/i).length).toBeGreaterThanOrEqual(1);
+  });
 });
