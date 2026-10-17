@@ -338,3 +338,36 @@ export function computeBlockCustomStyles(block) {
 
   return customStyle;
 }
+
+/**
+ * Applique un style homogène (contours, arrondis, couleurs, ombres) à tous les blocs d'une liste
+ */
+export function applyStyleToAllBlocks(blocks = [], targetStyle = {}) {
+  if (!Array.isArray(blocks)) return [];
+  return blocks.map(block => {
+    if (!block || typeof block !== 'object') return block;
+    const currentStyle = block.style || {};
+    return {
+      ...block,
+      style: {
+        ...currentStyle,
+        ...(targetStyle.borderWidth !== undefined ? { borderWidth: targetStyle.borderWidth } : {}),
+        ...(targetStyle.borderStyle !== undefined ? { borderStyle: targetStyle.borderStyle } : {}),
+        ...(targetStyle.borderColor !== undefined ? { borderColor: targetStyle.borderColor } : {}),
+        ...(targetStyle.borderRadius !== undefined ? { borderRadius: targetStyle.borderRadius } : {}),
+        ...(targetStyle.borderSidesUniform !== undefined ? { borderSidesUniform: targetStyle.borderSidesUniform } : {}),
+        ...(targetStyle.backgroundColor !== undefined ? { backgroundColor: targetStyle.backgroundColor } : {}),
+        ...(targetStyle.textColor !== undefined ? { textColor: targetStyle.textColor } : {}),
+        ...(targetStyle.shadowEnabled !== undefined ? { shadowEnabled: targetStyle.shadowEnabled } : {}),
+        ...(targetStyle.shadow !== undefined ? { shadow: targetStyle.shadow } : {}),
+        ...(targetStyle.shadowOffsetX !== undefined ? { shadowOffsetX: targetStyle.shadowOffsetX } : {}),
+        ...(targetStyle.shadowOffsetY !== undefined ? { shadowOffsetY: targetStyle.shadowOffsetY } : {}),
+        ...(targetStyle.shadowBlur !== undefined ? { shadowBlur: targetStyle.shadowBlur } : {}),
+        ...(targetStyle.shadowSpread !== undefined ? { shadowSpread: targetStyle.shadowSpread } : {}),
+        ...(targetStyle.shadowOpacity !== undefined ? { shadowOpacity: targetStyle.shadowOpacity } : {}),
+        ...(targetStyle.shadowColor !== undefined ? { shadowColor: targetStyle.shadowColor } : {}),
+        ...(targetStyle.shadowInset !== undefined ? { shadowInset: targetStyle.shadowInset } : {})
+      }
+    };
+  });
+}

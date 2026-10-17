@@ -6,6 +6,7 @@ import {
   computeBoxShadowCss,
   computeBorderCssProperties,
   computeBlockCustomStyles,
+  applyStyleToAllBlocks,
   SHADOW_PRESETS,
   BORDER_STYLES
 } from './flipbookBlockStyleUtils';
@@ -200,4 +201,37 @@ describe('flipbookBlockStyleUtils', () => {
       expect(style.textAlign).toBe('center');
     });
   });
+
+  describe('applyStyleToAllBlocks', () => {
+    test('propagates border and shadow styles across all blocks homogeneously', () => {
+      const blocks = [
+        { id: 'b1', type: 'text', title: 'Bloc 1', style: { borderWidth: 1 } },
+        { id: 'b2', type: 'image', title: 'Bloc 2', style: { borderWidth: 0 } }
+      ];
+
+      const globalStyle = {
+        borderWidth: 4,
+        borderColor: '#1e3a8a',
+        borderStyle: 'dashed',
+        borderRadius: 20,
+        shadowEnabled: true,
+        shadowBlur: 14
+      };
+
+      const updated = applyStyleToAllBlocks(blocks, globalStyle);
+      expect(updated).toHaveLength(2);
+      expect(updated[0].style.borderWidth).toBe(4);
+      expect(updated[0].style.borderColor).toBe('#1e3a8a');
+      expect(updated[0].style.borderStyle).toBe('dashed');
+      expect(updated[0].style.borderRadius).toBe(20);
+      expect(updated[0].style.shadowBlur).toBe(14);
+
+      expect(updated[1].style.borderWidth).toBe(4);
+      expect(updated[1].style.borderColor).toBe('#1e3a8a');
+      expect(updated[1].style.borderStyle).toBe('dashed');
+      expect(updated[1].style.borderRadius).toBe(20);
+      expect(updated[1].style.shadowBlur).toBe(14);
+    });
+  });
 });
+

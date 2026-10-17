@@ -7,6 +7,9 @@ import {
 } from '../services/flipbookSidebarService';
 
 const mapGapValue = (gap) => {
+  if (gap === undefined || gap === null || gap === '') return null;
+  if (typeof gap === 'number') return `${gap}px`;
+  if (typeof gap === 'string' && /^\d+/.test(gap)) return gap.endsWith('px') || gap.endsWith('rem') ? gap : `${gap}px`;
   if (gap === 'compact') return '0.75rem';
   if (gap === 'relaxed') return '1.75rem';
   if (gap === 'normal') return '1.25rem';
@@ -14,6 +17,9 @@ const mapGapValue = (gap) => {
 };
 
 const mapPaddingValue = (padding) => {
+  if (padding === undefined || padding === null || padding === '') return null;
+  if (typeof padding === 'number') return `${padding}px`;
+  if (typeof padding === 'string' && /^\d+/.test(padding)) return padding.endsWith('px') || padding.endsWith('rem') ? padding : `${padding}px`;
   if (padding === 'compact') return '0.75rem';
   if (padding === 'relaxed') return '1.5rem';
   if (padding === 'normal') return '1.15rem';
@@ -111,8 +117,8 @@ export default function FlipbookLayout({ book, children, globalSidebar = null })
   const rightBlocks = Array.isArray(resolved.rightSidebar) ? resolved.rightSidebar : [];
   const styles = resolved.styles || {};
 
-  const hasActiveLeft = leftBlocks.some(b => b && b.enabled !== false);
-  const hasActiveRight = rightBlocks.some(b => b && b.enabled !== false);
+  const hasActiveLeft = (styles.showLeftSidebar !== false) && leftBlocks.some(b => b && b.enabled !== false);
+  const hasActiveRight = (styles.showRightSidebar !== false) && rightBlocks.some(b => b && b.enabled !== false);
 
   let layoutClass = 'has-both-sidebars';
   if (hasActiveLeft && !hasActiveRight) {
