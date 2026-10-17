@@ -126,8 +126,10 @@ Se déplacer dans le dossier : `cd page-builder-react`
 *   **Déploiement Firebase Hosting** : Effectué à la demande via la CLI Firebase (`firebase deploy --only hosting`).
 
 ### 2. PWA (Progressive Web App) & Lecture 100% Hors-Ligne
-*   **Service Worker & Enregistrement (`serviceWorkerRegistration.js` & `public/service-worker.js`)** : Stratégie de mise en cache multi-niveaux (Cache-First pour les flipbooks PDF, Stale-While-Revalidate pour les médias et assets statiques, fallback SPA offline sur `index.html`).
-*   **Catalogue Littéraire Accessible Hors-Ligne** : L'ensemble des textes, poésies, fables et guides littéraires sont instantanément disponibles sans connexion Internet.
+*   **Service Worker & Enregistrement (`serviceWorkerRegistration.js` & `public/service-worker.js`)** : Stratégie de mise en cache multi-niveaux (Cache-First pour les flipbooks PDF, Stale-While-Revalidate pour les médias et assets statiques, fallback SPA offline sur `index.html`). Prise de contrôle transparente du cache au premier enregistrement sans rechargement brutal intempestif (`hadController` check), évitant la destruction de sessions et le double chargement des documents PDF dans `PdfFlipbookReader`.
+*   **Catalogue Littéraire & Flipbooks Accessibles Hors-Ligne** : L'ensemble des textes, poésies, fables et documents PDF mis en cache dans IndexedDB (`getPDFFile`) sont instantanément disponibles sans connexion Internet.
+*   **Filtrage des rejets d'extensions (`index.js`)** : Gestionnaire global `unhandledrejection` neutralisant les bruits de console émis par des extensions tierces de navigateur (`message channel closed before a response was received`).
+*   **Mode hors-ligne résilient (Zero-Spam)** : Court-circuit des requêtes Firestore impossibles et rafraîchissements de token (`securetoken.googleapis.com`) quand `navigator.onLine === false`, avec réactivité automatique au retour du réseau via `window.addEventListener('online')`.
 
 ### 3. Optimisation des Médias & Miniatures WebP (`imageOptimizer.js`)
 *   **Génération et Conversion WebP** : Module centralisé [app/src/utils/imageOptimizer.js](file:///C:/Users/jerem/REACT-anjou-edition-pour-les-nuls.ags49.fr/app/src/utils/imageOptimizer.js) assurant la génération dynamique de miniatures WebP légères (`400x300` / `75% qualité`) et de jeux de sources réactifs (`srcset`).

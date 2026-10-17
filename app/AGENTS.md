@@ -61,9 +61,10 @@ Se déplacer dans le dossier : `cd app`
 *   Le déploiement sur Firebase Hosting s'effectue manuellement à la demande via `firebase deploy --only hosting`.
 
 ### 2. PWA (Progressive Web App) & Lecture 100% Hors-Ligne
-*   Enregistrement du service worker (`serviceWorkerRegistration.js` & `public/service-worker.js`).
-*   Mise en cache intelligente : Cache-First pour les Flipbooks PDF, Stale-While-Revalidate pour les médias et assets statiques, fallback SPA sur `index.html`.
-*   Lecture 100% hors-ligne des textes littéraires, contes, fables et poésies d'Anjou.
+*   **Enregistrement du service worker (`serviceWorkerRegistration.js` & `public/service-worker.js`)** : Prise de contrôle transparente du cache au premier enregistrement sans rechargement brutal intempestif (`hadController` check), évitant la destruction de sessions et le double chargement des documents PDF dans `PdfFlipbookReader`.
+*   **Mise en cache intelligente** : Cache-First pour les Flipbooks PDF, Stale-While-Revalidate pour les médias et assets statiques, fallback SPA sur `index.html`.
+*   **Lecture 100% hors-ligne des textes littéraires, contes, fables et flipbooks** : Accès instantané à l'ensemble du catalogue et des flipbooks mis en cache dans IndexedDB (`getPDFFile`).
+*   **Filtrage des rejets d'extensions (`index.js`)** : Gestionnaire global `unhandledrejection` neutralisant les bruits de console émis par des extensions tierces de navigateur (`message channel closed before a response was received`).
 
 ### 3. Optimisation des Médias & Miniatures WebP (`imageOptimizer.js`)
 *   Génération de miniatures WebP légères (`400x300`) et jeux de sources réactifs (`srcset`).
@@ -72,9 +73,11 @@ Se déplacer dans le dossier : `cd app`
 ### 4. Sécurité & Protection XSS (`sanitize.js`)
 *   Module de désinfection centralisé [src/utils/sanitize.js](file:///C:/Users/jerem/REACT-anjou-edition-pour-les-nuls.ags49.fr/app/src/utils/sanitize.js) protégeant contre toute injection de scripts, balises HTML non autorisées et schémas d'URL malveillants (`javascript:`, `data:`).
 
-### 5. Gestion Hybride des Données & Mode Hors-Ligne (Offline-First)
-*   Tous les accès Firestore sont sécurisés de manière défensive (`snap && !snap.empty && snap.docs`).
-*   Bascule automatique (**fallback**) sur le `localStorage` de l'utilisateur en cas de coupure réseau ou d'absence de configuration Firebase.
+### 5. Gestion Hybride des Données & Mode Hors-Ligne Résilient (Offline-First)
+*   **Court-circuit des requêtes réseau impossibles (`navigator.onLine === false`)** : `fetchPublicMedia`, `fetchMenus`, `fetchGlobalSidebarTemplate` et `pageService.getPages` vérifient l'état de connexion avant toute sollicitation Firestore, supprimant à la source les erreurs `net::ERR_INTERNET_DISCONNECTED` et les tentatives de rafraîchissement de token Google (`securetoken.googleapis.com`).
+*   **Vérification administrateur hors-ligne (`verifyAdminStatus`)** : Authentification directe sans forcer le réseau (`user.getIdTokenResult(false)`) et validation prioritaire sur liste blanche (`source: 'whitelist_offline'`).
+*   **Réactivité au retour du réseau** : Écouteurs `window.addEventListener('online')` synchronisant automatiquement Firestore dès que la connexion Internet est rétablie.
+*   **Bascule automatique (**fallback**)** sur le `localStorage` et les structures intégrées de secours en cas de coupure réseau ou d'absence de configuration Firebase.
 
 ### 6. Conformité RGPD & Respect de la Vie Privée
 *   **Bannière de Consentement (`CookieConsentBanner.js`)** : Consentement granulaire, information claire sur l'absence de traceurs publicitaires.
