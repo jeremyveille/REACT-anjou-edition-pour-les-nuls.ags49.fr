@@ -226,6 +226,9 @@ export const getPreviousSavedGlobalSidebar = () => {
  * Charge le modèle global depuis Firestore avec fallback LocalStorage
  */
 export const fetchGlobalSidebarTemplate = async () => {
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    return getLocalGlobalSidebar();
+  }
   try {
     if (db) {
       const docRef = doc(db, "settings", "flipbook_global_sidebar");

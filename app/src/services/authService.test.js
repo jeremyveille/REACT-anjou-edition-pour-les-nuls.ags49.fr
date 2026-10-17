@@ -156,6 +156,24 @@ describe('authService - verifyAdminStatus', () => {
     expect(res.isAdmin).toBe(false);
     expect(res.reason).toBe('unauthorized_account');
   });
+
+  test('authenticates admin instantly via whitelist in offline mode without network calls', async () => {
+    const originalOnline = navigator.onLine;
+    Object.defineProperty(navigator, 'onLine', { value: false, writable: true, configurable: true });
+
+    const mockUser = {
+      email: 'jeremy.veille@hotmail.fr',
+      displayName: 'Jérémy Veillé',
+      getIdTokenResult: jest.fn()
+    };
+
+    const res = await verifyAdminStatus(mockUser);
+    expect(res.isAdmin).toBe(true);
+    expect(res.source).toBe('whitelist_offline');
+    expect(mockUser.getIdTokenResult).not.toHaveBeenCalled();
+
+    Object.defineProperty(navigator, 'onLine', { value: originalOnline, writable: true, configurable: true });
+  });
 });
 
 describe('authService - Actions login & logout', () => {

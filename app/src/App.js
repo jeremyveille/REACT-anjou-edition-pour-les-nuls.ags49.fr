@@ -415,6 +415,11 @@ function App() {
   useEffect(() => {
     let isMounted = true;
     const fetchPublicMedia = async () => {
+      // Évite de déclencher des requêtes réseau Firestore impossibles et des rafales securetoken hors ligne
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+        return;
+      }
+
       try {
         let snapFb = null;
         let galSnap = null;
@@ -484,8 +489,20 @@ function App() {
     };
 
     fetchPublicMedia();
+
+    // Re-synchroniser avec Firestore lorsque la connexion Internet est rétablie
+    const handleOnline = () => {
+      fetchPublicMedia();
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('online', handleOnline);
+    }
+
     return () => {
       isMounted = false;
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('online', handleOnline);
+      }
     };
   }, []);
 
@@ -575,9 +592,17 @@ function App() {
   });
 
   useEffect(() => {
+    let isMounted = true;
     const fetchMenus = async () => {
+      // Évite de déclencher des requêtes réseau Firestore impossibles et des rafales securetoken hors ligne
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+        return;
+      }
+
       try {
         const snap = await getDocs(collection(db, "menus"));
+        if (!isMounted) return;
+
         if (snap && !snap.empty && snap.docs) {
           const list = snap.docs.map(doc => {
             const data = doc.data() || {};
@@ -631,10 +656,28 @@ function App() {
           localStorage.setItem("ae_menus", JSON.stringify(sorted));
         }
       } catch (err) {
-        console.error("Failed to load menus from Firestore:", err);
+        if (isMounted) {
+          console.error("Failed to load menus from Firestore:", err);
+        }
       }
     };
+
     fetchMenus();
+
+    // Re-synchroniser avec Firestore lorsque la connexion Internet est rétablie
+    const handleOnline = () => {
+      fetchMenus();
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('online', handleOnline);
+    }
+
+    return () => {
+      isMounted = false;
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('online', handleOnline);
+      }
+    };
   }, []);
 
   // Refs for closing dropdowns when clicking outside

@@ -244,6 +244,24 @@ export const auditService = {
   }
 };
 
+const mapLocalItems = (collectionName, local) => {
+  return local.map(item => {
+    let blocks = item.blocks;
+    const isHome = (item.title || '').toLowerCase().includes('accueil') || item.slug === 'home' || item.slug === 'accueil';
+    if (isHome && collectionName === 'pages') {
+      blocks = sanitizeHomePageBlocks(blocks || []);
+    }
+    if ((!blocks || blocks.length === 0) && isHome && collectionName === 'pages') {
+      blocks = getDefaultHomepageBlocks();
+    }
+    return {
+      ...item,
+      status: normalizeStatus(item.status),
+      blocks: normalizeBlocks(blocks || [])
+    };
+  });
+};
+
 /**
  * Service pour la gestion des pages dans Firestore avec workflow éditorial sécurisé.
  */
@@ -253,6 +271,19 @@ export const pageService = {
    * STRICTEMENT en lecture seule : aucune création automatique (auto-seed) en base de données lors d'une lecture.
    */
   async getPages(collectionName = 'pages') {
+    const isOffline = typeof navigator !== 'undefined' && navigator.onLine === false;
+    if (isOffline) {
+      const local = getLocalItems(collectionName);
+      if (local && local.length > 0) {
+        return mapLocalItems(collectionName, local);
+      }
+      if (collectionName === 'articles') {
+        saveLocalItems('articles', articlesData);
+        return articlesData;
+      }
+      return [];
+    }
+
     try {
       if (db) {
         const q = query(collection(db, collectionName), orderBy('updatedAt', 'desc'));
@@ -296,21 +327,7 @@ export const pageService = {
       // Si la collection Firestore est vide ou non initialisée, retourner un tableau local ou défauts
       const local = getLocalItems(collectionName);
       if (local && local.length > 0) {
-        return local.map(item => {
-          let blocks = item.blocks;
-          const isHome = (item.title || '').toLowerCase().includes('accueil') || item.slug === 'home' || item.slug === 'accueil';
-          if (isHome && collectionName === 'pages') {
-            blocks = sanitizeHomePageBlocks(blocks || []);
-          }
-          if ((!blocks || blocks.length === 0) && isHome && collectionName === 'pages') {
-            blocks = getDefaultHomepageBlocks();
-          }
-          return {
-            ...item,
-            status: normalizeStatus(item.status),
-            blocks: normalizeBlocks(blocks || [])
-          };
-        });
+        return mapLocalItems(collectionName, local);
       }
 
       // Fallback par défaut pour les articles
@@ -324,21 +341,7 @@ export const pageService = {
       console.warn(`Firestore indisponible ou restreint, récupération des ${collectionName} locaux...`, error);
       const local = getLocalItems(collectionName);
       if (local && local.length > 0) {
-        return local.map(item => {
-          let blocks = item.blocks;
-          const isHome = (item.title || '').toLowerCase().includes('accueil') || item.slug === 'home' || item.slug === 'accueil';
-          if (isHome && collectionName === 'pages') {
-            blocks = sanitizeHomePageBlocks(blocks || []);
-          }
-          if ((!blocks || blocks.length === 0) && isHome && collectionName === 'pages') {
-            blocks = getDefaultHomepageBlocks();
-          }
-          return {
-            ...item,
-            status: normalizeStatus(item.status),
-            blocks: normalizeBlocks(blocks || [])
-          };
-        });
+        return mapLocalItems(collectionName, local);
       }
       if (collectionName === 'articles') {
         return articlesData;

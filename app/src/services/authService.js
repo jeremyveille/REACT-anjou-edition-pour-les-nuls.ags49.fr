@@ -84,11 +84,25 @@ export async function verifyAdminStatus(user) {
   }
 
   const email = normalizeEmail(user.email);
+  const isOffline = typeof navigator !== 'undefined' && navigator.onLine === false;
+
+  // Contrôle prioritaire de secours en mode hors-ligne :
+  // Évite d'émettre des requêtes réseau impossibles vers securetoken.googleapis.com
+  if (isOffline && AUTHORIZED_ADMIN_EMAILS.includes(email)) {
+    return { 
+      isAdmin: true, 
+      role: 'Administrateur', 
+      source: 'whitelist_offline',
+      email,
+      displayName: user.displayName || user.email
+    };
+  }
 
   // 1. Contrôle des Custom Claims Firebase
   try {
     if (typeof user.getIdTokenResult === 'function') {
-      const tokenResult = await user.getIdTokenResult();
+      // Utiliser le cache local en priorité sans forcer de contact réseau vers securetoken
+      const tokenResult = await user.getIdTokenResult(false);
       if (tokenResult?.claims && (tokenResult.claims.admin === true || tokenResult.claims.role === 'admin')) {
         return { 
           isAdmin: true, 
@@ -103,32 +117,34 @@ export async function verifyAdminStatus(user) {
     console.warn("[Auth] Vérification token claims non concluante :", claimErr?.message || claimErr);
   }
 
-  // 2. Contrôle de la collection Firestore 'accounts'
-  try {
-    const snap = await getDocs(collection(db, "accounts"));
-    if (snap && !snap.empty && snap.docs) {
-      const match = snap.docs
-        .map(d => ({ id: d.id, ...d.data() }))
-        .find(acc => normalizeEmail(acc.email) === email);
+  // 2. Contrôle de la collection Firestore 'accounts' (uniquement si en ligne)
+  if (!isOffline) {
+    try {
+      const snap = await getDocs(collection(db, "accounts"));
+      if (snap && !snap.empty && snap.docs) {
+        const match = snap.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .find(acc => normalizeEmail(acc.email) === email);
 
-      if (match) {
-        const isAdminRole = (match.role || '').toLowerCase() === 'administrateur';
-        const isActive = match.status === 'Actif' || match.isActive === true || match.status === 'active';
-        if (isAdminRole && isActive) {
-          return { 
-            isAdmin: true, 
-            role: 'Administrateur', 
-            source: 'firestore_account',
-            account: match,
-            email,
-            displayName: match.name || user.displayName || user.email
-          };
+        if (match) {
+          const isAdminRole = (match.role || '').toLowerCase() === 'administrateur';
+          const isActive = match.status === 'Actif' || match.isActive === true || match.status === 'active';
+          if (isAdminRole && isActive) {
+            return { 
+              isAdmin: true, 
+              role: 'Administrateur', 
+              source: 'firestore_account',
+              account: match,
+              email,
+              displayName: match.name || user.displayName || user.email
+            };
+          }
         }
       }
+    } catch (firestoreErr) {
+      // Si la lecture échoue (ex: hors ligne ou règles strictes), on continue sur la liste blanche
+      console.warn("[Auth] Vérification collection accounts non concluante :", firestoreErr?.message || firestoreErr);
     }
-  } catch (firestoreErr) {
-    // Si la lecture échoue (ex: hors ligne ou règles strictes), on continue sur la liste blanche
-    console.warn("[Auth] Vérification collection accounts non concluante :", firestoreErr?.message || firestoreErr);
   }
 
   // 3. Contrôle de la liste blanche autorisée
