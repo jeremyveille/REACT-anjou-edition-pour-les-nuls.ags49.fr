@@ -87,4 +87,68 @@ describe('FlipbookSidebarEditor component in Dashboard', () => {
     expect(updated.leftSidebar.length).toBe(1);
     expect(updated.leftSidebar[0].id).toBe('b_left_2');
   });
+
+  test('duplicates a block when clicking the duplicate button', () => {
+    const handleChange = jest.fn();
+    render(<FlipbookSidebarEditor flipbook={initialFlipbook} onChange={handleChange} />);
+
+    const dupBtn = screen.getByRole('button', { name: /Dupliquer le bloc 1 de la barre gauche/i });
+    fireEvent.click(dupBtn);
+
+    expect(handleChange).toHaveBeenCalledTimes(1);
+    const updated = handleChange.mock.calls[0][0];
+    expect(updated.leftSidebar.length).toBe(3);
+    expect(updated.leftSidebar[1].title).toBe('Titre Gauche (Copie)');
+  });
+
+  test('opens spacious modal editor when clicking Edit button on a block card', () => {
+    render(<FlipbookSidebarEditor flipbook={initialFlipbook} onChange={jest.fn()} />);
+
+    const editBtn = screen.getByRole('button', { name: /Modifier la configuration du bloc 1 de la barre gauche/i });
+    fireEvent.click(editBtn);
+
+    expect(screen.getByTestId('block-modal-editor-dialog')).toBeInTheDocument();
+    expect(screen.getByText(/Paramètres du bloc : Titre Gauche/i)).toBeInTheDocument();
+  });
+
+  test('collapses and expands left and right panels independently via accordion headers', () => {
+    render(<FlipbookSidebarEditor flipbook={initialFlipbook} onChange={jest.fn()} />);
+
+    // Initially, both panels are open
+    expect(screen.getByText('Titre Gauche')).toBeInTheDocument();
+    expect(screen.getByText('Image Droite')).toBeInTheDocument();
+
+    const leftHeaderBtn = screen.getByRole('button', { name: /Barre gauche, 2 blocs/i });
+    expect(leftHeaderBtn).toHaveAttribute('aria-expanded', 'true');
+
+    // Collapse left panel
+    fireEvent.click(leftHeaderBtn);
+    expect(leftHeaderBtn).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByText('Titre Gauche')).not.toBeInTheDocument();
+    // Right panel is still open
+    expect(screen.getByText('Image Droite')).toBeInTheDocument();
+
+    // Re-expand left panel
+    fireEvent.click(leftHeaderBtn);
+    expect(leftHeaderBtn).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByText('Titre Gauche')).toBeInTheDocument();
+  });
+
+  test('collapses and expands all panels simultaneously via global helper buttons', () => {
+    render(<FlipbookSidebarEditor flipbook={initialFlipbook} onChange={jest.fn()} />);
+
+    const collapseAllBtn = screen.getByRole('button', { name: /Tout replier/i });
+    const expandAllBtn = screen.getByRole('button', { name: /Tout déplier/i });
+
+    // Collapse all
+    fireEvent.click(collapseAllBtn);
+    expect(screen.queryByText('Titre Gauche')).not.toBeInTheDocument();
+    expect(screen.queryByText('Image Droite')).not.toBeInTheDocument();
+
+    // Expand all
+    fireEvent.click(expandAllBtn);
+    expect(screen.getByText('Titre Gauche')).toBeInTheDocument();
+    expect(screen.getByText('Image Droite')).toBeInTheDocument();
+  });
 });
+

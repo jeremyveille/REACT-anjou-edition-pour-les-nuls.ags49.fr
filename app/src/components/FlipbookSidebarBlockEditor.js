@@ -3,33 +3,43 @@ import {
   ArrowUp, 
   ArrowDown, 
   Edit3, 
+  Copy,
   Trash2, 
   Eye, 
   EyeOff, 
   Film, 
   Upload, 
   FolderOpen,
-  ChevronUp
+  Image as ImageIcon,
+  FileText,
+  Type,
+  Link as LinkIcon,
+  FileCode
 } from 'lucide-react';
 import { pageService } from '../services/pageService';
-import { extractYoutubeVideoId, getYoutubeEmbedUrl } from '../utils/youtubeUtils';
+import { getYoutubeEmbedUrl } from '../utils/youtubeUtils';
 import FlipbookBlockStyleEditor from './FlipbookBlockStyleEditor';
 
 /**
- * Éditeur pour un bloc individuel de la barre latérale du Flipbook.
+ * Carte visuelle et éditeur pour un bloc individuel de barre latérale Flipbook.
+ * Présentation moderne compacte avec miniature, titre, badge de type, statut et actions rapides :
+ * Monter, Descendre, Modifier, Dupliquer, Activer/Désactiver, Supprimer.
  */
 export default function FlipbookSidebarBlockEditor({
   block,
   index,
   totalBlocks,
-  position,
+  position = 'left',
   onUpdate,
   onDelete,
   onMoveUp,
   onMoveDown,
-  onOpenMediaLibrary
+  onDuplicate,
+  onEdit,
+  onOpenMediaLibrary,
+  defaultExpanded = true
 }) {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [showBlockStyles, setShowBlockStyles] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
@@ -38,17 +48,6 @@ export default function FlipbookSidebarBlockEditor({
 
   const blockType = block.type || 'text';
   const isEnabled = block.enabled !== false;
-  const blockStyle = block.style || {};
-
-  const handleUpdateBlockStyle = (key, value) => {
-    onUpdate({
-      ...block,
-      style: {
-        ...(block.style || {}),
-        [key]: value
-      }
-    });
-  };
 
   // Téléversement d'image avec fallback local sécurisé
   const handleImageUpload = async (file) => {
@@ -66,7 +65,6 @@ export default function FlipbookSidebarBlockEditor({
         console.warn("Échec du téléversement Firebase Storage, utilisation du Data URL local:", uploadErr);
       }
 
-      // Fallback base64 local
       const reader = new FileReader();
       reader.onload = (e) => {
         onUpdate({ 
@@ -176,24 +174,99 @@ export default function FlipbookSidebarBlockEditor({
     return `${getBlockTypeLabel(block.type)} #${index + 1}`;
   };
 
+  const renderThumbnail = () => {
+    switch (blockType) {
+      case 'image':
+        if (block.imageUrl || block.url) {
+          return (
+            <img 
+              src={block.imageUrl || block.url} 
+              alt={block.imageAlt || 'Aperçu'} 
+              className="w-10 h-10 object-cover rounded-md border border-slate-200 dark:border-slate-700 shrink-0"
+            />
+          );
+        }
+        return (
+          <div className="w-10 h-10 rounded-md bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-200 dark:border-blue-800">
+            <ImageIcon size={18} aria-hidden="true" />
+          </div>
+        );
+      case 'video':
+        return (
+          <div className="w-10 h-10 rounded-md bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 border border-rose-200 dark:border-rose-800">
+            <Film size={18} aria-hidden="true" />
+          </div>
+        );
+      case 'heading':
+        return (
+          <div className="w-10 h-10 rounded-md bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-200 dark:border-indigo-800 font-bold text-xs">
+            <Type size={18} aria-hidden="true" />
+          </div>
+        );
+      case 'button':
+        return (
+          <div className="w-10 h-10 rounded-md bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-200 dark:border-emerald-800">
+            <LinkIcon size={18} aria-hidden="true" />
+          </div>
+        );
+      case 'pdf':
+        return (
+          <div className="w-10 h-10 rounded-md bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-200 dark:border-amber-800">
+            <FileCode size={18} aria-hidden="true" />
+          </div>
+        );
+      default:
+        return (
+          <div className="w-10 h-10 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center shrink-0 border border-slate-200 dark:border-slate-700">
+            <FileText size={18} aria-hidden="true" />
+          </div>
+        );
+    }
+  };
+
+  const handleEditClick = () => {
+    if (onEdit) {
+      onEdit();
+    } else {
+      setIsExpanded(!isExpanded);
+    }
+  };
+
   return (
     <div 
       className={`flipbook-editor-block-card ${!isEnabled ? 'is-disabled' : ''}`}
       data-testid={`block-editor-${position}-${index}`}
     >
-      {/* En-tête du bloc avec contrôles d'action accessibles */}
-      <div className="flipbook-editor-block-header">
-        <div className="flipbook-editor-block-meta">
-          <span className="flipbook-editor-block-num">#{index + 1}</span>
-          <span className="flipbook-editor-block-summary" title={getBlockSummary()}>
-            {getBlockSummary()}
-          </span>
-          <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">
-            ({getBlockTypeLabel(blockType)})
-          </span>
+      {/* En-tête du bloc avec miniature, titre, badge et boutons d'action ergonomiques */}
+      <div className="flipbook-editor-block-header p-2.5 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+          {renderThumbnail()}
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="flipbook-editor-block-num text-[11px] font-bold">#{index + 1}</span>
+              <span className="ae-badge-type-pill text-[10px] font-bold uppercase tracking-wider">
+                {getBlockTypeLabel(blockType)}
+              </span>
+              {!isEnabled && (
+                <span className="text-[10px] font-semibold text-slate-400 italic">
+                  (Désactivé)
+                </span>
+              )}
+            </div>
+            <div 
+              className="flipbook-editor-block-summary text-xs font-bold text-slate-900 dark:text-slate-100 truncate mt-0.5" 
+              title={getBlockSummary()}
+            >
+              {getBlockSummary()}
+            </div>
+          </div>
         </div>
 
-        <div className="flipbook-editor-block-actions" role="toolbar" aria-label={`Actions pour le bloc ${index + 1} de la barre ${position === 'left' ? 'gauche' : 'droite'}`}>
+        <div 
+          className="flipbook-editor-block-actions flex items-center gap-1 shrink-0" 
+          role="toolbar" 
+          aria-label={`Actions pour le bloc ${index + 1} de la barre ${position === 'left' ? 'gauche' : 'droite'}`}
+        >
           {/* Monter */}
           <button
             type="button"
@@ -218,6 +291,31 @@ export default function FlipbookSidebarBlockEditor({
             <ArrowDown size={13} aria-hidden="true" />
           </button>
 
+          {/* Modifier */}
+          <button
+            type="button"
+            onClick={handleEditClick}
+            className="flipbook-btn-ctrl btn-edit"
+            title="Modifier la configuration du bloc"
+            aria-label={`Modifier la configuration du bloc ${index + 1} de la barre ${position === 'left' ? 'gauche' : 'droite'}`}
+            aria-expanded={isExpanded}
+          >
+            <Edit3 size={13} aria-hidden="true" />
+          </button>
+
+          {/* Dupliquer */}
+          {onDuplicate && (
+            <button
+              type="button"
+              onClick={onDuplicate}
+              className="flipbook-btn-ctrl"
+              title="Dupliquer ce bloc"
+              aria-label={`Dupliquer le bloc ${index + 1} de la barre ${position === 'left' ? 'gauche' : 'droite'}`}
+            >
+              <Copy size={13} aria-hidden="true" />
+            </button>
+          )}
+
           {/* Activer / Désactiver */}
           <button
             type="button"
@@ -228,18 +326,6 @@ export default function FlipbookSidebarBlockEditor({
             aria-pressed={isEnabled}
           >
             {isEnabled ? <Eye size={13} aria-hidden="true" /> : <EyeOff size={13} aria-hidden="true" />}
-          </button>
-
-          {/* Déplier / Replier */}
-          <button
-            type="button"
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="flipbook-btn-ctrl"
-            title={isExpanded ? "Replier la configuration" : "Modifier la configuration"}
-            aria-label={isExpanded ? `Replier la configuration du bloc ${index + 1} de la barre ${position === 'left' ? 'gauche' : 'droite'}` : `Modifier la configuration du bloc ${index + 1} de la barre ${position === 'left' ? 'gauche' : 'droite'}`}
-            aria-expanded={isExpanded}
-          >
-            {isExpanded ? <ChevronUp size={13} aria-hidden="true" /> : <Edit3 size={13} aria-hidden="true" />}
           </button>
 
           {/* Supprimer */}
@@ -255,12 +341,12 @@ export default function FlipbookSidebarBlockEditor({
         </div>
       </div>
 
-      {/* Corps du formulaire de configuration */}
-      {isExpanded && (
-        <div className="flipbook-editor-block-body">
+      {/* Corps du formulaire de configuration déployable inline (compatibilité tests & mode étendu) */}
+      {isExpanded && !onEdit && (
+        <div className="flipbook-editor-block-body p-3 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
           {/* Sélecteur de Type de contenu */}
-          <div className="flipbook-editor-field-row">
-            <label className="flipbook-editor-label" htmlFor={`block-type-select-${position}-${index}`}>
+          <div className="flipbook-editor-field-row mb-2">
+            <label className="flipbook-editor-label text-xs font-semibold block mb-1" htmlFor={`block-type-select-${position}-${index}`}>
               Type de contenu
             </label>
             <select
@@ -281,8 +367,8 @@ export default function FlipbookSidebarBlockEditor({
 
           {/* Titre optionnel (commun à plusieurs types) */}
           {blockType !== 'heading' && (
-            <div className="flipbook-editor-field-row">
-              <label className="flipbook-editor-label" htmlFor={`block-title-${position}-${index}`}>
+            <div className="flipbook-editor-field-row mb-2">
+              <label className="flipbook-editor-label text-xs font-semibold block mb-1" htmlFor={`block-title-${position}-${index}`}>
                 Titre du bloc (optionnel)
               </label>
               <input
@@ -291,7 +377,7 @@ export default function FlipbookSidebarBlockEditor({
                 value={block.title || ''}
                 onChange={(e) => onUpdate({ ...block, title: e.target.value })}
                 placeholder="ex: Patrimoine d'Anjou"
-                className="db-input text-xs"
+                className="db-input text-xs w-full"
               />
             </div>
           )}
@@ -299,23 +385,27 @@ export default function FlipbookSidebarBlockEditor({
           {/* CONFIGURATION SPÉCIFIQUE : IMAGE */}
           {blockType === 'image' && (
             <div className="space-y-3 pt-1">
-              <label className="flipbook-editor-label">Source de l'image</label>
+              <label className="flipbook-editor-label text-xs font-semibold block">Source de l'image</label>
               
-              <div className="flex flex-wrap gap-2">
+              <div className="ae-media-actions-row">
                 <button
                   type="button"
-                  onClick={() => onOpenMediaLibrary((selectedMedia) => {
-                    if (selectedMedia) {
-                      onUpdate({
-                        ...block,
-                        imageUrl: selectedMedia.url || selectedMedia.downloadUrl || '',
-                        imageAlt: block.imageAlt || selectedMedia.name || selectedMedia.title || ''
-                      });
+                  onClick={() => {
+                    if (onOpenMediaLibrary) {
+                      onOpenMediaLibrary((selectedMedia) => {
+                        if (selectedMedia) {
+                          onUpdate({
+                            ...block,
+                            imageUrl: selectedMedia.url || selectedMedia.downloadUrl || '',
+                            imageAlt: block.imageAlt || selectedMedia.name || selectedMedia.title || ''
+                          });
+                        }
+                      }, 'image');
                     }
-                  }, 'image')}
-                  className="bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 text-xs font-semibold px-2.5 py-1.5 rounded flex items-center gap-1.5 transition-colors border border-blue-200 dark:border-blue-900/40 cursor-pointer"
+                  }}
+                  className="ae-media-action-btn ae-media-btn-library"
                 >
-                  <FolderOpen size={13} aria-hidden="true" />
+                  <FolderOpen size={14} aria-hidden="true" />
                   <span>Choisir dans la médiathèque ▼</span>
                 </button>
 
@@ -323,9 +413,10 @@ export default function FlipbookSidebarBlockEditor({
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isUploading}
-                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300 text-xs font-semibold px-2.5 py-1.5 rounded flex items-center gap-1.5 transition-colors border border-slate-300 dark:border-slate-700 cursor-pointer"
+                  className="ae-media-action-btn ae-media-btn-upload"
+                  aria-label="Téléverser une nouvelle image"
                 >
-                  <Upload size={13} aria-hidden="true" />
+                  <Upload size={14} aria-hidden="true" />
                   <span>{isUploading ? "Téléversement..." : "Téléverser une nouvelle image"}</span>
                 </button>
 
@@ -343,7 +434,7 @@ export default function FlipbookSidebarBlockEditor({
               </div>
 
               <div className="flipbook-editor-field-row">
-                <label className="flipbook-editor-label" htmlFor={`block-img-url-${position}-${index}`}>
+                <label className="flipbook-editor-label text-xs font-semibold block mb-1" htmlFor={`block-img-url-${position}-${index}`}>
                   URL de l'image
                 </label>
                 <input
@@ -352,26 +443,31 @@ export default function FlipbookSidebarBlockEditor({
                   value={block.imageUrl || block.url || ''}
                   onChange={(e) => onUpdate({ ...block, imageUrl: e.target.value })}
                   placeholder="https://... ou fichier local"
-                  className="db-input text-xs"
+                  className="db-input ae-fluid-input text-xs w-full font-mono"
                 />
               </div>
 
               {(block.imageUrl || block.url) && (
-                <div className="p-2 bg-slate-50 dark:bg-slate-900/50 rounded border border-slate-200 dark:border-slate-800 flex items-center gap-3">
+                <div className="ae-image-preview-card">
                   <img
                     src={block.imageUrl || block.url}
                     alt={block.imageAlt || "Aperçu miniature"}
-                    className="flipbook-editor-preview-thumb"
+                    className="ae-image-preview-thumb"
                   />
-                  <div className="text-[11px] text-slate-500 leading-snug">
-                    <span className="font-semibold text-slate-700 dark:text-slate-300 block">Aperçu direct</span>
-                    <span>Image prête à l'affichage</span>
+                  <div className="ae-image-preview-meta">
+                    <div className="ae-image-preview-status">
+                      <span className="ae-status-dot" aria-hidden="true" />
+                      <span className="ae-status-title">Image prête à l'affichage</span>
+                    </div>
+                    <span className="ae-image-preview-subtext">
+                      {block.imageAlt ? `Alt: ${block.imageAlt}` : "Aperçu direct pour le Flipbook"}
+                    </span>
                   </div>
                 </div>
               )}
 
               <div className="flipbook-editor-field-row">
-                <label className="flipbook-editor-label" htmlFor={`block-img-alt-${position}-${index}`}>
+                <label className="flipbook-editor-label text-xs font-semibold block mb-1" htmlFor={`block-img-alt-${position}-${index}`}>
                   Texte alternatif (Alt - Accessibilité WCAG) <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -380,13 +476,13 @@ export default function FlipbookSidebarBlockEditor({
                   value={block.imageAlt || ''}
                   onChange={(e) => onUpdate({ ...block, imageAlt: e.target.value })}
                   placeholder="Description détaillée de l'image pour les lecteurs d'écran"
-                  className="db-input text-xs"
+                  className="db-input text-xs w-full"
                   required
                 />
               </div>
 
               <div className="flipbook-editor-field-row">
-                <label className="flipbook-editor-label" htmlFor={`block-img-caption-${position}-${index}`}>
+                <label className="flipbook-editor-label text-xs font-semibold block mb-1" htmlFor={`block-img-caption-${position}-${index}`}>
                   Légende sous l'image (optionnelle)
                 </label>
                 <input
@@ -395,12 +491,12 @@ export default function FlipbookSidebarBlockEditor({
                   value={block.caption || ''}
                   onChange={(e) => onUpdate({ ...block, caption: e.target.value })}
                   placeholder="ex: Vignobles de Savennières au coucher du soleil"
-                  className="db-input text-xs"
+                  className="db-input text-xs w-full"
                 />
               </div>
 
               <div className="flipbook-editor-field-row">
-                <label className="flipbook-editor-label" htmlFor={`block-img-link-${position}-${index}`}>
+                <label className="flipbook-editor-label text-xs font-semibold block mb-1" htmlFor={`block-img-link-${position}-${index}`}>
                   Lien au clic sur l'image (optionnel)
                 </label>
                 <input
@@ -409,7 +505,7 @@ export default function FlipbookSidebarBlockEditor({
                   value={block.linkUrl || ''}
                   onChange={(e) => onUpdate({ ...block, linkUrl: e.target.value })}
                   placeholder="https://... ou /contact"
-                  className="db-input text-xs"
+                  className="db-input text-xs w-full"
                 />
               </div>
 
@@ -428,24 +524,28 @@ export default function FlipbookSidebarBlockEditor({
           {/* CONFIGURATION SPÉCIFIQUE : VIDÉO */}
           {blockType === 'video' && (
             <div className="space-y-3 pt-1">
-              <label className="flipbook-editor-label">Source de la vidéo</label>
+              <label className="flipbook-editor-label text-xs font-semibold block">Source de la vidéo</label>
 
-              {/* Bouton Fichier Vidéo */}
-              <div className="flex flex-wrap gap-2">
+              <div className="ae-media-actions-row">
                 <button
                   type="button"
-                  onClick={() => onOpenMediaLibrary((selectedMedia) => {
-                    if (selectedMedia) {
-                      onUpdate({
-                        ...block,
-                        videoUrl: selectedMedia.url || selectedMedia.downloadUrl || '',
-                        videoSourceType: 'local'
-                      });
+                  onClick={() => {
+                    if (onOpenMediaLibrary) {
+                      onOpenMediaLibrary((selectedMedia) => {
+                        if (selectedMedia) {
+                          onUpdate({
+                            ...block,
+                            videoUrl: selectedMedia.url || selectedMedia.downloadUrl || '',
+                            videoSourceType: 'local'
+                          });
+                        }
+                      }, 'video');
                     }
-                  }, 'video')}
-                  className="bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 text-xs font-semibold px-2.5 py-1.5 rounded flex items-center gap-1.5 transition-colors border border-blue-200 dark:border-blue-900/40 cursor-pointer"
+                  }}
+                  className="ae-media-action-btn ae-media-btn-library"
+                  aria-label="Choisir un fichier vidéo dans la médiathèque"
                 >
-                  <Film size={13} aria-hidden="true" />
+                  <Film size={14} aria-hidden="true" />
                   <span>Choisir un fichier vidéo ▼</span>
                 </button>
 
@@ -453,10 +553,11 @@ export default function FlipbookSidebarBlockEditor({
                   type="button"
                   onClick={() => videoFileInputRef.current?.click()}
                   disabled={isUploading}
-                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300 text-xs font-semibold px-2.5 py-1.5 rounded flex items-center gap-1.5 transition-colors border border-slate-300 dark:border-slate-700 cursor-pointer"
+                  className="ae-media-action-btn ae-media-btn-upload"
+                  aria-label="Téléverser une vidéo MP4"
                 >
-                  <Upload size={13} aria-hidden="true" />
-                  <span>{isUploading ? "Téléversement..." : "Téléverser une vidéo (.mp4)"}</span>
+                  <Upload size={14} aria-hidden="true" />
+                  <span>{isUploading ? "Téléversement..." : "Téléverser vidéo MP4"}</span>
                 </button>
 
                 <input
@@ -472,69 +573,38 @@ export default function FlipbookSidebarBlockEditor({
                 />
               </div>
 
-              <div className="text-center my-1 text-slate-400 text-xs font-bold uppercase tracking-wider">
+              <div className="text-[11px] text-slate-400 font-semibold text-center my-1">
                 — OU —
               </div>
 
-              {/* URL YouTube / Vidéo */}
               <div className="flipbook-editor-field-row">
-                <label className="flipbook-editor-label" htmlFor={`block-video-url-${position}-${index}`}>
+                <label className="flipbook-editor-label text-xs font-semibold block mb-1" htmlFor={`block-vid-url-${position}-${index}`}>
                   URL YouTube / vidéo
                 </label>
                 <input
-                  id={`block-video-url-${position}-${index}`}
+                  id={`block-vid-url-${position}-${index}`}
                   type="text"
-                  value={block.videoUrl || block.url || ''}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    const isYt = Boolean(extractYoutubeVideoId(val));
-                    onUpdate({ 
-                      ...block, 
-                      videoUrl: val, 
-                      videoSourceType: isYt ? 'youtube' : (block.videoSourceType || 'url') 
-                    });
-                  }}
-                  placeholder="https://www.youtube.com/watch?v=... ou https://.../video.mp4"
-                  className="db-input text-xs"
+                  value={block.videoUrl || ''}
+                  onChange={(e) => onUpdate({ ...block, videoUrl: e.target.value })}
+                  placeholder="ex: https://www.youtube.com/watch?v=..."
+                  className="db-input text-xs w-full font-mono"
                 />
               </div>
 
-              {/* Aperçu vidéo */}
-              {(block.videoUrl || block.url) && (
-                <div className="p-2 bg-slate-50 dark:bg-slate-900/50 rounded border border-slate-200 dark:border-slate-800">
-                  <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 block mb-1.5">
-                    Aperçu de la vidéo intégrée :
-                  </span>
-                  <div className="flipbook-video-ratio-container" style={{ maxHeight: '160px' }}>
-                    {extractYoutubeVideoId(block.videoUrl || block.url) ? (
-                      <iframe
-                        src={getYoutubeEmbedUrl(block.videoUrl || block.url)}
-                        title="Aperçu YouTube"
-                        className="flipbook-video-iframe"
-                        allowFullScreen
-                      />
-                    ) : (
-                      <video controls className="flipbook-responsive-video">
-                        <source src={block.videoUrl || block.url} />
-                      </video>
-                    )}
-                  </div>
+              {block.videoUrl && (
+                <div className="flipbook-video-ratio-container mt-2">
+                  {block.videoUrl.includes('youtube.com') || block.videoUrl.includes('youtu.be') ? (
+                    <iframe
+                      src={getYoutubeEmbedUrl(block.videoUrl)}
+                      title="Aperçu YouTube"
+                      className="flipbook-video-iframe"
+                      allowFullScreen
+                    />
+                  ) : (
+                    <video src={block.videoUrl} controls className="flipbook-video-element" />
+                  )}
                 </div>
               )}
-
-              <div className="flipbook-editor-field-row">
-                <label className="flipbook-editor-label" htmlFor={`block-video-caption-${position}-${index}`}>
-                  Légende ou description de la vidéo
-                </label>
-                <input
-                  id={`block-video-caption-${position}-${index}`}
-                  type="text"
-                  value={block.caption || ''}
-                  onChange={(e) => onUpdate({ ...block, caption: e.target.value })}
-                  placeholder="ex: Survol historique du Val de Loire"
-                  className="db-input text-xs"
-                />
-              </div>
             </div>
           )}
 
@@ -542,20 +612,17 @@ export default function FlipbookSidebarBlockEditor({
           {blockType === 'text' && (
             <div className="space-y-3 pt-1">
               <div className="flipbook-editor-field-row">
-                <label className="flipbook-editor-label" htmlFor={`block-text-content-${position}-${index}`}>
+                <label className="flipbook-editor-label text-xs font-semibold block mb-1" htmlFor={`block-text-content-${position}-${index}`}>
                   Contenu texte ou HTML sécurisé
                 </label>
                 <textarea
                   id={`block-text-content-${position}-${index}`}
-                  rows={4}
                   value={block.content || ''}
                   onChange={(e) => onUpdate({ ...block, content: e.target.value })}
-                  placeholder="Rédigez votre texte ici... Les balises HTML basiques (<p>, <strong>, <em>, <br>) sont acceptées et assainies."
-                  className="db-textarea text-xs"
+                  placeholder="Rédigez votre texte..."
+                  rows="4"
+                  className="db-input text-xs font-sans leading-relaxed w-full"
                 />
-                <span className="text-[10px] text-slate-400 italic">
-                  Protégé par sanitizeHtml : les balises de script et attributs suspects sont automatiquement neutralisés.
-                </span>
               </div>
             </div>
           )}
@@ -564,86 +631,82 @@ export default function FlipbookSidebarBlockEditor({
           {blockType === 'heading' && (
             <div className="space-y-3 pt-1">
               <div className="flipbook-editor-field-row">
-                <label className="flipbook-editor-label" htmlFor={`block-heading-text-${position}-${index}`}>
-                  Texte du titre <span className="text-red-500">*</span>
+                <label className="flipbook-editor-label text-xs font-semibold block mb-1" htmlFor={`block-heading-text-${position}-${index}`}>
+                  Texte du titre
                 </label>
                 <input
                   id={`block-heading-text-${position}-${index}`}
                   type="text"
-                  value={block.text || block.title || ''}
-                  onChange={(e) => onUpdate({ ...block, text: e.target.value, title: e.target.value })}
-                  placeholder="ex: Informations complémentaires"
-                  className="db-input text-xs"
-                  required
+                  value={block.text || ''}
+                  onChange={(e) => onUpdate({ ...block, text: e.target.value })}
+                  placeholder="Titre de section..."
+                  className="db-input text-xs w-full"
                 />
               </div>
 
               <div className="flipbook-editor-field-row">
-                <label className="flipbook-editor-label" htmlFor={`block-heading-level-${position}-${index}`}>
+                <label className="flipbook-editor-label text-xs font-semibold block mb-1" htmlFor={`block-heading-level-${position}-${index}`}>
                   Niveau hiérarchique
                 </label>
                 <select
                   id={`block-heading-level-${position}-${index}`}
                   value={block.level || 'h3'}
                   onChange={(e) => onUpdate({ ...block, level: e.target.value })}
-                  className="db-select text-xs"
+                  className="db-select text-xs w-full"
                 >
-                  <option value="h2">H2 — Titre principal</option>
-                  <option value="h3">H3 — Sous-titre standard</option>
-                  <option value="h4">H4 — Petit titre de section</option>
-                  <option value="h5">H5 — En-tête compacte</option>
+                  <option value="h2">H2 (Grand titre)</option>
+                  <option value="h3">H3 (Titre moyen)</option>
+                  <option value="h4">H4 (Sous-titre)</option>
+                  <option value="h5">H5 (Petit titre majuscule)</option>
                 </select>
               </div>
             </div>
           )}
 
-          {/* CONFIGURATION SPÉCIFIQUE : BOUTON / LIEN */}
+          {/* CONFIGURATION SPÉCIFIQUE : BOUTON */}
           {blockType === 'button' && (
             <div className="space-y-3 pt-1">
               <div className="flipbook-editor-field-row">
-                <label className="flipbook-editor-label" htmlFor={`block-btn-text-${position}-${index}`}>
-                  Texte du bouton <span className="text-red-500">*</span>
+                <label className="flipbook-editor-label text-xs font-semibold block mb-1" htmlFor={`block-btn-text-${position}-${index}`}>
+                  Libellé du bouton
                 </label>
                 <input
                   id={`block-btn-text-${position}-${index}`}
                   type="text"
-                  value={block.buttonText || block.title || ''}
-                  onChange={(e) => onUpdate({ ...block, buttonText: e.target.value, title: e.target.value })}
-                  placeholder="ex: Contacter l'auteur"
-                  className="db-input text-xs"
-                  required
+                  value={block.buttonText || ''}
+                  onChange={(e) => onUpdate({ ...block, buttonText: e.target.value })}
+                  placeholder="ex: Découvrir le livre..."
+                  className="db-input text-xs w-full"
                 />
               </div>
 
               <div className="flipbook-editor-field-row">
-                <label className="flipbook-editor-label" htmlFor={`block-btn-url-${position}-${index}`}>
-                  URL de redirection <span className="text-red-500">*</span>
+                <label className="flipbook-editor-label text-xs font-semibold block mb-1" htmlFor={`block-btn-url-${position}-${index}`}>
+                  Lien (URL)
                 </label>
                 <input
                   id={`block-btn-url-${position}-${index}`}
                   type="text"
-                  value={block.buttonUrl || block.url || ''}
+                  value={block.buttonUrl || ''}
                   onChange={(e) => onUpdate({ ...block, buttonUrl: e.target.value })}
-                  placeholder="ex: /contact ou https://..."
-                  className="db-input text-xs"
-                  required
+                  placeholder="https://... ou /contact"
+                  className="db-input text-xs w-full font-mono"
                 />
               </div>
 
               <div className="flipbook-editor-field-row">
-                <label className="flipbook-editor-label" htmlFor={`block-btn-style-${position}-${index}`}>
-                  Style visuel du bouton
+                <label className="flipbook-editor-label text-xs font-semibold block mb-1" htmlFor={`block-btn-style-${position}-${index}`}>
+                  Style d'apparence
                 </label>
                 <select
                   id={`block-btn-style-${position}-${index}`}
                   value={block.buttonStyle || 'primary'}
                   onChange={(e) => onUpdate({ ...block, buttonStyle: e.target.value })}
-                  className="db-select text-xs"
+                  className="db-select text-xs w-full"
                 >
-                  <option value="primary">Bleu Royal Anjou (Plein)</option>
-                  <option value="secondary">Bleu Lumineux</option>
-                  <option value="outline">Contour / Bordure fine</option>
-                  <option value="gold">Doré Élégant</option>
+                  <option value="primary">Primaire (Bleu Anjou)</option>
+                  <option value="secondary">Secondaire (Contour bleu)</option>
+                  <option value="accent">Accent (Or angevin)</option>
                 </select>
               </div>
 
@@ -654,7 +717,7 @@ export default function FlipbookSidebarBlockEditor({
                   onChange={(e) => onUpdate({ ...block, openNewTab: e.target.checked })}
                   className="ae-form-checkbox"
                 />
-                <span>Ouvrir dans un nouvel onglet</span>
+                <span>Ouvrir le lien dans un nouvel onglet</span>
               </label>
             </div>
           )}
@@ -662,38 +725,24 @@ export default function FlipbookSidebarBlockEditor({
           {/* CONFIGURATION SPÉCIFIQUE : DOCUMENT PDF */}
           {blockType === 'pdf' && (
             <div className="space-y-3 pt-1">
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => onOpenMediaLibrary((selectedMedia) => {
-                    if (selectedMedia) {
-                      onUpdate({
-                        ...block,
-                        pdfUrl: selectedMedia.url || selectedMedia.downloadUrl || '',
-                        pdfTitle: block.pdfTitle || selectedMedia.name || 'Document PDF'
-                      });
-                    }
-                  }, 'document')}
-                  className="bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 text-xs font-semibold px-2.5 py-1.5 rounded flex items-center gap-1.5 transition-colors border border-blue-200 dark:border-blue-900/40 cursor-pointer"
-                >
-                  <FolderOpen size={13} aria-hidden="true" />
-                  <span>Choisir dans la médiathèque ▼</span>
-                </button>
+              <label className="flipbook-editor-label text-xs font-semibold block">Document PDF</label>
 
+              <div className="ae-media-actions-row">
                 <button
                   type="button"
                   onClick={() => pdfFileInputRef.current?.click()}
                   disabled={isUploading}
-                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300 text-xs font-semibold px-2.5 py-1.5 rounded flex items-center gap-1.5 transition-colors border border-slate-300 dark:border-slate-700 cursor-pointer"
+                  className="ae-media-action-btn ae-media-btn-upload"
+                  aria-label="Téléverser un document PDF"
                 >
-                  <Upload size={13} aria-hidden="true" />
-                  <span>{isUploading ? "Téléversement..." : "Téléverser un PDF"}</span>
+                  <Upload size={14} aria-hidden="true" />
+                  <span>{isUploading ? "Téléversement..." : "Téléverser document PDF"}</span>
                 </button>
 
                 <input
                   ref={pdfFileInputRef}
                   type="file"
-                  accept=".pdf"
+                  accept="application/pdf"
                   className="hidden"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
@@ -704,126 +753,47 @@ export default function FlipbookSidebarBlockEditor({
               </div>
 
               <div className="flipbook-editor-field-row">
-                <label className="flipbook-editor-label" htmlFor={`block-pdf-title-${position}-${index}`}>
-                  Titre du document PDF
+                <label className="flipbook-editor-label text-xs font-semibold block mb-1" htmlFor={`block-pdf-title-${position}-${index}`}>
+                  Titre du document
                 </label>
                 <input
                   id={`block-pdf-title-${position}-${index}`}
                   type="text"
-                  value={block.pdfTitle || block.title || ''}
+                  value={block.pdfTitle || ''}
                   onChange={(e) => onUpdate({ ...block, pdfTitle: e.target.value })}
-                  placeholder="ex: Fiche pédagogique"
-                  className="db-input text-xs"
+                  placeholder="ex: Extrait du livre..."
+                  className="db-input text-xs w-full"
                 />
               </div>
 
               <div className="flipbook-editor-field-row">
-                <label className="flipbook-editor-label" htmlFor={`block-pdf-url-${position}-${index}`}>
-                  URL ou nom du fichier PDF
+                <label className="flipbook-editor-label text-xs font-semibold block mb-1" htmlFor={`block-pdf-url-${position}-${index}`}>
+                  URL du PDF
                 </label>
                 <input
                   id={`block-pdf-url-${position}-${index}`}
                   type="text"
-                  value={block.pdfUrl || block.pdfFile || ''}
+                  value={block.pdfUrl || ''}
                   onChange={(e) => onUpdate({ ...block, pdfUrl: e.target.value })}
-                  placeholder="https://... ou mon-document.pdf"
-                  className="db-input text-xs"
-                />
-              </div>
-
-              <div className="flipbook-editor-field-row">
-                <label className="flipbook-editor-label" htmlFor={`block-pdf-desc-${position}-${index}`}>
-                  Courte description (optionnelle)
-                </label>
-                <input
-                  id={`block-pdf-desc-${position}-${index}`}
-                  type="text"
-                  value={block.description || ''}
-                  onChange={(e) => onUpdate({ ...block, description: e.target.value })}
-                  placeholder="ex: Télécharger la fiche complète au format PDF"
-                  className="db-input text-xs"
+                  placeholder="https://...fichier.pdf"
+                  className="db-input text-xs w-full font-mono"
                 />
               </div>
             </div>
           )}
 
-          {/* STYLES INDIVIDUELS DU BLOC */}
-          <div className="ae-block-individual-styles-section" style={{ borderTop: '1px dashed #e2e8f0', paddingTop: '0.5rem', marginTop: '0.25rem' }}>
+          {/* STYLES INDIVIDUELS DU BLOC (CONTOUR & OMBRE) */}
+          <div className="pt-3 mt-3 border-t border-slate-200 dark:border-slate-700">
             <button
               type="button"
               onClick={() => setShowBlockStyles(!showBlockStyles)}
-              className="ae-btn-toggle-block-styles"
-              style={{
-                background: 'none',
-                border: 'none',
-                padding: '0.2rem 0',
-                fontSize: '0.74rem',
-                fontWeight: 700,
-                color: '#1e3a8a',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                width: '100%'
-              }}
-              aria-expanded={showBlockStyles}
-              aria-label={`Styles individuels du bloc ${index + 1}`}
+              className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1.5 cursor-pointer bg-transparent border-none p-0"
             >
-              <span>🎨 Styles individuels du bloc (optionnel)</span>
-              <span>{showBlockStyles ? '▲' : '▼'}</span>
+              <span>Styles individuels du bloc (Contours & Ombres)</span>
             </button>
 
             {showBlockStyles && (
-              <div className="space-y-3 mt-2">
-                {/* 1. Propriétés générales du bloc (alignement, fond, texte) */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.5rem', background: '#f8fafc', padding: '0.6rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                  <div className="flipbook-editor-field-row">
-                    <label className="flipbook-editor-label" htmlFor={`block-style-align-${position}-${index}`}>
-                      Alignement
-                    </label>
-                    <select
-                      id={`block-style-align-${position}-${index}`}
-                      value={blockStyle.textAlign || ''}
-                      onChange={(e) => handleUpdateBlockStyle('textAlign', e.target.value)}
-                      className="db-select text-xs"
-                    >
-                      <option value="">Par défaut (Barre)</option>
-                      <option value="left">Gauche</option>
-                      <option value="center">Centré</option>
-                      <option value="right">Droite</option>
-                    </select>
-                  </div>
-
-                  <div className="flipbook-editor-field-row">
-                    <label className="flipbook-editor-label" htmlFor={`block-style-bg-${position}-${index}`}>
-                      Couleur de fond
-                    </label>
-                    <input
-                      id={`block-style-bg-${position}-${index}`}
-                      type="text"
-                      value={blockStyle.backgroundColor || ''}
-                      onChange={(e) => handleUpdateBlockStyle('backgroundColor', e.target.value)}
-                      placeholder="ex: #ffffff"
-                      className="db-input text-xs"
-                    />
-                  </div>
-
-                  <div className="flipbook-editor-field-row">
-                    <label className="flipbook-editor-label" htmlFor={`block-style-color-${position}-${index}`}>
-                      Couleur du texte
-                    </label>
-                    <input
-                      id={`block-style-color-${position}-${index}`}
-                      type="text"
-                      value={blockStyle.textColor || ''}
-                      onChange={(e) => handleUpdateBlockStyle('textColor', e.target.value)}
-                      placeholder="ex: #0f172a"
-                      className="db-input text-xs"
-                    />
-                  </div>
-                </div>
-
-                {/* 2. Personnalisation avancée des contours, ombres et aperçu immédiat */}
+              <div className="mt-2.5">
                 <FlipbookBlockStyleEditor
                   block={block}
                   position={position}

@@ -191,7 +191,18 @@
   color: var(--primary, #1e3a8a);
 }
 
-/* Bloc Image */
+/* ==========================================================================
+   BLOCS MULTIMÉDIAS HARMONISÉS : IMAGE & VIDÉO
+   Dimensions, ratios (16:9 standard) et cadrages rigoureusement identiques
+   ========================================================================== */
+
+.flipbook-block-image,
+.flipbook-block-video {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
 .flipbook-block-figure {
   margin: 0;
   display: flex;
@@ -199,46 +210,52 @@
   width: 100%;
 }
 
-.flipbook-responsive-img {
-  width: 100%;
-  max-width: 100%;
-  height: auto;
-  border-radius: 8px;
-  display: block;
-  object-fit: cover;
-  transition: transform 0.25s ease;
-}
-
-.flipbook-image-link {
-  display: block;
-  overflow: hidden;
-  border-radius: 8px;
-}
-
-.flipbook-image-link:hover .flipbook-responsive-img {
-  transform: scale(1.02);
-}
-
-.flipbook-block-caption {
-  font-size: 0.75rem;
-  color: var(--text-muted, #64748b);
-  margin-top: 0.45rem;
-  line-height: 1.35;
-  font-style: italic;
-  text-align: center;
-}
-
-/* Bloc Vidéo (YouTube ou HTML5) */
+/* Conteneurs de ratio unifiés pour Images et Vidéos (Gauche ou Droite) */
+.flipbook-image-ratio-container,
 .flipbook-video-ratio-container {
   position: relative;
   width: 100%;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: var(--flipbook-media-ratio, 16 / 9);
   border-radius: 8px;
   overflow: hidden;
   background-color: #0b1120;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
+}
+
+.flipbook-image-link {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.flipbook-responsive-img {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  aspect-ratio: var(--flipbook-media-ratio, 16 / 9);
+  border-radius: 8px;
+  display: block;
+  object-fit: cover;
+  object-position: center;
+  transition: transform 0.25s ease;
+}
+
+.flipbook-image-link:hover .flipbook-responsive-img {
+  transform: scale(1.03);
+}
+
+.flipbook-block-caption {
+  font-size: 0.75rem;
+  color: var(--text-muted, #64748b);
+  margin-top: 0.5rem;
+  line-height: 1.35;
+  font-style: italic;
+  text-align: center;
 }
 
 .flipbook-video-iframe {
@@ -256,7 +273,9 @@
   max-width: 100%;
   border-radius: 8px;
   object-fit: cover;
+  object-position: center;
   background: #000;
+  display: block;
 }
 
 /* Bloc Bouton / Lien */
@@ -464,30 +483,31 @@
 
 .flipbook-sidebars-editor-container {
   width: 100%;
+  min-width: 0;
   box-sizing: border-box;
 }
 
-.flipbook-editor-columns-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+.flipbook-editor-columns-grid,
+.flipbook-editor-stacked-panels {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
   gap: 1.25rem;
-  margin-top: 1rem;
-}
-
-@media (max-width: 860px) {
-  .flipbook-editor-columns-grid {
-    grid-template-columns: 1fr;
-  }
+  margin-top: 0.5rem;
 }
 
 .flipbook-sidebar-admin-column {
   background: var(--bg-sidebar, #f8fafc);
   border: 1px solid var(--border, #e2e8f0);
   border-radius: 12px;
-  padding: 1rem;
+  padding: 0.85rem 1.15rem;
   display: flex;
   flex-direction: column;
+  width: 100%;
+  min-width: 0;
   box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .dark-mode .flipbook-sidebar-admin-column {
@@ -495,22 +515,81 @@
   border-color: #334155;
 }
 
+.flipbook-sidebar-admin-column:hover {
+  border-color: #cbd5e1;
+}
+
+.dark-mode .flipbook-sidebar-admin-column:hover {
+  border-color: #475569;
+}
+
+.flipbook-sidebar-admin-column.is-collapsed {
+  padding-bottom: 0.85rem;
+}
+
 .flipbook-admin-col-header {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.flipbook-sidebar-admin-column:not(.is-collapsed) .flipbook-admin-col-header {
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border, #e2e8f0);
+}
+
+.dark-mode .flipbook-sidebar-admin-column:not(.is-collapsed) .flipbook-admin-col-header {
+  border-color: #334155;
+}
+
+.flipbook-admin-col-header-btn {
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1rem;
-  padding-bottom: 0.65rem;
-  border-bottom: 1px solid var(--border, #e2e8f0);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem 0;
+  text-align: left;
+  color: inherit;
+  border-radius: 6px;
+  transition: opacity 0.15s ease;
+}
+
+.flipbook-admin-col-header-btn:hover {
+  opacity: 0.85;
+}
+
+.flipbook-admin-col-header-btn:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
 }
 
 .flipbook-admin-col-title {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.92rem;
+  gap: 0.6rem;
+  font-size: 0.95rem;
   font-weight: 700;
   color: var(--text-main, #0f172a);
+}
+
+.dark-mode .flipbook-admin-col-title {
+  color: #f1f5f9;
+}
+
+.flipbook-admin-chevron-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  transition: transform 0.2s ease;
+}
+
+.dark-mode .flipbook-admin-chevron-icon {
+  color: #94a3b8;
 }
 
 .flipbook-admin-badge-count {
@@ -518,13 +597,23 @@
   color: var(--primary, #1e3a8a);
   font-size: 0.72rem;
   font-weight: 800;
-  padding: 0.15rem 0.55rem;
+  padding: 0.2rem 0.6rem;
   border-radius: 9999px;
+  border: 1px solid #bfdbfe;
 }
 
 .dark-mode .flipbook-admin-badge-count {
   background: rgba(2, 132, 199, 0.2);
   color: #38bdf8;
+  border-color: #0284c7;
+}
+
+.flipbook-admin-column-body {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  animation: fadeIn 0.2s ease;
 }
 
 .flipbook-admin-blocks-list {
@@ -789,6 +878,184 @@
   margin-top: 0.35rem;
 }
 
+/* ==========================================================================
+   4.1 CONTRÔLES MÉDIAS & APERÇU D'IMAGE ERGONOMIQUE
+   Boutons médiathèque / upload aérés sans coupure disgracieuse & vignette nette
+   ========================================================================== */
+
+.ae-media-actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.ae-media-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.85rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid var(--border, #cbd5e1);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  min-height: 36px;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.ae-media-btn-library {
+  background: #eff6ff;
+  color: #1e3a8a;
+  border-color: #bfdbfe;
+}
+
+.dark-mode .ae-media-btn-library {
+  background: rgba(30, 58, 138, 0.35);
+  color: #93c5fd;
+  border-color: #2563eb;
+}
+
+.ae-media-btn-library:hover {
+  background: #dbeafe;
+  border-color: #3b82f6;
+  color: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.dark-mode .ae-media-btn-library:hover {
+  background: rgba(30, 58, 138, 0.55);
+  color: #bfdbfe;
+  border-color: #60a5fa;
+}
+
+.ae-media-btn-upload {
+  background: #f8fafc;
+  color: #334155;
+  border-color: #cbd5e1;
+}
+
+.dark-mode .ae-media-btn-upload {
+  background: #1e293b;
+  color: #e2e8f0;
+  border-color: #475569;
+}
+
+.ae-media-btn-upload:hover:not(:disabled) {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  color: #0f172a;
+  transform: translateY(-1px);
+}
+
+.dark-mode .ae-media-btn-upload:hover:not(:disabled) {
+  background: #334155;
+  color: #ffffff;
+}
+
+.ae-media-action-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Carte d'aperçu d'image soignée et distincte */
+.ae-image-preview-card {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.65rem 0.85rem;
+  background: #ffffff;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 10px;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.dark-mode .ae-image-preview-card {
+  background: rgba(15, 23, 42, 0.5);
+  border-color: #334155;
+}
+
+.ae-image-preview-thumb {
+  width: 72px;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  flex-shrink: 0;
+}
+
+.dark-mode .ae-image-preview-thumb {
+  border-color: #475569;
+  background: #1e293b;
+}
+
+.ae-image-preview-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.ae-image-preview-status {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.ae-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+  flex-shrink: 0;
+}
+
+.ae-status-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.dark-mode .ae-status-title {
+  color: #f1f5f9;
+}
+
+.ae-image-preview-subtext {
+  font-size: 0.72rem;
+  color: #64748b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dark-mode .ae-image-preview-subtext {
+  color: #94a3b8;
+}
+
+/* Sécurité anti-débordement sur les champs de saisie */
+.ae-fluid-input {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-all !important;
+}
+
 /* --------------------------------------------------------------------------
    5. PERSONNALISATION DES CONTOURS ET OMBRES DES BLOCS (ANJOU ÉDITION)
    -------------------------------------------------------------------------- */
@@ -1028,10 +1295,10 @@
 }
 
 /* ==========================================================================
-   10. ÉDITEUR VISUEL DU MODÈLE GLOBAL EN 3 ZONES
-   Zone 1 : Panneau gauche (Personnalisation par accordéons)
-   Zone 2 : Zone centrale (Aperçu en direct [ GAUCHE ] [ FLIPBOOK ] [ DROITE ])
-   Zone 3 : Zone inférieure (Actions sticky : Annuler, Réinitialiser, Enregistrer)
+   10. ÉDITEUR VISUEL DU MODÈLE GLOBAL EN DEUX PANNEAUX (55% / 45%)
+   Panneau gauche : Configuration, accordéons intelligents & blocs (~55%)
+   Panneau droit  : Aperçu interactif sticky sous le header (~45%)
+   Barre inférieure : Actions sticky avec flou d'arrière-plan & contrastes WCAG
    ========================================================================== */
 
 .ae-global-editor-unified-layout {
@@ -1040,31 +1307,73 @@
   align-items: flex-start;
   gap: 1.5rem;
   width: 100%;
+  max-width: 1720px;
   margin-top: 1rem;
-  margin-bottom: 5rem; /* Espace pour la barre inférieure sticky */
+  margin-bottom: 6rem; /* Espace pour la barre inférieure sticky */
   box-sizing: border-box;
 }
 
-@media (max-width: 1100px) {
-  .ae-global-editor-unified-layout {
-    flex-direction: column;
+/* Panneau gauche (~55%) : Configuration et Blocs */
+.ae-editor-left-panel {
+  flex: 0 0 55%;
+  max-width: 55%;
+  width: 55%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-sizing: border-box;
+}
+
+/* Panneau droit (~45%) : Aperçu interactif sticky sous le header */
+.ae-editor-center-stage {
+  flex: 0 0 calc(45% - 1.5rem);
+  max-width: calc(45% - 1.5rem);
+  width: calc(45% - 1.5rem);
+  min-width: 0;
+  position: sticky;
+  top: 5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-sizing: border-box;
+  z-index: 10;
+}
+
+/* Palier L (900px à 1199px) : adaptation 52% / 48% */
+@media (min-width: 900px) and (max-width: 1199px) {
+  .ae-editor-left-panel {
+    flex: 0 0 52%;
+    max-width: 52%;
+    width: 52%;
+    min-width: 0;
+  }
+  .ae-editor-center-stage {
+    flex: 0 0 calc(48% - 1.5rem);
+    max-width: calc(48% - 1.5rem);
+    width: calc(48% - 1.5rem);
+    min-width: 0;
   }
 }
 
-/* Zone 1 : Panneau gauche (Personnalisation) */
-.ae-editor-left-panel {
-  width: 440px;
-  max-width: 100%;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.85rem;
-  box-sizing: border-box;
-}
+/* Palier M & S (< 900px) : Passage à 1 colonne fluide avec bascule */
+@media (max-width: 899px) {
+  .ae-global-editor-unified-layout {
+    flex-direction: column;
+    margin-bottom: 7.5rem;
+  }
 
-@media (max-width: 1100px) {
-  .ae-editor-left-panel {
+  .ae-editor-left-panel,
+  .ae-editor-center-stage {
+    flex: 1 1 100%;
+    max-width: 100%;
+    min-width: 0;
     width: 100%;
+    position: static;
+  }
+
+  .ae-mobile-panel-hidden {
+    display: none !important;
   }
 }
 
@@ -1086,7 +1395,7 @@
 
 .ae-editor-accordion.is-open {
   border-color: #93c5fd;
-  box-shadow: 0 2px 8px rgba(30, 58, 138, 0.08);
+  box-shadow: 0 4px 12px rgba(30, 58, 138, 0.08);
 }
 
 .dark-mode .ae-editor-accordion.is-open {
@@ -1098,7 +1407,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.85rem 1rem;
+  padding: 0.85rem 1.15rem;
   background: #f8fafc;
   border: none;
   cursor: pointer;
@@ -1133,8 +1442,29 @@
   color: #f1f5f9;
 }
 
+.ae-accordion-num-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #eff6ff;
+  color: #1e3a8a;
+  font-size: 0.7rem;
+  font-weight: 800;
+  border: 1px solid #bfdbfe;
+  flex-shrink: 0;
+}
+
+.dark-mode .ae-accordion-num-badge {
+  background: rgba(30, 58, 138, 0.4);
+  color: #93c5fd;
+  border-color: #2563eb;
+}
+
 .ae-accordion-content {
-  padding: 1rem;
+  padding: 1.15rem;
   background: #ffffff;
   border-top: 1px solid var(--border, #e2e8f0);
   box-sizing: border-box;
@@ -1145,30 +1475,100 @@
   border-color: #334155;
 }
 
-/* Zone 2 : Zone centrale (Aperçu en direct) */
-.ae-editor-center-stage {
-  flex: 1 1 auto;
-  min-width: 0;
+/* Cartes de blocs compactes & Badges */
+.ae-badge-type-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  background: #eff6ff;
+  color: #1e3a8a;
+  border: 1px solid #bfdbfe;
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.dark-mode .ae-badge-type-pill {
+  background: rgba(30, 58, 138, 0.4);
+  color: #93c5fd;
+  border-color: #2563eb;
+}
+
+.flipbook-editor-block-card {
+  background: #ffffff;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.dark-mode .flipbook-editor-block-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.flipbook-editor-block-card:hover {
+  border-color: #93c5fd;
+  box-shadow: 0 4px 10px rgba(30, 58, 138, 0.07);
+}
+
+.flipbook-editor-block-card.is-disabled {
+  opacity: 0.65;
+  background: #f8fafc;
+}
+
+.dark-mode .flipbook-editor-block-card.is-disabled {
+  background: #0f172a;
+}
+
+.flipbook-btn-ctrl.btn-edit:hover:not(:disabled) {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: #ffffff;
+}
+
+/* Modale d'édition spacieuse (FlipbookBlockModalEditor) */
+.ae-block-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  box-sizing: border-box;
+  animation: fadeIn 0.2s ease;
+}
+
+.ae-block-modal-dialog {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.3);
+  border: 1px solid #cbd5e1;
+  max-width: 780px;
+  width: 100%;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  box-sizing: border-box;
-  position: sticky;
-  top: 1rem;
 }
 
-@media (max-width: 1100px) {
-  .ae-editor-center-stage {
-    position: static;
-  }
+.dark-mode .ae-block-modal-dialog {
+  background: #0f172a;
+  border-color: #334155;
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.6);
 }
 
+/* Zone 2 : Zone centrale (Aperçu en direct) */
 .ae-center-stage-card {
   background: #ffffff;
   border: 1px solid var(--border, #e2e8f0);
   border-radius: 14px;
-  padding: 1rem;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  padding: 1.15rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
   box-sizing: border-box;
 }
 
@@ -1184,7 +1584,7 @@
   justify-content: center;
   gap: 0.5rem;
   width: 100%;
-  padding: 0.65rem 1rem;
+  padding: 0.7rem 1rem;
   font-size: 0.8rem;
   font-weight: 700;
   color: #1e3a8a;
@@ -1223,10 +1623,10 @@
   right: 0;
   z-index: 40;
   background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-top: 1px solid var(--border, #cbd5e1);
-  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
   padding: 0.85rem 1.5rem;
   box-sizing: border-box;
 }
@@ -1234,11 +1634,11 @@
 .dark-mode .ae-editor-bottom-bar {
   background: rgba(15, 23, 42, 0.95);
   border-color: #334155;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.4);
 }
 
 .ae-bottom-bar-inner {
-  max-width: 1700px;
+  max-width: 1720px;
   margin: 0 auto;
   display: flex;
   align-items: center;
@@ -1251,7 +1651,7 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   color: var(--text-main, #475569);
 }
 
@@ -1271,7 +1671,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.5rem 0.85rem;
+  padding: 0.55rem 0.85rem;
   font-size: 0.8rem;
   font-weight: 600;
   color: #b91c1c;
@@ -1280,6 +1680,7 @@
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.15s ease;
+  min-height: 38px;
 }
 
 .dark-mode .ae-btn-reset-changes {
@@ -1292,5 +1693,6 @@
   background: #fee2e2;
   border-color: #f87171;
 }
+
 
 
