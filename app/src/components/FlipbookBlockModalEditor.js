@@ -283,9 +283,9 @@ export default function FlipbookBlockModalEditor({
           </button>
         </div>
 
-        {/* CORPS DU FORMULAIRE */}
-        <form onSubmit={handleFormSubmit}>
-          <div className="p-6 max-h-[calc(85vh-180px)] overflow-y-auto space-y-4">
+        {/* CORPS DU FORMULAIRE AVEC DÉFILEMENT INTERNE CONFINÉ (R1) */}
+        <form onSubmit={handleFormSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+          <div className="ae-block-modal-body space-y-4">
             {errorMsg && (
               <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-lg text-xs text-red-700 dark:text-red-300 flex items-center gap-2">
                 <AlertCircle size={16} className="shrink-0 text-red-600" aria-hidden="true" />
@@ -338,10 +338,26 @@ export default function FlipbookBlockModalEditor({
                 {blockType === 'image' && (
                   <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-3">
                     <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
-                      Source de l'image
+                      Aperçu et source de l'image
                     </span>
 
-                    <div className="flex flex-wrap gap-2">
+                    {/* Aperçu d'image dédié sans déformation (R1) */}
+                    {(formData.imageUrl || formData.url) ? (
+                      <div className="ae-modal-image-preview-container">
+                        <img
+                          src={formData.imageUrl || formData.url}
+                          alt={formData.imageAlt || "Aperçu de l'image du bloc"}
+                          className="ae-modal-image-preview-img"
+                        />
+                      </div>
+                    ) : (
+                      <div className="ae-modal-image-preview-container text-slate-400 text-xs italic">
+                        Aucune image sélectionnée pour ce bloc
+                      </div>
+                    )}
+
+                    {/* Actions de sélection de média */}
+                    <div className="flex flex-wrap items-center gap-2">
                       <button
                         type="button"
                         onClick={() => {
@@ -384,35 +400,36 @@ export default function FlipbookBlockModalEditor({
                           e.target.value = '';
                         }}
                       />
+
+                      {(formData.imageUrl || formData.url) && (
+                        <span className="ae-modal-source-badge">
+                          ✓ Image prête pour l'affichage
+                        </span>
+                      )}
                     </div>
 
                     <div>
                       <label htmlFor="modal-img-url-input" className="ae-modal-label text-xs">
-                        URL directe de l'image
+                        URL directe ou référence du média
                       </label>
                       <input
                         id="modal-img-url-input"
                         type="text"
-                        value={formData.imageUrl || formData.url || ''}
-                        onChange={(e) => handleChangeField('imageUrl', e.target.value)}
-                        placeholder="https://... ou chemin local"
+                        value={
+                          (formData.imageUrl || formData.url || '').startsWith('data:image/')
+                            ? '[Image locale téléversée (données Base64 prêtes)]'
+                            : (formData.imageUrl || formData.url || '')
+                        }
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (!val.startsWith('[')) {
+                            handleChangeField('imageUrl', val);
+                          }
+                        }}
+                        placeholder="https://... ou chemin local /images/..."
                         className="ae-flipbook-input ae-fluid-input text-xs w-full font-mono"
                       />
                     </div>
-
-                    {(formData.imageUrl || formData.url) && (
-                      <div className="flex items-center gap-3 p-2.5 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700">
-                        <img
-                          src={formData.imageUrl || formData.url}
-                          alt={formData.imageAlt || "Aperçu de l'image"}
-                          className="w-16 h-16 object-cover rounded border border-slate-200 dark:border-slate-700 shrink-0"
-                        />
-                        <div className="text-xs text-slate-600 dark:text-slate-300">
-                          <strong className="block text-slate-800 dark:text-slate-100">Image chargée</strong>
-                          <span className="text-[11px] text-slate-400">Prête pour le Flipbook</span>
-                        </div>
-                      </div>
-                    )}
 
                     <div>
                       <label htmlFor="modal-img-alt-input" className="ae-modal-label text-xs">

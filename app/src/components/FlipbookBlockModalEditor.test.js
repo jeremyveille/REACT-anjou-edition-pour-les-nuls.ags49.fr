@@ -130,4 +130,43 @@ describe('FlipbookBlockModalEditor component tests', () => {
     fireEvent.keyDown(window, { key: 'Escape' });
     expect(handleClose).toHaveBeenCalledTimes(1);
   });
+
+  test('renders image block with dedicated preview container and clean base64 label', () => {
+    const mockImageBlock = {
+      id: 'block_img_1',
+      type: 'image',
+      title: 'Illustration de couverture',
+      imageUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+      imageAlt: 'Vignette du livre',
+      enabled: true
+    };
+
+    const { container } = render(
+      <FlipbookBlockModalEditor
+        isOpen={true}
+        block={mockImageBlock}
+        position="right"
+        index={1}
+        onSave={jest.fn()}
+        onClose={jest.fn()}
+      />
+    );
+
+    // Vérifie le conteneur défilable interne
+    expect(container.querySelector('.ae-block-modal-body')).toBeInTheDocument();
+
+    // Vérifie le conteneur dédié d'aperçu d'image
+    const previewContainer = container.querySelector('.ae-modal-image-preview-container');
+    expect(previewContainer).toBeInTheDocument();
+    const previewImg = previewContainer.querySelector('img');
+    expect(previewImg).toBeInTheDocument();
+    expect(previewImg).toHaveAttribute('alt', 'Vignette du livre');
+
+    // Vérifie le masquage propre de la chaîne Base64 dans le champ texte
+    const urlInput = screen.getByLabelText(/URL directe ou référence du média/i);
+    expect(urlInput.value).toContain('[Image locale téléversée');
+
+    // Vérifie le badge de statut
+    expect(screen.getByText(/Image prête pour l'affichage/i)).toBeInTheDocument();
+  });
 });

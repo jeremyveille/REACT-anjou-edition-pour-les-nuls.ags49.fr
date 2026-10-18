@@ -182,43 +182,43 @@ export default function FlipbookSidebarBlockEditor({
             <img 
               src={block.imageUrl || block.url} 
               alt={block.imageAlt || 'Aperçu'} 
-              className="w-10 h-10 object-cover rounded-md border border-slate-200 dark:border-slate-700 shrink-0"
+              className="w-[54px] h-[54px] object-cover rounded-md border border-slate-200 dark:border-slate-700 shrink-0"
             />
           );
         }
         return (
-          <div className="w-10 h-10 rounded-md bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-200 dark:border-blue-800">
-            <ImageIcon size={18} aria-hidden="true" />
+          <div className="w-[54px] h-[54px] rounded-md bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-200 dark:border-blue-800">
+            <ImageIcon size={22} aria-hidden="true" />
           </div>
         );
       case 'video':
         return (
-          <div className="w-10 h-10 rounded-md bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 border border-rose-200 dark:border-rose-800">
-            <Film size={18} aria-hidden="true" />
+          <div className="w-[54px] h-[54px] rounded-md bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 border border-rose-200 dark:border-rose-800">
+            <Film size={22} aria-hidden="true" />
           </div>
         );
       case 'heading':
         return (
-          <div className="w-10 h-10 rounded-md bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-200 dark:border-indigo-800 font-bold text-xs">
-            <Type size={18} aria-hidden="true" />
+          <div className="w-[54px] h-[54px] rounded-md bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-200 dark:border-indigo-800 font-bold text-xs">
+            <Type size={22} aria-hidden="true" />
           </div>
         );
       case 'button':
         return (
-          <div className="w-10 h-10 rounded-md bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-200 dark:border-emerald-800">
-            <LinkIcon size={18} aria-hidden="true" />
+          <div className="w-[54px] h-[54px] rounded-md bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-200 dark:border-emerald-800">
+            <LinkIcon size={22} aria-hidden="true" />
           </div>
         );
       case 'pdf':
         return (
-          <div className="w-10 h-10 rounded-md bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-200 dark:border-amber-800">
-            <FileCode size={18} aria-hidden="true" />
+          <div className="w-[54px] h-[54px] rounded-md bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-200 dark:border-amber-800">
+            <FileCode size={22} aria-hidden="true" />
           </div>
         );
       default:
         return (
-          <div className="w-10 h-10 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center shrink-0 border border-slate-200 dark:border-slate-700">
-            <FileText size={18} aria-hidden="true" />
+          <div className="w-[54px] h-[54px] rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center shrink-0 border border-slate-200 dark:border-slate-700">
+            <FileText size={22} aria-hidden="true" />
           </div>
         );
     }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   ArrowLeft, 
   Save, 
@@ -86,6 +86,50 @@ export default function GlobalFlipbookSidebarEditor({
   const [previewBookId, setPreviewBookId] = useState(() => {
     return flipbooks.length > 0 ? flipbooks[0].id : '';
   });
+
+  // Mise à l'échelle virtuelle uniforme pour l'aperçu XL et L (R2)
+  const previewStageWrapperRef = useRef(null);
+  const previewContentRef = useRef(null);
+  const [previewScale, setPreviewScale] = useState(1);
+  const [scaledHeight, setScaledHeight] = useState('auto');
+
+  useEffect(() => {
+    const updatePreviewScale = () => {
+      if (!previewStageWrapperRef.current) return;
+      const availableWidth = previewStageWrapperRef.current.clientWidth;
+      let virtualTarget = 1240;
+      if (previewViewport === 'l') virtualTarget = 1024;
+      else if (previewViewport === 'm') virtualTarget = 768;
+      else if (previewViewport === 's') virtualTarget = 390;
+
+      if (availableWidth > 0 && availableWidth < virtualTarget) {
+        const s = availableWidth / virtualTarget;
+        setPreviewScale(s);
+        if (previewContentRef.current) {
+          const h = previewContentRef.current.offsetHeight;
+          setScaledHeight(h > 0 ? `${Math.ceil(h * s)}px` : 'auto');
+        }
+      } else {
+        setPreviewScale(1);
+        setScaledHeight('auto');
+      }
+    };
+
+    updatePreviewScale();
+    const timer = setTimeout(updatePreviewScale, 150);
+    window.addEventListener('resize', updatePreviewScale);
+    let observer = null;
+    if (typeof ResizeObserver !== 'undefined' && previewStageWrapperRef.current) {
+      observer = new ResizeObserver(updatePreviewScale);
+      observer.observe(previewStageWrapperRef.current);
+      if (previewContentRef.current) observer.observe(previewContentRef.current);
+    }
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', updatePreviewScale);
+      if (observer) observer.disconnect();
+    };
+  }, [previewViewport, template]);
 
   // Gestion des 5 accordéons : dépliables et repliables à volonté avec bouton Tout replier
   const [openAccordions, setOpenAccordions] = useState({
@@ -1645,24 +1689,36 @@ export default function GlobalFlipbookSidebarEditor({
               </span>
             </div>
 
-            {/* Cadre de prévisualisation avec contrainte responsive */}
-            <div className="ae-preview-stage-wrapper">
+            {/* Cadre de prévisualisation avec contrainte responsive et mise à l'échelle virtuelle (R2) */}
+            <div className="ae-preview-stage-wrapper" ref={previewStageWrapperRef}>
               <div 
-                className={`ae-preview-viewport-frame viewport-${previewViewport}`}
+                className={`ae-preview-viewport-frame viewport-${previewViewport} ae-preview-scaler-outer`}
                 style={{
-                  maxWidth: previewViewport === 'xl' ? '100%' : previewViewport === 'l' ? '1024px' : previewViewport === 'm' ? '768px' : '390px'
+                  height: previewScale < 1 && scaledHeight !== 'auto' ? scaledHeight : 'auto'
                 }}
               >
-                <div className="ae-preview-stage-content p-3 bg-slate-100 dark:bg-slate-900 rounded-b-xl overflow-hidden">
-                  <FlipbookLayout
-                    book={{ ...previewBook, sidebarMode: 'global' }}
-                    globalSidebar={template}
-                  >
-                    <PdfFlipbookReader
-                      book={previewBook}
-                      onClose={() => {}}
-                    />
-                  </FlipbookLayout>
+                <div
+                  ref={previewContentRef}
+                  className="ae-preview-scaler-inner"
+                  style={{
+                    width: previewScale < 1 ? `${previewViewport === 'xl' ? 1240 : previewViewport === 'l' ? 1024 : previewViewport === 'm' ? 768 : 390}px` : '100%',
+                    maxWidth: previewScale === 1 ? (previewViewport === 'xl' ? '100%' : previewViewport === 'l' ? '1024px' : previewViewport === 'm' ? '768px' : '390px') : 'none',
+                    transform: previewScale < 1 ? `scale(${previewScale})` : 'none',
+                    transformOrigin: 'top left',
+                    margin: previewScale === 1 ? '0 auto' : '0'
+                  }}
+                >
+                  <div className="ae-preview-stage-content p-3 bg-slate-100 dark:bg-slate-900 rounded-b-xl overflow-hidden">
+                    <FlipbookLayout
+                      book={{ ...previewBook, sidebarMode: 'global' }}
+                      globalSidebar={template}
+                    >
+                      <PdfFlipbookReader
+                        book={previewBook}
+                        onClose={() => {}}
+                      />
+                    </FlipbookLayout>
+                  </div>
                 </div>
               </div>
             </div>

@@ -5,15 +5,11 @@
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
-   1. DISPOSITION PUBLIQUE DU FLIPBOOK (3 COLONNES)
+   1. DISPOSITION PUBLIQUE DU FLIPBOOK (3 COLONNES STABLES)
+   [ BARRE GAUCHE ] [ FLIPBOOK CENTRAL ] [ BARRE DROITE ]
    -------------------------------------------------------------------------- */
 
 .flipbook-layout-wrapper {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 1.5rem;
   width: 100%;
   max-width: 1680px;
   margin: 0 auto;
@@ -22,56 +18,61 @@
   min-width: 0;
 }
 
+/* 3 Colonnes : Grille native sur Desktop (>= 861px) */
+.flipbook-layout-wrapper.has-both-sidebars {
+  display: grid;
+  grid-template-columns: minmax(200px, var(--sidebar-left-width, 20%)) minmax(0, 1fr) minmax(200px, var(--sidebar-right-width, 20%));
+  gap: 1.5rem;
+  align-items: start;
+}
+
+/* Si seule la barre gauche est active */
+.flipbook-layout-wrapper.has-left-only {
+  display: grid;
+  grid-template-columns: minmax(200px, var(--sidebar-left-width, 22%)) minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+/* Si seule la barre droite est active */
+.flipbook-layout-wrapper.has-right-only {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(200px, var(--sidebar-right-width, 22%));
+  gap: 1.5rem;
+  align-items: start;
+}
+
+/* Si aucune barre latérale n'a de blocs actifs */
+.flipbook-layout-wrapper.has-no-sidebars {
+  display: block;
+}
+
+.flipbook-layout-wrapper.has-no-sidebars .flipbook-main-stage {
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
 /* Colonnes des barres latérales gauche et droite */
 .flipbook-sidebar-column {
-  width: 20%;
-  min-width: 200px;
-  max-width: 380px;
-  flex-shrink: 0;
+  width: 100%;
+  min-width: 0;
   box-sizing: border-box;
 }
 
 .flipbook-sidebar-left-wrapper {
-  width: var(--sidebar-left-width, 20%);
+  width: 100%;
 }
 
 .flipbook-sidebar-right-wrapper {
-  width: var(--sidebar-right-width, 20%);
+  width: 100%;
 }
 
 /* Zone centrale contenant le lecteur Flipbook */
 .flipbook-main-stage {
-  flex: 1 1 60%;
-  min-width: 0; /* Empêche le débordement flex */
+  min-width: 0; /* Empêche le débordement */
   width: 100%;
   box-sizing: border-box;
-}
-
-/* Si seule la barre gauche est présente */
-.flipbook-layout-wrapper.has-left-only .flipbook-sidebar-column {
-  width: 22%;
-  max-width: 340px;
-}
-
-.flipbook-layout-wrapper.has-left-only .flipbook-main-stage {
-  flex: 1 1 78%;
-}
-
-/* Si seule la barre droite est présente */
-.flipbook-layout-wrapper.has-right-only .flipbook-sidebar-column {
-  width: 22%;
-  max-width: 340px;
-}
-
-.flipbook-layout-wrapper.has-right-only .flipbook-main-stage {
-  flex: 1 1 78%;
-}
-
-/* Si aucune barre latérale n'a de blocs actifs */
-.flipbook-layout-wrapper.has-no-sidebars .flipbook-main-stage {
-  flex: 1 1 100%;
-  max-width: 1200px;
-  margin: 0 auto;
 }
 
 /* --------------------------------------------------------------------------
@@ -404,36 +405,38 @@
     gap: 1rem;
   }
   .flipbook-sidebar-column {
-    width: 22%;
-    min-width: 190px;
+    width: 100%;
+    min-width: 0;
   }
   .flipbook-sidebar-card {
     padding: 0.85rem;
   }
 }
 
-/* Tablette et Mobile (860px et moins) : passage en disposition verticale */
+/* Tablette et Mobile (860px et moins) : passage en disposition verticale ordonnée */
 @media (max-width: 860px) {
-  .flipbook-layout-wrapper {
+  .flipbook-layout-wrapper,
+  .flipbook-layout-wrapper.has-both-sidebars,
+  .flipbook-layout-wrapper.has-left-only,
+  .flipbook-layout-wrapper.has-right-only {
+    display: flex;
     flex-direction: column;
     gap: 1.5rem;
   }
 
-  /* Flipbook en priorité absolue tout en haut */
-  .flipbook-main-stage {
+  /* Ordre hiérarchique : 1. Barre gauche, 2. Flipbook central, 3. Barre droite */
+  .flipbook-sidebar-left-wrapper {
     order: 1;
     width: 100%;
     max-width: 100%;
   }
 
-  /* Barre gauche en deuxième */
-  .flipbook-sidebar-left-wrapper {
+  .flipbook-main-stage {
     order: 2;
     width: 100%;
     max-width: 100%;
   }
 
-  /* Barre droite en troisième */
   .flipbook-sidebar-right-wrapper {
     order: 3;
     width: 100%;
@@ -461,7 +464,7 @@
     display: none !important;
   }
 }
-@media (min-width: 900px) {
+@media (min-width: 900px) and (max-width: 1199px) {
   .flipbook-sidebar-column.ae-hide-desktop {
     display: none !important;
   }
@@ -709,14 +712,16 @@
   flex-shrink: 0;
 }
 
-/* Boutons de contrôle accessibles du bloc */
+/* Boutons de contrôle accessibles du bloc (minimum 36x36px tactile conforme WCAG) */
 .flipbook-btn-ctrl {
   background: #ffffff;
   border: 1px solid var(--border, #cbd5e1);
   color: var(--text-main, #334155);
-  border-radius: 6px;
-  width: 28px;
-  height: 28px;
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1549,17 +1554,98 @@
   border-radius: 16px;
   box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.3);
   border: 1px solid #cbd5e1;
-  max-width: 780px;
+  max-width: min(92vw, 780px);
+  max-height: min(88vh, 760px);
+  height: auto;
   width: 100%;
+  margin: auto;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
 }
 
 .dark-mode .ae-block-modal-dialog {
   background: #0f172a;
   border-color: #334155;
   box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.6);
+}
+
+/* Corps interne défilable exclusivement de la modale */
+.ae-block-modal-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  min-height: 0;
+  box-sizing: border-box;
+  padding: 1.25rem 1.5rem;
+}
+
+/* Conteneur d'aperçu d'image dédié sans déformation (R1) */
+.ae-modal-image-preview-container {
+  width: 100%;
+  max-height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.75rem;
+  box-sizing: border-box;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
+
+.dark-mode .ae-modal-image-preview-container {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+.ae-modal-image-preview-img {
+  max-width: 100%;
+  max-height: 200px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 6px;
+}
+
+/* Badge de statut et source de média sans déversement base64 */
+.ae-modal-source-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  color: #475569;
+  background: #f1f5f9;
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dark-mode .ae-modal-source-badge {
+  background: #1e293b;
+  border-color: #334155;
+  color: #94a3b8;
+}
+
+/* Conteneur de mise à l'échelle virtuelle uniforme pour l'aperçu Flipbook XL (R2) */
+.ae-preview-scaler-outer {
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.ae-preview-scaler-inner {
+  transform-origin: top left;
+  transition: transform 0.15s ease-out;
+  box-sizing: border-box;
 }
 
 /* Zone 2 : Zone centrale (Aperçu en direct) */
