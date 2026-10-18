@@ -337,56 +337,108 @@ export const restoreLastSavedGlobalSidebar = async () => {
 };
 
 /**
+ * Extrait de façon tolérante les blocs configurés pour une barre latérale ('left' ou 'right')
+ * en prenant en charge toutes les conventions et alias de propriétés :
+ * leftSidebar / rightSidebar, leftBlocks / rightBlocks, sidebarLeft / sidebarRight, etc.
+ * Renvoie un tableau ou null si la propriété n'est pas définie.
+ */
+export const extractSidebarBlocks = (flipbook, side = 'left') => {
+  if (!flipbook || typeof flipbook !== 'object') return null;
+
+  if (side === 'left') {
+    if (Array.isArray(flipbook.leftSidebar)) return flipbook.leftSidebar;
+    if (Array.isArray(flipbook.leftBlocks)) return flipbook.leftBlocks;
+    if (Array.isArray(flipbook.sidebarLeft)) return flipbook.sidebarLeft;
+    if (Array.isArray(flipbook.left)) return flipbook.left;
+    if (flipbook.sidebars && Array.isArray(flipbook.sidebars.left)) return flipbook.sidebars.left;
+    if (Array.isArray(flipbook.blocks)) {
+      const filtered = flipbook.blocks.filter(b => b && (b.position === 'left' || b.side === 'left'));
+      if (filtered.length > 0) return filtered;
+    }
+    return null;
+  }
+
+  if (side === 'right') {
+    if (Array.isArray(flipbook.rightSidebar)) return flipbook.rightSidebar;
+    if (Array.isArray(flipbook.rightBlocks)) return flipbook.rightBlocks;
+    if (Array.isArray(flipbook.sidebarRight)) return flipbook.sidebarRight;
+    if (Array.isArray(flipbook.right)) return flipbook.right;
+    if (flipbook.sidebars && Array.isArray(flipbook.sidebars.right)) return flipbook.sidebars.right;
+    if (Array.isArray(flipbook.blocks)) {
+      const filtered = flipbook.blocks.filter(b => b && (b.position === 'right' || b.side === 'right'));
+      if (filtered.length > 0) return filtered;
+    }
+    return null;
+  }
+
+  return null;
+};
+
+/**
  * Résout les barres latérales d'un flipbook selon son mode :
  * - Mode 'global' : utilise une référence dynamique au modèle global partagé
  * - Mode 'custom' : utilise la configuration propre au flipbook
- * - Rétro-compatibilité : si non spécifié, un flipbook existant avec des blocs configurés
- *   reste en mode 'custom', tandis qu'un flipbook sans blocs utilise le modèle global.
+ * - Héritage intelligent : si une barre latérale est indéfinie ou non transmise,
+ *   elle hérite automatiquement de la barre correspondante du modèle global.
+ * - Rétro-compatibilité : support des alias (rightSidebar, rightBlocks, sidebarRight, etc.)
+ *   et des styles (styles, sidebarStyles).
  */
 export const resolveFlipbookSidebar = (flipbook, globalTemplate = null) => {
   const currentGlobal = globalTemplate ? normalizeSidebarTemplate(globalTemplate) : getLocalGlobalSidebar();
+  const globalLeft = Array.isArray(currentGlobal.leftSidebar) ? currentGlobal.leftSidebar : (DEFAULT_GLOBAL_SIDEBAR.leftSidebar || []);
+  const globalRight = Array.isArray(currentGlobal.rightSidebar) ? currentGlobal.rightSidebar : (DEFAULT_GLOBAL_SIDEBAR.rightSidebar || []);
+  const globalStyles = currentGlobal.styles || DEFAULT_GLOBAL_SIDEBAR.styles || {};
+
   if (!flipbook) {
     return {
       mode: 'global',
       isGlobal: true,
-      leftSidebar: currentGlobal.leftSidebar || [],
-      rightSidebar: currentGlobal.rightSidebar || [],
-      styles: currentGlobal.styles || {}
+      leftSidebar: globalLeft,
+      rightSidebar: globalRight,
+      styles: globalStyles
     };
   }
 
   const explicitMode = flipbook.sidebarMode;
+  const bookStyles = flipbook.styles || flipbook.sidebarStyles || {};
+  const mergedStyles = {
+    ...globalStyles,
+    ...bookStyles
+  };
 
   if (explicitMode === 'global') {
     return {
       mode: 'global',
       isGlobal: true,
-      leftSidebar: currentGlobal.leftSidebar || [],
-      rightSidebar: currentGlobal.rightSidebar || [],
-      styles: currentGlobal.styles || {}
+      leftSidebar: globalLeft,
+      rightSidebar: globalRight,
+      styles: mergedStyles
     };
   }
+
+  const rawLeft = extractSidebarBlocks(flipbook, 'left');
+  const rawRight = extractSidebarBlocks(flipbook, 'right');
 
   if (explicitMode === 'custom') {
     return {
       mode: 'custom',
       isGlobal: false,
-      leftSidebar: Array.isArray(flipbook.leftSidebar) ? flipbook.leftSidebar : [],
-      rightSidebar: Array.isArray(flipbook.rightSidebar) ? flipbook.rightSidebar : [],
-      styles: flipbook.styles || currentGlobal.styles || {}
+      leftSidebar: rawLeft !== null ? rawLeft : globalLeft,
+      rightSidebar: rawRight !== null ? rawRight : globalRight,
+      styles: mergedStyles
     };
   }
 
   // Si le mode n'est pas explicite (anciens flipbooks existants) :
-  // Si le flipbook possède explicitement leftSidebar ou rightSidebar (tableau),
-  // on conserve sa configuration existante (mode 'custom').
-  if (Array.isArray(flipbook.leftSidebar) || Array.isArray(flipbook.rightSidebar)) {
+  // Si le flipbook possède au moins une barre définie, on conserve sa configuration
+  // et on complète la barre non transmise par le modèle global.
+  if (rawLeft !== null || rawRight !== null) {
     return {
       mode: 'custom',
       isGlobal: false,
-      leftSidebar: flipbook.leftSidebar || [],
-      rightSidebar: flipbook.rightSidebar || [],
-      styles: flipbook.styles || currentGlobal.styles || {}
+      leftSidebar: rawLeft !== null ? rawLeft : globalLeft,
+      rightSidebar: rawRight !== null ? rawRight : globalRight,
+      styles: mergedStyles
     };
   }
 
@@ -394,9 +446,9 @@ export const resolveFlipbookSidebar = (flipbook, globalTemplate = null) => {
   return {
     mode: 'global',
     isGlobal: true,
-    leftSidebar: currentGlobal.leftSidebar || [],
-    rightSidebar: currentGlobal.rightSidebar || [],
-    styles: currentGlobal.styles || {}
+    leftSidebar: globalLeft,
+    rightSidebar: globalRight,
+    styles: mergedStyles
   };
 };
 

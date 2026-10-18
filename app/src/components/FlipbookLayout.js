@@ -5,6 +5,7 @@ import {
   getLocalGlobalSidebar,
   GLOBAL_SIDEBAR_EVENT
 } from '../services/flipbookSidebarService';
+import '../styles/flipbook-sidebars.css';
 
 const mapGapValue = (gap) => {
   if (gap === undefined || gap === null || gap === '') return null;

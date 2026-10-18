@@ -370,8 +370,12 @@ function App() {
             return {
               ...fb,
               pdfFile: fb.pdfFile || (fb.id === "4455" ? "secrets_vignoble_angevin.pdf" : "Seraphin-le-marin.pdf"),
-              ...(Array.isArray(fb.leftSidebar) ? { leftSidebar: fb.leftSidebar } : (defaultFb?.leftSidebar ? { leftSidebar: defaultFb.leftSidebar } : {})),
-              ...(Array.isArray(fb.rightSidebar) ? { rightSidebar: fb.rightSidebar } : (defaultFb?.rightSidebar ? { rightSidebar: defaultFb.rightSidebar } : {}))
+              ...(Array.isArray(fb.leftSidebar) && fb.leftSidebar.length > 0 
+                ? { leftSidebar: fb.leftSidebar } 
+                : (defaultFb?.leftSidebar ? { leftSidebar: defaultFb.leftSidebar } : { leftSidebar: fb.leftSidebar || [] })),
+              ...(Array.isArray(fb.rightSidebar) && fb.rightSidebar.length > 0 
+                ? { rightSidebar: fb.rightSidebar } 
+                : (defaultFb?.rightSidebar ? { rightSidebar: defaultFb.rightSidebar } : { rightSidebar: fb.rightSidebar || [] }))
             };
           });
         }
@@ -462,8 +466,12 @@ function App() {
               id: docSnap.id,
               ...data,
               pdfFile: data.pdfFile || (docSnap.id === "4455" ? "secrets_vignoble_angevin.pdf" : "Seraphin-le-marin.pdf"),
-              ...(Array.isArray(data.leftSidebar) ? { leftSidebar: data.leftSidebar } : (defaultFb?.leftSidebar ? { leftSidebar: defaultFb.leftSidebar } : {})),
-              ...(Array.isArray(data.rightSidebar) ? { rightSidebar: data.rightSidebar } : (defaultFb?.rightSidebar ? { rightSidebar: defaultFb.rightSidebar } : {}))
+              ...(Array.isArray(data.leftSidebar) && data.leftSidebar.length > 0 
+                ? { leftSidebar: data.leftSidebar } 
+                : (defaultFb?.leftSidebar ? { leftSidebar: defaultFb.leftSidebar } : { leftSidebar: data.leftSidebar || [] })),
+              ...(Array.isArray(data.rightSidebar) && data.rightSidebar.length > 0 
+                ? { rightSidebar: data.rightSidebar } 
+                : (defaultFb?.rightSidebar ? { rightSidebar: defaultFb.rightSidebar } : { rightSidebar: data.rightSidebar || [] }))
             });
           }
           setFlipbooks(list);

@@ -198,4 +198,50 @@ describe('FlipbookLayout component', () => {
     expect(screen.getByText('Titre Spécifique Individuel')).toBeInTheDocument();
     expect(screen.queryByText('Titre Global')).not.toBeInTheDocument();
   });
+
+  test('resolves right sidebar from aliases (rightBlocks, sidebarRight)', () => {
+    const bookWithAlias = {
+      id: 'book-alias',
+      title: 'Livre avec Alias',
+      leftSidebar: [{ id: 'l1', type: 'heading', text: 'Titre Gauche Standard', enabled: true }],
+      rightBlocks: [{ id: 'r1', type: 'heading', text: 'Titre Droit via rightBlocks', enabled: true }]
+    };
+
+    render(
+      <FlipbookLayout book={bookWithAlias}>
+        {mockChildren}
+      </FlipbookLayout>
+    );
+
+    const layout = screen.getByTestId('flipbook-layout-wrapper');
+    expect(layout).toHaveClass('has-both-sidebars');
+    expect(screen.getByTestId('flipbook-left-sidebar-col')).toBeInTheDocument();
+    expect(screen.getByTestId('flipbook-right-sidebar-col')).toBeInTheDocument();
+    expect(screen.getByText('Titre Droit via rightBlocks')).toBeInTheDocument();
+  });
+
+  test('inherits right sidebar from global template when flipbook only defines leftSidebar', () => {
+    const globalSidebarMock = {
+      leftSidebar: [{ id: 'g_left', type: 'heading', text: 'Global Gauche', enabled: true }],
+      rightSidebar: [{ id: 'g_right', type: 'text', content: '<p>Global Droit Hérité</p>', enabled: true }]
+    };
+
+    const bookLeftOnlyNoRight = {
+      id: 'book-half-custom',
+      title: 'Livre avec seulement barre gauche définie',
+      leftSidebar: [{ id: 'l_custom', type: 'heading', text: 'Gauche Custom', enabled: true }]
+      // rightSidebar is undefined -> should inherit from global
+    };
+
+    render(
+      <FlipbookLayout book={bookLeftOnlyNoRight} globalSidebar={globalSidebarMock}>
+        {mockChildren}
+      </FlipbookLayout>
+    );
+
+    const layout = screen.getByTestId('flipbook-layout-wrapper');
+    expect(layout).toHaveClass('has-both-sidebars');
+    expect(screen.getByText('Gauche Custom')).toBeInTheDocument();
+    expect(screen.getByText('Global Droit Hérité')).toBeInTheDocument();
+  });
 });
