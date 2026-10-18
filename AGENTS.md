@@ -154,16 +154,25 @@ Se déplacer dans le dossier : `cd page-builder-react`
 *   **Classes mutualisées** : `.responsive-container`, `.responsive-grid`, `.responsive-actions`, `.responsive-form`, `.responsive-table`, `.responsive-modal`.
 
 ### 7. Barres Latérales Administrables du Flipbook & Modèle Global (`FlipbookLayout`, `FlipbookSidebar`, `GlobalFlipbookSidebarEditor`, `FlipbookSidebarEditor`, `FlipbookBlockModalEditor`)
-*   **Disposition publique à 3 colonnes** : Encadre le lecteur central (`PdfFlipbookReader`) avec une barre latérale gauche (~20%) et une barre latérale droite (~20%) qui s'adaptent automatiquement à l'espace disponible.
-*   **Responsive sans compromis** : Sur mobile et tablette (`<= 860px`), disposition verticale fluide ordonnée avec priorité absolue au Flipbook en haut (`order: 1`), suivi des blocs de la barre gauche (`order: 2`), puis de la barre droite (`order: 3`), avec zéro débordement horizontal.
+*   **Disposition publique à 3 colonnes native (CSS Grid)** :
+    *   Encadre le lecteur central (`PdfFlipbookReader`) avec une barre latérale gauche (`--sidebar-left-width, 20%`) et une barre latérale droite (`--sidebar-right-width, 20%`) via une grille native `grid-template-columns: minmax(200px, 20%) minmax(0, 1fr) minmax(200px, 20%);`.
+    *   La contrainte `minmax(0, 1fr)` sur le lecteur central garantit que la barre droite n'est **plus jamais refoulée hors de l'écran**.
+    *   **Extraction tolérante multi-alias (`extractSidebarBlocks`)** : Prise en charge native de toutes les nomenclatures de données (`rightSidebar`, `rightBlocks`, `sidebarRight`, `right`, etc.) et héritage automatique depuis le modèle global partagé lorsqu'un flipbook n'a pas configuré de barre droite spécifique.
+*   **Responsive sans compromis** : Sur mobile et tablette (`<= 860px`), bascule fluide en flexbox colonne ordonnée : **1. Barre gauche (`order: 1`)**, **2. Flipbook central (`order: 2`)**, **3. Barre droite (`order: 3`)**, avec zéro débordement horizontal.
 *   **Éditeur visuel moderne en deux panneaux (55% / 45%)** :
     *   **Panneau gauche (~55%)** : Espace spacieux d'administration évitant tout texte coupé ou champ compressé, articulé autour de 5 sections d'accordéons intelligents (1. Dimensions & Visibilité, 2. Contours & Ombres, 3. Couleurs & Habillage, 4. Espacements & Disposition, 5. Contenu des blocs) avec bouton rapide « Tout déplier / Tout replier ».
-    *   **Panneau droit (~45% sticky)** : Aperçu interactif permanent sous le header existant avec sélecteurs de viewports (XL, L, M, S) et sélecteur de Flipbook de démonstration.
+    *   **Panneau droit (~45% sticky) avec Scaler Virtuel Homothétique** :
+        *   Résolution de l'écrasement de la vue XL dans la colonne de 45% grâce à un conteneur virtuel natif de 1240px avec facteur d'échelle dynamique (`scale = Math.min(1, largeurDisponible / 1240)`).
+        *   Les 3 colonnes `[ Barre Gauche ] [ Flipbook Central ] [ Barre Droite ]` s'affichent simultanément avec leurs proportions exactes d'écran large, sans déformer le lecteur PDF ni rogner la barre droite.
     *   **Bascule mobile/tablette (< 900px)** : Onglets réactifs `[ ⚙️ Paramètres & Blocs ]` / `[ 👁️ Aperçu en direct ]` éliminant les défilements verticaux sans fin.
 *   **Administration ergonomique des blocs par cartes compactes** :
-    *   Chaque bloc s'affiche sous forme d'une carte condensée soignée avec vignette miniature, titre, badge sémantique coloré et statut actif/inactif.
-    *   Boutons d'action rapides et accessibles : Monter, Descendre, **Modifier** (ouvre la modale spacieuse), **Dupliquer** (clonage instantané en 1 clic), Activer/Désactiver, Supprimer.
-    *   **Modale d'édition spacieuse (`FlipbookBlockModalEditor`)** : Fenêtre modale centrée et confortable de 780px avec onglets *Contenu* (champs aérés, médiathèque, alt text WCAG) et *Styles individuels* (`FlipbookBlockStyleEditor` avec contours, ombres et aperçu direct).
+    *   Chaque bloc s'affiche sous forme d'une carte condensée soignée avec vignette miniature agrandie et nette à **54x54px** (`object-fit: cover`), titre, badge sémantique coloré et statut actif/inactif.
+    *   Boutons d'action rapides et accessibles : Monter, Descendre, **Modifier** (ouvre la modale spacieuse), **Dupliquer** (clonage instantané en 1 clic), Activer/Désactiver, Supprimer, avec dimensions tactiles portées à **36x36px** conformes aux cibles WCAG 2.2 AA.
+    *   **Modale d'édition ergonomique et contenue (`FlipbookBlockModalEditor`)** :
+        *   Dimensions strictement bornées au viewport : `max-width: min(92vw, 780px)` et `max-height: min(88vh, 760px)`, centrage automatique sans dépassement.
+        *   Défilement vertical confiné exclusivement au corps du formulaire (`.ae-block-modal-body`), maintenant l'en-tête et les boutons d'action (*Enregistrer*, *Annuler*) toujours visibles et fixes.
+        *   Section d'aperçu d'image dédiée (`.ae-modal-image-preview-container`) avec `object-fit: contain` et hauteur maximale de 200px (zéro rognage ni étirement).
+        *   Masquage élégant des données Base64 volumineuses ou URLs longues dans les champs visibles avec badge de statut dédié (`.ae-modal-source-badge`), préservant la valeur réelle sous-jacente.
 *   **Contrôles numériques précis & Réinitialisation** : Sliders synchronisés avec des champs numériques modifiables et unités explicites (`%`, `px`), palettes de couleurs angevines et boutons de réinitialisation rapide.
 *   **Barre d'actions inférieure fixe (Sticky Glassmorphism)** :
     *   Indicateur dynamique de statut (Modifications non enregistrées / Modèle synchronisé).
@@ -177,7 +186,7 @@ Se déplacer dans le dossier : `cd page-builder-react`
     *   Ratio d'aspect unifié (`aspect-ratio: var(--flipbook-media-ratio, 16 / 9)`) et `object-fit: cover; object-position: center; width: 100%; height: 100%;` sur tous les blocs images et vidéos, garantissant des dimensions strictement identiques à gauche et à droite.
     *   Symétrie automatique des colonnes gauche et droite (`syncSidebarsWidth`) liée en 1 clic dans l'éditeur de modèle global, avec choix du format de média (16:9 panoramique, 4:3 classique, 1:1 carré).
 *   **Persistance hybride** : Association exclusive à chaque flipbook (`leftSidebar` et `rightSidebar`), synchronisée sur Firestore et mise en cache dans `localStorage`.
-*   **Tests & Qualité** : 40 suites de tests et 350 tests unitaires/d'intégration réussis à 100%, 0 avertissements de compilation.
+*   **Tests & Qualité** : 40 suites de tests et 353 tests unitaires/d'intégration réussis à 100%, 0 avertissements de compilation.
 
 ### 8. Menu d'Administration Latéral Ergonomique & Layout Dashboard (`DashboardSidebar`, `DashboardHeader`, `dashboard.css`)
 *   **Structure SaaS rectangulaire & Sans rognage** : Sidebar verticale rectangulaire de 250px de largeur fixe sur grand écran, sans forme ovale ou arrondie qui coupe les intitulés, s'intégrant directement dans un conteneur SaaS pleine hauteur (`.dashboard-layout-container`).
