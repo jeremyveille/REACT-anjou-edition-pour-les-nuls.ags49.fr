@@ -185,8 +185,14 @@ Se déplacer dans le dossier : `cd page-builder-react`
 *   **Harmonisation stricte des dimensions Images & Vidéos (Gauche & Droite)** :
     *   Ratio d'aspect unifié (`aspect-ratio: var(--flipbook-media-ratio, 16 / 9)`) et `object-fit: cover; object-position: center; width: 100%; height: 100%;` sur tous les blocs images et vidéos, garantissant des dimensions strictement identiques à gauche et à droite.
     *   Symétrie automatique des colonnes gauche et droite (`syncSidebarsWidth`) liée en 1 clic dans l'éditeur de modèle global, avec choix du format de média (16:9 panoramique, 4:3 classique, 1:1 carré).
+*   **Médiathèque Mutualisée, Centrée & Accessible (`MediaLibraryModal`, `media-modal.css`)** :
+    *   **Centrage parfait & Montée sur `document.body` via React Portal (`createPortal`)** : Élimination absolue des conflits de superposition, d'empilement CSS ou de déformation causés par des conteneurs parents (`scale()`, `transform`, `overflow`).
+    *   **100% Vanilla CSS pur** : Remplacement complet des classes Bootstrap/Tailwind non stylisées par une suite de styles dédiée (`.ae-media-modal-backdrop`, `.ae-media-modal-dialog`, `.ae-media-modal-header`, `.ae-media-modal-toolbar`, `.ae-media-modal-body`, `.ae-media-grid`, `.ae-media-card`, `.ae-media-sidebar`, `.ae-media-modal-footer`).
+    *   **Dimensions et défilement maîtrisés** : Fenêtre parfaitement centrée `min(1100px, 96vw)` et hauteur `85vh` (max `90dvh`), défilement confiné exclusivement à la zone de la grille avec en-tête et pied de page fixes.
+    *   **Sélection réactive & Conservation des modifications** : Sélection d'un média en 1 clic (ou double-clic), transmission immédiate au formulaire du bloc avec mise à jour instantanée de l'aperçu d'image et conservation intégrale des autres champs de saisie.
+    *   **Accessibilité WCAG 2.2 AA & Sécurisation de la touche Échap** : Rôles `dialog` et `aria-modal="true"`, capture de la touche Échap avec `stopPropagation` empêchant la fermeture accidentelle de la modale d'édition sous-jacente.
 *   **Persistance hybride** : Association exclusive à chaque flipbook (`leftSidebar` et `rightSidebar`), synchronisée sur Firestore et mise en cache dans `localStorage`.
-*   **Tests & Qualité** : 40 suites de tests et 353 tests unitaires/d'intégration réussis à 100%, 0 avertissements de compilation.
+*   **Tests & Qualité** : 41 suites de tests et 364 tests unitaires/d'intégration réussis à 100%, 0 avertissements de compilation.
 
 ### 8. Menu d'Administration Latéral Ergonomique & Layout Dashboard (`DashboardSidebar`, `DashboardHeader`, `dashboard.css`)
 *   **Structure SaaS rectangulaire & Sans rognage** : Sidebar verticale rectangulaire de 250px de largeur fixe sur grand écran, sans forme ovale ou arrondie qui coupe les intitulés, s'intégrant directement dans un conteneur SaaS pleine hauteur (`.dashboard-layout-container`).
