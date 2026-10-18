@@ -52,6 +52,10 @@ export default function FlipbookBlockModalEditor({
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape' && isOpen) {
+        // Ne pas fermer si une modale enfant (ex: Médiathèque) est ouverte au-dessus
+        if (typeof document !== 'undefined' && document.querySelector('.ae-media-modal-backdrop')) {
+          return;
+        }
         onClose();
       }
     };

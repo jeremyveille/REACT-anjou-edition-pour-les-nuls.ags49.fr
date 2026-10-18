@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import FlipbookBlockModalEditor from './FlipbookBlockModalEditor';
 
 describe('FlipbookBlockModalEditor component tests', () => {
@@ -168,5 +168,53 @@ describe('FlipbookBlockModalEditor component tests', () => {
 
     // Vérifie le badge de statut
     expect(screen.getByText(/Image prête pour l'affichage/i)).toBeInTheDocument();
+  });
+
+  test('calls onOpenMediaLibrary when clicking Choisir dans la médiathèque and updates form state cleanly', async () => {
+    const handleOpenMediaLibrary = jest.fn();
+    const mockImageBlock = {
+      id: 'block_img_2',
+      type: 'image',
+      title: 'Illustration Poème',
+      imageUrl: '',
+      imageAlt: '',
+      enabled: true
+    };
+
+    render(
+      <FlipbookBlockModalEditor
+        isOpen={true}
+        block={mockImageBlock}
+        position="left"
+        index={0}
+        onSave={jest.fn()}
+        onClose={jest.fn()}
+        onOpenMediaLibrary={handleOpenMediaLibrary}
+      />
+    );
+
+    const mediaLibBtn = screen.getByRole('button', { name: /Choisir dans la médiathèque/i });
+    expect(mediaLibBtn).toBeInTheDocument();
+
+    fireEvent.click(mediaLibBtn);
+    expect(handleOpenMediaLibrary).toHaveBeenCalledTimes(1);
+
+    // Vérifie les arguments passés à onOpenMediaLibrary : un callback et le filtre 'image'
+    const [callback, filterType] = handleOpenMediaLibrary.mock.calls[0];
+    expect(typeof callback).toBe('function');
+    expect(filterType).toBe('image');
+
+    // Exécute le callback simulant la sélection d'une image
+    act(() => {
+      callback({
+        url: 'https://example.com/nouvelle_illustration.jpg',
+        name: 'nouvelle_illustration.jpg'
+      });
+    });
+
+    // L'aperçu de l'image est immédiatement mis à jour
+    const imgPreview = await screen.findByRole('img', { name: /nouvelle_illustration/i });
+    expect(imgPreview).toBeInTheDocument();
+    expect(imgPreview).toHaveAttribute('src', 'https://example.com/nouvelle_illustration.jpg');
   });
 });

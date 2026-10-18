@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   X, 
   Search, 
@@ -13,16 +14,18 @@ import {
   Plus
 } from 'lucide-react';
 import { pageService } from '../services/pageService';
+import '../styles/media-modal.css';
 
 /**
- * Modal de sélection et de gestion de la médiathèque (Firestore / Storage / LocalStorage)
+ * Modal de sélection et de gestion de la médiathèque Anjou Édition (Firestore / Storage / LocalStorage)
+ * Centrée, accessible (WCAG 2.2 AA), 100% Vanilla CSS pur et montée via React Portal.
  */
 export const MediaLibraryModal = ({
   isOpen = false,
   onClose = () => {},
   onSelect = () => {},
   filterType = null, // null | 'image' | 'video' | 'document'
-  title = "Médiathèque Anjou Édition"
+  title = "Sélectionner un média"
 }) => {
   const [mediaList, setMediaList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,6 +38,7 @@ export const MediaLibraryModal = ({
 
   const fileInputRef = useRef(null);
   const modalRef = useRef(null);
+  const previousActiveElement = useRef(null);
 
   // Charger la liste des médias
   const loadMedia = async () => {
@@ -52,6 +56,7 @@ export const MediaLibraryModal = ({
 
   useEffect(() => {
     if (isOpen) {
+      previousActiveElement.current = document.activeElement;
       loadMedia();
       if (filterType) {
         setActiveTab(filterType);
@@ -59,6 +64,9 @@ export const MediaLibraryModal = ({
     } else {
       setSelectedId(null);
       setSearchQuery('');
+      if (previousActiveElement.current && typeof previousActiveElement.current.focus === 'function') {
+        previousActiveElement.current.focus();
+      }
     }
   }, [isOpen, filterType]);
 
@@ -66,11 +74,12 @@ export const MediaLibraryModal = ({
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape' && isOpen) {
+        e.stopPropagation();
         onClose();
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown, true);
+    return () => window.removeEventListener('keydown', handleKeyDown, true);
   }, [isOpen, onClose]);
 
   // Gestion du téléversement
@@ -132,6 +141,8 @@ export const MediaLibraryModal = ({
     onClose();
   };
 
+  if (!isOpen) return null;
+
   // Filtrage des médias
   const filteredMedia = mediaList.filter(item => {
     // Filtre de type
@@ -151,48 +162,44 @@ export const MediaLibraryModal = ({
     return true;
   });
 
-  if (!isOpen) return null;
-
   const selectedItem = mediaList.find(m => m.id === selectedId);
 
-  return (
+  const getFileInputAccept = () => {
+    if (activeTab === 'image') return 'image/*';
+    if (activeTab === 'video') return 'video/*';
+    return 'image/*,video/*,application/pdf';
+  };
+
+  const modalNode = (
     <div 
-      className="db-modal-overlay d-flex align-items-center justify-content-center p-3"
+      className="ae-media-modal-backdrop"
       role="dialog"
       aria-modal="true"
-      aria-labelledby="media-library-title"
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100vw',
-        height: '100vh',
-        backgroundColor: 'rgba(15, 23, 42, 0.65)',
-        backdropFilter: 'blur(4px)',
-        zIndex: 9999
+      aria-labelledby="ae-media-modal-title"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
       }}
+      data-testid="media-library-backdrop"
     >
       <div 
         ref={modalRef}
-        className="db-card d-flex flex-column bg-white rounded-4 shadow-xl overflow-hidden animate-in"
-        style={{
-          width: '100%',
-          maxWidth: '920px',
-          height: '85vh',
-          maxHeight: '750px'
-        }}
+        className="ae-media-modal-dialog"
+        onClick={(e) => e.stopPropagation()}
+        data-testid="media-library-dialog"
       >
         {/* EN-TÊTE DE LA MODALE */}
-        <div className="d-flex align-items-center justify-content-between px-4 py-3 border-bottom bg-slate-50">
-          <div className="d-flex align-items-center gap-2.5">
-            <div className="p-2 bg-primary-subtle text-primary rounded-3 d-flex align-items-center justify-content-center">
-              <ImageIcon size={20} />
+        <div className="ae-media-modal-header">
+          <div className="ae-media-modal-title-group">
+            <div className="ae-media-modal-icon-badge" aria-hidden="true">
+              <ImageIcon size={22} />
             </div>
             <div>
-              <h2 id="media-library-title" className="h5 mb-0 fw-bold text-slate-800">
+              <h2 id="ae-media-modal-title" className="ae-media-modal-title">
                 {title}
               </h2>
-              <p className="text-xs text-muted mb-0">
+              <p className="ae-media-modal-subtitle">
                 Sélectionnez, organisez ou téléversez des médias pour vos contenus
               </p>
             </div>
@@ -201,61 +208,57 @@ export const MediaLibraryModal = ({
             type="button"
             onClick={onClose}
             aria-label="Fermer la médiathèque"
-            className="btn btn-light btn-sm rounded-circle p-1.5 text-muted hover:text-dark"
+            className="ae-media-modal-close-btn"
           >
-            <X size={18} />
+            <X size={20} />
           </button>
         </div>
 
-        {/* BARRE DE CONTRÔLES (ONGLETS + RECHERCHE + TÉLÉVERSEMENT) */}
-        <div className="px-4 py-2.5 border-bottom bg-white d-flex flex-wrap align-items-center justify-content-between gap-3">
+        {/* BARRE D'OUTILS (ONGLETS + RECHERCHE + TÉLÉVERSEMENT) */}
+        <div className="ae-media-modal-toolbar">
           {/* Onglets de filtrage */}
-          <div className="d-flex align-items-center gap-1 bg-slate-100 p-1 rounded-3">
+          <div className="ae-media-tabs" role="tablist" aria-label="Catégories de médias">
             <button
               type="button"
+              role="tab"
+              aria-selected={activeTab === 'all'}
               onClick={() => setActiveTab('all')}
-              className={`btn btn-sm py-1 px-2.5 rounded-2 font-medium text-xs transition-all ${
-                activeTab === 'all' 
-                  ? 'bg-white text-primary shadow-sm fw-semibold' 
-                  : 'text-slate-600 border-0 hover:bg-white/50'
-              }`}
+              className={`ae-media-tab-btn ${activeTab === 'all' ? 'is-active' : ''}`}
             >
               Tous ({mediaList.length})
             </button>
             <button
               type="button"
+              role="tab"
+              aria-selected={activeTab === 'image'}
               onClick={() => setActiveTab('image')}
-              className={`btn btn-sm py-1 px-2.5 rounded-2 font-medium text-xs d-flex align-items-center gap-1 transition-all ${
-                activeTab === 'image' 
-                  ? 'bg-white text-primary shadow-sm fw-semibold' 
-                  : 'text-slate-600 border-0 hover:bg-white/50'
-              }`}
+              className={`ae-media-tab-btn ${activeTab === 'image' ? 'is-active' : ''}`}
             >
-              <ImageIcon size={13} /> Images ({mediaList.filter(m => m.type === 'image').length})
+              <ImageIcon size={14} aria-hidden="true" />
+              Images ({mediaList.filter(m => m.type === 'image').length})
             </button>
             <button
               type="button"
+              role="tab"
+              aria-selected={activeTab === 'video'}
               onClick={() => setActiveTab('video')}
-              className={`btn btn-sm py-1 px-2.5 rounded-2 font-medium text-xs d-flex align-items-center gap-1 transition-all ${
-                activeTab === 'video' 
-                  ? 'bg-white text-primary shadow-sm fw-semibold' 
-                  : 'text-slate-600 border-0 hover:bg-white/50'
-              }`}
+              className={`ae-media-tab-btn ${activeTab === 'video' ? 'is-active' : ''}`}
             >
-              <Film size={13} /> Vidéos ({mediaList.filter(m => m.type === 'video').length})
+              <Film size={14} aria-hidden="true" />
+              Vidéos ({mediaList.filter(m => m.type === 'video').length})
             </button>
           </div>
 
           {/* Recherche & Téléversement */}
-          <div className="d-flex align-items-center gap-2 flex-grow-1 justify-content-end" style={{ minWidth: '240px' }}>
-            <div className="position-relative flex-grow-1" style={{ maxWidth: '280px' }}>
-              <Search size={14} className="position-absolute text-muted" style={{ left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
+          <div className="ae-media-actions-bar">
+            <div className="ae-media-search-wrapper">
+              <Search size={15} className="ae-media-search-icon" aria-hidden="true" />
               <input
                 type="search"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Rechercher un média..."
-                className="form-control form-control-sm ps-4 text-xs rounded-3"
+                className="ae-media-search-input"
                 aria-label="Rechercher un média"
               />
             </div>
@@ -264,82 +267,81 @@ export const MediaLibraryModal = ({
               type="file"
               ref={fileInputRef}
               onChange={handleFileInputChange}
-              accept="image/*,video/*,application/pdf"
-              className="d-none"
+              accept={getFileInputAccept()}
+              style={{ display: 'none' }}
+              data-testid="media-file-input"
             />
+
             <button
               type="button"
-              disabled={isUploading}
               onClick={() => fileInputRef.current?.click()}
-              className="btn btn-primary btn-sm d-flex align-items-center gap-1.5 rounded-3 text-xs fw-semibold px-3 text-nowrap"
+              disabled={isUploading}
+              className="ae-media-upload-btn"
             >
               {isUploading ? (
                 <>
-                  <Loader size={14} className="animate-spin" /> Envoi...
+                  <Loader size={14} className="animate-spin" aria-hidden="true" />
+                  <span>Envoi en cours...</span>
                 </>
               ) : (
                 <>
-                  <Upload size={14} /> Ajouter un média
+                  <Upload size={14} aria-hidden="true" />
+                  <span>Ajouter un média</span>
                 </>
               )}
             </button>
           </div>
         </div>
 
+        {/* Message d'erreur de téléversement éventuel */}
         {uploadError && (
-          <div className="px-4 py-2 bg-danger-subtle text-danger text-xs border-bottom">
-            {uploadError}
+          <div className="ae-media-alert-error" role="alert">
+            <X size={14} aria-hidden="true" />
+            <span>{uploadError}</span>
           </div>
         )}
 
-        {/* CORPS PRINCIPAL : GRILLE DES MÉDIAS & DÉTAIL */}
+        {/* CORPS DE LA MODALE & GRILLE DES MÉDIAS */}
         <div 
-          className="d-flex flex-grow-1 overflow-hidden"
+          className="ae-media-modal-body"
           onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
           onDragLeave={() => setIsDragging(false)}
           onDrop={handleDrop}
         >
-          {/* Grille des médias */}
-          <div className="flex-grow-1 p-3.5 overflow-y-auto bg-slate-50/50 position-relative">
-            {isDragging && (
-              <div 
-                className="position-absolute inset-0 bg-primary/10 border-2 border-primary border-dashed rounded-3 m-3 d-flex flex-column align-items-center justify-content-center z-10"
-                style={{ top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 75, 122, 0.08)' }}
-              >
-                <Upload size={36} className="text-primary mb-2" />
-                <p className="fw-bold text-primary mb-0">Déposez votre fichier ici pour le téléverser</p>
-              </div>
-            )}
+          {isDragging && (
+            <div className="ae-media-drag-overlay">
+              <Upload size={40} />
+              <p className="ae-media-drag-text">Déposez votre fichier ici pour le téléverser</p>
+            </div>
+          )}
 
+          <div className="ae-media-grid-area">
             {loading ? (
-              <div className="d-flex flex-column align-items-center justify-content-center h-100 py-5 text-muted">
-                <Loader size={32} className="animate-spin mb-2 text-primary" />
-                <p className="text-xs">Chargement de la médiathèque...</p>
+              <div className="ae-media-loading-state">
+                <Loader size={32} className="animate-spin mb-2" style={{ color: '#004b7a' }} />
+                <p style={{ fontSize: '0.85rem' }}>Chargement de la médiathèque...</p>
               </div>
             ) : filteredMedia.length === 0 ? (
-              <div className="d-flex flex-column align-items-center justify-content-center h-100 py-5 text-muted text-center">
-                <div className="p-3 bg-slate-100 rounded-circle mb-3">
-                  <ImageIcon size={32} className="text-slate-400" />
+              <div className="ae-media-empty-state">
+                <div className="ae-media-empty-icon">
+                  <ImageIcon size={28} />
                 </div>
-                <h6 className="fw-semibold text-slate-700 mb-1">Aucun média trouvé</h6>
-                <p className="text-xs text-muted mb-3" style={{ maxWidth: '300px' }}>
-                  {searchQuery ? "Aucun fichier ne correspond à votre recherche." : "Vous n'avez pas encore téléversé de fichiers dans cette catégorie."}
+                <h3 className="ae-media-empty-title">Aucun média trouvé</h3>
+                <p className="ae-media-empty-desc">
+                  {searchQuery 
+                    ? "Aucun fichier ne correspond à votre recherche." 
+                    : "Vous n'avez pas encore téléversé de fichiers dans cette catégorie."}
                 </p>
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="btn btn-outline-primary btn-sm rounded-3 text-xs"
+                  className="ae-media-upload-btn"
                 >
-                  <Plus size={14} className="me-1" /> Téléverser un fichier
+                  <Plus size={14} aria-hidden="true" /> Téléverser un fichier
                 </button>
               </div>
             ) : (
-              <div 
-                className="d-grid gap-3"
-                style={{
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))'
-                }}
-              >
+              <div className="ae-media-grid" role="listbox" aria-label="Liste des médias">
                 {filteredMedia.map((item) => {
                   const isSelected = item.id === selectedId;
                   const isImage = item.type === 'image';
@@ -350,62 +352,53 @@ export const MediaLibraryModal = ({
                       key={item.id}
                       onClick={() => setSelectedId(item.id)}
                       onDoubleClick={() => handleDoubleClick(item)}
-                      className={`position-relative rounded-3 overflow-hidden border bg-white cursor-pointer transition-all shadow-sm ${
-                        isSelected 
-                          ? 'border-primary ring-2 ring-primary ring-offset-1' 
-                          : 'border-slate-200 hover:border-slate-300 hover:shadow-md'
-                      }`}
-                      style={{
-                        height: '150px',
-                        outline: isSelected ? '2px solid #004b7a' : 'none'
-                      }}
+                      className={`ae-media-card ${isSelected ? 'is-selected' : ''}`}
                       tabIndex={0}
-                      role="button"
-                      aria-label={`Sélectionner ${item.name}`}
+                      role="option"
+                      aria-selected={isSelected}
+                      aria-label={`Sélectionner ${item.name || 'le média'}`}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
                           setSelectedId(item.id);
                         }
                       }}
+                      data-testid={`media-card-${item.id}`}
                     >
                       {/* VIGNETTE APERÇU */}
-                      <div className="w-100 bg-slate-100 d-flex align-items-center justify-content-center overflow-hidden" style={{ height: '100px' }}>
+                      <div className="ae-media-card-thumb">
                         {isImage && item.url ? (
                           <img 
                             src={item.url} 
-                            alt={item.alt || item.name} 
-                            className="w-100 h-100 object-fit-cover"
+                            alt={item.alt || item.name || 'Média'} 
                             loading="lazy"
                           />
                         ) : isVideo ? (
-                          <div className="d-flex flex-column align-items-center justify-content-center text-primary bg-primary-subtle w-100 h-100">
-                            <Film size={28} />
-                            <span className="text-xxs fw-bold mt-1 text-uppercase">Vidéo</span>
+                          <div className="ae-media-card-icon-preview is-video">
+                            <Film size={26} />
+                            <span>Vidéo</span>
                           </div>
                         ) : (
-                          <div className="d-flex flex-column align-items-center justify-content-center text-slate-500 w-100 h-100">
-                            <FileText size={28} />
-                            <span className="text-xxs fw-bold mt-1 text-uppercase">Document</span>
+                          <div className="ae-media-card-icon-preview">
+                            <FileText size={26} />
+                            <span>Document</span>
                           </div>
                         )}
                       </div>
 
                       {/* BADGE DE SÉLECTION */}
                       {isSelected && (
-                        <div 
-                          className="position-absolute bg-primary text-white rounded-circle p-0.5 d-flex align-items-center justify-content-center shadow"
-                          style={{ top: '6px', right: '6px', width: '20px', height: '20px' }}
-                        >
-                          <Check size={13} strokeWidth={3} />
+                        <div className="ae-media-card-check" aria-hidden="true">
+                          <Check size={14} strokeWidth={3} />
                         </div>
                       )}
 
                       {/* INFORMATIONS FICHIER */}
-                      <div className="p-2 bg-white">
-                        <p className="text-xs fw-semibold text-truncate mb-0 text-slate-800" title={item.name}>
+                      <div className="ae-media-card-info">
+                        <p className="ae-media-card-name" title={item.name}>
                           {item.name}
                         </p>
-                        <span className="text-xxs text-muted text-uppercase">
+                        <span className="ae-media-card-meta">
                           {item.type}
                         </span>
                       </div>
@@ -418,79 +411,88 @@ export const MediaLibraryModal = ({
 
           {/* PANNEAU LATÉRAL DES DÉTAILS DU MÉDIA SÉLECTIONNÉ */}
           {selectedItem && (
-            <div className="border-start bg-white p-3.5 d-flex flex-column overflow-y-auto" style={{ width: '280px' }}>
-              <h6 className="text-xs fw-bold text-uppercase text-slate-500 mb-3 tracking-wider">
+            <aside className="ae-media-sidebar" aria-label="Détails du média sélectionné">
+              <h3 className="ae-media-sidebar-title">
                 Détails du média
-              </h6>
+              </h3>
 
-              <div className="rounded-3 overflow-hidden border border-slate-200 mb-3 bg-slate-50 d-flex align-items-center justify-content-center" style={{ height: '140px' }}>
+              <div className="ae-media-sidebar-preview">
                 {selectedItem.type === 'image' && selectedItem.url ? (
                   <img 
                     src={selectedItem.url} 
-                    alt={selectedItem.alt || selectedItem.name} 
-                    className="w-100 h-100 object-fit-contain"
+                    alt={selectedItem.alt || selectedItem.name || 'Aperçu'} 
                   />
                 ) : selectedItem.type === 'video' ? (
-                  <div className="text-center text-primary">
-                    <Film size={36} className="mx-auto mb-1" />
-                    <p className="text-xs mb-0 fw-medium">Lecteur Vidéo</p>
+                  <div style={{ textAlign: 'center', color: '#004b7a' }}>
+                    <Film size={36} style={{ margin: '0 auto 0.25rem auto' }} />
+                    <p style={{ fontSize: '0.8rem', margin: 0, fontWeight: 600 }}>Fichier Vidéo</p>
                   </div>
                 ) : (
-                  <div className="text-center text-slate-500">
-                    <FileText size={36} className="mx-auto mb-1" />
-                    <p className="text-xs mb-0 fw-medium">Document PDF</p>
+                  <div style={{ textAlign: 'center', color: '#64748b' }}>
+                    <FileText size={36} style={{ margin: '0 auto 0.25rem auto' }} />
+                    <p style={{ fontSize: '0.8rem', margin: 0, fontWeight: 600 }}>Document</p>
                   </div>
                 )}
               </div>
 
-              <div className="space-y-2 mb-4 text-xs">
-                <div>
-                  <span className="text-muted d-block text-xxs">Nom du fichier</span>
-                  <span className="fw-semibold text-slate-800 text-break">{selectedItem.name}</span>
+              <div className="ae-media-sidebar-meta-list">
+                <div className="ae-media-sidebar-meta-item">
+                  <span className="ae-media-sidebar-meta-label">Nom du fichier</span>
+                  <span className="ae-media-sidebar-meta-val">{selectedItem.name}</span>
                 </div>
-                <div>
-                  <span className="text-muted d-block text-xxs">Type MIME</span>
-                  <span className="text-slate-700 font-mono text-xxs">{selectedItem.mimeType || selectedItem.type}</span>
+                <div className="ae-media-sidebar-meta-item">
+                  <span className="ae-media-sidebar-meta-label">Type</span>
+                  <span className="ae-media-sidebar-meta-val">{selectedItem.mimeType || selectedItem.type}</span>
                 </div>
                 {selectedItem.url && (
-                  <div>
-                    <span className="text-muted d-block text-xxs">URL publique</span>
+                  <div className="ae-media-sidebar-meta-item">
+                    <span className="ae-media-sidebar-meta-label">Lien direct</span>
                     <a 
                       href={selectedItem.url} 
                       target="_blank" 
                       rel="noopener noreferrer" 
-                      className="text-primary text-truncate d-block text-xxs hover:underline"
+                      style={{ 
+                        color: '#004b7a', 
+                        fontSize: '0.75rem', 
+                        wordBreak: 'break-all', 
+                        display: 'inline-flex', 
+                        alignItems: 'center', 
+                        gap: '0.25rem',
+                        textDecoration: 'none'
+                      }}
                     >
-                      {selectedItem.url} <ExternalLink size={10} className="d-inline" />
+                      <span>Ouvrir l'original</span>
+                      <ExternalLink size={12} />
                     </a>
                   </div>
                 )}
               </div>
 
-              <div className="mt-auto pt-3 border-top d-flex gap-2">
+              <div className="ae-media-sidebar-actions">
                 <button
                   type="button"
                   onClick={(e) => handleDelete(e, selectedItem.id)}
-                  className="btn btn-outline-danger btn-sm rounded-3 text-xs w-100 d-flex align-items-center justify-content-center gap-1"
+                  className="ae-media-btn-delete"
                 >
-                  <Trash2 size={13} /> Supprimer
+                  <Trash2 size={14} aria-hidden="true" />
+                  <span>Supprimer de la bibliothèque</span>
                 </button>
               </div>
-            </div>
+            </aside>
           )}
         </div>
 
         {/* PIED DE PAGE DE LA MODALE */}
-        <div className="px-4 py-3 border-top bg-slate-50 d-flex align-items-center justify-content-between">
-          <span className="text-xs text-muted">
+        <div className="ae-media-modal-footer">
+          <span className="ae-media-footer-count">
             {filteredMedia.length} média{filteredMedia.length > 1 ? 's' : ''} disponible{filteredMedia.length > 1 ? 's' : ''}
           </span>
 
-          <div className="d-flex align-items-center gap-2">
+          <div className="ae-media-footer-actions">
             <button
               type="button"
               onClick={onClose}
-              className="btn btn-light btn-sm text-xs rounded-3 px-3 fw-medium text-slate-700"
+              className="ae-media-btn-cancel"
             >
               Annuler
             </button>
@@ -498,14 +500,23 @@ export const MediaLibraryModal = ({
               type="button"
               disabled={!selectedId}
               onClick={handleConfirmSelect}
-              className="btn btn-primary btn-sm text-xs rounded-3 px-3.5 fw-semibold d-flex align-items-center gap-1.5 shadow-sm"
+              className="ae-media-btn-confirm"
             >
-              <Check size={14} /> Insérer ce média
+              <Check size={16} aria-hidden="true" />
+              <span>Utiliser ce média</span>
             </button>
           </div>
         </div>
       </div>
     </div>
   );
+
+  // Utilisation de ReactDOM.createPortal pour monter la modale sur document.body
+  if (typeof document !== 'undefined') {
+    return createPortal(modalNode, document.body);
+  }
+
+  return modalNode;
 };
+
 export default MediaLibraryModal;
