@@ -75,6 +75,9 @@ describe('FlipbookSidebarBlock component', () => {
     expect(link).toHaveAttribute('href', 'https://anjou-tourisme.fr');
     expect(link).toHaveAttribute('target', '_blank');
     expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+
+    const ratioContainer = document.querySelector('.flipbook-image-ratio-container');
+    expect(ratioContainer).toBeInTheDocument();
   });
 
   test('renders YouTube video block using responsive embed iframe', () => {

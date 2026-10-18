@@ -57,14 +57,24 @@ export default function FlipbookSidebarBlock({ block }) {
         <div className="flipbook-sidebar-card flipbook-block-image" style={customBlockStyle} data-block-type="image">
           {title && <h4 className="flipbook-block-title">{title}</h4>}
           <figure className="flipbook-block-figure">
-            {block.linkUrl ? (
-              <a 
-                href={sanitizeUrl(block.linkUrl)}
-                target={isExternalLink ? "_blank" : undefined}
-                rel={isExternalLink ? "noopener noreferrer" : undefined}
-                className="flipbook-image-link"
-                aria-label={title || imageAlt}
-              >
+            <div className="flipbook-image-ratio-container">
+              {block.linkUrl ? (
+                <a 
+                  href={sanitizeUrl(block.linkUrl)}
+                  target={isExternalLink ? "_blank" : undefined}
+                  rel={isExternalLink ? "noopener noreferrer" : undefined}
+                  className="flipbook-image-link"
+                  aria-label={title || imageAlt}
+                >
+                  <img 
+                    src={imageUrl} 
+                    alt={imageAlt} 
+                    className="flipbook-responsive-img" 
+                    loading="lazy" 
+                    decoding="async"
+                  />
+                </a>
+              ) : (
                 <img 
                   src={imageUrl} 
                   alt={imageAlt} 
@@ -72,16 +82,8 @@ export default function FlipbookSidebarBlock({ block }) {
                   loading="lazy" 
                   decoding="async"
                 />
-              </a>
-            ) : (
-              <img 
-                src={imageUrl} 
-                alt={imageAlt} 
-                className="flipbook-responsive-img" 
-                loading="lazy" 
-                decoding="async"
-              />
-            )}
+              )}
+            </div>
             {caption && (
               <figcaption className="flipbook-block-caption">{caption}</figcaption>
             )}

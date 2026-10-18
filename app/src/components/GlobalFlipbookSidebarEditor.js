@@ -26,7 +26,9 @@ import {
   ChevronUp,
   Box,
   Palette,
-  Maximize2
+  Maximize2,
+  ChevronsUpDown,
+  ChevronsDownUp
 } from 'lucide-react';
 import FlipbookSidebarEditor from './FlipbookSidebarEditor';
 import FlipbookLayout from './FlipbookLayout';
@@ -47,12 +49,18 @@ import {
 } from '../utils/flipbookBlockStyleUtils';
 
 /**
- * Éditeur visuel ergonomique en 3 zones du « Modèle global — Anjou Édition » :
- * - Zone 1 : Panneau gauche de personnalisation par accordéons repliables
- *   (Dimensions, Contours et bordures, Couleurs, Espacements, Contenu des blocs)
- * - Zone 2 : Zone centrale : Aperçu en direct [ BARRE GAUCHE ] [ FLIPBOOK ] [ BARRE DROITE ]
- *   avec sélection responsive (XL, L, M, S)
- * - Zone 3 : Zone inférieure : Barre d'actions fixe sticky (Annuler, Réinitialiser, Enregistrer)
+ * Éditeur visuel moderne et ergonomique du « Modèle global — Anjou Édition » :
+ * - Disposition en 2 panneaux sur grand écran :
+ *   • Panneau gauche (~55%) : Paramètres, accordéons intelligents et gestion des blocs
+ *   • Panneau droit (~45% sticky) : Aperçu interactif du Flipbook sous le header
+ * - 5 sections d'accordéons exclusifs intelligents :
+ *   1. Dimensions et visibilité
+ *   2. Contours et ombres
+ *   3. Couleurs et habillage
+ *   4. Espacements et disposition
+ *   5. Contenu des blocs gauche et droit
+ * - Contrôles enrichis avec sliders synchronisés, unités explicites (% et px) et boutons de réinitialisation
+ * - Barre d'actions inférieure fixe sticky conforme WCAG 2.2 AA
  */
 export default function GlobalFlipbookSidebarEditor({
   initialTemplate = null,
@@ -70,27 +78,55 @@ export default function GlobalFlipbookSidebarEditor({
     return JSON.stringify(normalizeSidebarTemplate(initialTemplate || getLocalGlobalSidebar()));
   });
 
-  // Mode de navigation / focalisation ('all' | 'content' | 'styles' | 'preview')
+  // Navigation haute ('content' | 'styles' | 'preview')
   const [activeTab, setActiveTab] = useState('content');
+  // Mode d'affichage mobile/tablette ('config' | 'preview')
+  const [mobileViewMode, setMobileViewMode] = useState('config');
   const [previewViewport, setPreviewViewport] = useState('xl'); // 'xl' | 'l' | 'm' | 's'
   const [previewBookId, setPreviewBookId] = useState(() => {
     return flipbooks.length > 0 ? flipbooks[0].id : '';
   });
 
-  // Gestion des accordéons repliables du panneau gauche
+  // Gestion des 5 accordéons : dépliables et repliables à volonté avec bouton Tout replier
   const [openAccordions, setOpenAccordions] = useState({
     dimensions: true,
     borders: true,
-    colors: false,
-    spacings: false,
+    colors: true,
+    spacings: true,
     content: true
   });
 
+  // Bascule d'un accordéon au clic
   const toggleAccordion = (key) => {
     setOpenAccordions(prev => ({
       ...prev,
       [key]: !prev[key]
     }));
+  };
+
+  // Option Tout déplier / Tout replier
+  const areAllAccordionsOpen = useMemo(() => {
+    return Object.values(openAccordions).every(Boolean);
+  }, [openAccordions]);
+
+  const toggleAllAccordions = () => {
+    if (areAllAccordionsOpen) {
+      setOpenAccordions({
+        dimensions: false,
+        borders: false,
+        colors: false,
+        spacings: false,
+        content: false
+      });
+    } else {
+      setOpenAccordions({
+        dimensions: true,
+        borders: true,
+        colors: true,
+        spacings: true,
+        content: true
+      });
+    }
   };
 
   const [isSaving, setIsSaving] = useState(false);
@@ -104,7 +140,7 @@ export default function GlobalFlipbookSidebarEditor({
     return JSON.stringify(template) !== savedBaseline;
   }, [template, savedBaseline]);
 
-  // Analyse en temps réel des Flipbooks enregistrés (global vs personnalisé)
+  // Analyse en temps réel des Flipbooks enregistrés
   const flipbooksAnalysis = useMemo(() => {
     return analyzeFlipbooksSidebarStatus(flipbooks, template);
   }, [flipbooks, template]);
@@ -130,7 +166,7 @@ export default function GlobalFlipbookSidebarEditor({
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [isDirty]);
 
-  // Flipbook résolu pour la prévisualisation centrale
+  // Flipbook résolu pour la prévisualisation
   const previewBook = useMemo(() => {
     const found = flipbooks.find(f => String(f.id) === String(previewBookId));
     if (found) return found;
@@ -155,6 +191,31 @@ export default function GlobalFlipbookSidebarEditor({
         [key]: value
       }
     }));
+  };
+
+  // Modification de largeur avec support de synchronisation symétrique gauche / droite
+  const handleWidthChange = (widthKey, value) => {
+    const isSync = (template.styles || {}).syncSidebarsWidth !== false;
+    setTemplate(prev => {
+      const currentStyles = prev.styles || {};
+      if (isSync) {
+        return {
+          ...prev,
+          styles: {
+            ...currentStyles,
+            leftWidth: value,
+            rightWidth: value
+          }
+        };
+      }
+      return {
+        ...prev,
+        styles: {
+          ...currentStyles,
+          [widthKey]: value
+        }
+      };
+    });
   };
 
   // Modifications de styles indépendants gauche / droite
@@ -199,30 +260,30 @@ export default function GlobalFlipbookSidebarEditor({
 
   // Harmonisation : « Appliquer ce style à tous les blocs »
   const handleApplyStyleToAllBlocks = () => {
-    const styles = template.styles || {};
+    const s = template.styles || {};
     const targetStyle = {
-      borderWidth: styles.borderWidth !== undefined ? Number(styles.borderWidth) : 1,
-      borderColor: styles.borderColor || '#cbd5e1',
-      borderStyle: styles.borderStyle || 'solid',
-      borderRadius: typeof styles.borderRadius === 'number' 
-        ? styles.borderRadius 
-        : (styles.borderRadius === 'pill' ? 20 : styles.borderRadius === 'normal' ? 14 : 8),
-      borderSidesUniform: styles.borderSidesUniform !== false,
-      borderWidthTop: styles.borderWidthTop !== undefined ? Number(styles.borderWidthTop) : undefined,
-      borderWidthRight: styles.borderWidthRight !== undefined ? Number(styles.borderWidthRight) : undefined,
-      borderWidthBottom: styles.borderWidthBottom !== undefined ? Number(styles.borderWidthBottom) : undefined,
-      borderWidthLeft: styles.borderWidthLeft !== undefined ? Number(styles.borderWidthLeft) : undefined,
-      backgroundColor: styles.cardBackground || '#ffffff',
-      textColor: styles.textColor || '#1e293b',
-      shadowEnabled: styles.shadowEnabled !== false && styles.cardShadow !== 'none',
-      shadow: styles.cardShadow || 'default',
-      shadowOffsetX: styles.shadowOffsetX !== undefined ? Number(styles.shadowOffsetX) : 0,
-      shadowOffsetY: styles.shadowOffsetY !== undefined ? Number(styles.shadowOffsetY) : 3,
-      shadowBlur: styles.shadowBlur !== undefined ? Number(styles.shadowBlur) : 10,
-      shadowSpread: styles.shadowSpread !== undefined ? Number(styles.shadowSpread) : 0,
-      shadowOpacity: styles.shadowOpacity !== undefined ? Number(styles.shadowOpacity) : 12,
-      shadowColor: styles.shadowColor || '#000000',
-      shadowInset: Boolean(styles.shadowInset)
+      borderWidth: s.borderWidth !== undefined ? Number(s.borderWidth) : 1,
+      borderColor: s.borderColor || '#cbd5e1',
+      borderStyle: s.borderStyle || 'solid',
+      borderRadius: typeof s.borderRadius === 'number' 
+        ? s.borderRadius 
+        : (s.borderRadius === 'pill' ? 20 : s.borderRadius === 'normal' ? 14 : 8),
+      borderSidesUniform: s.borderSidesUniform !== false,
+      borderWidthTop: s.borderWidthTop !== undefined ? Number(s.borderWidthTop) : undefined,
+      borderWidthRight: s.borderWidthRight !== undefined ? Number(s.borderWidthRight) : undefined,
+      borderWidthBottom: s.borderWidthBottom !== undefined ? Number(s.borderWidthBottom) : undefined,
+      borderWidthLeft: s.borderWidthLeft !== undefined ? Number(s.borderWidthLeft) : undefined,
+      backgroundColor: s.cardBackground || '#ffffff',
+      textColor: s.textColor || '#1e293b',
+      shadowEnabled: s.shadowEnabled !== false && s.cardShadow !== 'none',
+      shadow: s.cardShadow || 'default',
+      shadowOffsetX: s.shadowOffsetX !== undefined ? Number(s.shadowOffsetX) : 0,
+      shadowOffsetY: s.shadowOffsetY !== undefined ? Number(s.shadowOffsetY) : 3,
+      shadowBlur: s.shadowBlur !== undefined ? Number(s.shadowBlur) : 10,
+      shadowSpread: s.shadowSpread !== undefined ? Number(s.shadowSpread) : 0,
+      shadowOpacity: s.shadowOpacity !== undefined ? Number(s.shadowOpacity) : 12,
+      shadowColor: s.shadowColor || '#000000',
+      shadowInset: Boolean(s.shadowInset)
     };
 
     const updatedLeft = applyStyleToAllBlocks(template.leftSidebar || [], targetStyle);
@@ -379,7 +440,7 @@ export default function GlobalFlipbookSidebarEditor({
   const leftVis = styles.visibility?.left || { xl: true, desktop: true, tablet: true, mobile: true };
   const rightVis = styles.visibility?.right || { xl: true, desktop: true, tablet: true, mobile: true };
 
-  // Définition des valeurs courantes de contour & ombre
+  // Valeurs de bordure et ombres
   const currentBorderWidth = styles.borderWidth !== undefined ? Number(styles.borderWidth) : 1;
   const currentBorderRadius = typeof styles.borderRadius === 'number' 
     ? styles.borderRadius 
@@ -419,45 +480,61 @@ export default function GlobalFlipbookSidebarEditor({
     }));
   };
 
-  // Panneaux de réglages indépendants par barre (Gauche / Droite) pour compatibilité
+  // Panneaux de réglages indépendants par barre (Gauche / Droite)
   const renderSideStyleControls = (side, label, sideStyle, vis, widthKey, defaultWidth) => {
     const isLeft = side === 'left';
+    const currentWidth = styles[widthKey] || defaultWidth;
     return (
       <div
-        className="ae-settings-group-card"
+        className="ae-settings-group-card p-3.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800"
         data-testid={`style-config-${side}`}
       >
-        <div className="flex items-center justify-between gap-2 pb-2 mb-3 border-b border-slate-200 dark:border-slate-700">
-          <h3 className="ae-settings-group-title mb-0">
+        <div className="flex items-center justify-between gap-2 pb-2 mb-3 border-b border-slate-200 dark:border-slate-800">
+          <h4 className="ae-settings-group-title text-xs font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 mb-0">
             {isLeft ? (
-              <PanelLeft size={18} className="text-blue-600" aria-hidden="true" />
+              <PanelLeft size={16} className="text-blue-600 dark:text-blue-400" aria-hidden="true" />
             ) : (
-              <PanelRight size={18} className="text-blue-600" aria-hidden="true" />
+              <PanelRight size={16} className="text-blue-600 dark:text-blue-400" aria-hidden="true" />
             )}
             <span>Personnalisation : {label}</span>
-          </h3>
-          <span className="ae-admin-pill-global">
+          </h4>
+          <span className="ae-admin-pill-global text-[11px]">
             {(isLeft ? template.leftSidebar?.length : template.rightSidebar?.length) || 0} bloc(s)
           </span>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-3.5">
+          {/* Largeur avec Slider + Input numérique synchronisé */}
           <div>
             <div className="flex justify-between items-center text-xs font-bold mb-1">
               <label htmlFor={`input-${side}-width`}>Largeur {label} (sur grand écran)</label>
-              <span className="text-blue-600 font-mono">{styles[widthKey] || defaultWidth}%</span>
+              <div className="flex items-center gap-1">
+                <span className="text-blue-600 font-mono text-xs">{currentWidth}%</span>
+              </div>
             </div>
-            <input
-              id={`input-${side}-width`}
-              type="range"
-              min="15"
-              max="30"
-              step="1"
-              value={styles[widthKey] || defaultWidth}
-              onChange={(e) => handleStyleChange(widthKey, Number(e.target.value))}
-              className="ae-range-input"
-              aria-label={`Largeur ${label.toLowerCase()} en pourcentage`}
-            />
+            <div className="ae-range-number-group flex items-center gap-2">
+              <input
+                id={`input-${side}-width`}
+                type="range"
+                min="15"
+                max="30"
+                step="1"
+                value={currentWidth}
+                onChange={(e) => handleWidthChange(widthKey, Number(e.target.value))}
+                className="ae-range-input flex-1"
+                aria-label={`Largeur ${label.toLowerCase()} en pourcentage`}
+              />
+              <input
+                type="number"
+                min="15"
+                max="30"
+                value={currentWidth}
+                onChange={(e) => handleWidthChange(widthKey, Math.max(15, Math.min(30, Number(e.target.value) || 20)))}
+                className="ae-number-input w-14 text-center font-mono text-xs"
+                aria-label={`Largeur ${label.toLowerCase()} valeur numérique`}
+              />
+              <span className="text-xs text-slate-400 font-bold">%</span>
+            </div>
             <div className="flex justify-between text-[11px] text-slate-400 mt-1">
               <span>15% (Étroite)</span>
               <span>20% (Standard)</span>
@@ -465,8 +542,9 @@ export default function GlobalFlipbookSidebarEditor({
             </div>
           </div>
 
+          {/* Alignement des éléments */}
           <div>
-            <span className="ae-modal-label text-xs block mb-1.5">
+            <span className="ae-modal-label text-xs font-semibold block mb-1.5">
               Alignement des éléments ({label})
             </span>
             <div className="flex items-center gap-2">
@@ -495,12 +573,13 @@ export default function GlobalFlipbookSidebarEditor({
             </div>
           </div>
 
-          <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 mt-2">
+          {/* Visibilité par palier responsive */}
+          <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
             <div className="font-bold text-xs text-slate-800 dark:text-slate-200 mb-2">
               Visibilité par palier responsive ({label}) :
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <label className="ae-checkbox-row">
+              <label className="ae-checkbox-row cursor-pointer">
                 <input
                   type="checkbox"
                   checked={vis.xl !== false}
@@ -511,7 +590,7 @@ export default function GlobalFlipbookSidebarEditor({
                 </span>
               </label>
 
-              <label className="ae-checkbox-row">
+              <label className="ae-checkbox-row cursor-pointer">
                 <input
                   type="checkbox"
                   checked={vis.desktop !== false}
@@ -522,7 +601,7 @@ export default function GlobalFlipbookSidebarEditor({
                 </span>
               </label>
 
-              <label className="ae-checkbox-row">
+              <label className="ae-checkbox-row cursor-pointer">
                 <input
                   type="checkbox"
                   checked={vis.tablet !== false}
@@ -533,7 +612,7 @@ export default function GlobalFlipbookSidebarEditor({
                 </span>
               </label>
 
-              <label className="ae-checkbox-row">
+              <label className="ae-checkbox-row cursor-pointer">
                 <input
                   type="checkbox"
                   checked={vis.mobile !== false}
@@ -553,12 +632,12 @@ export default function GlobalFlipbookSidebarEditor({
   return (
     <div className="ae-global-sidebar-editor-container" data-testid="global-sidebar-editor">
       {/* 1. EN-TÊTE DE NAVIGATION & INFORMATIONS */}
-      <div className="ae-global-editor-header">
+      <div className="ae-global-editor-header p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm mb-4">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <button
             type="button"
             onClick={handleSafeBack}
-            className="ae-back-button"
+            className="ae-back-button flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-blue-600 transition-colors cursor-pointer bg-transparent border border-slate-200 dark:border-slate-700 px-3 py-1.5 rounded-lg"
             aria-label="Retour à la gestion des Flipbooks"
           >
             <ArrowLeft size={16} aria-hidden="true" />
@@ -587,77 +666,146 @@ export default function GlobalFlipbookSidebarEditor({
           </div>
         </div>
 
-        <div className="mt-2.5">
-          <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-1">
+        <div className="mt-3">
+          <h2 className="text-xl font-extrabold text-slate-900 dark:text-slate-100 mb-1 tracking-tight">
             Modèle global — Anjou Édition
           </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mb-0">
-            Personnalisez les contours, ombres, couleurs et contenus des barres latérales. Vos modifications sont visibles instantanément dans l'aperçu central et répercutées sur tous les Flipbooks utilisant ce modèle.
+          <p className="text-xs text-slate-500 dark:text-slate-400 mb-0 leading-relaxed">
+            Éditeur visuel des barres latérales du Flipbook. Personnalisez les dimensions, contours, ombres et contenus.
+            L'aperçu en direct à droite reflète vos choix instantanément.
           </p>
         </div>
       </div>
 
-      {/* 2. ONGLETS DE FOCUS / NAVIGATION COMPLÈTE */}
-      <div className="ae-global-tabs-bar" role="tablist" aria-label="Sections du modèle global">
+      {/* 2. ONGLETS DE FOCUS / NAVIGATION HAUTE */}
+      <div className="ae-global-tabs-bar flex items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-700 mb-4 pb-1" role="tablist" aria-label="Sections du modèle global">
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            type="button"
+            role="tab"
+            id="tab-btn-content"
+            aria-selected={activeTab === 'content'}
+            aria-controls="panel-content"
+            onClick={() => {
+              setActiveTab('content');
+              setOpenAccordions(prev => ({ ...prev, content: true }));
+            }}
+            className={`ae-global-tab-btn flex items-center gap-2 px-3.5 py-2 rounded-t-lg text-xs font-bold transition-all cursor-pointer ${
+              activeTab === 'content'
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 bg-slate-100 dark:bg-slate-800'
+            }`}
+          >
+            <Layers size={15} aria-hidden="true" />
+            <span>1. Contenu des barres</span>
+          </button>
+
+          <button
+            type="button"
+            role="tab"
+            id="tab-btn-styles"
+            aria-selected={activeTab === 'styles'}
+            aria-controls="panel-styles"
+            onClick={() => {
+              setActiveTab('styles');
+              setOpenAccordions({ dimensions: true, borders: false, colors: false, spacings: false, content: false });
+            }}
+            className={`ae-global-tab-btn flex items-center gap-2 px-3.5 py-2 rounded-t-lg text-xs font-bold transition-all cursor-pointer ${
+              activeTab === 'styles'
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 bg-slate-100 dark:bg-slate-800'
+            }`}
+          >
+            <Sliders size={15} aria-hidden="true" />
+            <span>2. Apparence, Styles & Visibilité</span>
+          </button>
+
+          <button
+            type="button"
+            role="tab"
+            id="tab-btn-preview"
+            aria-selected={activeTab === 'preview'}
+            aria-controls="panel-preview"
+            onClick={() => {
+              setActiveTab('preview');
+              setMobileViewMode('preview');
+            }}
+            className={`ae-global-tab-btn flex items-center gap-2 px-3.5 py-2 rounded-t-lg text-xs font-bold transition-all cursor-pointer ${
+              activeTab === 'preview'
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 bg-slate-100 dark:bg-slate-800'
+            }`}
+          >
+            <Eye size={15} aria-hidden="true" />
+            <span>3. Prévisualisation en direct (S, M, L, XL)</span>
+          </button>
+        </div>
+
+        {/* Bouton pour tout déplier ou tout replier */}
         <button
           type="button"
-          role="tab"
-          id="tab-btn-content"
-          aria-selected={activeTab === 'content'}
-          aria-controls="panel-content"
-          onClick={() => {
-            setActiveTab('content');
-            setOpenAccordions(prev => ({ ...prev, content: true }));
-          }}
-          className={`ae-global-tab-btn ${activeTab === 'content' ? 'active' : ''}`}
+          onClick={toggleAllAccordions}
+          className="text-[11px] font-bold text-slate-500 hover:text-blue-600 flex items-center gap-1.5 px-2.5 py-1.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 transition-colors cursor-pointer border-none"
+          title={areAllAccordionsOpen ? "Tout replier pour un gain de place maximal" : "Tout déplier pour voir toutes les sections"}
         >
-          <Layers size={16} aria-hidden="true" />
-          <span>1. Contenu des barres</span>
+          {areAllAccordionsOpen ? (
+            <>
+              <ChevronsDownUp size={14} aria-hidden="true" />
+              <span>Tout replier</span>
+            </>
+          ) : (
+            <>
+              <ChevronsUpDown size={14} aria-hidden="true" />
+              <span>Tout déplier</span>
+            </>
+          )}
+        </button>
+      </div>
+
+      {/* BASCULE RESPONSIVE MOBILE / TABLETTE (< 900px) */}
+      <div className="ae-mobile-view-toggle block lg:hidden mb-4 p-1.5 bg-slate-100 dark:bg-slate-800 rounded-xl flex items-center gap-1">
+        <button
+          type="button"
+          onClick={() => setMobileViewMode('config')}
+          className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer ${
+            mobileViewMode === 'config'
+              ? 'bg-white dark:bg-slate-900 text-blue-600 shadow-sm'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+          }`}
+        >
+          <Sliders size={14} aria-hidden="true" />
+          <span>Paramètres & Blocs</span>
         </button>
 
         <button
           type="button"
-          role="tab"
-          id="tab-btn-styles"
-          aria-selected={activeTab === 'styles'}
-          aria-controls="panel-styles"
-          onClick={() => {
-            setActiveTab('styles');
-            setOpenAccordions(prev => ({ ...prev, dimensions: true, borders: true, colors: true, spacings: true }));
-          }}
-          className={`ae-global-tab-btn ${activeTab === 'styles' ? 'active' : ''}`}
+          onClick={() => setMobileViewMode('preview')}
+          className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer ${
+            mobileViewMode === 'preview'
+              ? 'bg-white dark:bg-slate-900 text-blue-600 shadow-sm'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+          }`}
         >
-          <Sliders size={16} aria-hidden="true" />
-          <span>2. Apparence, Styles & Visibilité</span>
-        </button>
-
-        <button
-          type="button"
-          role="tab"
-          id="tab-btn-preview"
-          aria-selected={activeTab === 'preview'}
-          aria-controls="panel-preview"
-          onClick={() => setActiveTab('preview')}
-          className={`ae-global-tab-btn ${activeTab === 'preview' ? 'active' : ''}`}
-        >
-          <Eye size={16} aria-hidden="true" />
-          <span>3. Prévisualisation en direct (S, M, L, XL)</span>
+          <Eye size={14} aria-hidden="true" />
+          <span>Aperçu en direct ({previewViewport.toUpperCase()})</span>
         </button>
       </div>
 
       {/* =========================================================================
-          3. DISPOSITION EN 3 ZONES
-          Zone 1 : Panneau gauche (Personnalisation par accordéons)
-          Zone 2 : Zone centrale (Aperçu en direct [ GAUCHE ] [ FLIPBOOK ] [ DROITE ])
+          3. DISPOSITION EN DEUX PANNEAUX (55% / 45%)
+          Panneau gauche : Configuration, accordéons et blocs (~55%)
+          Panneau droit  : Aperçu interactif sticky sous le header (~45%)
           ========================================================================= */}
       <div className="ae-global-editor-unified-layout">
         
         {/* =====================================================================
-            ZONE 1 : PANNEAU GAUCHE - PERSONNALISATION PAR ACCORDÉONS REPLIABLES
+            PANNEAU GAUCHE (~55%) - 5 SECTIONS D'ACCORDÉONS INTELLIGENTS
             ===================================================================== */}
-        <aside className="ae-editor-left-panel" aria-label="Panneau de personnalisation">
-          
-          {/* ACCORDÉON 1 : DIMENSIONS */}
+        <aside 
+          className={`ae-editor-left-panel ${mobileViewMode === 'preview' ? 'ae-mobile-panel-hidden' : ''}`} 
+          aria-label="Panneau de personnalisation"
+        >
+          {/* ACCORDÉON 1 : DIMENSIONS & VISIBILITÉ */}
           <div className={`ae-editor-accordion ${openAccordions.dimensions ? 'is-open' : ''}`}>
             <button
               type="button"
@@ -666,6 +814,7 @@ export default function GlobalFlipbookSidebarEditor({
               aria-expanded={openAccordions.dimensions}
             >
               <h3 className="ae-accordion-title">
+                <span className="ae-accordion-num-badge">1</span>
                 <Maximize2 size={16} className="text-blue-600" aria-hidden="true" />
                 <span>Dimensions & Visibilité des barres</span>
               </h3>
@@ -675,7 +824,7 @@ export default function GlobalFlipbookSidebarEditor({
             {openAccordions.dimensions && (
               <div className="ae-accordion-content space-y-4">
                 {/* Activation/Désactivation des barres */}
-                <div className="p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-lg border border-slate-200 dark:border-slate-700 space-y-2">
+                <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2">
                   <label className="ae-checkbox-row cursor-pointer">
                     <input
                       type="checkbox"
@@ -697,11 +846,40 @@ export default function GlobalFlipbookSidebarEditor({
                       Afficher la barre latérale droite
                     </span>
                   </label>
+
+                  <div className="pt-2 mt-1 border-t border-slate-200 dark:border-slate-700">
+                    <label className="ae-checkbox-row cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={styles.syncSidebarsWidth !== false}
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          if (checked) {
+                            const syncedVal = styles.leftWidth || styles.rightWidth || 20;
+                            setTemplate(prev => ({
+                              ...prev,
+                              styles: {
+                                ...(prev.styles || {}),
+                                syncSidebarsWidth: true,
+                                leftWidth: syncedVal,
+                                rightWidth: syncedVal
+                              }
+                            }));
+                          } else {
+                            handleStyleChange('syncSidebarsWidth', false);
+                          }
+                        }}
+                      />
+                      <span className="text-xs font-semibold text-blue-700 dark:text-blue-300">
+                        Symétrie automatique : lier les dimensions de la barre gauche et droite
+                      </span>
+                    </label>
+                  </div>
                 </div>
 
                 {/* En-têtes sémantiques et contrôles indépendants gauche / droite */}
                 <div className="flex items-center justify-between flex-wrap gap-2 text-xs text-slate-500 px-1 pt-1">
-                  <span>Largeurs des barres latérales</span>
+                  <span className="font-bold text-slate-700 dark:text-slate-300">Largeurs des barres latérales</span>
                   <span>Visibilité par palier responsive</span>
                 </div>
 
@@ -710,16 +888,42 @@ export default function GlobalFlipbookSidebarEditor({
                   {renderSideStyleControls('right', 'Barre droite', rightSideStyle, rightVis, 'rightWidth', 20)}
                 </div>
 
+                {/* Format & Ratio unifié des Médias (Images & Vidéos) */}
+                <div className="p-3 bg-blue-50/70 dark:bg-blue-950/40 rounded-xl border border-blue-200 dark:border-blue-900/50 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label htmlFor="select-media-ratio" className="ae-modal-label text-xs font-bold block mb-0 text-blue-900 dark:text-blue-300">
+                      Dimensions des médias : Ratio unifié Images & Vidéos
+                    </label>
+                    <span className="ae-admin-pill-global text-[10px]">
+                      Mêmes dimensions G/D
+                    </span>
+                  </div>
+                  <select
+                    id="select-media-ratio"
+                    value={styles.mediaRatio || '16 / 9'}
+                    onChange={(e) => handleStyleChange('mediaRatio', e.target.value)}
+                    className="ae-flipbook-select w-full text-xs font-semibold"
+                    aria-label="Format et ratio des blocs images et vidéos"
+                  >
+                    <option value="16 / 9">16:9 Panoramique vidéo (Standard Anjou Édition — Recommandé)</option>
+                    <option value="4 / 3">4:3 Classique photo</option>
+                    <option value="1 / 1">1:1 Format carré</option>
+                  </select>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400 mb-0">
+                    Garantit que tous les blocs images et vidéos adoptent rigoureusement les mêmes dimensions dans la barre gauche et la barre droite.
+                  </p>
+                </div>
+
                 {/* Largeur maximale du conteneur */}
                 <div>
-                  <label htmlFor="input-max-width" className="ae-modal-label text-xs">
+                  <label htmlFor="input-max-width" className="ae-modal-label text-xs font-bold block mb-1">
                     Largeur maximale totale (px)
                   </label>
                   <select
                     id="input-max-width"
                     value={styles.maxWidth || 1680}
                     onChange={(e) => handleStyleChange('maxWidth', Number(e.target.value))}
-                    className="ae-flipbook-select w-full"
+                    className="ae-flipbook-select w-full text-xs"
                   >
                     <option value="1400">1400 px — Modérée</option>
                     <option value="1680">1680 px — Recommandée (Standard Anjou Édition)</option>
@@ -730,7 +934,7 @@ export default function GlobalFlipbookSidebarEditor({
             )}
           </div>
 
-          {/* ACCORDÉON 2 : CONTOURS ET BORDURES DES BLOCS */}
+          {/* ACCORDÉON 2 : CONTOURS ET OMBRES DES BLOCS */}
           <div className={`ae-editor-accordion ${openAccordions.borders ? 'is-open' : ''}`}>
             <button
               type="button"
@@ -739,6 +943,7 @@ export default function GlobalFlipbookSidebarEditor({
               aria-expanded={openAccordions.borders}
             >
               <h3 className="ae-accordion-title">
+                <span className="ae-accordion-num-badge">2</span>
                 <Box size={16} className="text-blue-600" aria-hidden="true" />
                 <span>Contours & Ombres des blocs</span>
               </h3>
@@ -755,7 +960,7 @@ export default function GlobalFlipbookSidebarEditor({
                       {currentBorderWidth === 0 ? '0 px (Supprimé)' : `${currentBorderWidth} px`}
                     </span>
                   </div>
-                  <div className="ae-range-number-group">
+                  <div className="ae-range-number-group flex items-center gap-2">
                     <input
                       id="input-border-width"
                       type="range"
@@ -764,7 +969,7 @@ export default function GlobalFlipbookSidebarEditor({
                       step="1"
                       value={currentBorderWidth}
                       onChange={(e) => handleStyleChange('borderWidth', Number(e.target.value))}
-                      className="ae-range-input"
+                      className="ae-range-input flex-1"
                       aria-label="Épaisseur du contour"
                     />
                     <input
@@ -773,26 +978,24 @@ export default function GlobalFlipbookSidebarEditor({
                       max="12"
                       value={currentBorderWidth}
                       onChange={(e) => handleStyleChange('borderWidth', Math.max(0, Math.min(12, Number(e.target.value) || 0)))}
-                      className="ae-number-input"
+                      className="ae-number-input w-14 text-center font-mono text-xs"
                       aria-label="Épaisseur du contour en pixels"
                     />
+                    <span className="text-xs text-slate-400 font-bold">px</span>
                   </div>
-                  <p className="text-[11px] text-slate-400 mt-1 mb-0">
-                    Une valeur de 0 px supprime visuellement le contour des cartes.
-                  </p>
                 </div>
 
                 {/* 2. STYLE ET COULEUR DU CONTOUR */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label htmlFor="select-border-style" className="ae-modal-label text-xs">
+                    <label htmlFor="select-border-style" className="ae-modal-label text-xs font-bold block mb-1">
                       Style du contour
                     </label>
                     <select
                       id="select-border-style"
                       value={currentBorderStyle}
                       onChange={(e) => handleStyleChange('borderStyle', e.target.value)}
-                      className="ae-flipbook-select w-full"
+                      className="ae-flipbook-select w-full text-xs"
                     >
                       <option value="solid">Continu</option>
                       <option value="dotted">Pointillé</option>
@@ -802,7 +1005,7 @@ export default function GlobalFlipbookSidebarEditor({
                   </div>
 
                   <div>
-                    <label htmlFor="color-border-color" className="ae-modal-label text-xs">
+                    <label htmlFor="color-border-color" className="ae-modal-label text-xs font-bold block mb-1">
                       Couleur du contour
                     </label>
                     <div className="flex items-center gap-1.5">
@@ -831,7 +1034,7 @@ export default function GlobalFlipbookSidebarEditor({
                     <label htmlFor="input-border-radius">Arrondi des angles</label>
                     <span className="text-blue-600 font-mono">{currentBorderRadius} px</span>
                   </div>
-                  <div className="ae-range-number-group">
+                  <div className="ae-range-number-group flex items-center gap-2">
                     <input
                       id="input-border-radius"
                       type="range"
@@ -840,7 +1043,7 @@ export default function GlobalFlipbookSidebarEditor({
                       step="1"
                       value={currentBorderRadius}
                       onChange={(e) => handleStyleChange('borderRadius', Number(e.target.value))}
-                      className="ae-range-input"
+                      className="ae-range-input flex-1"
                       aria-label="Arrondi des angles"
                     />
                     <input
@@ -849,14 +1052,15 @@ export default function GlobalFlipbookSidebarEditor({
                       max="40"
                       value={currentBorderRadius}
                       onChange={(e) => handleStyleChange('borderRadius', Math.max(0, Math.min(40, Number(e.target.value) || 0)))}
-                      className="ae-number-input"
+                      className="ae-number-input w-14 text-center font-mono text-xs"
                       aria-label="Arrondi des angles en pixels"
                     />
+                    <span className="text-xs text-slate-400 font-bold">px</span>
                   </div>
                 </div>
 
                 {/* 4. CONTOURS SÉPARÉS DES 4 CÔTÉS */}
-                <div className="p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-lg border border-slate-200 dark:border-slate-700">
+                <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700">
                   <div className="flex items-center justify-between gap-2 mb-2">
                     <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
                       Définition des 4 côtés :
@@ -938,7 +1142,7 @@ export default function GlobalFlipbookSidebarEditor({
                 </div>
 
                 {/* 5. SECTION OMBRE */}
-                <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-lg border border-slate-200 dark:border-slate-700 space-y-3">
+                <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
                       Ombre portée des blocs
@@ -993,7 +1197,7 @@ export default function GlobalFlipbookSidebarEditor({
                             step="1"
                             value={currentShadowBlur}
                             onChange={(e) => handleStyleChange('shadowBlur', Number(e.target.value))}
-                            className="ae-range-input"
+                            className="ae-range-input w-full"
                           />
                         </div>
 
@@ -1010,7 +1214,7 @@ export default function GlobalFlipbookSidebarEditor({
                             step="1"
                             value={currentShadowOpacity}
                             onChange={(e) => handleStyleChange('shadowOpacity', Number(e.target.value))}
-                            className="ae-range-input"
+                            className="ae-range-input w-full"
                           />
                         </div>
                       </div>
@@ -1030,7 +1234,7 @@ export default function GlobalFlipbookSidebarEditor({
                             step="1"
                             value={currentShadowOffsetX}
                             onChange={(e) => handleStyleChange('shadowOffsetX', Number(e.target.value))}
-                            className="ae-range-input"
+                            className="ae-range-input w-full"
                           />
                         </div>
 
@@ -1047,7 +1251,7 @@ export default function GlobalFlipbookSidebarEditor({
                             step="1"
                             value={currentShadowOffsetY}
                             onChange={(e) => handleStyleChange('shadowOffsetY', Number(e.target.value))}
-                            className="ae-range-input"
+                            className="ae-range-input w-full"
                           />
                         </div>
                       </div>
@@ -1066,7 +1270,7 @@ export default function GlobalFlipbookSidebarEditor({
                           step="1"
                           value={currentShadowSpread}
                           onChange={(e) => handleStyleChange('shadowSpread', Number(e.target.value))}
-                          className="ae-range-input"
+                          className="ae-range-input w-full"
                           aria-label="Étendue de l'ombre en pixels"
                         />
                       </div>
@@ -1119,7 +1323,7 @@ export default function GlobalFlipbookSidebarEditor({
                 <button
                   type="button"
                   onClick={handleApplyStyleToAllBlocks}
-                  className="ae-btn-apply-all-blocks"
+                  className="ae-btn-apply-all-blocks w-full"
                   aria-label="Appliquer ce style à tous les blocs"
                 >
                   <Sparkles size={16} aria-hidden="true" />
@@ -1129,7 +1333,7 @@ export default function GlobalFlipbookSidebarEditor({
             )}
           </div>
 
-          {/* ACCORDÉON 3 : COULEURS */}
+          {/* ACCORDÉON 3 : COULEURS ET HABILLAGE */}
           <div className={`ae-editor-accordion ${openAccordions.colors ? 'is-open' : ''}`}>
             <button
               type="button"
@@ -1138,6 +1342,7 @@ export default function GlobalFlipbookSidebarEditor({
               aria-expanded={openAccordions.colors}
             >
               <h3 className="ae-accordion-title">
+                <span className="ae-accordion-num-badge">3</span>
                 <Palette size={16} className="text-blue-600" aria-hidden="true" />
                 <span>Couleurs et habillage des cartes</span>
               </h3>
@@ -1148,9 +1353,18 @@ export default function GlobalFlipbookSidebarEditor({
               <div className="ae-accordion-content space-y-4">
                 {/* Couleur d'accentuation */}
                 <div>
-                  <label htmlFor="input-primary-color" className="ae-modal-label text-xs">
-                    Couleur d'accentuation des titres et boutons
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label htmlFor="input-primary-color" className="ae-modal-label text-xs font-bold block mb-0">
+                      Couleur d'accentuation des titres et boutons
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => handleStyleChange('primaryColor', '#1e3a8a')}
+                      className="text-[10px] text-blue-600 hover:underline bg-transparent border-none cursor-pointer"
+                    >
+                      Défaut (#1e3a8a)
+                    </button>
+                  </div>
                   <div className="flex items-center gap-2">
                     <input
                       id="input-primary-color"
@@ -1178,14 +1392,14 @@ export default function GlobalFlipbookSidebarEditor({
 
                 {/* Couleur de fond des cartes */}
                 <div>
-                  <label htmlFor="input-card-bg" className="ae-modal-label text-xs">
+                  <label htmlFor="input-card-bg" className="ae-modal-label text-xs font-bold block mb-1">
                     Fond des cartes de blocs
                   </label>
                   <select
                     id="input-card-bg"
                     value={styles.cardBackground || ''}
                     onChange={(e) => handleStyleChange('cardBackground', e.target.value)}
-                    className="ae-flipbook-select w-full"
+                    className="ae-flipbook-select w-full text-xs"
                   >
                     <option value="">Blanc pur (#ffffff) — Par défaut</option>
                     <option value="#f8fafc">Gris ardoise très doux (#f8fafc)</option>
@@ -1196,14 +1410,14 @@ export default function GlobalFlipbookSidebarEditor({
 
                 {/* Couleur d'arrière-plan des colonnes */}
                 <div>
-                  <label htmlFor="input-col-bg" className="ae-modal-label text-xs">
+                  <label htmlFor="input-col-bg" className="ae-modal-label text-xs font-bold block mb-1">
                     Arrière-plan des barres latérales
                   </label>
                   <select
                     id="input-col-bg"
                     value={styles.backgroundColor || ''}
                     onChange={(e) => handleStyleChange('backgroundColor', e.target.value)}
-                    className="ae-flipbook-select w-full"
+                    className="ae-flipbook-select w-full text-xs"
                   >
                     <option value="">Transparent (Par défaut)</option>
                     <option value="#f8fafc">Ardoise claire (#f8fafc)</option>
@@ -1214,7 +1428,7 @@ export default function GlobalFlipbookSidebarEditor({
 
                 {/* Couleur du texte */}
                 <div>
-                  <label htmlFor="input-text-color" className="ae-modal-label text-xs">
+                  <label htmlFor="input-text-color" className="ae-modal-label text-xs font-bold block mb-1">
                     Couleur du texte
                   </label>
                   <div className="flex items-center gap-2">
@@ -1231,7 +1445,7 @@ export default function GlobalFlipbookSidebarEditor({
                       value={styles.textColor || ''}
                       onChange={(e) => handleStyleChange('textColor', e.target.value)}
                       placeholder="#334155"
-                      className="ae-flipbook-input text-xs flex-1"
+                      className="ae-flipbook-input text-xs flex-1 font-mono"
                     />
                   </div>
                 </div>
@@ -1239,7 +1453,7 @@ export default function GlobalFlipbookSidebarEditor({
             )}
           </div>
 
-          {/* ACCORDÉON 4 : ESPACEMENTS */}
+          {/* ACCORDÉON 4 : ESPACEMENTS & DISPOSITION */}
           <div className={`ae-editor-accordion ${openAccordions.spacings ? 'is-open' : ''}`}>
             <button
               type="button"
@@ -1248,6 +1462,7 @@ export default function GlobalFlipbookSidebarEditor({
               aria-expanded={openAccordions.spacings}
             >
               <h3 className="ae-accordion-title">
+                <span className="ae-accordion-num-badge">4</span>
                 <Sliders size={16} className="text-blue-600" aria-hidden="true" />
                 <span>Espacements & Disposition</span>
               </h3>
@@ -1258,14 +1473,14 @@ export default function GlobalFlipbookSidebarEditor({
               <div className="ae-accordion-content space-y-4">
                 {/* Espacement intérieur des cartes */}
                 <div>
-                  <label htmlFor="input-card-padding" className="ae-modal-label text-xs">
+                  <label htmlFor="input-card-padding" className="ae-modal-label text-xs font-bold block mb-1">
                     Espacement intérieur des cartes (padding)
                   </label>
                   <select
                     id="input-card-padding"
                     value={styles.cardPadding || 'normal'}
                     onChange={(e) => handleStyleChange('cardPadding', e.target.value)}
-                    className="ae-flipbook-select w-full"
+                    className="ae-flipbook-select w-full text-xs"
                   >
                     <option value="compact">Compact (12px)</option>
                     <option value="normal">Normal (18px)</option>
@@ -1275,14 +1490,14 @@ export default function GlobalFlipbookSidebarEditor({
 
                 {/* Espacement entre les blocs */}
                 <div>
-                  <label htmlFor="input-gap" className="ae-modal-label text-xs">
+                  <label htmlFor="input-gap" className="ae-modal-label text-xs font-bold block mb-1">
                     Espacement entre les blocs (gap)
                   </label>
                   <select
                     id="input-gap"
                     value={styles.gap || 'normal'}
                     onChange={(e) => handleStyleChange('gap', e.target.value)}
-                    className="ae-flipbook-select w-full"
+                    className="ae-flipbook-select w-full text-xs"
                   >
                     <option value="compact">Compact (12px)</option>
                     <option value="normal">Normal (20px)</option>
@@ -1293,7 +1508,7 @@ export default function GlobalFlipbookSidebarEditor({
             )}
           </div>
 
-          {/* ACCORDÉON 5 : CONTENU DES BLOCS */}
+          {/* ACCORDÉON 5 : CONTENU DES BLOCS (GAUCHE & DROITE) */}
           <div className={`ae-editor-accordion ${openAccordions.content ? 'is-open' : ''}`}>
             <button
               type="button"
@@ -1302,6 +1517,7 @@ export default function GlobalFlipbookSidebarEditor({
               aria-expanded={openAccordions.content}
             >
               <h3 className="ae-accordion-title">
+                <span className="ae-accordion-num-badge">5</span>
                 <Layers size={16} className="text-blue-600" aria-hidden="true" />
                 <span>Contenu des blocs (Gauche & Droite)</span>
               </h3>
@@ -1309,11 +1525,11 @@ export default function GlobalFlipbookSidebarEditor({
             </button>
 
             {openAccordions.content && (
-              <div className="ae-accordion-content p-2">
-                <div className="ae-notice-banner mb-3">
+              <div className="ae-accordion-content p-3 space-y-3">
+                <div className="ae-notice-banner mb-3 flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/40 rounded-xl">
                   <Info size={16} className="text-blue-600 shrink-0 mt-0.5" aria-hidden="true" />
                   <div className="text-xs text-slate-600 dark:text-slate-300">
-                    <strong>Souveraineté éditoriale :</strong> Modifiez, ajoutez ou réorganisez librement les blocs des deux barres. Aucun contenu fictif ou patrimonial n'est jamais auto-généré.
+                    <strong>Souveraineté éditoriale :</strong> Modifiez, ajoutez, dupliquez ou réorganisez librement les blocs des deux barres. Vos modifications s'affichent instantanément dans l'aperçu sticky.
                   </div>
                 </div>
 
@@ -1330,15 +1546,17 @@ export default function GlobalFlipbookSidebarEditor({
               </div>
             )}
           </div>
-
         </aside>
 
         {/* =====================================================================
-            ZONE 2 : ZONE CENTRALE - APERÇU EN DIRECT EN TEMPS RÉEL
+            PANNEAU DROIT (~45%) - APERÇU INTERACTIF STICKY DU FLIPBOOK
             [ BARRE GAUCHE ] [ FLIPBOOK ] [ BARRE DROITE ]
             ===================================================================== */}
-        <main className="ae-editor-center-stage" aria-label="Aperçu en direct du modèle global">
-          <div className="ae-center-stage-card">
+        <main 
+          className={`ae-editor-center-stage ${mobileViewMode === 'config' ? 'ae-mobile-panel-hidden' : ''}`} 
+          aria-label="Aperçu en direct du modèle global"
+        >
+          <div className="ae-center-stage-card w-full p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
             {/* Barre de contrôle du viewport (XL, L, M, S) & sélection du livre de test */}
             <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
               <div className="flex items-center gap-1.5 flex-wrap">
@@ -1415,19 +1633,19 @@ export default function GlobalFlipbookSidebarEditor({
             </div>
 
             {/* En-tête de repère visuel */}
-            <div className="ae-preview-frame-header mb-2.5">
-              <span className="ae-preview-tag font-semibold">
+            <div className="ae-preview-frame-header mb-2.5 flex items-center justify-between text-xs text-slate-400">
+              <span className="ae-preview-tag font-bold text-slate-700 dark:text-slate-300">
                 [ BARRE GAUCHE ] [ FLIPBOOK ] [ BARRE DROITE ]
               </span>
-              <span className="text-[11px] text-slate-400 font-mono">
+              <span className="text-[11px] font-mono">
                 {previewViewport === 'xl' && 'Plein écran (>1200px)'}
                 {previewViewport === 'l' && '1024px Desktop'}
                 {previewViewport === 'm' && '768px Tablette (Flipbook prioritaire)'}
-                {previewViewport === 's' && '390px Smartphone (Défilement vertical sans débordement)'}
+                {previewViewport === 's' && '390px Smartphone (Défilement vertical)'}
               </span>
             </div>
 
-            {/* Cadre de prévisualisation avec contrainte responsive et composant FlipbookLayout */}
+            {/* Cadre de prévisualisation avec contrainte responsive */}
             <div className="ae-preview-stage-wrapper">
               <div 
                 className={`ae-preview-viewport-frame viewport-${previewViewport}`}
@@ -1453,23 +1671,19 @@ export default function GlobalFlipbookSidebarEditor({
       </div>
 
       {/* =========================================================================
-          ZONE 3 : ZONE INFÉRIEURE - ACTIONS STICKY FIXES EN BAS
-          - Annuler
-          - Réinitialiser les modifications
-          - Appliquer à tous les Flipbooks
-          - Enregistrer comme modèle global
+          4. BARRE D'ACTIONS STICKY INFÉRIEURE FIXE
           ========================================================================= */}
       <footer className="ae-editor-bottom-bar" role="region" aria-label="Actions du modèle global">
-        <div className="ae-bottom-bar-inner">
+        <div className="ae-bottom-bar-inner max-w-7xl mx-auto flex items-center justify-between gap-3 flex-wrap">
           {/* Statut à gauche */}
-          <div className="ae-bottom-bar-status">
+          <div className="ae-bottom-bar-status flex items-center gap-2">
             {isDirty ? (
-              <span className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400 font-bold">
+              <span className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400 font-bold text-xs">
                 <span className="ae-dirty-dot" />
                 <span>Modifications en attente d'enregistrement</span>
               </span>
             ) : (
-              <span className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 font-semibold">
+              <span className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 font-bold text-xs">
                 <Check size={16} aria-hidden="true" />
                 <span>Modèle global à jour et synchronisé</span>
               </span>
@@ -1477,7 +1691,7 @@ export default function GlobalFlipbookSidebarEditor({
           </div>
 
           {/* Actions à droite */}
-          <div className="ae-bottom-bar-actions">
+          <div className="ae-bottom-bar-actions flex items-center gap-2 flex-wrap">
             <button
               type="button"
               onClick={handleCancelModifications}
@@ -1485,7 +1699,7 @@ export default function GlobalFlipbookSidebarEditor({
               className="ae-flipbook-btn-secondary"
               aria-label="Annuler les modifications"
             >
-              <Undo2 size={16} aria-hidden="true" />
+              <Undo2 size={15} aria-hidden="true" />
               <span>Annuler les modifications</span>
             </button>
 
@@ -1519,7 +1733,7 @@ export default function GlobalFlipbookSidebarEditor({
               className="ae-btn-outline-primary"
               aria-label="Appliquer le modèle global à tous"
             >
-              <Sparkles size={16} aria-hidden="true" />
+              <Sparkles size={15} aria-hidden="true" />
               <span>Appliquer à tous les Flipbooks</span>
             </button>
 

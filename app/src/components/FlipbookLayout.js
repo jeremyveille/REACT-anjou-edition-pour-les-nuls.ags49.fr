@@ -158,8 +158,16 @@ export default function FlipbookLayout({ book, children, globalSidebar = null })
 
   // Propriétés CSS inline globales pour le conteneur
   const containerStyle = {};
-  if (styles.leftWidth) containerStyle['--sidebar-left-width'] = `${styles.leftWidth}%`;
-  if (styles.rightWidth) containerStyle['--sidebar-right-width'] = `${styles.rightWidth}%`;
+  const effectiveLeftWidth = styles.leftWidth || styles.sidebarWidth || 20;
+  const effectiveRightWidth = styles.syncSidebarsWidth !== false
+    ? (styles.leftWidth || styles.rightWidth || styles.sidebarWidth || 20)
+    : (styles.rightWidth || styles.sidebarWidth || 20);
+
+  containerStyle['--sidebar-left-width'] = `${effectiveLeftWidth}%`;
+  containerStyle['--sidebar-right-width'] = `${effectiveRightWidth}%`;
+
+  const mediaRatio = styles.mediaRatio || '16 / 9';
+  containerStyle['--flipbook-media-ratio'] = mediaRatio;
   if (styles.maxWidth) containerStyle.maxWidth = `${styles.maxWidth}px`;
   if (styles.backgroundColor) containerStyle.backgroundColor = styles.backgroundColor;
   if (styles.primaryColor) containerStyle['--primary'] = styles.primaryColor;

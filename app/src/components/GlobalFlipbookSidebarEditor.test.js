@@ -385,6 +385,36 @@ describe('GlobalFlipbookSidebarEditor Component Tests', () => {
     expect(screen.getByText(/\[ BARRE GAUCHE \] \[ FLIPBOOK \] \[ BARRE DROITE \]/i)).toBeInTheDocument();
     expect(screen.getByTestId('flipbook-layout-wrapper')).toBeInTheDocument();
   });
+
+  test('supports automatic sidebar width symmetry and media ratio selection for identical dimensions', () => {
+    render(
+      <GlobalFlipbookSidebarEditor
+        initialTemplate={DEFAULT_GLOBAL_SIDEBAR}
+        flipbooks={mockFlipbooks}
+        onBack={jest.fn()}
+        onSaveSuccess={jest.fn()}
+        onApplyToAll={jest.fn()}
+      />
+    );
+
+    // Switch to styles tab
+    fireEvent.click(screen.getByRole('tab', { name: /Apparence, Styles & Visibilité/i }));
+
+    // Check symmetry checkbox is present and checked by default
+    const symmetryCheckbox = screen.getByLabelText(/Symétrie automatique : lier les dimensions de la barre gauche et droite/i);
+    expect(symmetryCheckbox).toBeInTheDocument();
+    expect(symmetryCheckbox).toBeChecked();
+
+    // Check media ratio selector is present
+    const ratioSelect = screen.getByLabelText(/Format et ratio des blocs images et vidéos/i);
+    expect(ratioSelect).toBeInTheDocument();
+    expect(ratioSelect).toHaveValue('16 / 9');
+
+    // Change ratio to 4:3
+    fireEvent.change(ratioSelect, { target: { value: '4 / 3' } });
+    expect(ratioSelect).toHaveValue('4 / 3');
+    expect(screen.getByText('Modifications non enregistrées')).toBeInTheDocument();
+  });
 });
 
 
