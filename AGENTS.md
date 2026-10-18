@@ -153,12 +153,31 @@ Se déplacer dans le dossier : `cd page-builder-react`
 *   **XL — Grands écrans** : `@media (min-width: 1200px)` (Disposition 3 colonnes jusqu'à 1700px max, KPIs 4 colonnes).
 *   **Classes mutualisées** : `.responsive-container`, `.responsive-grid`, `.responsive-actions`, `.responsive-form`, `.responsive-table`, `.responsive-modal`.
 
-### 7. Barres Latérales Administrables du Flipbook (`FlipbookLayout`, `FlipbookSidebar`, `FlipbookSidebarEditor`)
+### 7. Barres Latérales Administrables du Flipbook & Modèle Global (`FlipbookLayout`, `FlipbookSidebar`, `GlobalFlipbookSidebarEditor`, `FlipbookSidebarEditor`, `FlipbookBlockModalEditor`)
 *   **Disposition publique à 3 colonnes** : Encadre le lecteur central (`PdfFlipbookReader`) avec une barre latérale gauche (~20%) et une barre latérale droite (~20%) qui s'adaptent automatiquement à l'espace disponible.
 *   **Responsive sans compromis** : Sur mobile et tablette (`<= 860px`), disposition verticale fluide ordonnée avec priorité absolue au Flipbook en haut (`order: 1`), suivi des blocs de la barre gauche (`order: 2`), puis de la barre droite (`order: 3`), avec zéro débordement horizontal.
-*   **Administration unifiée dans le Dashboard** : Section « Barres latérales du Flipbook » avec colonnes « Barre gauche » et « Barre droite », gestion fine des blocs (création, modification, activation/désactivation, monter, descendre, suppression).
+*   **Éditeur visuel moderne en deux panneaux (55% / 45%)** :
+    *   **Panneau gauche (~55%)** : Espace spacieux d'administration évitant tout texte coupé ou champ compressé, articulé autour de 5 sections d'accordéons intelligents (1. Dimensions & Visibilité, 2. Contours & Ombres, 3. Couleurs & Habillage, 4. Espacements & Disposition, 5. Contenu des blocs) avec bouton rapide « Tout déplier / Tout replier ».
+    *   **Panneau droit (~45% sticky)** : Aperçu interactif permanent sous le header existant avec sélecteurs de viewports (XL, L, M, S) et sélecteur de Flipbook de démonstration.
+    *   **Bascule mobile/tablette (< 900px)** : Onglets réactifs `[ ⚙️ Paramètres & Blocs ]` / `[ 👁️ Aperçu en direct ]` éliminant les défilements verticaux sans fin.
+*   **Administration ergonomique des blocs par cartes compactes** :
+    *   Chaque bloc s'affiche sous forme d'une carte condensée soignée avec vignette miniature, titre, badge sémantique coloré et statut actif/inactif.
+    *   Boutons d'action rapides et accessibles : Monter, Descendre, **Modifier** (ouvre la modale spacieuse), **Dupliquer** (clonage instantané en 1 clic), Activer/Désactiver, Supprimer.
+    *   **Modale d'édition spacieuse (`FlipbookBlockModalEditor`)** : Fenêtre modale centrée et confortable de 780px avec onglets *Contenu* (champs aérés, médiathèque, alt text WCAG) et *Styles individuels* (`FlipbookBlockStyleEditor` avec contours, ombres et aperçu direct).
+*   **Contrôles numériques précis & Réinitialisation** : Sliders synchronisés avec des champs numériques modifiables et unités explicites (`%`, `px`), palettes de couleurs angevines et boutons de réinitialisation rapide.
+*   **Barre d'actions inférieure fixe (Sticky Glassmorphism)** :
+    *   Indicateur dynamique de statut (Modifications non enregistrées / Modèle synchronisé).
+    *   Boutons d'action clairs : Annuler, Restaurer version enregistrée, Réinitialiser le modèle (avec confirmation), Appliquer à tous les Flipbooks (avec bilan détaillé et sauvegarde de secours des personnalisations individuelles), Enregistrer le modèle global.
+*   **Disposition verticale pleine largeur & Accordéons des barres (`FlipbookSidebarEditor`)** :
+    *   Remplacement de la grille 2 colonnes par une disposition verticale empilée fluide : **1. Barre gauche (100% de largeur)** puis **2. Barre droite (100% de largeur)**, éliminant tout risque de débordement horizontal ou de champ masqué.
+    *   Sections repliables indépendantes avec en-têtes interactifs accessibles, icônes (`PanelLeft`, `PanelRight`), badges de compteurs, chevrons animés et boutons globaux « Tout déplier » / « Tout replier ».
+    *   Contrôles médias améliorés (`.ae-media-actions-row`) pour la médiathèque et le téléversement, carte d'aperçu d'image dédiée (`.ae-image-preview-card`) et protection des URLs longues (`.ae-fluid-input`).
 *   **Types de blocs multimédias supportés** : Images (médiathèque, upload ou URL), vidéos (intégration YouTube responsive 16/9 ou vidéos locales HTML5), textes/HTML sécurisés avec assainissement XSS (`sanitizeHtml`), titres avec niveaux hiérarchiques, boutons d'action stylisés, documents PDF téléchargeables.
+*   **Harmonisation stricte des dimensions Images & Vidéos (Gauche & Droite)** :
+    *   Ratio d'aspect unifié (`aspect-ratio: var(--flipbook-media-ratio, 16 / 9)`) et `object-fit: cover; object-position: center; width: 100%; height: 100%;` sur tous les blocs images et vidéos, garantissant des dimensions strictement identiques à gauche et à droite.
+    *   Symétrie automatique des colonnes gauche et droite (`syncSidebarsWidth`) liée en 1 clic dans l'éditeur de modèle global, avec choix du format de média (16:9 panoramique, 4:3 classique, 1:1 carré).
 *   **Persistance hybride** : Association exclusive à chaque flipbook (`leftSidebar` et `rightSidebar`), synchronisée sur Firestore et mise en cache dans `localStorage`.
+*   **Tests & Qualité** : 40 suites de tests et 350 tests unitaires/d'intégration réussis à 100%, 0 avertissements de compilation.
 
 ### 8. Menu d'Administration Latéral Ergonomique & Layout Dashboard (`DashboardSidebar`, `DashboardHeader`, `dashboard.css`)
 *   **Structure SaaS rectangulaire & Sans rognage** : Sidebar verticale rectangulaire de 250px de largeur fixe sur grand écran, sans forme ovale ou arrondie qui coupe les intitulés, s'intégrant directement dans un conteneur SaaS pleine hauteur (`.dashboard-layout-container`).
