@@ -80,7 +80,7 @@
   }
 }
 
-@media (max-width: 1199px) {
+@media (max-width: 1023.98px) {
   .public-nav .nav-links { display: none; }
   .public-nav .mobile-menu-toggle-btn { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; }
   .public-nav { width: calc(100% - 48px); }
@@ -89,7 +89,7 @@
   .home-pillars-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .pillar-card { padding: 1.5rem; }
 }
-@media (max-width: 599px) {
+@media (max-width: 639.98px) {
   .ae-mockup-header { width: calc(100% - 24px); height: 164px; min-height: 164px; border-radius: 18px 18px 28px 28px; }
   .header-mockup-content { left: 1rem; right: 3rem; }
   .header-mockup-logo-area { gap: .5rem; }

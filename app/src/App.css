@@ -616,8 +616,16 @@ nav.public-nav {
   transform: translateX(8px) translateY(0);
   margin-top: -0.3rem;
   min-width: 175px;
-  max-width: 290px;
+  max-width: min(290px, calc(100vw - 40px));
   width: max-content;
+}
+
+/* Sous-menus sur la droite du conteneur nav s'ouvrant vers la gauche */
+.dropdown-submenu.open-left > .dropdown-menu,
+.dropdown-menu-align-left .dropdown-submenu > .dropdown-menu {
+  left: auto;
+  right: 100%;
+  transform: translateX(-8px) translateY(0);
 }
 
 .dropdown-submenu:not(.dropdown-submenu-below):hover > .dropdown-menu,
@@ -6261,20 +6269,22 @@ nav.public-nav {
   }
   nav.public-nav {
     width: calc(100% - 16px);
-    height: 42px;
-    min-height: 42px;
+    min-height: 48px;
+    height: auto;
     margin: 6px auto 1rem auto;
-    padding: 0.2rem 0.45rem;
+    padding: 0.25rem 0.5rem;
   }
   .nav-logo {
     font-size: 0.6825rem !important;
-    padding: 0.25rem 0.65rem !important;
-    height: 28px;
+    padding: 0.35rem 0.65rem !important;
+    min-height: 44px;
+    min-width: 44px;
   }
   .contact-btn {
     font-size: 0.6825rem !important;
-    padding: 0.25rem 0.65rem !important;
-    height: 28px;
+    padding: 0.35rem 0.65rem !important;
+    min-height: 44px;
+    min-width: 44px;
   }
 }
 
