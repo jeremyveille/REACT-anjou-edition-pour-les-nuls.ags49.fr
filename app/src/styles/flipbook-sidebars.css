@@ -193,8 +193,7 @@
 }
 
 /* ==========================================================================
-   BLOCS MULTIMÉDIAS HARMONISÉS : IMAGE & VIDÉO
-   Dimensions, ratios (16:9 standard) et cadrages rigoureusement identiques
+   BLOCS MULTIMÉDIAS : IMAGE (PLEINE SURFACE PROPORTIONNELLE) & VIDÉO (16:9)
    ========================================================================== */
 
 .flipbook-block-image,
@@ -204,20 +203,53 @@
   box-sizing: border-box;
 }
 
+/* Bloc Image & Vidéo : suppression des marges internes pour exploiter toute la surface du cadre à bordure bleue */
+.flipbook-sidebar-card.flipbook-block-image,
+.flipbook-sidebar-card.flipbook-block-video {
+  width: 100%;
+  height: auto;
+  padding: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.flipbook-sidebar-card.flipbook-block-image .flipbook-block-title,
+.flipbook-sidebar-card.flipbook-block-video .flipbook-block-title {
+  padding: 0.55rem 0.75rem 0.35rem;
+  margin: 0;
+}
+
 .flipbook-block-figure {
   margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
   width: 100%;
+  height: auto;
+  box-sizing: border-box;
 }
 
-/* Conteneurs de ratio unifiés pour Images et Vidéos (Gauche ou Droite) */
-.flipbook-image-ratio-container,
+/* Conteneur d'image : s'adapte aux proportions réelles de l'image sans ratio forcé ni rognage */
+.flipbook-image-ratio-container {
+  position: relative;
+  width: 100%;
+  height: auto;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+  background-color: transparent;
+  border-radius: 0;
+}
+
+/* Conteneur de ratio 16:9 pour les vidéos YouTube intégrées */
 .flipbook-video-ratio-container {
   position: relative;
   width: 100%;
   aspect-ratio: var(--flipbook-media-ratio, 16 / 9);
-  border-radius: 8px;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
   overflow: hidden;
   background-color: #0b1120;
   display: flex;
@@ -226,28 +258,39 @@
   box-sizing: border-box;
 }
 
+/* Conteneur natif pour les vidéos téléversées (MP4, WebM) : conserve le ratio natif sans bandes inutiles */
+.flipbook-video-ratio-container.flipbook-video-native-container {
+  aspect-ratio: auto;
+  height: auto;
+  background-color: #000000;
+}
+
 .flipbook-image-link {
   display: block;
   width: 100%;
-  height: 100%;
+  height: auto;
+  padding: 0;
+  margin: 0;
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: 0;
+  box-sizing: border-box;
 }
 
 .flipbook-responsive-img {
-  width: 100%;
-  height: 100%;
-  max-width: 100%;
-  aspect-ratio: var(--flipbook-media-ratio, 16 / 9);
-  border-radius: 8px;
   display: block;
-  object-fit: cover;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  object-fit: contain;
   object-position: center;
+  border-radius: 0;
+  margin: 0;
+  padding: 0;
   transition: transform 0.25s ease;
 }
 
 .flipbook-image-link:hover .flipbook-responsive-img {
-  transform: scale(1.03);
+  transform: scale(1.02);
 }
 
 .flipbook-block-caption {
@@ -259,6 +302,13 @@
   text-align: center;
 }
 
+.flipbook-sidebar-card.flipbook-block-image .flipbook-block-caption,
+.flipbook-sidebar-card.flipbook-block-video .flipbook-block-caption {
+  margin-top: 0;
+  margin-bottom: 0;
+  padding: 0.4rem 0.75rem 0.5rem;
+}
+
 .flipbook-video-iframe {
   position: absolute;
   top: 0;
@@ -266,14 +316,15 @@
   width: 100%;
   height: 100%;
   border: none;
+  display: block;
 }
 
 .flipbook-responsive-video {
   width: 100%;
-  height: 100%;
+  height: auto;
   max-width: 100%;
-  border-radius: 8px;
-  object-fit: cover;
+  border-radius: 0;
+  object-fit: contain;
   object-position: center;
   background: #000;
   display: block;
@@ -411,10 +462,14 @@
   .flipbook-sidebar-card {
     padding: 0.85rem;
   }
+  .flipbook-sidebar-card.flipbook-block-image,
+  .flipbook-sidebar-card.flipbook-block-video {
+    padding: 0;
+  }
 }
 
-/* Tablette et Mobile (860px et moins) : passage en disposition verticale ordonnée */
-@media (max-width: 860px) {
+/* Tablette et Mobile (< 1024px) : passage en disposition verticale ordonnée avec priorité au lecteur */
+@media (max-width: 1023.98px) {
   .flipbook-layout-wrapper,
   .flipbook-layout-wrapper.has-both-sidebars,
   .flipbook-layout-wrapper.has-left-only,
@@ -424,21 +479,21 @@
     gap: 1.5rem;
   }
 
-  /* Ordre hiérarchique : 1. Barre gauche, 2. Flipbook central, 3. Barre droite */
-  .flipbook-sidebar-left-wrapper {
-    order: 1;
+  /* Priorité absolue au lecteur sur mobile et tablette : 1. Flipbook central, 2. Barre gauche, 3. Barre droite */
+  .flipbook-main-stage {
+    order: 1 !important;
     width: 100%;
     max-width: 100%;
   }
 
-  .flipbook-main-stage {
-    order: 2;
+  .flipbook-sidebar-left-wrapper {
+    order: 2 !important;
     width: 100%;
     max-width: 100%;
   }
 
   .flipbook-sidebar-right-wrapper {
-    order: 3;
+    order: 3 !important;
     width: 100%;
     max-width: 100%;
   }
@@ -873,12 +928,14 @@
 
 /* Aperçu miniature dans l'éditeur */
 .flipbook-editor-preview-thumb {
-  max-height: 90px;
-  width: auto;
+  max-height: 120px;
+  width: 100%;
+  height: auto;
   max-width: 100%;
   border-radius: 6px;
   border: 1px solid var(--border, #e2e8f0);
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
   display: block;
   margin-top: 0.35rem;
 }
@@ -993,8 +1050,9 @@
 .ae-image-preview-thumb {
   width: 72px;
   height: auto;
-  aspect-ratio: 16 / 9;
-  object-fit: cover;
+  max-height: 54px;
+  object-fit: contain;
+  object-position: center;
   border-radius: 6px;
   border: 1px solid #cbd5e1;
   background: #ffffff;

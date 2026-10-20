@@ -63,8 +63,11 @@
     justify-content: space-between;
   }
   .pdf-reader-title {
-    max-width: 105px;
-    font-size: 10.5px;
+    max-width: min(45vw, 240px);
+    font-size: clamp(0.75rem, 2.5vw, 0.85rem);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .pdf-reader-toolbar {
     gap: 2px;
@@ -76,17 +79,20 @@
     gap: 1px;
   }
   .pdf-toolbar-btn {
-    height: 24px;
-    width: 24px;
-    padding: 2px;
+    height: 38px;
+    width: 38px;
+    min-height: 38px;
+    min-width: 38px;
+    padding: 6px;
   }
   .pdf-toolbar-btn.text-btn {
-    padding: 2px 4px;
-    font-size: 9px;
+    padding: 2px 6px;
+    font-size: 10px;
+    width: auto;
   }
   .pdf-zoom-val {
-    font-size: 9px;
-    min-width: 24px;
+    font-size: 10px;
+    min-width: 28px;
     padding: 0 2px;
   }
   .pdf-reader-viewport {
@@ -98,9 +104,11 @@
     justify-content: space-between;
   }
   .pdf-nav-btn {
-    height: 24px;
-    width: 24px;
-    padding: 2px;
+    height: 38px;
+    width: 38px;
+    min-height: 38px;
+    min-width: 38px;
+    padding: 6px;
   }
   .pdf-page-indicator {
     font-size: 10px;
@@ -281,7 +289,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 16px;
+  padding: 8px;
   overflow: auto;
   background-image: radial-gradient(circle, var(--viewport-overlay-center) 0%, var(--viewport-overlay-edge) 100%), url("./flipbook-background.jpeg");
   background-repeat: repeat;

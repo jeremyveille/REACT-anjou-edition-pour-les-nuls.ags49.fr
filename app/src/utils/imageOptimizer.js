@@ -284,6 +284,57 @@ export function generateWebPThumbnail(imageSource, options = {}) {
 }
 
 /**
+ * Compresse automatiquement une image Data URL (Base64) volumineuse en WebP/JPEG léger
+ * afin d'éviter tout dépassement de la limite de 1 Mo des documents Firestore.
+ *
+ * @param {string} dataUrl - Chaîne Data URL (data:image/...) ou URL standard
+ * @param {object} [options]
+ * @param {number} [options.thresholdBytes=100000] - Seuil en caractères au-delà duquel compresser
+ * @param {number} [options.maxWidth=900]
+ * @param {number} [options.maxHeight=900]
+ * @param {number} [options.quality=0.78]
+ * @returns {Promise<string>} Data URL optimisée ou l'URL d'origine
+ */
+export async function compressBase64ImageIfNeeded(dataUrl, options = {}) {
+  if (!dataUrl || typeof dataUrl !== 'string') return dataUrl || '';
+  if (!dataUrl.startsWith('data:image/')) return dataUrl;
+
+  const {
+    thresholdBytes = 100 * 1024,
+    maxWidth = 900,
+    maxHeight = 900,
+    quality = 0.78,
+    forceInTest = false
+  } = options;
+
+  if (dataUrl.length <= thresholdBytes) {
+    return dataUrl;
+  }
+
+  // En environnement de test JSDOM sans moteur d'image réel, retourner immédiatement sauf si forcé
+  if (!forceInTest && typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'test') {
+    return dataUrl;
+  }
+
+  try {
+    const res = await generateWebPThumbnail(dataUrl, { maxWidth, maxHeight, quality });
+    if (
+      res &&
+      typeof res.dataUrl === 'string' &&
+      res.dataUrl.startsWith('data:image/') &&
+      res.dataUrl.length > 100 &&
+      res.dataUrl.length < dataUrl.length
+    ) {
+      return res.dataUrl;
+    }
+  } catch (e) {
+    // Conserver l'image originale en cas d'erreur de décodage
+  }
+
+  return dataUrl;
+}
+
+/**
  * Composant React Image Optimisée (<OptimizedImage />)
  * Offre un chargement WebP natif avec balise <picture>, srcset adaptatif, fallback transparent et lazy-loading.
  */
