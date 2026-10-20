@@ -108,23 +108,8 @@ export const PublicNav = ({
           {hasChilds ? (
             <details className={`mobile-details mobile-level-${depth + 1}`}>
               <summary className={`mobile-summary mobile-summary-level-${depth + 1}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                {(item.status === "Actif" || item.isActive) && (item.url || item.shortcode) ? (
-                  <button 
-                    type="button"
-                    className="ae-mobile-nav-item-button"
-                    style={{ border: 'none', background: 'transparent' }}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleMenuItemClick(item, e);
-                      setMobileMenuOpen(false);
-                    }}
-                  >
-                    {item.title}
-                  </button>
-                ) : (
-                  <span className="flex-grow">{item.title}</span>
-                )}
-                <span className="ae-action-icon-wrapper"><ChevronDown size={14} /></span>
+                <span className="flex-grow">{item.title}</span>
+                <span className="ae-action-icon-wrapper" aria-hidden="true"><ChevronDown size={14} /></span>
               </summary>
               <div className="mobile-details-content">
                 {renderMobileMenuItems(item.children, depth + 1)}

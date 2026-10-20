@@ -207,7 +207,17 @@ describe('Suite de Tests d\'Intégration Responsive E2E — Anjou Édition (4-Ti
       const setMobileMenuOpen = jest.fn((val) => { isOpen = typeof val === 'function' ? val(isOpen) : val; });
 
       const mockItems = [
-        { id: 'm1', title: 'Catalogue Littéraire', status: 'Actif', url: '/catalogue', children: [] }
+        { id: 'm1', title: 'Catalogue Littéraire', status: 'Actif', url: '/catalogue', children: [] },
+        {
+          id: 'm2',
+          title: 'POÉSIES',
+          status: 'Actif',
+          url: '/poesies',
+          shortcode: 'POÉSIES',
+          children: [
+            { id: 'm2-1', title: 'SONNET', status: 'Actif', url: '/poesie/sonnet', children: [] }
+          ]
+        }
       ];
 
       const { rerender } = render(
@@ -250,6 +260,13 @@ describe('Suite de Tests d\'Intégration Responsive E2E — Anjou Édition (4-Ti
       expect(drawer).toHaveAttribute('role', 'dialog');
       expect(drawer).toHaveAttribute('aria-modal', 'true');
       expect(document.body.style.overflow).toBe('hidden');
+
+      // Conformité WCAG / HTML5 : aucun élément interactif (button, a, input) à l'intérieur d'un <summary>
+      const summaries = drawer.querySelectorAll('summary');
+      expect(summaries.length).toBeGreaterThan(0);
+      summaries.forEach((summaryEl) => {
+        expect(summaryEl.querySelectorAll('button, a, input, select, textarea').length).toBe(0);
+      });
 
       // Fermeture par la touche Échap
       fireEvent.keyDown(document, { key: 'Escape' });
