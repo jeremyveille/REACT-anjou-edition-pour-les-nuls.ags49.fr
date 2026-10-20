@@ -1,8 +1,8 @@
 
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import * as Icons from 'lucide-react';
 import { GripVertical } from 'lucide-react';
+import { getWidgetIcon } from '../utils/iconMap';
 
 export default function WidgetItem({ type, label, description, icon }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
@@ -15,7 +15,7 @@ export default function WidgetItem({ type, label, description, icon }) {
     zIndex: isDragging ? 1000 : 'auto'
   };
 
-  const IconComponent = Icons[icon] || Icons.HelpCircle;
+  const IconComponent = getWidgetIcon(icon);
 
   return (
     <div

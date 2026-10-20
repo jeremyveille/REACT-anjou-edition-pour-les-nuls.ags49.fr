@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DndContext, DragOverlay, useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
 import { useBuilder } from '../store/builderStore';
 import Toolbar from './Toolbar';
@@ -8,13 +8,21 @@ import SettingsPanel from './SettingsPanel';
 import Navigator from './Navigator';
 import GlobalSettings from './GlobalSettings';
 import ContextMenu from './ContextMenu';
-import * as Icons from 'lucide-react';
 import { GripVertical } from 'lucide-react';
+import { renderWidgetIcon } from '../utils/iconMap';
 import { widgets } from '../data/widgets';
 
 export default function Layout() {
-  const { moveElement } = useBuilder();
+  const { moveElement, selectedElementId } = useBuilder();
   const [activeWidget, setActiveWidget] = useState(null);
+  const [mobileTab, setMobileTab] = useState('canvas'); // 'widgets' | 'canvas' | 'settings'
+
+  // Basculer automatiquement sur l'onglet réglages sur mobile si un élément est sélectionné
+  useEffect(() => {
+    if (selectedElementId) {
+      setMobileTab('settings');
+    }
+  }, [selectedElementId]);
 
   // Require 8px movement before starting drag to allow normal clicks
   const sensors = useSensors(
@@ -45,7 +53,39 @@ export default function Layout() {
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="builder-layout">
         <Toolbar />
-        <div className="builder-workspace" style={{ position: 'relative' }}>
+
+        {/* Sélecteur d'onglets pour navigation mobile et tablette (< 1024px) */}
+        <div className="pb-mobile-tabs" role="tablist" aria-label="Navigation des vues mobiles">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mobileTab === 'widgets'}
+            className={`pb-mobile-tab ${mobileTab === 'widgets' ? 'active' : ''}`}
+            onClick={() => setMobileTab('widgets')}
+          >
+            📦 Widgets
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mobileTab === 'canvas'}
+            className={`pb-mobile-tab ${mobileTab === 'canvas' ? 'active' : ''}`}
+            onClick={() => setMobileTab('canvas')}
+          >
+            👁️ Canevas
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mobileTab === 'settings'}
+            className={`pb-mobile-tab ${mobileTab === 'settings' ? 'active' : ''}`}
+            onClick={() => setMobileTab('settings')}
+          >
+            ⚙️ Réglages {selectedElementId ? '•' : ''}
+          </button>
+        </div>
+
+        <div className={`builder-workspace tab-${mobileTab}`} style={{ position: 'relative' }}>
           <Sidebar />
           <Navigator />
           <Canvas />
@@ -60,10 +100,7 @@ export default function Layout() {
         {activeWidget ? (
           <div className="drag-overlay-widget">
             <span style={{ color: 'var(--pb-primary)', display: 'flex' }}>
-              {Icons[activeWidget.icon]
-                ? React.createElement(Icons[activeWidget.icon], { size: 16 })
-                : <Icons.HelpCircle size={16} />
-              }
+              {renderWidgetIcon(activeWidget.icon, { size: 16 })}
             </span>
             <GripVertical size={13} style={{ color: 'var(--pb-text-3)', marginRight: '-.1rem' }} />
             <span style={{ fontWeight: 600, color: 'var(--pb-text)', fontSize: '.82rem' }}>

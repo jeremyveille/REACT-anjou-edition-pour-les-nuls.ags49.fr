@@ -152,85 +152,78 @@ export const MediaPickerModal = ({
 
   return (
     <div 
-      className="position-fixed inset-0 d-flex align-items-center justify-content-center p-3"
+      className="pb-media-modal-backdrop"
       role="dialog"
       aria-modal="true"
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100vw',
-        height: '100vh',
-        backgroundColor: 'rgba(15, 23, 42, 0.65)',
-        backdropFilter: 'blur(4px)',
-        zIndex: 9999
+      aria-labelledby="pb-media-modal-title"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div 
-        className="d-flex flex-column bg-white rounded-4 shadow-xl overflow-hidden animate-in"
-        style={{
-          width: '100%',
-          maxWidth: '900px',
-          height: '80vh',
-          maxHeight: '700px'
-        }}
-      >
+      <div className="pb-media-modal-dialog">
         {/* HEADER */}
-        <div className="d-flex align-items-center justify-content-between px-4 py-3 border-bottom bg-slate-50">
-          <div className="d-flex align-items-center gap-2">
-            <div className="p-2 bg-primary-subtle text-primary rounded-3">
+        <div className="pb-media-modal-header">
+          <div className="pb-media-modal-header-info">
+            <div className="pb-media-modal-header-icon" aria-hidden="true">
               <ImageIcon size={18} />
             </div>
             <div>
-              <h2 className="h6 mb-0 fw-bold text-slate-800">{title}</h2>
-              <p className="text-xs text-muted mb-0">Sélectionnez un média existant ou téléversez un nouveau fichier</p>
+              <h2 id="pb-media-modal-title" className="pb-media-modal-title">{title}</h2>
+              <p className="pb-media-modal-subtitle">Sélectionnez un média existant ou téléversez un nouveau fichier</p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="btn btn-light btn-sm rounded-circle p-1.5"
-            aria-label="Fermer"
+            className="pb-btn pb-btn-icon-only"
+            aria-label="Fermer la médiathèque"
           >
             <X size={16} />
           </button>
         </div>
 
         {/* CONTROLS */}
-        <div className="px-4 py-2.5 border-bottom bg-white d-flex flex-wrap align-items-center justify-content-between gap-3">
-          <div className="d-flex align-items-center gap-1 bg-slate-100 p-1 rounded-3">
+        <div className="pb-media-modal-toolbar">
+          <div className="pb-media-tab-group" role="tablist" aria-label="Filtres par type de média">
             <button
               type="button"
+              role="tab"
+              aria-selected={activeTab === 'all'}
               onClick={() => setActiveTab('all')}
-              className={`btn btn-sm py-1 px-2.5 rounded-2 font-medium text-xs ${activeTab === 'all' ? 'bg-white text-primary shadow-sm fw-semibold' : 'text-slate-600 border-0'}`}
+              className={`pb-media-tab-btn ${activeTab === 'all' ? 'active' : ''}`}
             >
               Tous ({mediaList.length})
             </button>
             <button
               type="button"
+              role="tab"
+              aria-selected={activeTab === 'image'}
               onClick={() => setActiveTab('image')}
-              className={`btn btn-sm py-1 px-2.5 rounded-2 font-medium text-xs d-flex align-items-center gap-1 ${activeTab === 'image' ? 'bg-white text-primary shadow-sm fw-semibold' : 'text-slate-600 border-0'}`}
+              className={`pb-media-tab-btn ${activeTab === 'image' ? 'active' : ''}`}
             >
               <ImageIcon size={13} /> Images ({mediaList.filter(m => m.type === 'image').length})
             </button>
             <button
               type="button"
+              role="tab"
+              aria-selected={activeTab === 'video'}
               onClick={() => setActiveTab('video')}
-              className={`btn btn-sm py-1 px-2.5 rounded-2 font-medium text-xs d-flex align-items-center gap-1 ${activeTab === 'video' ? 'bg-white text-primary shadow-sm fw-semibold' : 'text-slate-600 border-0'}`}
+              className={`pb-media-tab-btn ${activeTab === 'video' ? 'active' : ''}`}
             >
               <Film size={13} /> Vidéos ({mediaList.filter(m => m.type === 'video').length})
             </button>
           </div>
 
-          <div className="d-flex align-items-center gap-2 flex-grow-1 justify-content-end">
-            <div className="position-relative flex-grow-1" style={{ maxWidth: '260px' }}>
-              <Search size={14} className="position-absolute text-muted" style={{ left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, justifyContent: 'flex-end' }}>
+            <div className="pb-media-search-container">
+              <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--pb-text-3)' }} aria-hidden="true" />
               <input
                 type="search"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Rechercher un média..."
-                className="form-control form-control-sm ps-4 text-xs rounded-3"
+                className="pb-media-search-input"
+                aria-label="Rechercher un média"
               />
             </div>
 
@@ -243,15 +236,17 @@ export const MediaPickerModal = ({
                 e.target.value = '';
               }}
               accept="image/*,video/*,application/pdf"
-              className="d-none"
+              style={{ display: 'none' }}
+              aria-hidden="true"
             />
             <button
               type="button"
               disabled={isUploading}
               onClick={() => fileInputRef.current?.click()}
-              className="btn btn-primary btn-sm d-flex align-items-center gap-1.5 rounded-3 text-xs fw-semibold px-3"
+              className="pb-btn pb-btn-primary"
+              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem', fontWeight: 600 }}
             >
-              {isUploading ? <Loader size={14} className="animate-spin" /> : <Upload size={14} />}
+              {isUploading ? <Loader size={14} className="pb-spin" /> : <Upload size={14} />}
               <span>{isUploading ? "Envoi..." : "Ajouter un média"}</span>
             </button>
           </div>
@@ -259,7 +254,7 @@ export const MediaPickerModal = ({
 
         {/* BODY */}
         <div 
-          className="d-flex flex-grow-1 overflow-hidden"
+          className="pb-media-modal-body"
           onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
           onDragLeave={() => setIsDragging(false)}
           onDrop={(e) => {
@@ -270,34 +265,41 @@ export const MediaPickerModal = ({
           }}
         >
           {/* GRID */}
-          <div className="flex-grow-1 p-3 overflow-y-auto bg-slate-50 position-relative">
+          <div className="pb-media-grid-area">
             {isDragging && (
               <div 
-                className="position-absolute inset-0 bg-primary/10 border-2 border-primary border-dashed rounded-3 m-3 d-flex flex-column align-items-center justify-content-center"
-                style={{ top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 75, 122, 0.08)' }}
+                style={{
+                  position: 'absolute',
+                  inset: '1rem',
+                  backgroundColor: 'rgba(59, 110, 248, 0.08)',
+                  border: '2px dashed var(--pb-primary)',
+                  borderRadius: 'var(--pb-r-lg)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  zIndex: 20
+                }}
               >
-                <Upload size={32} className="text-primary mb-2" />
-                <p className="fw-bold text-primary mb-0">Déposez votre fichier ici</p>
+                <Upload size={32} style={{ color: 'var(--pb-primary)', marginBottom: '0.5rem' }} />
+                <p style={{ fontWeight: 700, color: 'var(--pb-primary)', margin: 0 }}>Déposez votre fichier ici</p>
               </div>
             )}
 
             {filteredMedia.length === 0 ? (
-              <div className="d-flex flex-column align-items-center justify-content-center h-100 py-5 text-muted text-center">
-                <ImageIcon size={32} className="text-slate-400 mb-2" />
-                <p className="text-xs">Aucun média trouvé</p>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', padding: '3rem 1rem', textAlign: 'center', color: 'var(--pb-text-3)' }}>
+                <ImageIcon size={36} style={{ color: 'var(--pb-text-3)', marginBottom: '0.75rem' }} />
+                <p style={{ fontSize: '0.8rem', margin: '0 0 1rem' }}>Aucun média trouvé</p>
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="btn btn-outline-primary btn-sm rounded-3 text-xs"
+                  className="pb-btn"
                 >
-                  <Plus size={14} className="me-1" /> Téléverser un fichier
+                  <Plus size={14} style={{ marginRight: '0.35rem' }} /> Téléverser un fichier
                 </button>
               </div>
             ) : (
-              <div 
-                className="d-grid gap-2.5"
-                style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))' }}
-              >
+              <div className="pb-media-grid">
                 {filteredMedia.map(item => {
                   const isSelected = item.id === selectedId;
                   return (
@@ -305,46 +307,42 @@ export const MediaPickerModal = ({
                       key={item.id}
                       onClick={() => setSelectedId(item.id)}
                       onDoubleClick={() => { onSelect(item); onClose(); }}
-                      className={`position-relative rounded-3 overflow-hidden border bg-white cursor-pointer transition-all shadow-sm ${
-                        isSelected ? 'border-primary' : 'border-slate-200 hover:border-slate-300'
-                      }`}
-                      style={{
-                        height: '140px',
-                        outline: isSelected ? '2px solid #004b7a' : 'none'
-                      }}
+                      className={`pb-media-card ${isSelected ? 'selected' : ''}`}
                       tabIndex={0}
                       role="button"
+                      aria-label={`Média ${item.name}`}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          setSelectedId(item.id);
+                        }
+                      }}
                     >
-                      <div className="w-100 bg-slate-100 d-flex align-items-center justify-content-center overflow-hidden" style={{ height: '90px' }}>
+                      <div className="pb-media-card-thumb">
                         {item.type === 'image' && item.url ? (
-                          <img src={item.url} alt={item.alt || item.name} className="w-100 h-100 object-fit-cover" loading="lazy" />
+                          <img src={item.url} alt={item.alt || item.name} loading="lazy" />
                         ) : item.type === 'video' ? (
-                          <div className="d-flex flex-column align-items-center text-primary bg-primary-subtle w-100 h-100 justify-content-center">
-                            <Film size={24} />
-                            <span className="text-xxs fw-bold mt-0.5">Vidéo</span>
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--pb-primary)', height: '100%' }}>
+                            <Film size={26} />
+                            <span style={{ fontSize: '0.65rem', fontWeight: 700, marginTop: '2px' }}>Vidéo</span>
                           </div>
                         ) : (
-                          <div className="d-flex flex-column align-items-center text-slate-500 w-100 h-100 justify-content-center">
-                            <FileText size={24} />
-                            <span className="text-xxs fw-bold mt-0.5">Document</span>
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--pb-text-3)', height: '100%' }}>
+                            <FileText size={26} />
+                            <span style={{ fontSize: '0.65rem', fontWeight: 700, marginTop: '2px' }}>Document</span>
                           </div>
                         )}
                       </div>
 
                       {isSelected && (
-                        <div 
-                          className="position-absolute bg-primary text-white rounded-circle p-0.5 d-flex align-items-center justify-content-center"
-                          style={{ top: '6px', right: '6px', width: '18px', height: '18px' }}
-                        >
+                        <div className="pb-media-card-badge" aria-label="Sélectionné">
                           <Check size={12} strokeWidth={3} />
                         </div>
                       )}
 
-                      <div className="p-2 bg-white">
-                        <p className="text-xs fw-semibold text-truncate mb-0 text-slate-800" title={item.name}>
-                          {item.name}
-                        </p>
-                      </div>
+                      <p className="pb-media-card-title" title={item.name}>
+                        {item.name}
+                      </p>
                     </div>
                   );
                 })}
@@ -352,34 +350,43 @@ export const MediaPickerModal = ({
             )}
           </div>
 
-          {/* SIDEBAR DETAILS */}
+          {/* SIDEBAR DETAILS (Fluide) */}
           {selectedItem && (
-            <div className="border-start bg-white p-3 d-flex flex-column" style={{ width: '250px' }}>
-              <h6 className="text-xs fw-bold text-uppercase text-slate-500 mb-2">Détails</h6>
-              <div className="rounded-3 overflow-hidden border border-slate-200 mb-2 bg-slate-50 d-flex align-items-center justify-content-center" style={{ height: '120px' }}>
+            <div className="pb-media-sidebar">
+              <h6 className="pb-media-sidebar-title">Détails</h6>
+              <div className="pb-media-sidebar-preview">
                 {selectedItem.type === 'image' && selectedItem.url ? (
-                  <img src={selectedItem.url} alt={selectedItem.alt || selectedItem.name} className="w-100 h-100 object-fit-contain" />
+                  <img src={selectedItem.url} alt={selectedItem.alt || selectedItem.name} />
                 ) : (
-                  <div className="text-center text-primary">
-                    <Film size={32} className="mx-auto mb-1" />
+                  <div style={{ color: 'var(--pb-primary)', textAlign: 'center' }}>
+                    <Film size={32} />
                   </div>
                 )}
               </div>
-              <div className="text-xs space-y-1 mb-3">
-                <p className="fw-semibold text-truncate mb-1">{selectedItem.name}</p>
+              <div className="pb-media-sidebar-meta">
+                <p style={{ fontWeight: 600, margin: '0 0 0.35rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={selectedItem.name}>
+                  {selectedItem.name}
+                </p>
                 {selectedItem.url && (
-                  <a href={selectedItem.url} target="_blank" rel="noopener noreferrer" className="text-primary text-truncate d-block text-xxs">
-                    {selectedItem.url} <ExternalLink size={10} className="d-inline" />
+                  <a
+                    href={selectedItem.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ fontSize: '0.68rem', color: 'var(--pb-primary)', wordBreak: 'break-all', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                  >
+                    <span>Ouvrir le lien</span>
+                    <ExternalLink size={10} />
                   </a>
                 )}
               </div>
-              <div className="mt-auto pt-2 border-top">
+              <div style={{ marginTop: 'auto', paddingTop: '0.5rem', borderTop: '1px solid var(--pb-border)' }}>
                 <button
                   type="button"
                   onClick={(e) => handleDelete(e, selectedItem.id)}
-                  className="btn btn-outline-danger btn-sm text-xs w-100 d-flex align-items-center justify-content-center gap-1"
+                  className="pb-btn pb-btn-danger"
+                  style={{ width: '100%', fontSize: '0.75rem', justifyContent: 'center' }}
                 >
-                  <Trash2 size={12} /> Supprimer
+                  <Trash2 size={13} style={{ marginRight: '0.35rem' }} /> Supprimer
                 </button>
               </div>
             </div>
@@ -387,19 +394,21 @@ export const MediaPickerModal = ({
         </div>
 
         {/* FOOTER */}
-        <div className="px-4 py-3 border-top bg-slate-50 d-flex align-items-center justify-content-between">
-          <span className="text-xs text-muted">{filteredMedia.length} élément{filteredMedia.length > 1 ? 's' : ''}</span>
-          <div className="d-flex align-items-center gap-2">
-            <button type="button" onClick={onClose} className="btn btn-light btn-sm text-xs rounded-3 px-3">
+        <div className="pb-media-modal-footer">
+          <span style={{ fontSize: '0.75rem', color: 'var(--pb-text-3)' }}>
+            {filteredMedia.length} élément{filteredMedia.length > 1 ? 's' : ''}
+          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <button type="button" onClick={onClose} className="pb-btn">
               Annuler
             </button>
             <button
               type="button"
               disabled={!selectedId}
               onClick={handleConfirmSelect}
-              className="btn btn-primary btn-sm text-xs rounded-3 px-3 fw-semibold d-flex align-items-center gap-1"
+              className="pb-btn pb-btn-primary"
             >
-              <Check size={14} /> Insérer ce média
+              <Check size={14} style={{ marginRight: '0.35rem' }} /> Insérer ce média
             </button>
           </div>
         </div>

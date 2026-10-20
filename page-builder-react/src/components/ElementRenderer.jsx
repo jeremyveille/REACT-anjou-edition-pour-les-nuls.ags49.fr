@@ -1,10 +1,10 @@
 import { useDroppable, useDraggable } from '@dnd-kit/core';
 import { useBuilder } from '../store/builderStore';
-import * as Icons from 'lucide-react';
+import { getWidgetIcon } from '../utils/iconMap';
 import { getYoutubeEmbedUrl } from '../utils/youtubeUtils';
 import { sanitizeHtml } from '../utils/sanitize';
 import { visibilityClasses } from '../utils/appearance';
-import { Copy, Trash2, GripVertical, Settings, Star } from 'lucide-react';
+import { Copy, Trash2, GripVertical, Settings, Star, Video, User } from 'lucide-react';
 
 /* ── Draggable wrapper for existing elements ── */
 function DraggableElement({ id, children }) {
@@ -104,7 +104,7 @@ export default function ElementRenderer({ element }) {
 
   /* ── Icon resolver ── */
   const renderIcon = () => {
-    const IconComponent = Icons[settings.name] || Icons.Smile;
+    const IconComponent = getWidgetIcon(settings.name, getWidgetIcon('Smile'));
     return (
       <div className={settings.className || 'd-inline-block'}>
         <IconComponent size={settings.size || 24} color={settings.color || '#000000'} />
@@ -348,7 +348,7 @@ export default function ElementRenderer({ element }) {
             ) : (
               <div style={{ background: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', borderRadius: '8px' }}>
                 <div style={{ textAlign: 'center', color: '#64748b' }}>
-                  <Icons.Video size={32} style={{ marginBottom: 8 }} />
+                  <Video size={32} style={{ marginBottom: 8 }} />
                   <p style={{ fontSize: '.8rem', margin: 0 }}>Cliquez pour configurer la vidéo</p>
                 </div>
               </div>
@@ -453,7 +453,7 @@ export default function ElementRenderer({ element }) {
                 <img src={settings.avatarSrc} alt={settings.author || ''} style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover' }} />
               ) : (
                 <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#dde7ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Icons.User size={20} color="#3b6ef8" />
+                  <User size={20} color="#3b6ef8" />
                 </div>
               )}
               <div>
