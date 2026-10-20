@@ -72,6 +72,11 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    match /media/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     match /gallery/{docId} {
       allow read: if true;
       allow write: if isAdmin();

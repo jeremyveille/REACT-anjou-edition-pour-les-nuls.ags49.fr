@@ -5,10 +5,13 @@ import {
   BookOpen, FileText, AlertCircle, List, Grid, Search, X,
   Volume2, VolumeX, RotateCw
 } from "lucide-react";
-import { getPDFFile } from "../utils/indexedDBStorage";
+import { getPDFFile, storePDFFile } from "../utils/indexedDBStorage";
 import { loadPdfFromFirestore } from "../utils/firestoreChunker";
 import { escapeHtml } from "../utils/sanitize";
 import "../styles/pdf-reader.css";
+
+// Cache en mémoire de session pour éviter tout re-téléchargement multiple des chunks Firestore
+const memoryPdfBlobCache = new Map();
 
 // Helper to resolve PDF Outline destination to page number
 const resolveOutlinePage = async (pdf, dest) => {
@@ -315,6 +318,9 @@ export default function PdfFlipbookReader({ book, onClose }) {
     };
   }, [loading, showToc, showSearch, showThumbnails, isFullscreen]);
 
+  // Clé stable de la source PDF du livre pour éviter les rechargements inutiles lors d'un re-rendu parent
+  const bookSourceKey = `${book?.id || ''}|${book?.pdfUrl || ''}|${book?.pdfFile || ''}|${Boolean(book?.hasFirestoreChunks)}`;
+
   // Reset navigation and zoom state when opening a new book
   useEffect(() => {
     setCurrentPage(1);
@@ -322,7 +328,7 @@ export default function PdfFlipbookReader({ book, onClose }) {
     setRotation(0);
     setPdfPageOriginalSize(null);
     isFirstRender.current = true;
-  }, [book]);
+  }, [bookSourceKey]);
 
   // Initialize audio object
   useEffect(() => {
@@ -516,31 +522,38 @@ export default function PdfFlipbookReader({ book, onClose }) {
         let isFallback = false;
 
         // Resolution strategy:
-        // 1. Try IndexedDB cache (stored under book ID)
+        // 1. Try Memory Cache & IndexedDB cache (stored under book ID)
         if (book.id) {
-          const cachedFile = await getPDFFile(book.id);
+          let cachedFile = memoryPdfBlobCache.get(book.id) || null;
+          if (!cachedFile) {
+            cachedFile = await getPDFFile(book.id);
+            if (cachedFile) {
+              memoryPdfBlobCache.set(book.id, cachedFile);
+            }
+          }
           if (cachedFile) {
             const url = URL.createObjectURL(cachedFile);
             setPdfObjectUrl(url);
             pdfSource = url;
-            console.log(`Loaded PDF for book "${book.title}" from IndexedDB cache.`);
           }
         }
 
         // 2. Try Firestore/Storage pdfUrl
         if (!pdfSource && book.pdfUrl) {
           pdfSource = book.pdfUrl;
-          console.log(`Loading PDF for book "${book.title}" from Firebase URL.`);
         }
 
-        // 3. Try Firestore Base64 Chunks
+        // 3. Try Firestore Base64 Chunks (and persist into Memory + IndexedDB to avoid repeated chunk downloads)
         if (!pdfSource && book.hasFirestoreChunks) {
           const chunkBlob = await loadPdfFromFirestore(book.id);
           if (chunkBlob) {
+            memoryPdfBlobCache.set(book.id, chunkBlob);
+            try {
+              storePDFFile(book.id, chunkBlob).catch(() => {});
+            } catch (e) {}
             const url = URL.createObjectURL(chunkBlob);
             setPdfObjectUrl(url);
             pdfSource = url;
-            console.log(`Loaded PDF for book "${book.title}" from Firestore chunks.`);
           }
         }
 
@@ -614,7 +627,8 @@ export default function PdfFlipbookReader({ book, onClose }) {
       active = false;
       window.removeEventListener("resize", handleResize);
     };
-  }, [book]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookSourceKey]);
 
   // Load TOC / Table of Contents
   useEffect(() => {

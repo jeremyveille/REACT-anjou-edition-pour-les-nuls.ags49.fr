@@ -1,5 +1,12 @@
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "../firebase";
+import { compressBase64ImageIfNeeded } from "../utils/imageOptimizer";
+
+/**
+ * Limite de sécurité en octets pour un document Firestore (limite stricte Firestore : 1 048 576 octets)
+ */
+export const FIRESTORE_SAFE_DOC_LIMIT = 750 * 1024;
+const SIDEBAR_CHUNK_SIZE = 700 * 1024;
 
 /**
  * Clé de stockage LocalStorage pour le modèle global
@@ -223,7 +230,41 @@ export const getPreviousSavedGlobalSidebar = () => {
 };
 
 /**
- * Charge le modèle global depuis Firestore avec fallback LocalStorage
+ * Compresse automatiquement les images Data URL (Base64) volumineuses présentes dans une liste de blocs
+ * afin de prévenir le dépassement de la limite de 1 Mo de Firestore.
+ */
+export const optimizeSidebarBlocks = async (blocks = []) => {
+  if (!Array.isArray(blocks)) return [];
+  const optimized = [];
+  for (const b of blocks) {
+    if (!b || typeof b !== 'object') {
+      optimized.push(b);
+      continue;
+    }
+    const cloned = { ...b };
+    if (typeof cloned.imageUrl === 'string' && cloned.imageUrl.startsWith('data:image/')) {
+      cloned.imageUrl = await compressBase64ImageIfNeeded(cloned.imageUrl, {
+        thresholdBytes: 90 * 1024,
+        maxWidth: 850,
+        maxHeight: 850,
+        quality: 0.78
+      });
+    }
+    if (typeof cloned.url === 'string' && cloned.url.startsWith('data:image/')) {
+      cloned.url = await compressBase64ImageIfNeeded(cloned.url, {
+        thresholdBytes: 90 * 1024,
+        maxWidth: 850,
+        maxHeight: 850,
+        quality: 0.78
+      });
+    }
+    optimized.push(cloned);
+  }
+  return optimized;
+};
+
+/**
+ * Charge le modèle global depuis Firestore avec fallback LocalStorage et support du découpage (chunks)
  */
 export const fetchGlobalSidebarTemplate = async () => {
   if (typeof navigator !== 'undefined' && navigator.onLine === false) {
@@ -234,8 +275,38 @@ export const fetchGlobalSidebarTemplate = async () => {
       const docRef = doc(db, "settings", "flipbook_global_sidebar");
       const snap = await getDoc(docRef);
       if (snap && snap.exists()) {
-        const data = snap.data();
-        const fullTemplate = normalizeSidebarTemplate(data);
+        const data = snap.data() || {};
+        let rawData = { ...data };
+
+        // Si les barres latérales ont été découpées en chunks pour respecter la limite de 1 Mo Firestore
+        if (data.isChunked && Number(data.chunkCount) > 0) {
+          try {
+            const chunkPromises = [];
+            for (let i = 0; i < Number(data.chunkCount); i++) {
+              chunkPromises.push(getDoc(doc(db, "settings", `flipbook_global_sidebar_chunk_${i}`)));
+            }
+            const chunkSnaps = await Promise.all(chunkPromises);
+            const orderedChunks = chunkSnaps
+              .filter(cs => cs && typeof cs.exists === 'function' && cs.exists())
+              .map(cs => cs.data())
+              .sort((a, b) => (a.index || 0) - (b.index || 0))
+              .map(c => c.data || '');
+            const joinedJson = orderedChunks.join('');
+            if (joinedJson) {
+              const parsedSidebars = JSON.parse(joinedJson);
+              if (Array.isArray(parsedSidebars.leftSidebar)) {
+                rawData.leftSidebar = parsedSidebars.leftSidebar;
+              }
+              if (Array.isArray(parsedSidebars.rightSidebar)) {
+                rawData.rightSidebar = parsedSidebars.rightSidebar;
+              }
+            }
+          } catch (chunkErr) {
+            console.warn("Erreur lors de la recomposition des chunks du modèle global:", chunkErr);
+          }
+        }
+
+        const fullTemplate = normalizeSidebarTemplate(rawData);
         try {
           localStorage.setItem(GLOBAL_SIDEBAR_STORAGE_KEY, JSON.stringify(fullTemplate));
           if (data.previousVersion && typeof data.previousVersion === 'object') {
@@ -259,6 +330,10 @@ export const fetchGlobalSidebarTemplate = async () => {
 /**
  * Enregistre le modèle global de barres latérales (Firestore + LocalStorage)
  * et conserve une sauvegarde de la version précédente pour restauration.
+ * Intègre :
+ * - La séparation de `previousVersion` hors du document principal (évitant de doubler sa taille)
+ * - La compression automatique des images Base64 volumineuses
+ * - Le découpage automatique en documents chunks si le modèle dépasse 750 Ko
  */
 export const saveGlobalSidebarTemplate = async (template) => {
   const currentSaved = getLocalGlobalSidebar();
@@ -266,16 +341,20 @@ export const saveGlobalSidebarTemplate = async (template) => {
   delete cleanPrevious.previousVersion;
 
   const normalized = normalizeSidebarTemplate(template);
+  const optimizedLeft = await optimizeSidebarBlocks(normalized.leftSidebar);
+  const optimizedRight = await optimizeSidebarBlocks(normalized.rightSidebar);
   const nextVersion = (Number(currentSaved.version) || 1) + 1;
 
   const dataToSave = {
     ...normalized,
+    leftSidebar: optimizedLeft,
+    rightSidebar: optimizedRight,
     id: "global-flipbook-sidebars",
     name: "Modèle global — Anjou Édition",
     version: nextVersion,
-    updatedAt: new Date().toISOString(),
-    previousVersion: cleanPrevious
+    updatedAt: new Date().toISOString()
   };
+  delete dataToSave.previousVersion;
 
   // 1. Sauvegarde de la version précédente + version courante dans LocalStorage (Offline-First)
   try {
@@ -294,16 +373,54 @@ export const saveGlobalSidebarTemplate = async (template) => {
     }
   }
 
-  // 3. Sauvegarde distante Firestore si disponible
+  // 3. Sauvegarde distante Firestore si disponible (avec protection stricte contre la limite de 1 Mo)
   let firestoreSuccess = false;
-  try {
-    if (db) {
+  const isOffline = typeof navigator !== 'undefined' && navigator.onLine === false;
+  if (!isOffline && db) {
+    try {
       const docRef = doc(db, "settings", "flipbook_global_sidebar");
-      await setDoc(docRef, dataToSave);
-      firestoreSuccess = true;
+      const serializedPayload = JSON.stringify(dataToSave);
+
+      if (serializedPayload.length <= FIRESTORE_SAFE_DOC_LIMIT) {
+        await setDoc(docRef, {
+          ...dataToSave,
+          isChunked: false,
+          chunkCount: 0
+        });
+        firestoreSuccess = true;
+      } else {
+        // Découpage automatique des barres latérales en tranches de 700 Ko dans settings/flipbook_global_sidebar_chunk_i
+        const sidebarsJson = JSON.stringify({
+          leftSidebar: dataToSave.leftSidebar || [],
+          rightSidebar: dataToSave.rightSidebar || []
+        });
+        const chunks = [];
+        for (let i = 0; i < sidebarsJson.length; i += SIDEBAR_CHUNK_SIZE) {
+          chunks.push(sidebarsJson.substring(i, i + SIDEBAR_CHUNK_SIZE));
+        }
+
+        await Promise.all(
+          chunks.map((chunkData, index) =>
+            setDoc(doc(db, "settings", `flipbook_global_sidebar_chunk_${index}`), {
+              index,
+              data: chunkData,
+              updatedAt: dataToSave.updatedAt
+            })
+          )
+        );
+
+        await setDoc(docRef, {
+          ...dataToSave,
+          leftSidebar: [],
+          rightSidebar: [],
+          isChunked: true,
+          chunkCount: chunks.length
+        });
+        firestoreSuccess = true;
+      }
+    } catch (err) {
+      console.warn("Échec sauvegarde Firestore modèle global:", err);
     }
-  } catch (err) {
-    console.warn("Échec sauvegarde Firestore modèle global:", err);
   }
 
   return { success: true, firestore: firestoreSuccess, data: dataToSave };
@@ -569,7 +686,18 @@ export const applyGlobalTemplateToAllAndPersist = async (flipbooks = [], globalT
           updatedAt: new Date().toISOString()
         };
         if (fb.customSidebarBackup) {
-          payload.customSidebarBackup = fb.customSidebarBackup;
+          const backupStr = JSON.stringify(fb.customSidebarBackup);
+          if (backupStr.length <= 350 * 1024) {
+            payload.customSidebarBackup = fb.customSidebarBackup;
+          } else {
+            // Si le backup personnalisé est volumineux, le stocker dans la sous-collection dédiée
+            try {
+              await setDoc(doc(db, `flipbooks/${String(fb.id)}/backups`, 'custom_sidebar'), fb.customSidebarBackup);
+              payload.hasCustomSidebarBackupDoc = true;
+            } catch (subErr) {
+              // ignore
+            }
+          }
         }
         await setDoc(doc(db, "flipbooks", String(fb.id)), payload, { merge: true });
         firestoreSuccessCount++;

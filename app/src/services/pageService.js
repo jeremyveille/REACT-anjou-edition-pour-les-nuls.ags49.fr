@@ -14,6 +14,7 @@ import {
 } from 'firebase/firestore';
 import { galleryImages, videosData, flipbooksData, articlesData } from '../data';
 import { normalizeBlocks, getDefaultHomepageBlocks } from '../components/page-builder/blockRegistry';
+import { compressBase64ImageIfNeeded } from '../utils/imageOptimizer';
 
 /**
  * Purge récursivement les anciens blocs de flipbook reader et le bloc d'introduction de la page d'accueil.
@@ -699,29 +700,54 @@ export const pageService = {
    * @returns {Promise<Array>} Liste des objets média.
    */
   async getMediaList() {
-    try {
-      const q = query(collection(db, 'media'), orderBy('createdAt', 'desc'));
-      const snapshot = await getDocs(q);
-      if (snapshot && !snapshot.empty && snapshot.docs) {
-        const list = snapshot.docs.map(docSnap => ({
-          id: docSnap.id,
-          ...docSnap.data()
-        }));
-        try {
-          localStorage.setItem('ae_media_library', JSON.stringify(list));
-        } catch (e) {}
-        return list;
+    const normalizeMediaDoc = (raw) => {
+      if (!raw || typeof raw !== 'object') return raw;
+      const rawType = String(raw.type || '').toLowerCase();
+      const rawUrl = String(raw.url || '');
+      let normalizedType = 'image';
+      if (rawType === 'video' || rawType.startsWith('video/') || rawUrl.includes('youtube.com') || rawUrl.includes('youtu.be')) {
+        normalizedType = 'video';
+      } else if (rawType === 'audio' || rawType.startsWith('audio/')) {
+        normalizedType = 'audio';
+      } else if (rawType === 'document' || rawType.includes('pdf') || rawUrl.toLowerCase().endsWith('.pdf')) {
+        normalizedType = 'document';
       }
-    } catch (err) {
-      console.warn('Fallback offline sur localStorage pour la médiathèque:', err);
+      return {
+        ...raw,
+        type: normalizedType,
+        mimeType: raw.mimeType || (rawType.includes('/') ? raw.type : (normalizedType === 'video' ? 'video/mp4' : 'image/jpeg')),
+        createdAt: raw.createdAt || raw.date || new Date().toISOString()
+      };
+    };
+
+    const isOffline = typeof navigator !== 'undefined' && navigator.onLine === false;
+    if (!isOffline && db) {
+      try {
+        const snapshot = await getDocs(collection(db, 'medias'));
+        if (snapshot && !snapshot.empty && snapshot.docs) {
+          const list = snapshot.docs
+            .map(docSnap => normalizeMediaDoc({
+              id: docSnap.id,
+              ...docSnap.data()
+            }))
+            .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+          try {
+            localStorage.setItem('ae_media_library', JSON.stringify(list));
+            localStorage.setItem('ae_medias', JSON.stringify(list));
+          } catch (e) {}
+          return list;
+        }
+      } catch (err) {
+        console.warn('Fallback offline sur localStorage pour la médiathèque:', err);
+      }
     }
 
     try {
-      const cached = localStorage.getItem('ae_media_library');
+      const cached = localStorage.getItem('ae_media_library') || localStorage.getItem('ae_medias');
       if (cached) {
         const parsed = JSON.parse(cached);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
+          return parsed.map(normalizeMediaDoc);
         }
       }
     } catch (e) {}
@@ -828,6 +854,14 @@ export const pageService = {
     if (typeof finalMediaUrl === 'string' && finalMediaUrl.startsWith('blob:')) {
       finalMediaUrl = await this.convertBlobToDataUrl(finalMediaUrl);
     }
+    if (typeof finalMediaUrl === 'string' && finalMediaUrl.startsWith('data:image/')) {
+      finalMediaUrl = await compressBase64ImageIfNeeded(finalMediaUrl, {
+        thresholdBytes: 100 * 1024,
+        maxWidth: 960,
+        maxHeight: 960,
+        quality: 0.78
+      });
+    }
 
     const itemToSave = {
       id: mediaItem.id || `media_${Date.now()}`,
@@ -840,11 +874,19 @@ export const pageService = {
       createdAt: mediaItem.createdAt || new Date().toISOString()
     };
 
-    try {
-      const docRef = doc(db, 'media', itemToSave.id);
-      await setDoc(docRef, itemToSave, { merge: true });
-    } catch (err) {
-      console.warn('Mode hors-ligne: enregistrement local du média', err);
+    const isOffline = typeof navigator !== 'undefined' && navigator.onLine === false;
+    if (!isOffline && db) {
+      try {
+        const serializedSize = JSON.stringify(itemToSave).length;
+        if (serializedSize <= 900 * 1024) {
+          const docRef = doc(db, 'medias', itemToSave.id);
+          await setDoc(docRef, itemToSave, { merge: true });
+        } else {
+          console.warn(`Média "${itemToSave.name}" supérieur à 900 Ko (${Math.round(serializedSize / 1024)} Ko), conservé en cache local.`);
+        }
+      } catch (err) {
+        console.warn('Mode hors-ligne: enregistrement local du média', err);
+      }
     }
 
     try {
@@ -856,6 +898,7 @@ export const pageService = {
         cached.unshift(itemToSave);
       }
       localStorage.setItem('ae_media_library', JSON.stringify(cached));
+      localStorage.setItem('ae_medias', JSON.stringify(cached));
     } catch (e) {}
 
     return itemToSave;
@@ -867,17 +910,21 @@ export const pageService = {
    * @returns {Promise<boolean>}
    */
   async deleteMediaItem(id) {
-    try {
-      const docRef = doc(db, 'media', id);
-      await deleteDoc(docRef);
-    } catch (err) {
-      console.warn('Mode hors-ligne: suppression locale du média', err);
+    const isOffline = typeof navigator !== 'undefined' && navigator.onLine === false;
+    if (!isOffline && db) {
+      try {
+        const docRef = doc(db, 'medias', id);
+        await deleteDoc(docRef);
+      } catch (err) {
+        console.warn('Mode hors-ligne: suppression locale du média', err);
+      }
     }
 
     try {
       const cached = JSON.parse(localStorage.getItem('ae_media_library') || '[]');
       const filtered = cached.filter(m => m.id !== id);
       localStorage.setItem('ae_media_library', JSON.stringify(filtered));
+      localStorage.setItem('ae_medias', JSON.stringify(filtered));
     } catch (e) {}
 
     return true;
@@ -949,9 +996,9 @@ export const pageService = {
       createdAt: new Date().toISOString()
     };
 
-    await this.saveMediaItem(mediaItem);
+    const savedMedia = await this.saveMediaItem(mediaItem);
 
-    return downloadUrl;
+    return savedMedia?.url || downloadUrl;
   },
 
   /**

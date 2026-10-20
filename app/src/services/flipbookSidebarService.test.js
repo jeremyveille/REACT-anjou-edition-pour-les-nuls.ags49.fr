@@ -222,5 +222,28 @@ describe('flipbookSidebarService Tests', () => {
     expect(updated.find(b => b.id === '1').customSidebarBackup.leftSidebar[0].text).toBe('Perso');
     expect(updated.find(b => b.id === '2').sidebarMode).toBe('custom');
   });
+
+  test('saveGlobalSidebarTemplate excludes previousVersion from main payload to prevent doubling document size above 1MB', async () => {
+    const largeDataUrl = 'data:image/png;base64,' + 'A'.repeat(400 * 1024);
+    const templateWithImage = {
+      ...DEFAULT_GLOBAL_SIDEBAR,
+      leftSidebar: [
+        { id: 'img1', type: 'image', title: 'Illustration', imageUrl: largeDataUrl, imageAlt: 'Alt', enabled: true }
+      ]
+    };
+
+    const firstRes = await saveGlobalSidebarTemplate(templateWithImage);
+    expect(firstRes.success).toBe(true);
+    expect(firstRes.data.previousVersion).toBeUndefined();
+
+    const secondRes = await saveGlobalSidebarTemplate({
+      ...templateWithImage,
+      styles: { ...DEFAULT_GLOBAL_SIDEBAR.styles, leftWidth: 24 }
+    });
+    expect(secondRes.success).toBe(true);
+    expect(secondRes.data.previousVersion).toBeUndefined();
+    // Ensures the serialized payload does not double in size
+    expect(JSON.stringify(secondRes.data).length).toBeLessThan(600 * 1024);
+  });
 });
 
