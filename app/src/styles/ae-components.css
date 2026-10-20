@@ -1065,3 +1065,19 @@ body.dark .ae-badge-draft {
   border-color: rgba(148, 163, 184, 0.3);
 }
 
+/* --- Grille Formulaire Responsive Partagée (Harmonisation 4 Paliers : S, M, L, XL) --- */
+.ae-form-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+@media (max-width: 639.98px) {
+  .ae-form-grid-2 {
+    grid-template-columns: 1fr;
+  }
+  .ae-builder-sidebar-responsive {
+    width: 100% !important;
+  }
+}
+

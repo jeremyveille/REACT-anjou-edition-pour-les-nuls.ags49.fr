@@ -1506,7 +1506,7 @@ export const PageBuilder = ({
         <div className="d-flex" style={{ flex: 1, overflow: 'hidden', minHeight: 0 }}>
           
           {/* Sidebar gauche */}
-          <div className="ae-sidebar-fixed-width" style={{ width: '340px', flexShrink: 0 }}>
+          <div className="ae-sidebar-fixed-width ae-builder-sidebar-responsive" style={{ width: '340px', flexShrink: 0 }}>
             <BuilderSidebar
               activeTab={activeTab}
               setActiveTab={setActiveTab}

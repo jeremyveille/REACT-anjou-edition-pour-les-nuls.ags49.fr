@@ -5286,7 +5286,7 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
                       />
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <div className="ae-form-grid-2">
                       <div>
                         <label className="ae-modal-label">Identifiant URL (Slug)</label>
                         <input 
@@ -5319,7 +5319,7 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
                       </div>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <div className="ae-form-grid-2">
                       <div>
                         <div className="d-flex align-items-center justify-content-between mb-1">
                           <label className="ae-modal-label mb-0">Image principale (URL)</label>

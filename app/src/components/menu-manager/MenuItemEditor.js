@@ -118,7 +118,7 @@ export default function MenuItemEditor({
         </div>
 
         {/* Type et Statut */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+        <div className="ae-form-grid-2" style={{ gap: '10px' }}>
           <div className="menu-editor-form-group">
             <label htmlFor="menu-item-type" className="menu-editor-label">
               Type d'action
