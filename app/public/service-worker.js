@@ -1,7 +1,7 @@
 /* eslint-disable no-restricted-globals */
 
 // Cache versioning
-const CACHE_VERSION = 'v16';
+const CACHE_VERSION = 'v17';
 const STATIC_CACHE = `anjou-edition-static-${CACHE_VERSION}`;
 const MEDIA_CACHE = `anjou-edition-media-${CACHE_VERSION}`;
 const PDF_CACHE = `anjou-edition-pdf-${CACHE_VERSION}`;
@@ -209,21 +209,21 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 4. STATIC SCRIPTS, STYLES & FONTS (Stale-While-Revalidate)
+  // 4. STATIC SCRIPTS, STYLES & FONTS (Network-First with Offline Cache Fallback)
   event.respondWith(
     caches.open(STATIC_CACHE).then(async (cache) => {
-      const cachedResponse = await cache.match(request);
-      const fetchPromise = fetch(request)
-        .then((networkResponse) => {
-          if (networkResponse && (networkResponse.status === 200 || networkResponse.type === 'opaque')) {
-            safeCachePut(cache, request, networkResponse.clone());
-          }
+      try {
+        const networkResponse = await fetch(request);
+        if (networkResponse && (networkResponse.status === 200 || networkResponse.type === 'opaque')) {
+          safeCachePut(cache, request, networkResponse.clone());
           return networkResponse;
-        })
-        .catch(() => cachedResponse || ensureValidResponse(null, 504, 'Asset Offline'));
-
-      const resolved = cachedResponse || (await fetchPromise);
-      return ensureValidResponse(resolved, 504, 'Asset Offline');
+        }
+        const cachedResponse = await cache.match(request);
+        return ensureValidResponse(cachedResponse || networkResponse, 504, 'Asset Offline');
+      } catch (e) {
+        const cachedResponse = await cache.match(request);
+        return ensureValidResponse(cachedResponse, 504, 'Asset Offline');
+      }
     })
   );
 });
