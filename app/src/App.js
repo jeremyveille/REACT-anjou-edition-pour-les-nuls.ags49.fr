@@ -63,6 +63,7 @@ import { OptimizedImage } from './utils/imageOptimizer';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { GoogleIcon } from './components/GoogleIcon';
 import { AdminLogoutSuccess } from './components/AdminLogoutSuccess';
+import VideoFullscreenButton from './components/VideoFullscreenButton';
 
 
 // Resilient dynamic import with retry on chunk loading failure
@@ -190,6 +191,7 @@ function App() {
     const feat = articlesData.find(a => a.isFeatured === true);
     return feat || articlesData[0];
   });
+  const publicVideoContainerRef = useRef(null);
 
   // Helper to resolve view state from URL pathname
   const resolveViewFromPath = (path, currentArticles = articlesData) => {
@@ -1859,7 +1861,7 @@ function App() {
                 </h1>
 
                 {view.article.image && (
-                  <div className="article-featured-image-box">
+                  <div className="article-featured-image-box ae-media-container">
                     <OptimizedImage 
                       src={view.article.image} 
                       thumbnailSrc={view.article.thumbnailUrl}
@@ -2050,7 +2052,7 @@ function App() {
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleOpenArticle(featuredArticle); }}
                     aria-label={`Lire l'article : ${featuredArticle.title}`}
                   >
-                    <div className="featured-article-media">
+                    <div className="featured-article-media ae-media-container">
                       <OptimizedImage 
                         src={featuredArticle.image || featuredArticle.thumbnailUrl || "/featured-article-book.jpg"} 
                         thumbnailSrc={featuredArticle.thumbnailUrl || "/featured-article-book.jpg"}
@@ -2435,7 +2437,7 @@ function App() {
                     {flipbooks.map((fb) => (
                       <div key={fb.id} className="flipbook-card">
                         <div 
-                          className="flipbook-cover-mock flipbook-clickable"
+                          className={`flipbook-cover-mock flipbook-clickable ${(fb.coverImage || fb.cover) ? 'ae-media-container has-cover-image' : ''}`}
                           onClick={(e) => handleOpenFlipbook(fb, e.currentTarget)}
                           role="button"
                           tabIndex={0}
@@ -2519,16 +2521,37 @@ function App() {
                 (() => {
                   const currentVideo = publicVideos.find(v => v.id === view.selectedId) || publicVideos[0];
                   const yId = currentVideo.youtubeId || (currentVideo.url ? (currentVideo.url.match(/(?:youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*)/)?.[1] || currentVideo.youtubeId) : '');
+                  const isDirectVideo = Boolean(!yId && currentVideo.url && (/(\.mp4|\.webm|\.ogg)(\?.*)?$/i.test(currentVideo.url) || currentVideo.url.startsWith('data:video/')));
                   return (
                     <div className="video-player-section">
-                      <div className="player-container">
-                        <iframe
-                          src={`https://www.youtube.com/embed/${yId}?rel=0`}
-                          title={currentVideo.title}
-                          frameBorder="0"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                        ></iframe>
+                      <div
+                        ref={publicVideoContainerRef}
+                        className={`player-container ae-media-container position-relative ${isDirectVideo ? 'ae-media-container--native-video' : 'ae-media-container--video'}`}
+                      >
+                        {isDirectVideo ? (
+                          <video
+                            controls
+                            playsInline
+                            preload="metadata"
+                            className="w-100 h-auto d-block"
+                            aria-label={currentVideo.title}
+                          >
+                            <source src={currentVideo.url} />
+                            Votre navigateur ne prend pas en charge la lecture de cette vidéo.
+                          </video>
+                        ) : (
+                          <iframe
+                            src={`https://www.youtube.com/embed/${yId}?rel=0`}
+                            title={currentVideo.title}
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen; web-share"
+                            allowFullScreen
+                          ></iframe>
+                        )}
+                        <VideoFullscreenButton
+                          containerRef={publicVideoContainerRef}
+                          videoTitle={currentVideo.title}
+                        />
                       </div>
                       <div className="video-description-card">
                         <h3>{currentVideo.title}</h3>
@@ -2593,15 +2616,13 @@ function App() {
                       onClick={() => setLightbox({ isOpen: true, currentIndex: idx, zoom: false })}
                       aria-label={`Agrandir l'image : ${img.title || 'Photographie'}`}
                     >
-                      <div className="gallery-img-wrapper">
+                      <div className="gallery-img-wrapper ae-media-container">
                         <OptimizedImage 
                           src={img.url} 
                           thumbnailSrc={img.thumbnailUrl}
                           alt={img.title || 'Photographie'} 
                           loading="lazy" 
-                          useThumbnail={true}
-                          thumbnailWidth={480}
-                          thumbnailHeight={340}
+                          useThumbnail={false}
                         />
                         <div className="gallery-item-overlay">
                           <h4>{img.title || 'Photographie'}</h4>

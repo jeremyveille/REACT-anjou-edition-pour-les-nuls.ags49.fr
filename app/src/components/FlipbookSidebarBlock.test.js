@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import FlipbookSidebarBlock from './FlipbookSidebarBlock';
 
 describe('FlipbookSidebarBlock component', () => {
@@ -97,7 +97,33 @@ describe('FlipbookSidebarBlock component', () => {
     const iframe = screen.getByTitle('Survol d\'Angers');
     expect(iframe).toBeInTheDocument();
     expect(iframe.src).toContain('https://www.youtube.com/embed/bO2tOaFf-1I');
+    expect(iframe.getAttribute('allow')).toContain('fullscreen');
+    expect(iframe).toHaveAttribute('allowFullScreen');
     expect(screen.getByText('Reportage exclusif en 4K')).toBeInTheDocument();
+
+    const fsBtn = screen.getByTestId('video-fullscreen-btn');
+    expect(fsBtn).toBeInTheDocument();
+
+    // 1er clic : ouverture en plein écran -> le bouton disparaît immédiatement du DOM
+    fireEvent.click(fsBtn);
+    expect(screen.queryByTestId('video-fullscreen-btn')).toBeNull();
+    const videoContainer = document.querySelector('.flipbook-video-ratio-container');
+    expect(videoContainer).toHaveClass('ae-video-is-fullscreen');
+
+    // Touche Échap : retour à l'affichage normal -> le bouton réapparaît automatiquement
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(videoContainer).not.toHaveClass('ae-video-is-fullscreen');
+    const restoredBtn = screen.getByTestId('video-fullscreen-btn');
+    expect(restoredBtn).toBeInTheDocument();
+
+    // Second cycle : ouverture puis sortie via l'événement fullscreenchange du lecteur
+    fireEvent.click(restoredBtn);
+    expect(screen.queryByTestId('video-fullscreen-btn')).toBeNull();
+    expect(videoContainer).toHaveClass('ae-video-is-fullscreen');
+
+    fireEvent(document, new Event('fullscreenchange'));
+    expect(videoContainer).not.toHaveClass('ae-video-is-fullscreen');
+    expect(screen.getByTestId('video-fullscreen-btn')).toBeInTheDocument();
   });
 
   test('renders local / direct video block using HTML5 video tag', () => {
@@ -195,5 +221,25 @@ describe('FlipbookSidebarBlock component', () => {
     expect(card.style.boxShadow).toContain('2px 8px 16px -2px');
     expect(card.style.boxShadow).toContain('rgba(15, 23, 42, 0.15)');
   });
+
+  test('media blocks CSS rules enforce full width, zero internal padding, auto height and object-fit contain without cropping across images and videos', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const sidebarsCss = fs.readFileSync(
+      path.resolve(__dirname, '../styles/flipbook-sidebars.css'),
+      'utf8'
+    );
+    const appCss = fs.readFileSync(
+      path.resolve(__dirname, '../App.css'),
+      'utf8'
+    );
+
+    expect(sidebarsCss).toMatch(/\.flipbook-sidebar-card\.flipbook-block-image,\s*\.flipbook-sidebar-card\.flipbook-block-video\s*\{[\s\S]*?width:\s*100%;[\s\S]*?height:\s*auto;[\s\S]*?padding:\s*0;[\s\S]*?overflow:\s*hidden;[\s\S]*?box-sizing:\s*border-box;/);
+    expect(sidebarsCss).toMatch(/\.flipbook-responsive-img\s*\{[\s\S]*?display:\s*block;[\s\S]*?width:\s*100%;[\s\S]*?height:\s*auto;[\s\S]*?max-width:\s*100%;[\s\S]*?object-fit:\s*contain;[\s\S]*?object-position:\s*center;/);
+    expect(sidebarsCss).toMatch(/\.flipbook-responsive-video\s*\{[\s\S]*?width:\s*100%;[\s\S]*?height:\s*auto;[\s\S]*?max-width:\s*100%;[\s\S]*?object-fit:\s*contain;/);
+    expect(appCss).toMatch(/\.ae-media-container[\s\S]*?\{[\s\S]*?width:\s*100%;[\s\S]*?min-width:\s*0;[\s\S]*?height:\s*auto;[\s\S]*?padding:\s*0;[\s\S]*?overflow:\s*hidden;[\s\S]*?box-sizing:\s*border-box;/);
+    expect(appCss).toMatch(/\.ae-media-container--video\s*\{[\s\S]*?aspect-ratio:\s*16\s*\/\s*9;/);
+  });
 });
+
 

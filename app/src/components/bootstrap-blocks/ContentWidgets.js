@@ -13,6 +13,7 @@ import { sanitizeHtml, sanitizeUrl } from '../../utils/sanitize';
 import { getThumbnailUrl, OptimizedImage } from '../../utils/imageOptimizer';
 import { getYoutubeEmbedUrl } from '../../utils/youtubeUtils';
 import PdfFlipbookReader from '../PdfFlipbookReader';
+import VideoFullscreenButton from '../VideoFullscreenButton';
 import { ContactForm } from '../ContactForm';
 import { getLocalFlipbooksSync } from '../../services/pageService';
 
@@ -89,13 +90,14 @@ export const Image = ({ settings = {}, isEditing = false, onOpenMediaPicker }) =
       className={customClasses} 
       loading="lazy" 
       decoding="async"
+      useThumbnail={false}
     />
   );
 
   return (
-    <div className="pb-widget-image-container position-relative text-center" style={style}>
+    <div className="pb-widget-image-container ae-media-container position-relative text-center" style={style}>
       {link ? (
-        <a href={link} target="_blank" rel="noopener noreferrer">
+        <a href={link} target="_blank" rel="noopener noreferrer" className="d-block w-100">
           {imgElement}
         </a>
       ) : (
@@ -164,16 +166,14 @@ export const Card = ({ settings = {}, isEditing = false, onOpenMediaPicker }) =>
 
   return (
     <div className={`card ${customClasses}`} style={style}>
-      <div className="position-relative">
+      <div className="ae-media-container position-relative">
         {image && (
           <OptimizedImage 
             src={image} 
             className="card-img-top" 
             alt={title} 
             loading="lazy" 
-            useThumbnail={true} 
-            thumbnailWidth={600} 
-            thumbnailHeight={350} 
+            useThumbnail={false}
           />
         )}
         {isEditing && (
@@ -226,23 +226,50 @@ export const Alert = ({ settings = {} }) => {
  * Widget Vidéo
  */
 export const Video = ({ settings = {}, isEditing = false, onOpenMediaPicker }) => {
+  const videoContainerRef = React.useRef(null);
   const input = settings.url || (settings.videoId ? `https://www.youtube.com/watch?v=${settings.videoId}` : (settings.src || ''));
+  const isDirectVideoFile = Boolean(input && (/(\.mp4|\.webm|\.ogg)(\?.*)?$/i.test(input) || input.startsWith('data:video/')));
   const fallbackEmbed = settings.videoId ? `https://www.youtube.com/embed/${settings.videoId}` : (settings.lastValidVideoId ? `https://www.youtube.com/embed/${settings.lastValidVideoId}` : 'https://www.youtube.com/embed/dQw4w9WgXcQ');
   const embedUrl = getYoutubeEmbedUrl(input, fallbackEmbed);
   const customClasses = settings.classes || settings.className || '';
   const style = settings.style || {};
+  const videoTitle = settings.title || (isDirectVideoFile ? "Lecteur vidéo" : "Lecteur vidéo YouTube");
 
   return (
-    <div className={`ratio ratio-16x9 position-relative ${customClasses}`} style={style}>
-      <iframe 
-        src={sanitizeUrl(embedUrl)} 
-        title={settings.title || "Lecteur vidéo YouTube"} 
-        allowFullScreen
-        className="rounded"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-      ></iframe>
+    <div
+      ref={videoContainerRef}
+      className={`pb-widget-video-container ae-media-container ${isDirectVideoFile ? 'ae-media-container--native-video' : 'ae-media-container--video ratio ratio-16x9'} position-relative ${customClasses}`}
+      style={style}
+    >
+      {isDirectVideoFile ? (
+        <video
+          controls
+          playsInline
+          preload="metadata"
+          className="pb-widget-native-video w-100 h-auto d-block rounded"
+          aria-label={videoTitle}
+        >
+          <source src={sanitizeUrl(input)} />
+          Votre navigateur ne prend pas en charge la lecture de cette vidéo.
+        </video>
+      ) : (
+        <iframe 
+          src={sanitizeUrl(embedUrl)} 
+          title={videoTitle} 
+          allowFullScreen
+          className="rounded"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen; web-share"
+        ></iframe>
+      )}
+      <VideoFullscreenButton
+        containerRef={videoContainerRef}
+        videoTitle={videoTitle}
+      />
       {isEditing && (
-        <div className="pb-media-action-overlay">
+        <div
+          className="pb-media-action-overlay"
+          style={{ top: '10px', left: '10px', bottom: 'auto', right: 'auto' }}
+        >
           <button
             type="button"
             className="pb-media-action-overlay-btn"
@@ -709,15 +736,13 @@ export const PhotoGallery = ({ settings = {}, isEditing = false }) => {
       <div className="full-gallery-grid">
         {images.map((img) => (
           <div key={img.id || img.url} className="full-gallery-item">
-            <div className="gallery-img-wrapper">
+            <div className="gallery-img-wrapper ae-media-container">
               <OptimizedImage 
                 src={img.url} 
                 thumbnailSrc={img.thumbnailUrl}
                 alt={img.title || 'Photographie'} 
                 loading="lazy" 
-                useThumbnail={true}
-                thumbnailWidth={450}
-                thumbnailHeight={320}
+                useThumbnail={false}
               />
               <div className="gallery-item-overlay">
                 <h4>{img.title}</h4>

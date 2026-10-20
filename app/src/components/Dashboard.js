@@ -21,6 +21,7 @@ import FlipbookLayout from "./FlipbookLayout";
 import FlipbookManager from "./FlipbookManager";
 import FlipbookEditModal from "./FlipbookEditModal";
 import AccountEditModal from "./AccountEditModal";
+import VideoFullscreenButton from "./VideoFullscreenButton";
 import { getLocalGlobalSidebar, fetchGlobalSidebarTemplate } from "../services/flipbookSidebarService";
 import { 
   collection, 
@@ -227,6 +228,7 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
   const [globalSidebar, setGlobalSidebar] = useState(() => getLocalGlobalSidebar());
 
   const fileInputRef = useRef(null);
+  const dashboardVideoPlayerRef = useRef(null);
   
   // Custom navigation state mimicking router path transitions
   const [activeSection, setActiveSection] = useState(() => {
@@ -5008,16 +5010,17 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
             {showVideoPlayerModal && playerVideo && (
               <div className="ae-modal-overlay" onClick={() => { setShowVideoPlayerModal(false); setPlayerVideo(null); }}>
                 <div className="ae-modal-container max-w-4xl" onClick={(e) => e.stopPropagation()} style={{ padding: 0, overflow: "hidden" }}>
-                  <div className="ae-video-container" style={{ height: "450px" }}>
+                  <div ref={dashboardVideoPlayerRef} className="ae-video-container ae-media-container ae-media-container--video" style={{ height: "450px" }}>
                     <iframe 
                       className="w-full h-full"
                       src={`https://www.youtube.com/embed/${playerVideo.youtubeId}?autoplay=1`}
                       title={playerVideo.title}
                       frameBorder="0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen; web-share"
                       allowFullScreen
                       referrerPolicy="no-referrer"
                     ></iframe>
+                    <VideoFullscreenButton containerRef={dashboardVideoPlayerRef} videoTitle={playerVideo.title} />
                     <button 
                       onClick={() => { setShowVideoPlayerModal(false); setPlayerVideo(null); }} 
                       className="ae-modal-close-floating"

@@ -88,6 +88,8 @@ export const IframePreview = ({ children, src = null, title = 'preview', device 
         src={src || undefined}
         onLoad={handleIframeLoad}
         style={getDimensionStyles()}
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen; web-share"
+        allowFullScreen
       >
         {!src && iframeDocument && createPortal(children, iframeDocument.body)}
       </iframe>

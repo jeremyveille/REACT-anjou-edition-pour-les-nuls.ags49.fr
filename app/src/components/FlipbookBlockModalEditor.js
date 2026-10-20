@@ -12,6 +12,7 @@ import {
 import { pageService } from '../services/pageService';
 import { getYoutubeEmbedUrl } from '../utils/youtubeUtils';
 import FlipbookBlockStyleEditor from './FlipbookBlockStyleEditor';
+import VideoFullscreenButton from './VideoFullscreenButton';
 
 /**
  * Modale d'édition spacieuse et ergonomique pour un bloc individuel de barre latérale Flipbook.
@@ -38,6 +39,7 @@ export default function FlipbookBlockModalEditor({
   const videoFileInputRef = useRef(null);
   const pdfFileInputRef = useRef(null);
   const modalRef = useRef(null);
+  const modalVideoPreviewRef = useRef(null);
 
   // Synchronisation lors de l'ouverture ou du changement de bloc
   useEffect(() => {
@@ -222,10 +224,20 @@ export default function FlipbookBlockModalEditor({
     }
   };
 
+  const handleBackdropClick = () => {
+    const isDirty = JSON.stringify(formData) !== JSON.stringify(block);
+    if (isDirty && typeof window !== 'undefined' && typeof window.confirm === 'function') {
+      if (!window.confirm('Vous avez des modifications non enregistrées sur ce bloc. Voulez-vous vraiment fermer sans enregistrer ?')) {
+        return;
+      }
+    }
+    onClose();
+  };
+
   return (
     <div 
       className="ae-modal-overlay ae-block-modal-backdrop" 
-      onClick={onClose} 
+      onClick={handleBackdropClick} 
       role="presentation"
       data-testid="block-modal-editor-overlay"
     >
@@ -560,17 +572,22 @@ export default function FlipbookBlockModalEditor({
                     </div>
 
                     {formData.videoUrl && (
-                      <div className="aspect-video w-full max-w-sm rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-black">
+                      <div
+                        ref={modalVideoPreviewRef}
+                        className="ae-media-container ae-media-container--video position-relative w-full max-w-sm rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-black"
+                      >
                         {formData.videoUrl.includes('youtube.com') || formData.videoUrl.includes('youtu.be') ? (
                           <iframe
                             src={getYoutubeEmbedUrl(formData.videoUrl)}
                             title="Aperçu YouTube"
                             className="w-full h-full border-0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen; web-share"
                             allowFullScreen
                           />
                         ) : (
-                          <video src={formData.videoUrl} controls className="w-full h-full object-cover" />
+                          <video src={formData.videoUrl} controls playsInline className="w-full h-full object-contain" />
                         )}
+                        <VideoFullscreenButton containerRef={modalVideoPreviewRef} videoTitle="Aperçu vidéo" />
                       </div>
                     )}
                   </div>

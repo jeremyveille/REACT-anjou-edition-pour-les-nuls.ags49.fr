@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { ExternalLink, FileText, Download } from 'lucide-react';
 import { sanitizeHtml, sanitizeUrl } from '../utils/sanitize';
 import { extractYoutubeVideoId, getYoutubeEmbedUrl } from '../utils/youtubeUtils';
+import VideoFullscreenButton from './VideoFullscreenButton';
 
 import { computeBlockCustomStyles } from '../utils/flipbookBlockStyleUtils';
 
@@ -10,6 +11,8 @@ import { computeBlockCustomStyles } from '../utils/flipbookBlockStyleUtils';
  * Supporte : image, vidéo (locale & YouTube), texte/HTML sécurisé, titre, bouton/lien, document PDF.
  */
 export default function FlipbookSidebarBlock({ block }) {
+  const videoContainerRef = useRef(null);
+
   if (!block || block.enabled === false) {
     return null;
   }
@@ -57,7 +60,7 @@ export default function FlipbookSidebarBlock({ block }) {
         <div className="flipbook-sidebar-card flipbook-block-image" style={customBlockStyle} data-block-type="image">
           {title && <h4 className="flipbook-block-title">{title}</h4>}
           <figure className="flipbook-block-figure">
-            <div className="flipbook-image-ratio-container">
+            <div className="flipbook-image-ratio-container ae-media-container">
               {block.linkUrl ? (
                 <a 
                   href={sanitizeUrl(block.linkUrl)}
@@ -101,18 +104,22 @@ export default function FlipbookSidebarBlock({ block }) {
       return (
         <div className="flipbook-sidebar-card flipbook-block-video" style={customBlockStyle} data-block-type="video">
           {title && <h4 className="flipbook-block-title">{title}</h4>}
-          <div className="flipbook-video-ratio-container">
+          <div
+            ref={videoContainerRef}
+            className={`flipbook-video-ratio-container ae-media-container ${isYoutube ? 'ae-media-container--video' : 'flipbook-video-native-container ae-media-container--native-video'}`}
+          >
             {isYoutube ? (
               <iframe 
                 src={getYoutubeEmbedUrl(videoUrl)} 
                 title={title || "Vidéo YouTube intégrée"}
                 className="flipbook-video-iframe"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen; web-share"
                 allowFullScreen
               />
             ) : (
               <video 
                 controls 
+                playsInline
                 className="flipbook-responsive-video"
                 preload="metadata"
                 poster={block.posterUrl || undefined}
@@ -122,6 +129,10 @@ export default function FlipbookSidebarBlock({ block }) {
                 Votre navigateur ne prend pas en charge la lecture de cette vidéo.
               </video>
             )}
+            <VideoFullscreenButton
+              containerRef={videoContainerRef}
+              videoTitle={title || (isYoutube ? "Vidéo YouTube intégrée" : "Vidéo d'illustration")}
+            />
           </div>
           {caption && <p className="flipbook-block-caption">{caption}</p>}
         </div>

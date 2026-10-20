@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { 
   Heading, 
   Text, 
@@ -88,6 +88,36 @@ describe('ContentWidgets component tests', () => {
     rerender(<Video settings={{ videoId: 'leg12345678' }} />);
     iframe = screen.getByTitle(/Lecteur vidéo YouTube|Widget Vidéo/i);
     expect(iframe.getAttribute('src')).toBe('https://www.youtube.com/embed/leg12345678');
+    expect(iframe.getAttribute('allow')).toContain('fullscreen');
+    expect(iframe).toHaveAttribute('allowFullScreen');
+
+    // 6. Bouton plein écran accessible (Maximize) : visible en normal, retiré du DOM en plein écran, réapparaît au retour
+    const fsBtn = screen.getByTestId('video-fullscreen-btn');
+    expect(fsBtn).toBeInTheDocument();
+    fireEvent.click(fsBtn);
+    expect(screen.queryByTestId('video-fullscreen-btn')).toBeNull();
+
+    // Sortie via touche Échap -> le bouton réapparaît automatiquement
+    fireEvent.keyDown(window, { key: 'Escape' });
+    const fsBtnRestored = screen.getByTestId('video-fullscreen-btn');
+    expect(fsBtnRestored).toBeInTheDocument();
+
+    // Second cycle avec événement fullscreenchange natif
+    fireEvent.click(fsBtnRestored);
+    expect(screen.queryByTestId('video-fullscreen-btn')).toBeNull();
+    fireEvent(document, new Event('fullscreenchange'));
+    expect(screen.getByTestId('video-fullscreen-btn')).toBeInTheDocument();
+
+    // 7. Vidéo téléversée directe (MP4) avec bouton plein écran
+    rerender(<Video settings={{ url: '/media/presentation.mp4', title: 'Présentation MP4' }} />);
+    const videoEl = document.querySelector('video.pb-widget-native-video');
+    expect(videoEl).toBeInTheDocument();
+    const mp4FsBtn = screen.getByTestId('video-fullscreen-btn');
+    expect(mp4FsBtn).toBeInTheDocument();
+    fireEvent.click(mp4FsBtn);
+    expect(screen.queryByTestId('video-fullscreen-btn')).toBeNull();
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(screen.getByTestId('video-fullscreen-btn')).toBeInTheDocument();
   });
 
   test('renders Divider with custom thickness and style', () => {

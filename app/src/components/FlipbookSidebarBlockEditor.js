@@ -19,6 +19,7 @@ import {
 import { pageService } from '../services/pageService';
 import { getYoutubeEmbedUrl } from '../utils/youtubeUtils';
 import FlipbookBlockStyleEditor from './FlipbookBlockStyleEditor';
+import VideoFullscreenButton from './VideoFullscreenButton';
 
 /**
  * Carte visuelle et éditeur pour un bloc individuel de barre latérale Flipbook.
@@ -43,6 +44,7 @@ export default function FlipbookSidebarBlockEditor({
   const [showBlockStyles, setShowBlockStyles] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
+  const editorVideoPreviewRef = useRef(null);
   const videoFileInputRef = useRef(null);
   const pdfFileInputRef = useRef(null);
 
@@ -592,17 +594,19 @@ export default function FlipbookSidebarBlockEditor({
               </div>
 
               {block.videoUrl && (
-                <div className="flipbook-video-ratio-container mt-2">
+                <div ref={editorVideoPreviewRef} className="flipbook-video-ratio-container ae-media-container ae-media-container--video mt-2">
                   {block.videoUrl.includes('youtube.com') || block.videoUrl.includes('youtu.be') ? (
                     <iframe
                       src={getYoutubeEmbedUrl(block.videoUrl)}
                       title="Aperçu YouTube"
                       className="flipbook-video-iframe"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen; web-share"
                       allowFullScreen
                     />
                   ) : (
-                    <video src={block.videoUrl} controls className="flipbook-video-element" />
+                    <video src={block.videoUrl} controls playsInline className="flipbook-video-element flipbook-responsive-video" />
                   )}
+                  <VideoFullscreenButton containerRef={editorVideoPreviewRef} videoTitle="Aperçu vidéo" />
                 </div>
               )}
             </div>
