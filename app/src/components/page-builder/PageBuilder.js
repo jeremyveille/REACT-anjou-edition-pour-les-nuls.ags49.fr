@@ -8,6 +8,7 @@ import {
   Undo, 
   Redo, 
   Monitor, 
+  Laptop,
   Tablet, 
   Smartphone, 
   Save, 
@@ -23,7 +24,9 @@ import {
   Newspaper,
   AlertTriangle,
   RotateCcw,
-  CheckCircle
+  CheckCircle,
+  PanelLeftClose,
+  PanelLeftOpen
 } from 'lucide-react';
 import { DndContext, DragOverlay, useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
 import moveElementInTree from '../../utils/moveElement';
@@ -32,9 +35,12 @@ import {
   createBlock, 
   normalizeBlocks, 
   cloneBlock, 
-  getDefaultHomepageBlocks 
+  getDefaultHomepageBlocks,
+  BLOCK_DEFINITIONS
 } from './blockRegistry';
+import { instantiateSectionTemplate } from './sectionTemplates';
 import { MediaLibraryModal } from '../MediaLibraryModal';
+import { BlockActionsContext } from './BlockRenderer';
 
 /**
  * Vérifie si un élément correspond à la page Accueil selon l'ordre de priorité défini.
@@ -151,6 +157,7 @@ export const PageBuilder = ({
   // États d'interface
   const [activeBlockId, setActiveBlockId] = useState(null);
   const [activeTab, setActiveTab] = useState('widgets');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // Drag & Drop State
   const [activeDragWidget, setActiveDragWidget] = useState(null);
@@ -198,6 +205,9 @@ export const PageBuilder = ({
       return () => clearTimeout(timer);
     }
   }, [saveToast.show]);
+
+  // Presse-papier de style d'apparence (Copier / Coller de style - M3)
+  const [copiedStyle, setCopiedStyle] = useState(null);
 
   // État du sélecteur de médiathèque direct pour remplacement sur canevas
   const [mediaPickerState, setMediaPickerState] = useState({
@@ -734,34 +744,45 @@ export const PageBuilder = ({
     handleAddBlock(childType || 'heading');
   };
 
-  // DUPLIQUER UN BLOC
-  const handleDuplicateBlock = useCallback((id, parentId) => {
+  // INSÉRER UN MODÈLE DE SECTION STRUCTURAL EN 1 CLIC
+  const handleInsertSectionTemplate = useCallback((templateId) => {
+    const newBlocks = instantiateSectionTemplate(templateId, cloneBlock);
+    if (!newBlocks || newBlocks.length === 0) return;
+
+    const nextBlocks = normalizeBlocks([...blocks, ...newBlocks]);
+    pushBlocksState(nextBlocks);
+
+    // Sélectionner la section nouvellement insérée et basculer sur les réglages
+    const rootSectionId = newBlocks[0]?.id;
+    if (rootSectionId) {
+      setActiveBlockId(rootSectionId);
+      setActiveTab('settings');
+    }
+  }, [blocks, pushBlocksState]);
+
+  // DUPLIQUER UN BLOC (Auto-localisant à toute profondeur, indépendant de parentId)
+  const handleDuplicateBlock = useCallback((id, parentId = null) => {
     const targetBlock = findBlockById(blocks, id);
     if (!targetBlock) return;
 
     const duplicated = cloneBlock(targetBlock);
+    if (!duplicated) return;
 
     const duplicateInTree = (tree) => {
-      if (!parentId) {
-        const idx = tree.findIndex(b => b.id === id);
-        if (idx === -1) return tree;
-        const result = [...tree];
-        result.splice(idx + 1, 0, duplicated);
-        return result;
+      // 1. Si le bloc est directement présent dans ce niveau de tableau
+      const idx = tree.findIndex(b => b.id === id);
+      if (idx !== -1) {
+        const next = [...tree];
+        next.splice(idx + 1, 0, duplicated);
+        return next;
       }
 
-      return tree.map(b => {
-        if (b.id === parentId) {
-          const idx = b.children.findIndex(c => c.id === id);
-          if (idx === -1) return b;
-          const newChildren = [...b.children];
-          newChildren.splice(idx + 1, 0, duplicated);
-          return { ...b, children: newChildren };
+      // 2. Sinon, parcours récursif dans les enfants
+      return tree.map(node => {
+        if (node.children && Array.isArray(node.children) && node.children.length > 0) {
+          return { ...node, children: duplicateInTree(node.children) };
         }
-        if (b.children) {
-          return { ...b, children: duplicateInTree(b.children) };
-        }
-        return b;
+        return node;
       });
     };
 
@@ -769,7 +790,109 @@ export const PageBuilder = ({
     pushBlocksState(normalizeBlocks(nextState));
     setActiveBlockId(duplicated.id);
     setActiveTab('settings');
+
+    const label = BLOCK_DEFINITIONS[duplicated.type]?.label || duplicated.type;
+    setSaveToast({
+      show: true,
+      message: `Élément « ${label} » dupliqué`,
+      type: 'info'
+    });
   }, [blocks, findBlockById, pushBlocksState]);
+
+  // COPIER LE STYLE D'UN BLOC (Extraction pure de l'apparence sans altération des contenus)
+  const handleCopyStyle = useCallback((block) => {
+    if (!block) return;
+    const rawSettings = block.settings || {};
+    const rawStyle = rawSettings.style || {};
+
+    // Filtrer les chaînes vides et valeurs nulles pour ne mémoriser que les styles explicitement définis
+    const cleanStyle = {};
+    Object.entries(rawStyle).forEach(([key, val]) => {
+      if (val !== '' && val !== null && val !== undefined) {
+        cleanStyle[key] = val;
+      }
+    });
+
+    const blockType = block.type || 'text';
+    const sourceLabel = BLOCK_DEFINITIONS[blockType]?.label || blockType;
+
+    const payload = {
+      sourceType: blockType,
+      sourceId: block.id,
+      sourceLabel,
+      style: cleanStyle,
+      classes: rawSettings.classes || '',
+      copiedAt: Date.now()
+    };
+
+    setCopiedStyle(payload);
+    setSaveToast({
+      show: true,
+      message: `Style d'apparence copié depuis « ${sourceLabel} »`,
+      type: 'info'
+    });
+  }, []);
+
+  // COLLER LE STYLE D'APPARENCE SUR UN BLOC CIBLE
+  const handlePasteStyle = useCallback((targetBlockId) => {
+    if (!copiedStyle || !copiedStyle.style) return;
+
+    const targetBlock = findBlockById(blocks, targetBlockId);
+    if (!targetBlock) return;
+
+    const updateInTree = (tree) => {
+      return tree.map(node => {
+        if (node.id === targetBlockId) {
+          const currentSettings = node.settings || {};
+          const currentStyle = currentSettings.style || {};
+
+          // Fusion des propriétés de style (sans écraser le contenu ou la structure)
+          const mergedStyle = {
+            ...currentStyle,
+            ...copiedStyle.style
+          };
+
+          const updatedSettings = {
+            ...currentSettings,
+            style: mergedStyle
+          };
+
+          if (copiedStyle.classes !== undefined && copiedStyle.classes !== '') {
+            updatedSettings.classes = copiedStyle.classes;
+          }
+
+          return {
+            ...node,
+            settings: updatedSettings
+          };
+        }
+
+        if (node.children && Array.isArray(node.children) && node.children.length > 0) {
+          return {
+            ...node,
+            children: updateInTree(node.children)
+          };
+        }
+
+        return node;
+      });
+    };
+
+    const nextState = updateInTree(blocks);
+    pushBlocksState(normalizeBlocks(nextState));
+
+    const targetLabel = BLOCK_DEFINITIONS[targetBlock.type]?.label || targetBlock.type;
+    setSaveToast({
+      show: true,
+      message: `Style d'apparence appliqué sur « ${targetLabel} »`,
+      type: 'success'
+    });
+  }, [blocks, copiedStyle, findBlockById, pushBlocksState]);
+
+  // EFFACER LE STYLE DU PRESSE-PAPIER
+  const handleClearCopiedStyle = useCallback(() => {
+    setCopiedStyle(null);
+  }, []);
 
   // MODIFIER LES REGLAGES D'UN BLOC
   const handleBlockSettingsChange = useCallback((id, newSettings) => {
@@ -1032,66 +1155,137 @@ export const PageBuilder = ({
     }
   }, [selectedContent, pageTitle, pageSlug, pageCategory, pageStatus, blocks, onSaveSuccess]);
 
-  // GESTION GLOBALE DES RACCOURCIS CLAVIER (Ctrl+Z, Ctrl+Y, Suppr, Ctrl+D, Escape, Ctrl+S)
+  // GESTION GLOBALE DES RACCOURCIS CLAVIER (Ctrl+Z, Ctrl+Y, Ctrl+Shift+Z, Suppr, Ctrl+D, Escape, Ctrl+S, Ctrl+B, Alt+C, Alt+V)
   useEffect(() => {
     const handleKeyDown = (e) => {
       const activeTag = document.activeElement?.tagName?.toLowerCase();
-      const isInput = activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select' || document.activeElement?.isContentEditable;
+      const isInput = activeTag === 'input' || 
+                      activeTag === 'textarea' || 
+                      activeTag === 'select' || 
+                      Boolean(document.activeElement?.isContentEditable);
 
-      // 1. Annuler : Ctrl+Z / Cmd+Z (sans Shift)
+      const isModalActive = Boolean(mediaPickerState?.isOpen || showUnsavedModal);
+
+      // 1. Sauvegarder : Ctrl+S / Cmd+S (Priorité absolue, opérationnel même si le focus est dans un champ de saisie)
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        handleSavePage();
+        return;
+      }
+
+      // Si une modale est ouverte, Escape ferme la modale et les actions destructives sur le canevas sont bloquées
+      if (isModalActive) {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          if (mediaPickerState?.isOpen) {
+            setMediaPickerState(prev => ({ ...prev, isOpen: false }));
+          } else if (showUnsavedModal) {
+            setShowUnsavedModal(false);
+            setPendingContentChange(null);
+          }
+        }
+        return;
+      }
+
+      // 2. Annuler : Ctrl+Z / Cmd+Z (sans Shift, hors saisie)
       if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z') {
         if (!isInput) {
           e.preventDefault();
           if (canUndo) undo();
         }
+        return;
       }
 
-      // 2. Rétablir : Ctrl+Y / Cmd+Y ou Ctrl+Shift+Z / Cmd+Shift+Z
+      // 3. Rétablir : Ctrl+Y / Cmd+Y ou Ctrl+Shift+Z / Cmd+Shift+Z (hors saisie)
       if (((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') ||
           ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'z')) {
         if (!isInput) {
           e.preventDefault();
           if (canRedo) redo();
         }
+        return;
       }
 
-      // 3. Dupliquer : Ctrl+D / Cmd+D (si un élément est sélectionné)
+      // 4. Dupliquer : Ctrl+D / Cmd+D (si un élément est sélectionné et hors saisie)
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
         if (!isInput && activeBlockId) {
           e.preventDefault();
-          const parentId = findParentId(blocks, activeBlockId);
-          handleDuplicateBlock(activeBlockId, parentId);
+          handleDuplicateBlock(activeBlockId);
         }
+        return;
       }
 
-      // 4. Supprimer : Suppr / Delete ou Backspace (si un élément est sélectionné et hors champs texte)
+      // 5. Copier le style au clavier : Alt+C ou Ctrl+Alt+C
+      if ((e.altKey && e.key.toLowerCase() === 'c') || ((e.ctrlKey || e.metaKey) && e.altKey && e.key.toLowerCase() === 'c')) {
+        if (!isInput && activeBlockId) {
+          const targetBlock = findBlockById(blocks, activeBlockId);
+          if (targetBlock) {
+            e.preventDefault();
+            handleCopyStyle(targetBlock);
+          }
+        }
+        return;
+      }
+
+      // 6. Coller le style au clavier : Alt+V ou Ctrl+Alt+V
+      if ((e.altKey && e.key.toLowerCase() === 'v') || ((e.ctrlKey || e.metaKey) && e.altKey && e.key.toLowerCase() === 'v')) {
+        if (!isInput && activeBlockId && copiedStyle) {
+          e.preventDefault();
+          handlePasteStyle(activeBlockId);
+        }
+        return;
+      }
+
+      // 7. Supprimer : Suppr / Delete ou Backspace (si un élément est sélectionné et hors champs texte)
       if (e.key === 'Delete' || e.key === 'Backspace') {
         if (!isInput && activeBlockId) {
           e.preventDefault();
           const parentId = findParentId(blocks, activeBlockId);
           handleRemoveBlock(activeBlockId, parentId);
         }
+        return;
       }
 
-      // 5. Désélectionner : Échap / Escape
+      // 8. Désélectionner : Échap / Escape
       if (e.key === 'Escape') {
         if (activeBlockId) {
           e.preventDefault();
           setActiveBlockId(null);
           setActiveTab('widgets');
         }
+        return;
       }
 
-      // 6. Sauvegarder : Ctrl+S / Cmd+S
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
-        e.preventDefault();
-        handleSavePage();
+      // 9. Basculer le panneau latéral : Ctrl+B / Cmd+B
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+        if (!isInput) {
+          e.preventDefault();
+          setIsSidebarCollapsed(prev => !prev);
+        }
+        return;
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [canUndo, canRedo, undo, redo, activeBlockId, blocks, findParentId, handleDuplicateBlock, handleRemoveBlock, handleSavePage]);
+  }, [
+    canUndo, 
+    canRedo, 
+    undo, 
+    redo, 
+    activeBlockId, 
+    blocks, 
+    findParentId, 
+    findBlockById,
+    handleDuplicateBlock, 
+    handleRemoveBlock, 
+    handleSavePage,
+    handleCopyStyle,
+    handlePasteStyle,
+    copiedStyle,
+    mediaPickerState?.isOpen,
+    showUnsavedModal
+  ]);
 
   // ACTIONS UNDO / REDO
   const handleUndo = () => {
@@ -1132,16 +1326,28 @@ export const PageBuilder = ({
               onClick={() => setDevice('desktop')}
               className={`btn btn-link p-1.5 rounded-md ${device === 'desktop' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-muted'}`}
               style={{ border: 'none', background: device === 'desktop' ? '' : 'transparent' }}
-              title="Desktop"
+              title="Grand écran XL (1200px / 100%)"
+              aria-label="Vue Grand Écran"
             >
               <Monitor size={18} />
+            </button>
+            <button 
+              type="button" 
+              onClick={() => setDevice('laptop')}
+              className={`btn btn-link p-1.5 rounded-md ${device === 'laptop' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-muted'}`}
+              style={{ border: 'none', background: device === 'laptop' ? '' : 'transparent' }}
+              title="Ordinateur portable L (1024px)"
+              aria-label="Vue Portable"
+            >
+              <Laptop size={18} />
             </button>
             <button 
               type="button" 
               onClick={() => setDevice('tablet')}
               className={`btn btn-link p-1.5 rounded-md ${device === 'tablet' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-muted'}`}
               style={{ border: 'none', background: device === 'tablet' ? '' : 'transparent' }}
-              title="Tablette"
+              title="Tablette M (768px)"
+              aria-label="Vue Tablette"
             >
               <Tablet size={18} />
             </button>
@@ -1150,7 +1356,8 @@ export const PageBuilder = ({
               onClick={() => setDevice('mobile')}
               className={`btn btn-link p-1.5 rounded-md ${device === 'mobile' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-muted'}`}
               style={{ border: 'none', background: device === 'mobile' ? '' : 'transparent' }}
-              title="Mobile"
+              title="Smartphone S (390px)"
+              aria-label="Vue Mobile"
             >
               <Smartphone size={18} />
             </button>
@@ -1208,6 +1415,26 @@ export const PageBuilder = ({
             aria-label="Quitter le constructeur"
           >
             <ArrowLeft size={18} />
+          </button>
+
+          {/* Bouton de repli/dépliement du panneau latéral */}
+          <button
+            type="button"
+            onClick={() => setIsSidebarCollapsed(prev => !prev)}
+            className={`btn btn-outline-secondary btn-sm p-1.5 rounded-lg d-flex align-items-center justify-content-center transition-all ${
+              isSidebarCollapsed ? 'bpb-btn-sidebar-collapsed' : ''
+            }`}
+            title={isSidebarCollapsed ? "Agrandir le panneau latéral" : "Réduire le panneau latéral"}
+            aria-label={isSidebarCollapsed ? "Agrandir le panneau" : "Réduire le panneau"}
+            aria-expanded={!isSidebarCollapsed}
+            aria-controls="bpb-sidebar-container"
+            data-testid="toggle-sidebar-btn"
+          >
+            {isSidebarCollapsed ? (
+              <PanelLeftOpen size={18} aria-hidden="true" />
+            ) : (
+              <PanelLeftClose size={18} aria-hidden="true" />
+            )}
           </button>
 
           {/* Sélecteur de Contenu Actuel */}
@@ -1380,17 +1607,29 @@ export const PageBuilder = ({
               type="button" 
               onClick={() => setDevice('desktop')}
               className={`btn btn-link p-1 rounded-md ${device === 'desktop' ? 'bg-white dark:bg-slate-700 text-primary' : 'text-muted'}`}
-              title="Desktop"
+              title="Grand écran XL (1200px)"
               aria-label="Vue Ordinateur"
+              data-testid="device-btn-desktop"
             >
               <Monitor size={18} />
             </button>
             <button 
               type="button" 
+              onClick={() => setDevice('laptop')}
+              className={`btn btn-link p-1 rounded-md ${device === 'laptop' ? 'bg-white dark:bg-slate-700 text-primary' : 'text-muted'}`}
+              title="Ordinateur portable L (1024px)"
+              aria-label="Vue Portable"
+              data-testid="device-btn-laptop"
+            >
+              <Laptop size={18} />
+            </button>
+            <button 
+              type="button" 
               onClick={() => setDevice('tablet')}
               className={`btn btn-link p-1 rounded-md ${device === 'tablet' ? 'bg-white dark:bg-slate-700 text-primary' : 'text-muted'}`}
-              title="Tablette"
+              title="Tablette M (768px)"
               aria-label="Vue Tablette"
+              data-testid="device-btn-tablet"
             >
               <Tablet size={18} />
             </button>
@@ -1398,21 +1637,43 @@ export const PageBuilder = ({
               type="button" 
               onClick={() => setDevice('mobile')}
               className={`btn btn-link p-1 rounded-md ${device === 'mobile' ? 'bg-white dark:bg-slate-700 text-primary' : 'text-muted'}`}
-              title="Mobile"
+              title="Smartphone S (390px)"
               aria-label="Vue Mobile"
+              data-testid="device-btn-mobile"
             >
               <Smartphone size={18} />
             </button>
           </div>
 
+          {/* Badge d'état du presse-papier de style d'apparence (M3) */}
+          {copiedStyle && (
+            <div 
+              className="pb-clipboard-badge" 
+              data-testid="pb-clipboard-badge"
+              title={`Style en mémoire copié depuis « ${copiedStyle.sourceLabel || copiedStyle.sourceType} »`}
+            >
+              <span className="pb-clipboard-text">Style copié :</span>
+              <span className="pb-clipboard-source-tag">{copiedStyle.sourceLabel || copiedStyle.sourceType}</span>
+              <button
+                type="button"
+                onClick={handleClearCopiedStyle}
+                className="pb-clipboard-clear-btn"
+                title="Effacer le style du presse-papier"
+                aria-label="Effacer le style du presse-papier"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+
           {/* Badge récapitulatif des raccourcis clavier */}
           <span 
             className="badge bg-slate-100 text-slate-600 border text-xxs d-none d-xl-inline-flex align-items-center gap-1 py-1 px-2 rounded-2"
-            title="Raccourcis : Ctrl+Z (Annuler), Ctrl+Y (Rétablir), Suppr (Supprimer), Ctrl+D (Dupliquer), Échap (Désélectionner)"
+            title="Raccourcis : Ctrl+Z (Annuler), Ctrl+Y (Rétablir), Suppr (Supprimer), Ctrl+D (Dupliquer), Ctrl+B (Panneau latéral), Échap (Désélectionner)"
             style={{ fontSize: '11px', fontWeight: '500' }}
           >
             <Command size={11} />
-            <span>Ctrl+Z / Ctrl+Y / Suppr / Ctrl+D</span>
+            <span>Ctrl+Z / Ctrl+Y / Suppr / Ctrl+D / Ctrl+B</span>
           </span>
         </div>
 
@@ -1503,39 +1764,87 @@ export const PageBuilder = ({
 
       {/* Zone principale (Sidebar + Canvas) */}
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <div className="d-flex" style={{ flex: 1, overflow: 'hidden', minHeight: 0 }}>
+        <div className="d-flex position-relative" style={{ flex: 1, overflow: 'hidden', minHeight: 0 }}>
           
-          {/* Sidebar gauche */}
-          <div className="ae-sidebar-fixed-width ae-builder-sidebar-responsive" style={{ width: '340px', flexShrink: 0 }}>
+          {/* Sidebar gauche avec conteneur repliable */}
+          <div 
+            id="bpb-sidebar-container"
+            className={`ae-sidebar-fixed-width ae-builder-sidebar-responsive bpb-sidebar-container ${isSidebarCollapsed ? 'bpb-sidebar-collapsed' : ''}`} 
+            style={{ 
+              width: isSidebarCollapsed ? 0 : '340px', 
+              flexShrink: 0 
+            }}
+            aria-hidden={isSidebarCollapsed}
+          >
             <BuilderSidebar
               activeTab={activeTab}
               setActiveTab={setActiveTab}
+              isCollapsed={isSidebarCollapsed}
               onAddBlock={handleAddBlock}
+              onInsertSectionTemplate={handleInsertSectionTemplate}
               activeBlock={activeBlock}
+              activeBlockId={activeBlockId}
+              blocks={blocks}
+              onSelectBlock={(block) => {
+                setActiveBlockId(block.id);
+                setActiveTab('settings');
+              }}
+              onToggleHideBlock={handleToggleHideBlock}
+              onRemoveBlock={handleRemoveBlock}
               onBlockSettingsChange={handleBlockSettingsChange}
               builderPageCategory={pageCategory}
               setBuilderPageCategory={setPageCategory}
             />
           </div>
 
-          {/* Canvas central */}
-          <div style={{ flex: '1 1 auto', minWidth: 0, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', position: 'relative' }}>
-            <BuilderCanvas
-              blocks={blocks}
-              activeBlockId={activeBlockId}
-              onSelectBlock={(block) => {
-                setActiveBlockId(block.id);
-                setActiveTab('settings');
-              }}
-              onRemoveBlock={handleRemoveBlock}
-              onMoveBlock={handleMoveBlock}
-              onDuplicateBlock={handleDuplicateBlock}
-              onToggleHideBlock={handleToggleHideBlock}
-              onAddChild={handleAddChild}
-              onOpenMediaPicker={handleOpenMediaPicker}
-              device={device}
-              pageSlug={pageSlug}
+          {/* Backdrop mobile pour refermer le panneau en 1 clic */}
+          {!isSidebarCollapsed && (
+            <div 
+              className="bpb-sidebar-mobile-backdrop" 
+              onClick={() => setIsSidebarCollapsed(true)}
+              aria-hidden="true"
+              data-testid="sidebar-mobile-backdrop"
             />
+          )}
+
+          {/* Canvas central */}
+          <div 
+            className="bpb-canvas-container"
+            style={{ 
+              flex: '1 1 auto', 
+              minWidth: 0, 
+              minHeight: 0, 
+              overflow: 'hidden', 
+              display: 'flex', 
+              flexDirection: 'column', 
+              position: 'relative' 
+            }}
+          >
+            <BlockActionsContext.Provider value={{
+              onCopyStyle: handleCopyStyle,
+              onPasteStyle: handlePasteStyle,
+              hasCopiedStyle: Boolean(copiedStyle && (Object.keys(copiedStyle.style || {}).length > 0 || copiedStyle.classes))
+            }}>
+              <BuilderCanvas
+                blocks={blocks}
+                activeBlockId={activeBlockId}
+                onSelectBlock={(block) => {
+                  setActiveBlockId(block.id);
+                  setActiveTab('settings');
+                }}
+                onRemoveBlock={handleRemoveBlock}
+                onMoveBlock={handleMoveBlock}
+                onDuplicateBlock={handleDuplicateBlock}
+                onToggleHideBlock={handleToggleHideBlock}
+                onAddChild={handleAddChild}
+                onOpenMediaPicker={handleOpenMediaPicker}
+                onCopyStyle={handleCopyStyle}
+                onPasteStyle={handlePasteStyle}
+                hasCopiedStyle={Boolean(copiedStyle && (Object.keys(copiedStyle.style || {}).length > 0 || copiedStyle.classes))}
+                device={device}
+                pageSlug={pageSlug}
+              />
+            </BlockActionsContext.Provider>
           </div>
 
         </div>

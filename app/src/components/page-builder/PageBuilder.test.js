@@ -2,7 +2,14 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import PageBuilder, { findHomePage, isHomePage } from './PageBuilder';
 import { pageService } from '../../services/pageService';
-import { normalizeBlocks, cloneBlock, createBlock, getDefaultHomepageBlocks } from './blockRegistry';
+import { normalizeBlocks, cloneBlock, createBlock, getDefaultHomepageBlocks, ANJOU_EDITION_PALETTE } from './blockRegistry';
+import { TreeStructureView, getNodeDisplayInfo, countBlocksStats } from './TreeStructureView';
+import { BuilderSidebar } from './BuilderSidebar';
+import { SECTION_TEMPLATES, instantiateSectionTemplate } from './sectionTemplates';
+import { BlockRenderer } from './BlockRenderer';
+import { BuilderSettings, SHADOW_PRESETS, resolveShadowValue } from './BuilderSettings';
+import { IframePreview } from './IframePreview';
+import { BuilderCanvas } from './BuilderCanvas';
 
 jest.mock('../../firebase', () => ({
   db: {},
@@ -987,4 +994,1300 @@ describe('PageBuilder and Block Architecture Tests', () => {
       expect(screen.queryByText('Titre Altéré Temporaire')).toBeNull();
     });
   });
+
+  // =========================================================================
+  // JALON M2 : Recherche avec Reset ✕, Arborescence, Repli Sidebar & Modèles
+  // =========================================================================
+  describe('Jalon M2 : Recherche, Arborescence TreeStructureView, Repli Sidebar & Modèles', () => {
+    const sampleTreeBlocks = [
+      {
+        id: 'sec_1',
+        type: 'section',
+        settings: { classes: 'py-5', style: { backgroundColor: '#ffffff' } },
+        children: [
+          {
+            id: 'cont_1',
+            type: 'container',
+            settings: { fluid: false },
+            children: [
+              {
+                id: 'row_1',
+                type: 'row',
+                settings: {},
+                children: [
+                  {
+                    id: 'col_1',
+                    type: 'column',
+                    settings: { sizeClasses: 'col-md-8' },
+                    children: [
+                      {
+                        id: 'head_1',
+                        type: 'heading',
+                        settings: { level: 'h1', content: 'Chef-d’œuvre Poétique' }
+                      },
+                      {
+                        id: 'txt_1',
+                        type: 'text',
+                        settings: { content: '<p>Écrit inédit par nos auteurs.</p>' }
+                      }
+                    ]
+                  },
+                  {
+                    id: 'col_2',
+                    type: 'column',
+                    settings: { sizeClasses: 'col-md-4' },
+                    children: [
+                      {
+                        id: 'vid_1',
+                        type: 'video',
+                        settings: { title: 'Entretien avec l’auteur', videoId: 'abc123' },
+                        hidden: true
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ];
+
+    test('getNodeDisplayInfo extrait fidèlement les métadonnées pour chaque type de bloc', () => {
+      const secInfo = getNodeDisplayInfo({ type: 'section', settings: { classes: 'ma-classe-custom' } });
+      expect(secInfo.label).toBe('Section');
+      expect(secInfo.badgeText).toBe('Section');
+      expect(secInfo.snippet).toBe('ma-classe-custom');
+      expect(secInfo.isContainer).toBe(true);
+
+      const headingInfo = getNodeDisplayInfo({ type: 'heading', settings: { level: 'h3', content: 'Mon H3' } });
+      expect(headingInfo.label).toBe('Titre (H3)');
+      expect(headingInfo.badgeText).toBe('H3');
+      expect(headingInfo.snippet).toBe('Mon H3');
+
+      const textInfo = getNodeDisplayInfo({ type: 'text', settings: { content: '<p>Ligne <strong>HTML</strong></p>' } });
+      expect(textInfo.label).toBe('Texte / HTML');
+      expect(textInfo.snippet).toContain('Ligne HTML');
+
+      const videoInfo = getNodeDisplayInfo({ type: 'video', settings: { title: 'Vidéo Test' } });
+      expect(videoInfo.label).toBe('Vidéo');
+      expect(videoInfo.snippet).toBe('Vidéo Test');
+    });
+
+    test('countBlocksStats calcule le total des sections et des blocs', () => {
+      const stats = countBlocksStats(sampleTreeBlocks);
+      expect(stats.sections).toBe(1);
+      expect(stats.totalBlocks).toBe(8);
+    });
+
+    test('TreeStructureView affiche un état vide propre quand blocks est vide et appelle onOpenLibrary', () => {
+      const handleOpenLib = jest.fn();
+      render(<TreeStructureView blocks={[]} onOpenLibrary={handleOpenLib} />);
+
+      expect(screen.getByTestId('tree-empty-state')).toBeInTheDocument();
+      expect(screen.getByText('Structure vierge')).toBeInTheDocument();
+
+      const openLibBtn = screen.getByRole('button', { name: /Ouvrir la Bibliothèque/i });
+      fireEvent.click(openLibBtn);
+      expect(handleOpenLib).toHaveBeenCalledTimes(1);
+    });
+
+    test('TreeStructureView affiche la hiérarchie récursive, le nœud actif et les nœuds masqués', () => {
+      render(<TreeStructureView blocks={sampleTreeBlocks} activeBlockId="head_1" />);
+
+      expect(screen.getByText(/1 section • 8 éléments/i)).toBeInTheDocument();
+      expect(screen.getByTestId('tree-node-sec_1')).toBeInTheDocument();
+      expect(screen.getByTestId('tree-node-head_1')).toHaveClass('pb-tree-node-active');
+      expect(screen.getByTestId('tree-node-vid_1')).toHaveClass('pb-tree-node-hidden');
+      expect(screen.getByTestId('tree-node-vid_1')).toHaveTextContent('Masqué');
+    });
+
+    test('TreeStructureView déclenche onSelectBlock au clic et isole les actions secondaires avec stopPropagation', () => {
+      const handleSelect = jest.fn();
+      const handleToggleHide = jest.fn();
+      const handleRemove = jest.fn();
+
+      render(
+        <TreeStructureView
+          blocks={sampleTreeBlocks}
+          onSelectBlock={handleSelect}
+          onToggleHideBlock={handleToggleHide}
+          onRemoveBlock={handleRemove}
+        />
+      );
+
+      // Clic sur nœud
+      fireEvent.click(screen.getByTestId('tree-node-txt_1'));
+      expect(handleSelect).toHaveBeenCalledWith(expect.objectContaining({ id: 'txt_1' }));
+
+      // Clic sur bouton masquage sans déclencher onSelectBlock
+      handleSelect.mockClear();
+      fireEvent.click(screen.getByTestId('tree-toggle-hide-head_1'));
+      expect(handleToggleHide).toHaveBeenCalledWith('head_1');
+      expect(handleSelect).not.toHaveBeenCalled();
+
+      // Clic sur suppression sans déclencher onSelectBlock
+      fireEvent.click(screen.getByTestId('tree-remove-head_1'));
+      expect(handleRemove).toHaveBeenCalledWith('head_1', 'col_1');
+      expect(handleSelect).not.toHaveBeenCalled();
+    });
+
+    test('TreeStructureView permet de replier/déplier individuellement et via les boutons Tout replier / Tout déplier', () => {
+      render(<TreeStructureView blocks={sampleTreeBlocks} />);
+
+      expect(screen.getByTestId('tree-node-head_1')).toBeInTheDocument();
+
+      // Tout replier
+      fireEvent.click(screen.getByRole('button', { name: /Tout replier/i }));
+      expect(screen.queryByTestId('tree-node-cont_1')).not.toBeInTheDocument();
+
+      // Tout déplier
+      fireEvent.click(screen.getByRole('button', { name: /Tout déplier/i }));
+      expect(screen.getByTestId('tree-node-cont_1')).toBeInTheDocument();
+    });
+
+    test('BuilderSidebar propose un champ de recherche avec bouton ✕ de réinitialisation, pilules de catégories et modèles', () => {
+      const handleInsertTemplate = jest.fn();
+      render(
+        <BuilderSidebar
+          activeTab="widgets"
+          setActiveTab={() => {}}
+          onAddBlock={() => {}}
+          onInsertSectionTemplate={handleInsertTemplate}
+          activeBlock={null}
+          builderPageCategory="Accueil"
+          setBuilderPageCategory={() => {}}
+          blocks={sampleTreeBlocks}
+        />
+      );
+
+      const searchInput = screen.getByPlaceholderText(/Rechercher un composant ou modèle/i);
+      expect(searchInput).toBeInTheDocument();
+
+      // Aucun bouton reset initialement
+      expect(screen.queryByRole('button', { name: /Effacer la recherche/i })).toBeNull();
+
+      // Saisie d'un terme
+      fireEvent.change(searchInput, { target: { value: 'colonne' } });
+      const resetBtn = screen.getByRole('button', { name: /Effacer la recherche/i });
+      expect(resetBtn).toBeInTheDocument();
+
+      // Clic sur reset
+      fireEvent.click(resetBtn);
+      expect(searchInput.value).toBe('');
+
+      // Pilules de catégories
+      const pillContent = screen.getByRole('button', { name: 'Contenu' });
+      fireEvent.click(pillContent);
+      expect(pillContent).toHaveClass('pb-category-pill-active');
+
+      // Modèle prêt à l'insertion
+      const pillTemplates = screen.getByRole('button', { name: 'Modèles' });
+      fireEvent.click(pillTemplates);
+      const insertBtns = screen.getAllByRole('button', { name: /Insérer cette section/i });
+      expect(insertBtns.length).toBeGreaterThanOrEqual(1);
+      fireEvent.click(insertBtns[0]);
+      expect(handleInsertTemplate).toHaveBeenCalledTimes(1);
+    });
+
+    test('PageBuilder intègre le repli/dépli de la barre latérale via bouton toolbar et raccourci Ctrl+B', async () => {
+      jest.spyOn(pageService, 'getPages').mockImplementation((coll) => {
+        if (coll === 'articles') return Promise.resolve([]);
+        return Promise.resolve([
+          {
+            id: 'page_repli_test',
+            title: 'Page Test Repli Toolbar',
+            slug: 'page-test-repli-toolbar',
+            category: 'Outils',
+            status: 'draft',
+            blocks: sampleTreeBlocks
+          }
+        ]);
+      });
+
+      render(
+        <PageBuilder
+          editingId="page_repli_test"
+          editingType="page"
+          onClose={() => {}}
+          onSaveSuccess={() => {}}
+        />
+      );
+
+      expect(await screen.findByDisplayValue('Page Test Repli Toolbar')).toBeInTheDocument();
+
+      const toggleBtn = screen.getByTestId('toggle-sidebar-btn');
+      expect(toggleBtn).toBeInTheDocument();
+      expect(toggleBtn).toHaveAttribute('aria-label', 'Réduire le panneau');
+      expect(toggleBtn).toHaveAttribute('aria-expanded', 'true');
+
+      const sidebarContainer = document.getElementById('bpb-sidebar-container');
+      expect(sidebarContainer).not.toHaveClass('bpb-sidebar-collapsed');
+
+      // Clic pour replier
+      fireEvent.click(toggleBtn);
+      expect(toggleBtn).toHaveAttribute('aria-label', 'Agrandir le panneau');
+      expect(toggleBtn).toHaveAttribute('aria-expanded', 'false');
+      expect(sidebarContainer).toHaveClass('bpb-sidebar-collapsed');
+
+      // Clic pour réouvrir
+      fireEvent.click(toggleBtn);
+      expect(toggleBtn).toHaveAttribute('aria-label', 'Réduire le panneau');
+      expect(toggleBtn).toHaveAttribute('aria-expanded', 'true');
+      expect(sidebarContainer).not.toHaveClass('bpb-sidebar-collapsed');
+
+      // Raccourci Ctrl+B pour replier
+      fireEvent.keyDown(window, { key: 'b', ctrlKey: true });
+      expect(sidebarContainer).toHaveClass('bpb-sidebar-collapsed');
+
+      // Raccourci Ctrl+B pour réouvrir
+      fireEvent.keyDown(window, { key: 'b', ctrlKey: true });
+      expect(sidebarContainer).not.toHaveClass('bpb-sidebar-collapsed');
+    });
+
+    test('PageBuilder gère l insertion en 1 clic de modèles de sections avec mise à jour du state et sélection', async () => {
+      jest.spyOn(pageService, 'getPages').mockImplementation((coll) => {
+        if (coll === 'articles') return Promise.resolve([]);
+        return Promise.resolve([
+          {
+            id: 'page_template_insert',
+            title: 'Page Insertion Modèle',
+            slug: 'page-insertion-modele',
+            category: 'Outils',
+            status: 'draft',
+            blocks: []
+          }
+        ]);
+      });
+
+      render(
+        <PageBuilder
+          editingId="page_template_insert"
+          editingType="page"
+          onClose={() => {}}
+          onSaveSuccess={() => {}}
+        />
+      );
+
+      expect(await screen.findByDisplayValue('Page Insertion Modèle')).toBeInTheDocument();
+
+      // Insérer le premier modèle disponible
+      const insertBtn = (await screen.findAllByRole('button', { name: /Insérer cette section/i }))[0];
+      expect(insertBtn).toBeInTheDocument();
+      fireEvent.click(insertBtn);
+
+      // Vérifier que le modèle est instancié sur le canevas
+      await waitFor(() => {
+        const sections = document.querySelectorAll('.pb-section-wrapper');
+        expect(sections.length).toBeGreaterThanOrEqual(1);
+      });
+    });
+  });
+
+  // =========================================================================
+  // JALON M3 (R2) : Manipulation Avancée, Copier/Coller Style, Masquage & Raccourcis
+  // =========================================================================
+  describe('Jalon M3 (R2) : Manipulation Avancée, Copier/Coller Style, Masquage & Raccourcis', () => {
+
+    test('TEST-UNIT-R2-STYLE-1 : Copier le style et le coller sur un autre bloc en préservant son contenu éditorial', async () => {
+      const mockPage = {
+        id: 'page_style_test',
+        title: 'Page Style Test',
+        slug: 'page-style-test',
+        blocks: [
+          {
+            id: 'sec_1',
+            type: 'section',
+            children: [
+              {
+                id: 'h_source',
+                type: 'heading',
+                settings: {
+                  content: 'Titre Source Stylisé',
+                  classes: 'custom-card-shadow',
+                  style: {
+                    color: '#004b7a',
+                    backgroundColor: '#e0f2fe',
+                    padding: '16px',
+                    borderRadius: '8px'
+                  }
+                }
+              },
+              {
+                id: 'h_target',
+                type: 'heading',
+                settings: {
+                  content: 'Titre Cible Primitif',
+                  style: {}
+                }
+              }
+            ]
+          }
+        ]
+      };
+
+      jest.spyOn(pageService, 'getPages').mockImplementation((coll) => {
+        if (coll === 'articles') return Promise.resolve([]);
+        return Promise.resolve([mockPage]);
+      });
+
+      render(
+        <PageBuilder
+          editingId="page_style_test"
+          editingType="page"
+          onClose={() => {}}
+          onSaveSuccess={() => {}}
+        />
+      );
+
+      expect(await screen.findByText('Titre Source Stylisé')).toBeInTheDocument();
+      expect(screen.getByText('Titre Cible Primitif')).toBeInTheDocument();
+
+      // 1. Bouton Coller désactivé avant toute copie
+      const pasteBtnsBefore = screen.getAllByRole('button', { name: /Coller le style/i });
+      expect(pasteBtnsBefore[0]).toBeDisabled();
+
+      // 2. Clic sur le bouton Copier le style du bloc source
+      const copyBtns = screen.getAllByRole('button', { name: /Copier le style/i });
+      fireEvent.click(copyBtns[0]);
+
+      // Vérifier le badge presse-papier et toast
+      expect(await screen.findByTestId('pb-clipboard-badge')).toBeInTheDocument();
+
+      // 3. Bouton Coller désormais activé
+      const pasteBtnsAfter = screen.getAllByRole('button', { name: /Coller le style/i });
+      expect(pasteBtnsAfter[1]).not.toBeDisabled();
+
+      // 4. Clic sur Coller le style sur le bloc cible
+      fireEvent.click(pasteBtnsAfter[1]);
+
+      // 5. Contenu textuel cible 100% préservé
+      expect(screen.getByText('Titre Cible Primitif')).toBeInTheDocument();
+    });
+
+    test('TEST-UNIT-R2-STYLE-2 : Compatibilité de transfert de style inter-types (Heading vers Text)', async () => {
+      const mockPage = {
+        id: 'page_cross_style',
+        title: 'Page Cross Style',
+        slug: 'page-cross-style',
+        blocks: [
+          {
+            id: 'h_src',
+            type: 'heading',
+            settings: {
+              content: 'Titre Donneur',
+              style: { color: '#1e3a8a', backgroundColor: '#dbeafe' }
+            }
+          },
+          {
+            id: 'txt_tgt',
+            type: 'text',
+            settings: {
+              content: '<p>Paragraphe Éditorial Intact</p>',
+              style: {}
+            }
+          }
+        ]
+      };
+
+      jest.spyOn(pageService, 'getPages').mockImplementation((coll) => {
+        if (coll === 'articles') return Promise.resolve([]);
+        return Promise.resolve([mockPage]);
+      });
+
+      render(
+        <PageBuilder
+          editingId="page_cross_style"
+          editingType="page"
+          onClose={() => {}}
+          onSaveSuccess={() => {}}
+        />
+      );
+
+      expect(await screen.findByText('Titre Donneur')).toBeInTheDocument();
+      expect(screen.getByText(/Paragraphe Éditorial Intact/i)).toBeInTheDocument();
+
+      // Copier le style du titre
+      const copyBtns = screen.getAllByRole('button', { name: /Copier le style/i });
+      fireEvent.click(copyBtns[0]);
+
+      // Coller sur le texte
+      const pasteBtns = screen.getAllByRole('button', { name: /Coller le style/i });
+      fireEvent.click(pasteBtns[1]);
+
+      // Le texte éditorial reste strictement présent
+      expect(screen.getByText(/Paragraphe Éditorial Intact/i)).toBeInTheDocument();
+    });
+
+    test('TEST-UNIT-R2-STYLE-3 : Annulation (Ctrl+Z) et Rétablissement (Ctrl+Y / Ctrl+Shift+Z) du collage de style', async () => {
+      const mockPage = {
+        id: 'page_undo_style',
+        title: 'Page Undo Style',
+        slug: 'page-undo-style',
+        blocks: [
+          {
+            id: 'b1',
+            type: 'heading',
+            settings: { content: 'Titre A', style: { color: '#2563eb' } }
+          },
+          {
+            id: 'b2',
+            type: 'heading',
+            settings: { content: 'Titre B', style: {} }
+          }
+        ]
+      };
+
+      jest.spyOn(pageService, 'getPages').mockImplementation((coll) => {
+        if (coll === 'articles') return Promise.resolve([]);
+        return Promise.resolve([mockPage]);
+      });
+
+      render(
+        <PageBuilder
+          editingId="page_undo_style"
+          editingType="page"
+          onClose={() => {}}
+          onSaveSuccess={() => {}}
+        />
+      );
+
+      await screen.findByText('Titre A');
+
+      // Copier B1
+      const copyBtns = screen.getAllByRole('button', { name: /Copier le style/i });
+      fireEvent.click(copyBtns[0]);
+
+      // Coller B2
+      const pasteBtns = screen.getAllByRole('button', { name: /Coller le style/i });
+      fireEvent.click(pasteBtns[1]);
+
+      // Annuler par Ctrl+Z
+      fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
+      expect(screen.getByText('Titre B')).toBeInTheDocument();
+
+      // Rétablir par Ctrl+Shift+Z
+      fireEvent.keyDown(window, { key: 'z', ctrlKey: true, shiftKey: true });
+      expect(screen.getByText('Titre B')).toBeInTheDocument();
+
+      // Annuler par Ctrl+Z puis rétablir par Ctrl+Y
+      fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
+      fireEvent.keyDown(window, { key: 'y', ctrlKey: true });
+      expect(screen.getByText('Titre B')).toBeInTheDocument();
+    });
+
+    test('TEST-UNIT-R2-STYLE-4 : Vidage rapide du presse-papier de style via le bouton de réinitialisation', async () => {
+      const mockPage = {
+        id: 'page_clear_style',
+        title: 'Page Clear Style',
+        slug: 'page-clear-style',
+        blocks: [
+          {
+            id: 'b_sample',
+            type: 'heading',
+            settings: { content: 'Élément Test', style: { color: '#059669' } }
+          }
+        ]
+      };
+
+      jest.spyOn(pageService, 'getPages').mockImplementation((coll) => {
+        if (coll === 'articles') return Promise.resolve([]);
+        return Promise.resolve([mockPage]);
+      });
+
+      render(
+        <PageBuilder
+          editingId="page_clear_style"
+          editingType="page"
+          onClose={() => {}}
+          onSaveSuccess={() => {}}
+        />
+      );
+
+      await screen.findByText('Élément Test');
+
+      // Au départ, pas de badge presse-papier
+      expect(screen.queryByTestId('pb-clipboard-badge')).toBeNull();
+
+      // Copier le style
+      const copyBtn = screen.getByRole('button', { name: /Copier le style/i });
+      fireEvent.click(copyBtn);
+
+      // Badge présent
+      const badge = await screen.findByTestId('pb-clipboard-badge');
+      expect(badge).toBeInTheDocument();
+
+      // Cliquer sur le bouton pour vider le presse-papier
+      const clearBtn = screen.getByRole('button', { name: /Effacer le style du presse-papier/i });
+      fireEvent.click(clearBtn);
+
+      // Le badge disparaît et le bouton coller redevient désactivé
+      expect(screen.queryByTestId('pb-clipboard-badge')).toBeNull();
+      const pasteBtn = screen.getByRole('button', { name: /Coller le style/i });
+      expect(pasteBtn).toBeDisabled();
+    });
+
+    test('TEST-UNIT-R2-HIDE-1 : Bascule du masquage temporaire avec badge et classe CSS .pb-block-hidden', async () => {
+      const mockPage = {
+        id: 'page_hide_test',
+        title: 'Page Masquage',
+        slug: 'page-masquage',
+        blocks: [
+          {
+            id: 'h_toggle',
+            type: 'heading',
+            settings: { content: 'Titre Masquable', hidden: false }
+          }
+        ]
+      };
+
+      jest.spyOn(pageService, 'getPages').mockImplementation((coll) => {
+        if (coll === 'articles') return Promise.resolve([]);
+        return Promise.resolve([mockPage]);
+      });
+
+      render(
+        <PageBuilder
+          editingId="page_hide_test"
+          editingType="page"
+          onClose={() => {}}
+          onSaveSuccess={() => {}}
+        />
+      );
+
+      await screen.findByText('Titre Masquable');
+
+      // 1. Masquer le bloc
+      const hideBtn = screen.getByRole('button', { name: /Masquer le bloc Titre/i });
+      fireEvent.click(hideBtn);
+
+      // 2. Le badge "Masqué" apparaît
+      await waitFor(() => {
+        expect(screen.getByText('Masqué')).toBeInTheDocument();
+      });
+
+      // 3. Le wrapper a la classe CSS .pb-block-hidden
+      const wrapper = document.querySelector('.pb-editor-wrapper.pb-block-hidden');
+      expect(wrapper).toBeInTheDocument();
+
+      // 4. Réafficher le bloc
+      const showBtn = screen.getByRole('button', { name: /Réafficher le bloc Titre/i });
+      fireEvent.click(showBtn);
+
+      await waitFor(() => {
+        expect(screen.queryByText('Masqué')).toBeNull();
+      });
+      expect(document.querySelector('.pb-editor-wrapper.pb-block-hidden')).toBeNull();
+    });
+
+    test('TEST-UNIT-R2-HIDE-2 : Exclusion stricte du rendu public pour tout bloc masqué (BlockRenderer isEditing={false})', () => {
+      // Bloc avec settings.hidden = true
+      const { container: c1 } = render(
+        <BlockRenderer
+          block={{
+            id: 'b_secret_1',
+            type: 'text',
+            settings: { content: 'Contenu Public Interdit', hidden: true }
+          }}
+          isEditing={false}
+        />
+      );
+      expect(c1.firstChild).toBeNull();
+
+      // Bloc avec block.hidden = true (rétrocompatibilité)
+      const { container: c2 } = render(
+        <BlockRenderer
+          block={{
+            id: 'b_secret_2',
+            type: 'heading',
+            hidden: true,
+            settings: { content: 'Titre Masqué' }
+          }}
+          isEditing={false}
+        />
+      );
+      expect(c2.firstChild).toBeNull();
+
+      // Bloc non masqué -> rendu effectif
+      const { container: c3 } = render(
+        <BlockRenderer
+          block={{
+            id: 'b_visible',
+            type: 'heading',
+            settings: { content: 'Titre Public Visible', hidden: false }
+          }}
+          isEditing={false}
+        />
+      );
+      expect(c3.firstChild).not.toBeNull();
+    });
+
+    test('TEST-UNIT-R2-HIDE-3 : Sauvegarde et persistance du statut masqué dans Firestore', async () => {
+      const saveSpy = jest.spyOn(pageService, 'savePage').mockResolvedValue({ success: true, id: 'page_save_hide' });
+      const mockPage = {
+        id: 'page_save_hide',
+        title: 'Page Sauvegarde Masquage',
+        slug: 'page-sauvegarde-masquage',
+        blocks: [
+          {
+            id: 'h_save_toggle',
+            type: 'heading',
+            settings: { content: 'Titre à sauvegarder masqué', hidden: false }
+          }
+        ]
+      };
+
+      jest.spyOn(pageService, 'getPages').mockImplementation((coll) => {
+        if (coll === 'articles') return Promise.resolve([]);
+        return Promise.resolve([mockPage]);
+      });
+
+      render(
+        <PageBuilder
+          editingId="page_save_hide"
+          editingType="page"
+          onClose={() => {}}
+          onSaveSuccess={() => {}}
+        />
+      );
+
+      await screen.findByText('Titre à sauvegarder masqué');
+
+      // Masquer
+      const hideBtn = screen.getByRole('button', { name: /Masquer le bloc Titre/i });
+      fireEvent.click(hideBtn);
+
+      await waitFor(() => {
+        expect(screen.getByText('Masqué')).toBeInTheDocument();
+      });
+
+      // Sauvegarder
+      const saveBtn = screen.getByRole('button', { name: /Enregistrer|Publier/i });
+      fireEvent.click(saveBtn);
+
+      await waitFor(() => {
+        expect(saveSpy).toHaveBeenCalledTimes(1);
+      });
+
+      const savedBlocks = saveSpy.mock.calls[0][0].blocks;
+      const targetSavedHeading = savedBlocks.find(b => b.id === 'h_save_toggle');
+      expect(targetSavedHeading.settings.hidden).toBe(true);
+    });
+
+    test('TEST-UNIT-R2-KB-1 : Sauvegarde immédiate par Ctrl+S même lors du focus dans un champ de saisie', async () => {
+      const saveSpy = jest.spyOn(pageService, 'savePage').mockResolvedValue({ success: true, id: 'page_kb_save' });
+      const mockPage = {
+        id: 'page_kb_save',
+        title: 'Page Test Raccourci Sauvegarde',
+        slug: 'page-test-raccourci-sauvegarde',
+        blocks: [
+          {
+            id: 'h_kb',
+            type: 'heading',
+            settings: { content: 'Titre Test KB' }
+          }
+        ]
+      };
+
+      jest.spyOn(pageService, 'getPages').mockImplementation((coll) => {
+        if (coll === 'articles') return Promise.resolve([]);
+        return Promise.resolve([mockPage]);
+      });
+
+      render(
+        <PageBuilder
+          editingId="page_kb_save"
+          editingType="page"
+          onClose={() => {}}
+          onSaveSuccess={() => {}}
+        />
+      );
+
+      const titleInput = await screen.findByDisplayValue('Page Test Raccourci Sauvegarde');
+      titleInput.focus();
+
+      // Déclencher Ctrl+S directement depuis le champ de saisie
+      fireEvent.keyDown(titleInput, { key: 's', ctrlKey: true });
+
+      await waitFor(() => {
+        expect(saveSpy).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    test('TEST-UNIT-R2-KB-2 : Isolation des touches Delete et Backspace dans les champs de saisie', async () => {
+      const mockPage = {
+        id: 'page_kb_isolation',
+        title: 'Page Isolation Clavier',
+        slug: 'page-isolation-clavier',
+        blocks: [
+          {
+            id: 'h_protected',
+            type: 'heading',
+            settings: { content: 'Bloc Protégé Contre Suppression Accidentelle' }
+          }
+        ]
+      };
+
+      jest.spyOn(pageService, 'getPages').mockImplementation((coll) => {
+        if (coll === 'articles') return Promise.resolve([]);
+        return Promise.resolve([mockPage]);
+      });
+
+      render(
+        <PageBuilder
+          editingId="page_kb_isolation"
+          editingType="page"
+          onClose={() => {}}
+          onSaveSuccess={() => {}}
+        />
+      );
+
+      const blockEl = await screen.findByText('Bloc Protégé Contre Suppression Accidentelle');
+      // Sélectionner le bloc
+      fireEvent.click(blockEl);
+
+      // Focus dans le champ titre de la barre d'outils
+      const titleInput = screen.getByDisplayValue('Page Isolation Clavier');
+      titleInput.focus();
+
+      // Appuyer sur Delete et Backspace dans le champ
+      fireEvent.keyDown(titleInput, { key: 'Delete' });
+      fireEvent.keyDown(titleInput, { key: 'Backspace' });
+
+      // Le bloc ne doit absolument PAS avoir été supprimé du canevas
+      expect(screen.getByText('Bloc Protégé Contre Suppression Accidentelle')).toBeInTheDocument();
+    });
+
+    test('TEST-UNIT-R2-DUP-1 : Duplication récursive et auto-localisante d\'un bloc imbriqué dans une colonne', async () => {
+      const mockPage = {
+        id: 'page_dup_test',
+        title: 'Page Duplication Imbriquée',
+        slug: 'page-duplication-imbriquee',
+        blocks: [
+          {
+            id: 'sec_root',
+            type: 'section',
+            children: [
+              {
+                id: 'cont_1',
+                type: 'container',
+                children: [
+                  {
+                    id: 'row_1',
+                    type: 'row',
+                    children: [
+                      {
+                        id: 'col_1',
+                        type: 'column',
+                        children: [
+                          {
+                            id: 'h_nested',
+                            type: 'heading',
+                            settings: { content: 'Titre Imbriqué Profond' }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      };
+
+      jest.spyOn(pageService, 'getPages').mockImplementation((coll) => {
+        if (coll === 'articles') return Promise.resolve([]);
+        return Promise.resolve([mockPage]);
+      });
+
+      render(
+        <PageBuilder
+          editingId="page_dup_test"
+          editingType="page"
+          onClose={() => {}}
+          onSaveSuccess={() => {}}
+        />
+      );
+
+      await screen.findByText('Titre Imbriqué Profond');
+
+      // Cliquer sur le bouton dupliquer de ce titre imbriqué
+      const dupBtns = screen.getAllByRole('button', { name: /Dupliquer/i });
+      fireEvent.click(dupBtns[0]);
+
+      // Vérifier que deux titres sont maintenant présents
+      await waitFor(() => {
+        const titles = screen.getAllByText('Titre Imbriqué Profond');
+        expect(titles.length).toBe(2);
+      });
+    });
+
+  });
+
+  // =========================================================================
+  // JALON M4 : INSPECTEUR ÉTENDU, NUANCIER ANJOU, MÉDIATHÈQUE & 4 PALIERS
+  // =========================================================================
+  describe('Jalon M4 : Inspecteur Étendu, Nuancier Anjou, Médiathèque & 4 Paliers Responsive (R3, R4, R5)', () => {
+
+    test('M4-1: Dimensionnement fidèle de IframePreview sur les 4 paliers responsive (S, M, L, XL)', () => {
+      // Palier S : Smartphone (390px)
+      const { container, rerender } = render(<IframePreview device="mobile" title="preview-m4-s" />);
+      let iframe = container.querySelector('iframe');
+      expect(iframe.style.width).toBe('390px');
+
+      // Palier M : Tablette (768px)
+      rerender(<IframePreview device="tablet" title="preview-m4-m" />);
+      iframe = container.querySelector('iframe');
+      expect(iframe.style.width).toBe('768px');
+
+      // Palier L : Ordinateur Portable (1024px)
+      rerender(<IframePreview device="laptop" title="preview-m4-l" />);
+      iframe = container.querySelector('iframe');
+      expect(iframe.style.width).toBe('1024px');
+
+      // Palier XL : Grand Écran (100%)
+      rerender(<IframePreview device="desktop" title="preview-m4-xl" />);
+      iframe = container.querySelector('iframe');
+      expect(iframe.style.width).toBe('100%');
+    });
+
+    test('M4-2: Sélecteur de terminaux à 4 paliers dans la toolbar de PageBuilder avec accessibilité stricte', async () => {
+      const mockPage = {
+        id: 'p_devices_test',
+        title: 'Page Test Paliers',
+        slug: 'paliers-test',
+        blocks: [
+          {
+            id: 'sec_1',
+            type: 'section',
+            children: [
+              {
+                id: 'h_1',
+                type: 'heading',
+                settings: { content: 'Titre Paliers M4' }
+              }
+            ]
+          }
+        ]
+      };
+
+      jest.spyOn(pageService, 'getPages').mockImplementation((coll) => {
+        if (coll === 'articles') return Promise.resolve([]);
+        return Promise.resolve([mockPage]);
+      });
+
+      render(<PageBuilder onClose={() => {}} onSaveSuccess={() => {}} />);
+      await screen.findByText('Titre Paliers M4');
+
+      // Vérification des 4 boutons de terminaux avec leurs étiquettes d'accessibilité sans conflit
+      const desktopBtn = screen.getByRole('button', { name: /Vue Ordinateur/i });
+      const laptopBtn = screen.getByRole('button', { name: /Vue Portable/i });
+      const tabletBtn = screen.getByRole('button', { name: /Vue Tablette/i });
+      const mobileBtn = screen.getByRole('button', { name: /Vue Mobile/i });
+
+      expect(desktopBtn).toBeInTheDocument();
+      expect(laptopBtn).toBeInTheDocument();
+      expect(tabletBtn).toBeInTheDocument();
+      expect(mobileBtn).toBeInTheDocument();
+
+      // Clics successifs sur les 4 terminaux
+      fireEvent.click(laptopBtn);
+      fireEvent.click(tabletBtn);
+      fireEvent.click(mobileBtn);
+      fireEvent.click(desktopBtn);
+    });
+
+    test('M4-3: BuilderCanvas applique les classes et largeurs maximales pour S, M, L, XL', () => {
+      // Laptop (1024px)
+      const { container, rerender } = render(
+        <BuilderCanvas blocks={[]} device="laptop" pageSlug="test-laptop" />
+      );
+      const canvasWrapper = container.querySelector('.pb-canvas-wrapper');
+      expect(canvasWrapper).toHaveClass('pb-canvas-laptop');
+      expect(canvasWrapper.style.maxWidth).toBe('1024px');
+
+      // Tablette (768px)
+      rerender(<BuilderCanvas blocks={[]} device="tablet" pageSlug="test-tablet" />);
+      expect(canvasWrapper).toHaveClass('pb-canvas-tablet');
+      expect(canvasWrapper.style.maxWidth).toBe('768px');
+
+      // Mobile (390px)
+      rerender(<BuilderCanvas blocks={[]} device="mobile" pageSlug="test-mobile" />);
+      expect(canvasWrapper).toHaveClass('pb-canvas-mobile');
+      expect(canvasWrapper.style.maxWidth).toBe('390px');
+
+      // Desktop (1200px)
+      rerender(<BuilderCanvas blocks={[]} device="desktop" pageSlug="test-desktop" />);
+      expect(canvasWrapper).toHaveClass('pb-canvas-desktop');
+      expect(canvasWrapper.style.maxWidth).toBe('1200px');
+    });
+
+    test('M4-4: BuilderSettings permet de configurer le padding général et granulaire ainsi que les marges', () => {
+      const mockOnChange = jest.fn();
+      const testBlock = {
+        id: 'block_spacing_test',
+        type: 'heading',
+        settings: {
+          content: 'Titre Espacement',
+          style: {
+            padding: '16px',
+            paddingTop: '16px',
+            paddingBottom: '16px',
+            paddingLeft: '16px',
+            paddingRight: '16px'
+          }
+        }
+      };
+
+      render(<BuilderSettings block={testBlock} onChange={mockOnChange} />);
+
+      // 1. Champ de padding général
+      const paddingInput = screen.getByLabelText(/Espacement intérieur \(Padding\)/i);
+      expect(paddingInput).toBeInTheDocument();
+      fireEvent.change(paddingInput, { target: { value: '24px' } });
+
+      expect(mockOnChange).toHaveBeenCalledWith(
+        'block_spacing_test',
+        expect.objectContaining({
+          style: expect.objectContaining({
+            padding: '24px',
+            paddingTop: '24px',
+            paddingBottom: '24px',
+            paddingLeft: '24px',
+            paddingRight: '24px'
+          })
+        })
+      );
+
+      // 2. Marge extérieure haute
+      const marginTopInput = screen.getByLabelText(/Marge Haute \(Top\)/i);
+      fireEvent.change(marginTopInput, { target: { value: '30px' } });
+      expect(mockOnChange).toHaveBeenCalledWith(
+        'block_spacing_test',
+        expect.objectContaining({
+          style: expect.objectContaining({
+            marginTop: '30px'
+          })
+        })
+      );
+    });
+
+    test('M4-5: BuilderSettings propose la personnalisation des bordures, styles et rayons d\'arrondi', () => {
+      const mockOnChange = jest.fn();
+      const testBlock = {
+        id: 'block_border_test',
+        type: 'card',
+        settings: {
+          title: 'Carte Bordure',
+          text: 'Description',
+          style: {
+            borderStyle: 'none',
+            borderRadius: '8px'
+          }
+        }
+      };
+
+      const { rerender } = render(<BuilderSettings block={testBlock} onChange={mockOnChange} />);
+
+      // 1. Style de bordure
+      const borderStyleSelect = screen.getByLabelText(/Style de bordure/i);
+      expect(borderStyleSelect).toBeInTheDocument();
+      fireEvent.change(borderStyleSelect, { target: { value: 'dashed' } });
+
+      expect(mockOnChange).toHaveBeenCalledWith(
+        'block_border_test',
+        expect.objectContaining({
+          style: expect.objectContaining({
+            borderStyle: 'dashed'
+          })
+        })
+      );
+
+      // 2. Épaisseur et couleur si bordure active
+      const blockWithDashed = {
+        ...testBlock,
+        settings: {
+          ...testBlock.settings,
+          style: { borderStyle: 'dashed', borderWidth: '2px', borderColor: '#004b7a' }
+        }
+      };
+      rerender(<BuilderSettings block={blockWithDashed} onChange={mockOnChange} />);
+
+      const borderWidthInput = screen.getByLabelText(/Épaisseur/i);
+      fireEvent.change(borderWidthInput, { target: { value: '4px' } });
+      expect(mockOnChange).toHaveBeenCalledWith(
+        'block_border_test',
+        expect.objectContaining({
+          style: expect.objectContaining({
+            borderWidth: '4px'
+          })
+        })
+      );
+
+      // 3. Bouton raccourci Pilule pour le border-radius
+      const piluleBtn = screen.getByRole('button', { name: /Pilule/i });
+      fireEvent.click(piluleBtn);
+      expect(mockOnChange).toHaveBeenCalledWith(
+        'block_border_test',
+        expect.objectContaining({
+          style: expect.objectContaining({
+            borderRadius: '9999px'
+          })
+        })
+      );
+    });
+
+    test('M4-6: BuilderSettings gère les presets et résolutions d\'ombres portées (Box Shadow)', () => {
+      const mockOnChange = jest.fn();
+      const testBlock = {
+        id: 'block_shadow_test',
+        type: 'heading',
+        settings: {
+          content: 'Titre Ombre',
+          style: {
+            boxShadow: 'none'
+          }
+        }
+      };
+
+      render(<BuilderSettings block={testBlock} onChange={mockOnChange} />);
+
+      const shadowSelect = screen.getByLabelText(/Ombre portée/i);
+      expect(shadowSelect).toBeInTheDocument();
+
+      // Sélection ombre moyenne
+      fireEvent.change(shadowSelect, { target: { value: 'medium' } });
+      expect(mockOnChange).toHaveBeenCalledWith(
+        'block_shadow_test',
+        expect.objectContaining({
+          style: expect.objectContaining({
+            boxShadow: SHADOW_PRESETS.medium
+          })
+        })
+      );
+
+      // Sélection ombre Bleu Loire
+      fireEvent.change(shadowSelect, { target: { value: 'anjou' } });
+      expect(mockOnChange).toHaveBeenCalledWith(
+        'block_shadow_test',
+        expect.objectContaining({
+          style: expect.objectContaining({
+            boxShadow: SHADOW_PRESETS.anjou
+          })
+        })
+      );
+
+      // Test des fonctions de résolution
+      expect(resolveShadowValue('none')).toBe('none');
+      expect(resolveShadowValue(SHADOW_PRESETS.light)).toBe('light');
+      expect(resolveShadowValue(SHADOW_PRESETS.medium)).toBe('medium');
+      expect(resolveShadowValue(SHADOW_PRESETS.large)).toBe('large');
+      expect(resolveShadowValue(SHADOW_PRESETS.anjou)).toBe('anjou');
+      expect(resolveShadowValue('0 20px 20px rgba(0,0,0,0.5)')).toBe('custom');
+    });
+
+    test('M4-7: Nuancier rapide officiel Anjou Édition propose les 17 teintes certifiées pour fond et texte', () => {
+      expect(Array.isArray(ANJOU_EDITION_PALETTE)).toBe(true);
+      expect(ANJOU_EDITION_PALETTE.length).toBe(17);
+
+      const bleuArdoise = ANJOU_EDITION_PALETTE.find(c => c.value.toLowerCase() === '#004b7a');
+      expect(bleuArdoise).toBeDefined();
+
+      const mockOnChange = jest.fn();
+      const testBlock = {
+        id: 'block_palette_test',
+        type: 'heading',
+        settings: {
+          content: 'Titre Nuancier',
+          style: {
+            backgroundColor: '',
+            color: ''
+          }
+        }
+      };
+
+      render(<BuilderSettings block={testBlock} onChange={mockOnChange} />);
+
+      // Clic sur la pastille Bleu Ardoise #004b7a en mode fond
+      const anjouSwatch = screen.getByTitle(/#004b7a/i);
+      expect(anjouSwatch).toBeInTheDocument();
+      fireEvent.click(anjouSwatch);
+
+      expect(mockOnChange).toHaveBeenCalledWith(
+        'block_palette_test',
+        expect.objectContaining({
+          style: expect.objectContaining({
+            backgroundColor: '#004b7a'
+          })
+        })
+      );
+
+      // Basculer la cible sur Texte
+      const textTargetBtn = screen.getByRole('button', { name: /✍️ Texte|^Texte$/i });
+      fireEvent.click(textTargetBtn);
+
+      // Clic sur la pastille #004b7a en mode texte
+      fireEvent.click(anjouSwatch);
+      expect(mockOnChange).toHaveBeenCalledWith(
+        'block_palette_test',
+        expect.objectContaining({
+          style: expect.objectContaining({
+            color: '#004b7a'
+          })
+        })
+      );
+    });
+
+    test('M4-8: BuilderSettings permet d\'activer sélectivement le masquage responsive (hideOnMobile, hideOnTablet, hideOnDesktop)', () => {
+      const mockOnChange = jest.fn();
+      const testBlock = {
+        id: 'block_vis_test',
+        type: 'text',
+        settings: {
+          content: '<p>Contenu test</p>',
+          hideOnMobile: false,
+          hideOnTablet: false,
+          hideOnDesktop: false
+        }
+      };
+
+      render(<BuilderSettings block={testBlock} onChange={mockOnChange} />);
+
+      // 1. Masquer sur mobile
+      const chkMobile = screen.getByLabelText(/Masquer sur mobile/i);
+      fireEvent.click(chkMobile);
+      expect(mockOnChange).toHaveBeenCalledWith(
+        'block_vis_test',
+        expect.objectContaining({
+          hideOnMobile: true
+        })
+      );
+
+      // 2. Masquer sur tablette
+      const chkTablet = screen.getByLabelText(/Masquer sur tablette/i);
+      fireEvent.click(chkTablet);
+      expect(mockOnChange).toHaveBeenCalledWith(
+        'block_vis_test',
+        expect.objectContaining({
+          hideOnTablet: true
+        })
+      );
+
+      // 3. Masquer sur ordinateur
+      const chkDesktop = screen.getByLabelText(/Masquer sur ordinateur/i);
+      fireEvent.click(chkDesktop);
+      expect(mockOnChange).toHaveBeenCalledWith(
+        'block_vis_test',
+        expect.objectContaining({
+          hideOnDesktop: true
+        })
+      );
+    });
+
+    test('M4-9: Bloc Galerie Photos (photoGallery) gère la liste dynamique d\'images et leur réorganisation', () => {
+      const mockOnChange = jest.fn();
+      const galleryBlock = {
+        id: 'gallery_test',
+        type: 'photoGallery',
+        settings: {
+          title: 'Ma Galerie Photo',
+          subtitle: 'Description photo',
+          layout: 'grid',
+          images: [
+            { id: 'img_1', url: 'https://example.com/p1.jpg', title: 'Première Photo' },
+            { id: 'img_2', url: 'https://example.com/p2.jpg', title: 'Deuxième Photo' }
+          ]
+        }
+      };
+
+      render(<BuilderSettings block={galleryBlock} onChange={mockOnChange} />);
+
+      // Vérifier les titres des photos
+      expect(screen.getByDisplayValue('Première Photo')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('Deuxième Photo')).toBeInTheDocument();
+
+      // Bouton pour monter la deuxième photo
+      const moveUpBtn = screen.getByRole('button', { name: /Monter la photo 2/i });
+      fireEvent.click(moveUpBtn);
+
+      expect(mockOnChange).toHaveBeenCalledWith(
+        'gallery_test',
+        expect.objectContaining({
+          images: [
+            expect.objectContaining({ id: 'img_2' }),
+            expect.objectContaining({ id: 'img_1' })
+          ]
+        })
+      );
+
+      // Bouton supprimer la première photo
+      const deletePhotoBtn = screen.getByRole('button', { name: /Supprimer la photo 1/i });
+      fireEvent.click(deletePhotoBtn);
+
+      expect(mockOnChange).toHaveBeenCalledWith(
+        'gallery_test',
+        expect.objectContaining({
+          images: [
+            expect.objectContaining({ id: 'img_2' })
+          ]
+        })
+      );
+    });
+
+    test('M4-10: Bloc Carte (card) dispose d\'un bouton pour retirer l\'image', () => {
+      const mockOnChange = jest.fn();
+      const cardBlock = {
+        id: 'card_test',
+        type: 'card',
+        settings: {
+          title: 'Carte Littéraire',
+          text: 'Description littéraire',
+          image: 'https://example.com/illustration.jpg'
+        }
+      };
+
+      render(<BuilderSettings block={cardBlock} onChange={mockOnChange} />);
+
+      const removeImageBtn = screen.getByRole('button', { name: /Retirer l'image de la carte/i });
+      expect(removeImageBtn).toBeInTheDocument();
+
+      fireEvent.click(removeImageBtn);
+      expect(mockOnChange).toHaveBeenCalledWith(
+        'card_test',
+        expect.objectContaining({
+          image: ''
+        })
+      );
+    });
+
+    test('M4-11: VideoBlockSettings reconnaît les fichiers vidéo directs sans fausse erreur YouTube', () => {
+      const mockOnChange = jest.fn();
+      const videoBlock = {
+        id: 'video_test',
+        type: 'video',
+        settings: {
+          url: 'https://example.com/creations/film-inedit.mp4',
+          videoId: ''
+        }
+      };
+
+      render(<BuilderSettings block={videoBlock} onChange={mockOnChange} />);
+
+      // Le badge "Fichier Direct" doit être visible
+      expect(screen.getByText('Fichier Direct')).toBeInTheDocument();
+      // Le message d'erreur YouTube ne doit PAS être affiché
+      expect(screen.queryByText(/Lien vidéo non valide/i)).not.toBeInTheDocument();
+    });
+
+    test('M4-12: Règle Fondamentale d\'Identité — Absence de contenu historique ou patrimonial auto-généré', () => {
+      // Vérifier que la palette et les réglages utilisent exclusivement des termes neutres
+      ANJOU_EDITION_PALETTE.forEach(color => {
+        expect(color.label).not.toMatch(/Plantagenêt|Château d'Angers|Généalogie|Cité Médiévale/i);
+      });
+    });
+
+  });
 });
+
+

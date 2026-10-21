@@ -38,6 +38,58 @@ const YoutubeIcon = ({ size = 20, color = "currentColor", fill = "none" }) => (
 );
 
 /**
+ * Palette officielle Anjou Édition (17 nuances certifiées).
+ * Conforme aux variables CSS de App.css et aux critères d'accessibilité WCAG 2.2 AA.
+ */
+export const ANJOU_EDITION_PALETTE = [
+  { label: 'Bleu Royal (Principal)', value: '#1e3a8a', textColor: '#ffffff' },
+  { label: 'Bleu Nuit Éditorial', value: '#0f2b5c', textColor: '#ffffff' },
+  { label: 'Bleu Ardoise Dashboard', value: '#004b7a', textColor: '#ffffff' },
+  { label: 'Bleu Royal Vif', value: '#2563eb', textColor: '#ffffff' },
+  { label: 'Bleu Ciel Loire', value: '#0284c7', textColor: '#ffffff' },
+  { label: 'Bleu Givré Doux', value: '#f0f7ff', textColor: '#0f2b5c' },
+  { label: 'Or Chaud Angevin', value: '#d97706', textColor: '#ffffff' },
+  { label: 'Or Doux Pastel', value: '#fef3c7', textColor: '#92400e' },
+  { label: 'Vert Loire Végétal', value: '#059669', textColor: '#ffffff' },
+  { label: 'Vert Givré', value: '#ecfdf5', textColor: '#065f46' },
+  { label: 'Pourpre Éditorial', value: '#7c3aed', textColor: '#ffffff' },
+  { label: 'Rose Pivoine', value: '#e11d48', textColor: '#ffffff' },
+  { label: 'Crème Papier Vélin', value: '#fdfbf7', textColor: '#1e293b' },
+  { label: 'Blanc Pur', value: '#ffffff', textColor: '#0f172a' },
+  { label: 'Ardoise Claire', value: '#f8fafc', textColor: '#334155' },
+  { label: 'Ardoise Sombre', value: '#1e293b', textColor: '#ffffff' },
+  { label: 'Noir Ébène Texte', value: '#0f172a', textColor: '#ffffff' }
+];
+
+/**
+ * Propriétés standard de style étendu pour le Page Builder.
+ */
+export const DEFAULT_EXTENDED_STYLE = {
+  paddingTop: '',
+  paddingBottom: '',
+  paddingLeft: '',
+  paddingRight: '',
+  marginTop: '',
+  marginBottom: '',
+  borderWidth: '',
+  borderStyle: 'none',
+  borderColor: '',
+  borderRadius: '',
+  boxShadow: '',
+  backgroundColor: '',
+  color: ''
+};
+
+/**
+ * Drapeaux de visibilité responsive par défaut pour un bloc.
+ */
+export const DEFAULT_RESPONSIVE_FLAGS = {
+  hideOnMobile: false,
+  hideOnTablet: false,
+  hideOnDesktop: false
+};
+
+/**
  * Registre exhaustif des blocs éditables pour Anjou Édition.
  */
 export const BLOCK_DEFINITIONS = {
@@ -408,26 +460,65 @@ export const BLOCK_DEFINITIONS = {
 };
 
 /**
- * Génère un bloc valide avec ses paramètres par défaut.
+ * Génère un bloc valide avec ses paramètres par défaut, styles étendus et drapeaux responsive.
+ * 
+ * @param {string} type - Type de bloc parmi BLOCK_DEFINITIONS
+ * @param {object} customSettings - Paramètres personnalisés injectés
+ * @returns {object} Bloc normalisé avec id unique, settings, et children optionnels
  */
 export const createBlock = (type, customSettings = {}) => {
   const definition = BLOCK_DEFINITIONS[type] || BLOCK_DEFINITIONS.text;
   const id = `${type}_${Math.random().toString(36).substr(2, 9)}`;
   const defaultSettings = JSON.parse(JSON.stringify(definition.defaultSettings || {}));
 
+  // Extraction et fusion propre des styles d'apparence (deep merge)
+  const mergedStyle = {
+    ...(defaultSettings.style || {}),
+    ...((customSettings && typeof customSettings.style === 'object') ? customSettings.style : {})
+  };
+
+  // Résolution des drapeaux responsive et de visibilité
+  const hideOnMobile = typeof customSettings?.hideOnMobile === 'boolean'
+    ? customSettings.hideOnMobile
+    : (typeof defaultSettings?.hideOnMobile === 'boolean' ? defaultSettings.hideOnMobile : false);
+
+  const hideOnTablet = typeof customSettings?.hideOnTablet === 'boolean'
+    ? customSettings.hideOnTablet
+    : (typeof defaultSettings?.hideOnTablet === 'boolean' ? defaultSettings.hideOnTablet : false);
+
+  const hideOnDesktop = typeof customSettings?.hideOnDesktop === 'boolean'
+    ? customSettings.hideOnDesktop
+    : (typeof defaultSettings?.hideOnDesktop === 'boolean' ? defaultSettings.hideOnDesktop : false);
+
+  const isHidden = typeof customSettings?.hidden === 'boolean'
+    ? customSettings.hidden
+    : (typeof defaultSettings?.hidden === 'boolean' ? defaultSettings.hidden : false);
+
+  const settings = {
+    ...defaultSettings,
+    ...customSettings,
+    hideOnMobile,
+    hideOnTablet,
+    hideOnDesktop,
+    hidden: isHidden,
+    style: mergedStyle
+  };
+
   return {
     id,
     type,
-    settings: {
-      ...defaultSettings,
-      ...customSettings
-    },
-    children: definition.hasChildren ? [] : undefined
+    hidden: isHidden,
+    settings,
+    children: definition.hasChildren ? (Array.isArray(customSettings?.children) ? customSettings.children : []) : undefined
   };
 };
 
 /**
- * Normalise récursivement un arbre de blocs pour garantir son intégrité.
+ * Normalise récursivement un arbre de blocs pour garantir son intégrité,
+ * hydrater les styles étendus manquants et initialiser les drapeaux responsive.
+ * 
+ * @param {Array} blocksList - Tableau de blocs bruts (Firestore, localStorage, ou importés)
+ * @returns {Array} Tableau de blocs normalisés et sécurisés
  */
 export const normalizeBlocks = (blocksList) => {
   if (!Array.isArray(blocksList)) return [];
@@ -439,16 +530,39 @@ export const normalizeBlocks = (blocksList) => {
     const type = BLOCK_DEFINITIONS[rawType] ? rawType : 'text';
     const definition = BLOCK_DEFINITIONS[type];
     const id = block.id || `${type}_${Math.random().toString(36).substr(2, 9)}`;
-    const settings = {
-      ...JSON.parse(JSON.stringify(definition.defaultSettings || {})),
-      ...(block.settings || {})
+    const defaultSettings = JSON.parse(JSON.stringify(definition.defaultSettings || {}));
+    const rawSettings = (block.settings && typeof block.settings === 'object') ? block.settings : {};
+
+    // 1. Fusion récursive des styles d'apparence
+    const defaultStyle = (defaultSettings.style && typeof defaultSettings.style === 'object') ? defaultSettings.style : {};
+    const rawStyle = (rawSettings.style && typeof rawSettings.style === 'object') ? rawSettings.style : {};
+    const mergedStyle = {
+      ...defaultStyle,
+      ...rawStyle
     };
 
-    // Rétrocompatibilité et préservation intégrale des blocs vidéo
+    // 2. Normalisation des drapeaux responsive et visibilité
+    const hideOnMobile = typeof rawSettings.hideOnMobile === 'boolean' ? rawSettings.hideOnMobile : false;
+    const hideOnTablet = typeof rawSettings.hideOnTablet === 'boolean' ? rawSettings.hideOnTablet : false;
+    const hideOnDesktop = typeof rawSettings.hideOnDesktop === 'boolean' ? rawSettings.hideOnDesktop : false;
+    const isHidden = Boolean(rawSettings.hidden ?? block.hidden ?? false);
+
+    // 3. Assemblage des paramètres normalisés
+    const settings = {
+      ...defaultSettings,
+      ...rawSettings,
+      hideOnMobile,
+      hideOnTablet,
+      hideOnDesktop,
+      hidden: isHidden,
+      style: mergedStyle
+    };
+
+    // 4. Rétrocompatibilité et préservation intégrale des blocs vidéo
     if (type === 'video') {
-      const rawUrl = block.settings?.url || block.settings?.src || settings.url || '';
+      const rawUrl = rawSettings.url || rawSettings.src || settings.url || '';
       const extractedId = extractYoutubeVideoId(rawUrl);
-      const rawId = block.settings?.videoId || settings.videoId || extractedId;
+      const rawId = rawSettings.videoId || settings.videoId || extractedId;
       
       if (rawUrl) {
         settings.url = rawUrl;
@@ -461,7 +575,7 @@ export const normalizeBlocks = (blocksList) => {
       }
     }
 
-    // Rétrocompatibilité et purge définitive des anciens flipbooks
+    // 5. Rétrocompatibilité et purge définitive des anciens flipbooks
     if (type === 'flipbookFeatured') {
       if (Array.isArray(settings.items)) {
         settings.items = settings.items.filter(it => 
@@ -478,6 +592,7 @@ export const normalizeBlocks = (blocksList) => {
     const normalized = {
       id,
       type,
+      hidden: isHidden,
       settings
     };
 
@@ -490,19 +605,42 @@ export const normalizeBlocks = (blocksList) => {
 };
 
 /**
- * Clone un bloc et tous ses enfants en leur attribuant de nouveaux identifiants uniques.
+ * Clone profondément un bloc et tous ses descendants en leur attribuant de nouveaux identifiants uniques,
+ * tout en dupliquant fidèlement l'ensemble des styles étendus, drapeaux responsive et réglages métiers.
+ * 
+ * @param {object} block - Bloc source à dupliquer
+ * @returns {object|null} Bloc dupliqué autonome ou null
  */
 export const cloneBlock = (block) => {
-  if (!block) return null;
+  if (!block || typeof block !== 'object') return null;
+
   const newType = block.type || 'text';
   const newId = `${newType}_${Math.random().toString(36).substr(2, 9)}`;
+
+  // Clonage en profondeur complet pour isoler toutes les références d'objets (style, settings, tableaux)
+  const clonedData = JSON.parse(JSON.stringify(block));
+
+  const rawSettings = (clonedData.settings && typeof clonedData.settings === 'object') ? clonedData.settings : {};
+  const rawStyle = (rawSettings.style && typeof rawSettings.style === 'object') ? rawSettings.style : {};
+
+  const clonedSettings = {
+    ...rawSettings,
+    style: { ...rawStyle },
+    hideOnMobile: typeof rawSettings.hideOnMobile === 'boolean' ? rawSettings.hideOnMobile : false,
+    hideOnTablet: typeof rawSettings.hideOnTablet === 'boolean' ? rawSettings.hideOnTablet : false,
+    hideOnDesktop: typeof rawSettings.hideOnDesktop === 'boolean' ? rawSettings.hideOnDesktop : false,
+    hidden: Boolean(rawSettings.hidden ?? block.hidden ?? false)
+  };
+
   const cloned = {
-    ...JSON.parse(JSON.stringify(block)),
-    id: newId
+    ...clonedData,
+    id: newId,
+    hidden: clonedSettings.hidden,
+    settings: clonedSettings
   };
 
   if (Array.isArray(cloned.children)) {
-    cloned.children = cloned.children.map(child => cloneBlock(child));
+    cloned.children = cloned.children.map(child => cloneBlock(child)).filter(Boolean);
   }
 
   return cloned;

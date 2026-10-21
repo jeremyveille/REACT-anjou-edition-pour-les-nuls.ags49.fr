@@ -50,6 +50,16 @@ export const IframePreview = ({ children, src = null, title = 'preview', device 
   // Device dimension class/styles mapping
   const getDimensionStyles = () => {
     switch (device) {
+      case 'laptop':
+        return {
+          width: '1024px',
+          height: '100%',
+          border: '10px solid #334155',
+          borderRadius: '20px',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+          margin: '1.5rem auto',
+          transition: 'all 0.3s ease'
+        };
       case 'tablet':
         return {
           width: '768px',

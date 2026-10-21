@@ -78,9 +78,21 @@ export const BuilderCanvas = ({
 
   const getDeviceClass = () => {
     switch (device) {
+      case 'laptop': return 'pb-canvas-laptop';
       case 'tablet': return 'pb-canvas-tablet';
       case 'mobile': return 'pb-canvas-mobile';
+      case 'desktop':
       default: return 'pb-canvas-desktop';
+    }
+  };
+
+  const getCanvasMaxWidth = () => {
+    switch (device) {
+      case 'laptop': return '1024px';
+      case 'tablet': return '768px';
+      case 'mobile': return '390px';
+      case 'desktop':
+      default: return '1200px';
     }
   };
 
@@ -115,7 +127,7 @@ export const BuilderCanvas = ({
     <div ref={canvasRef} className="pb-canvas-viewport" style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', backgroundColor: '#f1f5f9', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       
       {/* Barre d'adresse simulée */}
-      <div className="browser-address-bar bg-slate-200 dark:bg-slate-800 border-bottom px-3 py-2 d-flex align-items-center gap-2 rounded-t-lg shadow-sm flex-shrink-0" style={{ width: '100%', maxWidth: device === 'desktop' ? '1200px' : device === 'tablet' ? '768px' : '390px', borderTopLeftRadius: '8px', borderTopRightRadius: '8px' }}>
+      <div className="browser-address-bar bg-slate-200 dark:bg-slate-800 border-bottom px-3 py-2 d-flex align-items-center gap-2 rounded-t-lg shadow-sm flex-shrink-0" style={{ width: '100%', maxWidth: getCanvasMaxWidth(), borderTopLeftRadius: '8px', borderTopRightRadius: '8px' }}>
         <div className="d-flex gap-1.5 mr-2">
           <span className="ae-status-dot-danger" style={{ width: '10px', height: '10px', opacity: 0.7, borderRadius: '50%', backgroundColor: '#ef4444' }}></span>
           <span className="ae-status-indicator-warning" style={{ width: '10px', height: '10px', opacity: 0.7, borderRadius: '50%', backgroundColor: '#f59e0b' }}></span>
@@ -130,7 +142,7 @@ export const BuilderCanvas = ({
       </div>
 
       {/* Rendu principal fidèle au site public */}
-      <div className={`pb-canvas-wrapper mx-auto shadow-lg min-vh-100 ${getDeviceClass()}`} style={{ borderBottomLeftRadius: '8px', borderBottomRightRadius: '8px', borderTopLeftRadius: 0, borderTopRightRadius: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', width: '100%', maxWidth: device === 'desktop' ? '1200px' : device === 'tablet' ? '768px' : '390px', backgroundColor: '#ffffff' }}>
+      <div className={`pb-canvas-wrapper mx-auto shadow-lg min-vh-100 ${getDeviceClass()}`} style={{ borderBottomLeftRadius: '8px', borderBottomRightRadius: '8px', borderTopLeftRadius: 0, borderTopRightRadius: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', width: '100%', maxWidth: getCanvasMaxWidth(), backgroundColor: '#ffffff' }}>
         <div className={`App ${darkMode ? 'dark-mode' : ''}`} style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
           
           <PublicHeader darkMode={darkMode} toggleDarkMode={toggleLocalDarkMode} />

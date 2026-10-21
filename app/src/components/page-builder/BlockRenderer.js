@@ -18,9 +18,19 @@ import {
   YoutubeChannel,
   ContactFormWidget
 } from '../bootstrap-blocks/ContentWidgets';
-import { Trash2, ArrowUp, ArrowDown, Plus, GripVertical, Copy, Image as ImageIcon, Film, Eye, EyeOff } from 'lucide-react';
+import { Trash2, ArrowUp, ArrowDown, Plus, GripVertical, Copy, ClipboardPaste, Image as ImageIcon, Film, Eye, EyeOff } from 'lucide-react';
 import { useDroppable, useDraggable } from '@dnd-kit/core';
 import { BLOCK_DEFINITIONS } from './blockRegistry';
+
+/**
+ * Contexte React pour acheminer les actions de copier/coller de styles
+ * sans nécessiter de prop-drilling à travers BuilderCanvas.
+ */
+export const BlockActionsContext = React.createContext({
+  onCopyStyle: null,
+  onPasteStyle: null,
+  hasCopiedStyle: false
+});
 
 // Composant wrapper pour la poignée de drag
 const DragHandle = ({ id }) => {
@@ -87,10 +97,20 @@ export const BlockRenderer = ({
   onAddChild = () => {},
   onOpenMediaPicker = null,
   onOpenFlipbook = null,
+  onCopyStyle: propsOnCopyStyle = null,
+  onPasteStyle: propsOnPasteStyle = null,
+  hasCopiedStyle: propsHasCopiedStyle = null,
   parentBlock = null,
   indexInParent = 0,
   siblingCount = 0
 }) => {
+  const context = React.useContext(BlockActionsContext) || {};
+  const onCopyStyle = propsOnCopyStyle || context.onCopyStyle;
+  const onPasteStyle = propsOnPasteStyle || context.onPasteStyle;
+  const hasCopiedStyle = propsHasCopiedStyle !== null && propsHasCopiedStyle !== undefined
+    ? propsHasCopiedStyle 
+    : Boolean(context.hasCopiedStyle);
+
   const { id = 'invalid', type = 'unknown', settings = {}, children = [] } = block || {};
   
   const { setNodeRef, isOver } = useDroppable({
@@ -133,6 +153,9 @@ export const BlockRenderer = ({
       onAddChild={onAddChild}
       onOpenMediaPicker={onOpenMediaPicker}
       onOpenFlipbook={onOpenFlipbook}
+      onCopyStyle={onCopyStyle}
+      onPasteStyle={onPasteStyle}
+      hasCopiedStyle={hasCopiedStyle}
       parentBlock={block}
       indexInParent={idx}
       siblingCount={children.length}
@@ -221,7 +244,7 @@ export const BlockRenderer = ({
   return (
     <div 
       ref={setNodeRef}
-      className={`ae-pagebuilder-block-wrapper pb-editor-wrapper pb-type-${type} ${isActive ? 'pb-active-block' : ''} ${isOver ? 'ae-drop-active-block' : ''} ${isHidden ? 'pb-block-hidden' : ''}`}
+      className={`ae-pagebuilder-block-wrapper pb-editor-wrapper pb-type-${type} pb-${type}-wrapper ${isActive ? 'pb-active-block' : ''} ${isOver ? 'ae-drop-active-block' : ''} ${isHidden ? 'pb-block-hidden' : ''}`}
       onClick={handleWrapperClick}
       data-block-id={id}
     >
@@ -330,11 +353,40 @@ export const BlockRenderer = ({
         <button 
           type="button" 
           onClick={(e) => { e.stopPropagation(); onDuplicateBlock(id, parentBlock ? parentBlock.id : null); }}
-          className="pb-control-btn"
+          className="pb-control-btn pb-btn-duplicate"
           title="Dupliquer"
           aria-label={`Dupliquer le bloc ${displayLabel}`}
         >
           <Copy className="ae-icon-tiny" aria-hidden="true" />
+        </button>
+
+        {/* Action Copier le style */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (onCopyStyle) onCopyStyle(block);
+          }}
+          className="pb-control-btn pb-btn-copy-style"
+          title="Copier le style d'apparence"
+          aria-label={`Copier le style du bloc ${displayLabel}`}
+        >
+          <Copy className="ae-icon-tiny" aria-hidden="true" />
+        </button>
+
+        {/* Action Coller le style */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (hasCopiedStyle && onPasteStyle) onPasteStyle(id);
+          }}
+          disabled={!hasCopiedStyle}
+          className={`pb-control-btn pb-btn-paste-style ${hasCopiedStyle ? 'pb-btn-paste-active' : 'pb-btn-disabled'}`}
+          title={hasCopiedStyle ? "Coller le style d'apparence" : "Aucun style copié en mémoire"}
+          aria-label={`Coller le style sur le bloc ${displayLabel}`}
+        >
+          <ClipboardPaste className="ae-icon-tiny" aria-hidden="true" />
         </button>
 
         {/* Action d'ajout rapide pour les colonnes, rows, containers */}

@@ -428,7 +428,30 @@ Se déplacer dans le dossier : `cd app`
 
 ---
 
-*Dernière mise à jour du contexte par l'agent : 17 octobre 2026.*
+### 27. Refonte Complète du Constructeur de Page Visuel du Dashboard (`PageBuilder.js`, `BuilderSidebar.js`, `BuilderSettings.js`, `TreeStructureView.js`, `sectionTemplates.js`, `BlockRenderer.js`, `blockRegistry.js`, `page-builder.css`)
+*   **Ergonomie de l'Interface, Recherche & Vue Arborescente (R1)** :
+    *   **Recherche en temps réel** dans `BuilderSidebar.js` avec filtrage simultané des composants et des modèles, pilules de catégories (`Tous`, `Structure`, `Contenu`, `Modules`, `Modèles`), bouton de réinitialisation rapide `✕` et raccourci `Échap`.
+    *   **Vue structurelle hiérarchique (`TreeStructureView.js`)** : Onglet dédié « Structure » affichant l'arborescence récursive complète des sections, conteneurs, lignes, colonnes et blocs, avec sélection en 1 clic, compteur d'enfants et actions rapides (masquer/afficher, supprimer).
+    *   **Panneau latéral repliable** : Bouton dans la barre d'outils supérieure et raccourci clavier `Ctrl+B` permettant de replier/déplier le panneau latéral pour maximiser le canevas d'édition.
+*   **Manipulation Avancée des Blocs, Copier/Coller de Style & Raccourcis (R2)** :
+    *   **Copier / Coller de style d'apparence (`BlockActionsContext`)** : Boutons « Copier le style » et « Coller le style » sur chaque bloc et badge de presse-papier dans la barre d'outils, transférant couleurs, bordures, ombres et espacements sans altérer le contenu éditorial ou multimédia.
+    *   **Duplication récursive (`cloneBlock`)** : Duplication en 1 clic (`Ctrl+D`) régénérant tous les identifiants enfants et insérant la copie immédiatement après le bloc source.
+    *   **Masquage temporaire (`hidden`)** : Commutateur permettant de masquer un bloc aux visiteurs du site public tout en le conservant visible (avec badge « Masqué ») dans l'éditeur.
+    *   **Raccourcis clavier complets** : `Ctrl+Z` (Annuler), `Ctrl+Y` / `Ctrl+Shift+Z` (Rétablir), `Ctrl+S` (Enregistrer), `Ctrl+D` (Dupliquer), `Ctrl+B` (Panneau latéral), `Suppr` (Supprimer) et `Échap` (Désélectionner).
+*   **Personnalisation Visuelle Avancée, Nuancier Anjou Édition & Visibilité Responsive (R3)** :
+    *   **Inspecteur visuel par accordéons (`BuilderSettings.js`)** : Réglages précis des espacements (`padding`, `margin`), contours (`borderStyle`, `borderWidth`, `borderColor`, `borderRadius`) et ombres portées (`SHADOW_PRESETS` + ombre personnalisée).
+    *   **Palette officielle Anjou Édition (`ANJOU_EDITION_PALETTE`)** : 17 teintes certifiées applicables en 1 clic sur l'arrière-plan ou le texte.
+    *   **Visibilité par terminal** : Options `hideOnMobile`, `hideOnTablet`, `hideOnDesktop` appliquées dynamiquement par `BlockRenderer.js`.
+*   **Modèles de Sections Vierges & Médiathèque Directe (R4)** :
+    *   **Catalogue de 6 modèles de sections (`sectionTemplates.js`)** : En-tête Hero, Section 2 colonnes Texte & Média, Grille de 3 cartes, Appel à l'action (CTA), Citation littéraire & Séparateur, et Foire Aux Questions (FAQ), 100% neutres et conformes à la souveraineté éditoriale (aucun contenu historique ou patrimonial auto-généré).
+    *   **Intégration directe de `MediaLibraryModal`** sur tous les blocs visuels (Image, Carte, Vidéo, Galerie Photos, Section avec image de fond).
+*   **Aperçu Responsive 4 Paliers & Qualité (R5)** :
+    *   **4 Paliers Responsive Unifiés** : **S** (Smartphone 390px), **M** (Tablette 768px), **L** (Ordinateur portable 1024px) et **XL** (Grand écran 100% / 1200px) synchronisés sur `BuilderCanvas.js` et `IframePreview.js`.
+    *   **Tests & Compilation** : 83 tests dédiés au Page Builder répartis en 3 suites (`PageBuilder.test.js`, `PageBuilder.e2e.test.js`, `sectionTemplates.test.js`) réussis à 100%, et compilation `npm run build` avec 0 erreur et 0 avertissement.
+
+---
+
+*Dernière mise à jour du contexte par l'agent : 21 octobre 2026.*
 
 
 

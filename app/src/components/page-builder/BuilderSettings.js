@@ -8,10 +8,23 @@ import {
   Settings,
   ExternalLink,
   Image as ImageIcon,
-  Film
+  Film,
+  ChevronDown,
+  ChevronUp,
+  Palette,
+  Maximize2,
+  Square,
+  Sparkles,
+  Smartphone,
+  Tablet,
+  Monitor,
+
+
+  RotateCcw,
+  Check
 } from 'lucide-react';
 import { extractYoutubeVideoId } from '../../utils/youtubeUtils';
-import { BLOCK_DEFINITIONS } from './blockRegistry';
+import { BLOCK_DEFINITIONS, ANJOU_EDITION_PALETTE } from './blockRegistry';
 import { MediaLibraryModal } from '../MediaLibraryModal';
 
 const COMMON_ICONS = [
@@ -21,9 +34,73 @@ const COMMON_ICONS = [
 ];
 
 /**
- * Panneau de réglages pour le composant Vidéo (YouTube).
+ * Presets d'ombres portées certifiés Anjou Édition (R3)
+ */
+export const SHADOW_PRESETS = {
+  none: 'none',
+  light: '0 1px 3px rgba(0, 0, 0, 0.08)',
+  medium: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+  large: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+  anjou: '0 10px 25px -5px rgba(30, 58, 138, 0.25)'
+};
+
+/**
+ * Helper de résolution de la valeur active du sélecteur d'ombre portée
+ */
+export const resolveShadowValue = (currentCss) => {
+  if (!currentCss || currentCss === 'none') return 'none';
+  if (currentCss === SHADOW_PRESETS.light) return 'light';
+  if (currentCss === SHADOW_PRESETS.medium || currentCss === 'medium') return 'medium';
+  if (currentCss === SHADOW_PRESETS.large) return 'large';
+  if (currentCss === SHADOW_PRESETS.anjou) return 'anjou';
+  return 'custom';
+};
+
+/**
+ * Composant d'Accordéon Réutilisable pour l'Inspecteur (R3)
+ */
+export const SettingsAccordionItem = ({ 
+  id, 
+  title, 
+  icon: Icon, 
+  isOpen, 
+  onToggle, 
+  badge = null, 
+  children 
+}) => {
+  return (
+    <div className={`ae-editor-accordion mb-2.5 ${isOpen ? 'is-open' : ''}`}>
+      <button
+        type="button"
+        id={`acc-btn-${id}`}
+        aria-expanded={isOpen}
+        aria-controls={`acc-content-${id}`}
+        onClick={onToggle}
+        className="ae-accordion-header w-100 d-flex align-items-center justify-content-between p-2.5 border-0 cursor-pointer text-start"
+      >
+        <span className="d-flex align-items-center gap-2">
+          {Icon && <Icon size={14} className="text-primary" />}
+          <span>{title}</span>
+        </span>
+        <span className="d-flex align-items-center gap-2">
+          {badge}
+          {isOpen ? <ChevronUp size={14} className="text-muted" /> : <ChevronDown size={14} className="text-muted" />}
+        </span>
+      </button>
+
+      {isOpen && (
+        <div id={`acc-content-${id}`} className="ae-accordion-content p-3 border-top">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+};
+
+/**
+ * Panneau de réglages pour le composant Vidéo (YouTube ou fichier direct).
  * Récupère automatiquement l'URL existante, supporte tous les formats YouTube
- * et valide en temps réel sans interrompre la saisie.
+ * ainsi que les fichiers vidéo directs (.mp4, .webm) sans faux positifs.
  */
 const VideoBlockSettings = ({ block, onChange, onOpenMediaPicker }) => {
   const { id, settings = {} } = block;
@@ -38,14 +115,20 @@ const VideoBlockSettings = ({ block, onChange, onOpenMediaPicker }) => {
     setInputValue(val);
   }, [id, settings.url, settings.videoId, settings.src]);
 
+  const isDirectVideoFile = Boolean(
+    inputValue && (/(\.mp4|\.webm|\.ogg)(\?.*)?$/i.test(inputValue) || inputValue.startsWith('data:video/'))
+  );
   const extractedId = extractYoutubeVideoId(inputValue);
   const isInputEmpty = !inputValue || inputValue.trim() === '';
-  const isInvalid = !isInputEmpty && !extractedId;
+  const isInvalid = !isInputEmpty && !extractedId && !isDirectVideoFile;
 
   const handleUrlChange = (e) => {
     const val = e.target.value;
     setInputValue(val);
 
+    const isDirect = Boolean(
+      val && (/(\.mp4|\.webm|\.ogg)(\?.*)?$/i.test(val) || val.startsWith('data:video/'))
+    );
     const newVideoId = extractYoutubeVideoId(val);
 
     if (newVideoId) {
@@ -56,8 +139,15 @@ const VideoBlockSettings = ({ block, onChange, onOpenMediaPicker }) => {
         embedUrl: `https://www.youtube.com/embed/${newVideoId}`,
         lastValidVideoId: newVideoId
       });
+    } else if (isDirect) {
+      onChange(id, {
+        ...settings,
+        url: val,
+        videoId: '',
+        embedUrl: ''
+      });
     } else {
-      // URL invalide ou en cours de frappe : on conserve la saisie dans url et on maintient le dernier videoId valide pour ne pas casser le lecteur
+      // URL en cours de frappe : on conserve la saisie dans url et on maintient le dernier videoId valide pour ne pas casser le lecteur
       onChange(id, {
         ...settings,
         url: val,
@@ -67,12 +157,27 @@ const VideoBlockSettings = ({ block, onChange, onOpenMediaPicker }) => {
   };
 
   const activeVideoId = extractedId || settings.videoId || settings.lastValidVideoId;
-  const watchUrl = activeVideoId ? `https://www.youtube.com/watch?v=${activeVideoId}` : null;
-  const thumbnailUrl = activeVideoId ? `https://img.youtube.com/vi/${activeVideoId}/hqdefault.jpg` : null;
+  const watchUrl = !isDirectVideoFile && activeVideoId ? `https://www.youtube.com/watch?v=${activeVideoId}` : null;
+  const thumbnailUrl = !isDirectVideoFile && activeVideoId ? `https://img.youtube.com/vi/${activeVideoId}/hqdefault.jpg` : null;
 
   return (
     <div className="space-y-3">
-      {thumbnailUrl && (
+      {isDirectVideoFile && (
+        <div className="pb-media-preview-box mb-2 p-2 border rounded-lg bg-slate-900 text-center position-relative shadow-sm">
+          <video 
+            src={inputValue} 
+            controls 
+            className="w-100 rounded border border-slate-700" 
+            style={{ maxHeight: '140px' }} 
+          />
+          <div className="d-flex align-items-center justify-content-between mt-1 text-slate-300" style={{ fontSize: '11px' }}>
+            <span className="font-mono text-truncate">Vidéo locale</span>
+            <span className="badge bg-success text-white font-normal" style={{ fontSize: '10px' }}>Fichier Direct</span>
+          </div>
+        </div>
+      )}
+
+      {!isDirectVideoFile && thumbnailUrl && (
         <div className="pb-media-preview-box mb-2 p-2 border rounded-lg bg-slate-900 text-center position-relative shadow-sm">
           <img 
             src={thumbnailUrl} 
@@ -89,21 +194,21 @@ const VideoBlockSettings = ({ block, onChange, onOpenMediaPicker }) => {
 
       <div>
         <label className="db-label font-bold text-xs" htmlFor="pb-video-url-input">
-          Lien YouTube
+          Lien YouTube ou fichier vidéo direct
         </label>
         <input
           id="pb-video-url-input"
           type="text"
           value={inputValue}
           onChange={handleUrlChange}
-          placeholder="https://www.youtube.com/watch?v=... ou https://youtu.be/..."
+          placeholder="https://www.youtube.com/watch?v=... ou https://.../video.mp4"
           className={`db-input text-xs w-100 ${isInvalid ? 'border-danger' : ''}`}
           aria-invalid={isInvalid}
           aria-describedby={isInvalid ? 'pb-video-error' : undefined}
         />
         {isInvalid && (
           <p id="pb-video-error" className="text-danger mt-1 mb-0 font-medium" style={{ fontSize: '11px', color: '#dc3545' }}>
-            Lien YouTube non valide ou format non reconnu (watch, youtu.be, embed, shorts)
+            Lien YouTube non valide (saisissez une URL YouTube ou un fichier vidéo direct .mp4, .webm)
           </p>
         )}
       </div>
@@ -115,6 +220,7 @@ const VideoBlockSettings = ({ block, onChange, onOpenMediaPicker }) => {
             onClick={onOpenMediaPicker}
             className="btn btn-outline-primary btn-xs py-1 px-2.5 d-inline-flex align-items-center gap-1.5 rounded"
             style={{ fontSize: '11px' }}
+            aria-label="Choisir une vidéo dans la médiathèque"
           >
             <Film size={12} /> Choisir depuis la médiathèque
           </button>
@@ -144,6 +250,34 @@ export const BuilderSettings = ({ block, onChange }) => {
     title: '',
     onSelect: null
   });
+
+  const [openSections, setOpenSections] = useState({
+    palette: true,
+    spacing: true,
+    borders: true,
+    shadows: true,
+    visibility: true,
+    advanced: false
+  });
+  const [colorTarget, setColorTarget] = useState('backgroundColor'); // 'backgroundColor' | 'color'
+
+  const toggleSection = (sectionKey) => {
+    setOpenSections(prev => ({
+      ...prev,
+      [sectionKey]: !prev[sectionKey]
+    }));
+  };
+
+  const setAllSections = (isOpen) => {
+    setOpenSections({
+      palette: isOpen,
+      spacing: isOpen,
+      borders: isOpen,
+      shadows: isOpen,
+      visibility: isOpen,
+      advanced: isOpen
+    });
+  };
 
   if (!block) {
     return (
@@ -176,6 +310,60 @@ export const BuilderSettings = ({ block, onChange }) => {
     });
   };
 
+  const handleGeneralPaddingChange = (e) => {
+    const val = e.target.value;
+    const currentStyle = settings.style || {};
+    onChange(id, {
+      ...settings,
+      style: {
+        ...currentStyle,
+        padding: val,
+        paddingTop: val,
+        paddingBottom: val,
+        paddingLeft: val,
+        paddingRight: val
+      }
+    });
+  };
+
+  const handleShadowSelectChange = (e) => {
+    const val = e.target.value;
+    if (val === 'custom') {
+      if (!settings.style?.boxShadow) {
+        updateNestedStyle('boxShadow', '0 4px 6px rgba(0, 0, 0, 0.1)');
+      }
+    } else {
+      const cssVal = SHADOW_PRESETS[val] || val;
+      updateNestedStyle('boxShadow', cssVal);
+    }
+  };
+
+  const handleResetSpacing = () => {
+    const currentStyle = { ...(settings.style || {}) };
+    delete currentStyle.padding;
+    delete currentStyle.paddingTop;
+    delete currentStyle.paddingBottom;
+    delete currentStyle.paddingLeft;
+    delete currentStyle.paddingRight;
+    delete currentStyle.marginTop;
+    delete currentStyle.marginBottom;
+    onChange(id, {
+      ...settings,
+      style: currentStyle
+    });
+  };
+
+  const handleResetBorders = () => {
+    const currentStyle = { ...(settings.style || {}) };
+    currentStyle.borderStyle = 'none';
+    currentStyle.borderWidth = '';
+    currentStyle.borderColor = '';
+    onChange(id, {
+      ...settings,
+      style: currentStyle
+    });
+  };
+
   return (
     <div className="builder-settings space-y-4 p-3">
       {/* Header Info */}
@@ -190,7 +378,7 @@ export const BuilderSettings = ({ block, onChange }) => {
       </div>
 
       {/* Visibilité & Publication du bloc */}
-      <div className="p-2.5 mb-3 bg-slate-50 dark:bg-slate-800 rounded border d-flex align-items-center justify-content-between">
+      <div className="p-2.5 mb-2 bg-slate-50 dark:bg-slate-800 rounded border d-flex align-items-center justify-content-between">
         <div className="d-flex flex-column">
           <span className="text-xs font-bold text-slate-700 dark:text-slate-200">Visibilité sur le site public</span>
           <span className="text-[11px] text-muted">{settings.hidden ? 'Masqué aux visiteurs' : 'Visible publiquement'}</span>
@@ -207,6 +395,30 @@ export const BuilderSettings = ({ block, onChange }) => {
           <label htmlFor={`chk-vis-${id}`} className="text-xs font-semibold cursor-pointer mb-0">
             {settings.hidden ? 'Masqué' : 'Actif'}
           </label>
+        </div>
+      </div>
+
+      {/* Barre d'action rapide pour déplier/replier les accordéons */}
+      <div className="d-flex justify-content-between align-items-center mb-2 px-1">
+        <span className="text-muted" style={{ fontSize: '11px', fontWeight: 600 }}>Styles & Visibilité étendue</span>
+        <div className="d-flex gap-1.5">
+          <button
+            type="button"
+            onClick={() => setAllSections(true)}
+            className="btn btn-link btn-xs p-0 text-decoration-none text-muted"
+            style={{ fontSize: '11px' }}
+          >
+            Tout déplier
+          </button>
+          <span className="text-muted" style={{ fontSize: '11px' }}>•</span>
+          <button
+            type="button"
+            onClick={() => setAllSections(false)}
+            className="btn btn-link btn-xs p-0 text-decoration-none text-muted"
+            style={{ fontSize: '11px' }}
+          >
+            Tout replier
+          </button>
         </div>
       </div>
 
@@ -755,6 +967,7 @@ export const BuilderSettings = ({ block, onChange }) => {
                 value={settings.title || ''}
                 onChange={(e) => updateSetting('title', e.target.value)}
                 className="db-input text-xs w-100"
+                placeholder="Galerie Photos"
               />
             </div>
 
@@ -765,6 +978,7 @@ export const BuilderSettings = ({ block, onChange }) => {
                 value={settings.subtitle || ''}
                 onChange={(e) => updateSetting('subtitle', e.target.value)}
                 className="db-input text-xs w-100"
+                placeholder="Cliquez sur une photographie pour l'agrandir en haute définition."
               />
             </div>
 
@@ -778,6 +992,165 @@ export const BuilderSettings = ({ block, onChange }) => {
                 <option value="grid">Grille complète (avec zoom HD)</option>
                 <option value="sidebar">Miniatures (format barre latérale)</option>
               </select>
+            </div>
+
+            {/* Gestion de la liste des photographies */}
+            <div className="border-top pt-2">
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <label className="db-label font-bold text-xs mb-0">
+                  Photographies ({settings.images?.length || 0})
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setMediaModal({
+                    isOpen: true,
+                    filterType: 'image',
+                    title: 'Ajouter une photo à la galerie',
+                    onSelect: (media) => {
+                      const currentImages = Array.isArray(settings.images) ? [...settings.images] : [];
+                      currentImages.push({
+                        id: media.id || `img_${Date.now()}`,
+                        url: media.url || media.downloadUrl || '',
+                        thumbnailUrl: media.thumbnailUrl || media.url || media.downloadUrl || '',
+                        title: media.name || media.title || media.alt || 'Photographie',
+                        description: media.alt || ''
+                      });
+                      updateSetting('images', currentImages);
+                    }
+                  })}
+                  className="btn btn-outline-primary btn-xs py-1 px-2.5 d-inline-flex align-items-center gap-1.5 rounded"
+                  style={{ fontSize: '11px' }}
+                  aria-label="Ajouter une photo à la galerie depuis la médiathèque"
+                >
+                  <Plus size={12} /> <ImageIcon size={12} /> Ajouter depuis la médiathèque
+                </button>
+              </div>
+
+              {(!settings.images || settings.images.length === 0) ? (
+                <div className="text-center p-3 border rounded bg-slate-50 text-muted" style={{ fontSize: '11px' }}>
+                  <ImageIcon size={24} className="mx-auto mb-1 text-slate-400" />
+                  <p className="mb-1">Aucune photo dans la galerie.</p>
+                  <button
+                    type="button"
+                    onClick={() => setMediaModal({
+                      isOpen: true,
+                      filterType: 'image',
+                      title: 'Ajouter une photo à la galerie',
+                      onSelect: (media) => {
+                        updateSetting('images', [{
+                          id: media.id || `img_${Date.now()}`,
+                          url: media.url || media.downloadUrl || '',
+                          thumbnailUrl: media.thumbnailUrl || media.url || media.downloadUrl || '',
+                          title: media.name || media.title || media.alt || 'Photographie',
+                          description: media.alt || ''
+                        }]);
+                      }
+                    })}
+                    className="btn btn-link btn-xs text-primary p-0 text-decoration-none font-bold"
+                  >
+                    Choisir une première photo
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {settings.images.map((img, idx) => (
+                    <div key={img.id || idx} className="card p-2 bg-slate-50 dark:bg-slate-800 border">
+                      <div className="d-flex align-items-center gap-2 mb-1.5">
+                        <img 
+                          src={img.thumbnailUrl || img.url} 
+                          alt={img.title || "Photo"} 
+                          className="rounded border" 
+                          style={{ width: '40px', height: '40px', objectFit: 'cover' }}
+                          onError={(e) => { e.target.style.display = 'none'; }}
+                        />
+                        <div className="flex-grow-1 min-w-0">
+                          <input
+                            type="text"
+                            value={img.title || ''}
+                            onChange={(e) => {
+                              const next = [...settings.images];
+                              next[idx] = { ...next[idx], title: e.target.value };
+                              updateSetting('images', next);
+                            }}
+                            placeholder="Titre de la photo"
+                            className="db-input text-xs py-0.5 px-1.5 w-100"
+                            title="Modifier le titre de la photo"
+                          />
+                        </div>
+                        <div className="d-flex gap-1 flex-shrink-0">
+                          <button
+                            type="button"
+                            disabled={idx === 0}
+                            onClick={() => {
+                              const next = [...settings.images];
+                              const tmp = next[idx];
+                              next[idx] = next[idx - 1];
+                              next[idx - 1] = tmp;
+                              updateSetting('images', next);
+                            }}
+                            className="btn btn-light btn-xs p-1 text-muted"
+                            title="Monter"
+                            aria-label={`Monter la photo ${idx + 1}`}
+                          >
+                            <ArrowUp size={12} />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={idx === settings.images.length - 1}
+                            onClick={() => {
+                              const next = [...settings.images];
+                              const tmp = next[idx];
+                              next[idx] = next[idx + 1];
+                              next[idx + 1] = tmp;
+                              updateSetting('images', next);
+                            }}
+                            className="btn btn-light btn-xs p-1 text-muted"
+                            title="Descendre"
+                            aria-label={`Descendre la photo ${idx + 1}`}
+                          >
+                            <ArrowDown size={12} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setMediaModal({
+                              isOpen: true,
+                              filterType: 'image',
+                              title: 'Remplacer cette photo',
+                              onSelect: (media) => {
+                                const next = [...settings.images];
+                                next[idx] = {
+                                  ...next[idx],
+                                  url: media.url || media.downloadUrl || '',
+                                  thumbnailUrl: media.thumbnailUrl || media.url || media.downloadUrl || '',
+                                  title: next[idx].title || media.name || media.title || 'Photographie'
+                                };
+                                updateSetting('images', next);
+                              }
+                            })}
+                            className="btn btn-light btn-xs p-1 text-primary"
+                            title="Remplacer l'image"
+                            aria-label={`Remplacer la photo ${idx + 1}`}
+                          >
+                            <ImageIcon size={12} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const next = settings.images.filter((_, i) => i !== idx);
+                              updateSetting('images', next);
+                            }}
+                            className="btn btn-light btn-xs p-1 text-danger"
+                            title="Supprimer"
+                            aria-label={`Supprimer la photo ${idx + 1}`}
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -1007,7 +1380,7 @@ export const BuilderSettings = ({ block, onChange }) => {
         )}
 
         {/* =========================================================================
-            9b. RÉGLAGES SPÉCIFIQUES : VIDÉO (YOUTUBE)
+            9b. RÉGLAGES SPÉCIFIQUES : VIDÉO (YOUTUBE OU FICHIER DIRECT)
            ========================================================================= */}
         {type === 'video' && (
           <VideoBlockSettings
@@ -1018,14 +1391,24 @@ export const BuilderSettings = ({ block, onChange }) => {
               filterType: 'video',
               title: 'Sélectionner une vidéo dans la médiathèque',
               onSelect: (media) => {
-                const vidUrl = media.url;
+                const vidUrl = media.url || media.downloadUrl || '';
                 const newId = extractYoutubeVideoId(vidUrl);
-                onChange(id, {
-                  ...settings,
-                  url: vidUrl,
-                  videoId: newId || settings.videoId || 'dQw4w9WgXcQ',
-                  embedUrl: newId ? `https://www.youtube.com/embed/${newId}` : undefined
-                });
+                if (newId) {
+                  onChange(id, {
+                    ...settings,
+                    url: vidUrl,
+                    videoId: newId,
+                    embedUrl: `https://www.youtube.com/embed/${newId}`,
+                    lastValidVideoId: newId
+                  });
+                } else {
+                  onChange(id, {
+                    ...settings,
+                    url: vidUrl,
+                    videoId: '',
+                    embedUrl: ''
+                  });
+                }
               }
             })}
           />
@@ -1083,14 +1466,27 @@ export const BuilderSettings = ({ block, onChange }) => {
                     filterType: 'image',
                     title: 'Sélectionner une image pour la carte',
                     onSelect: (media) => {
-                      updateSetting('image', media.url);
+                      updateSetting('image', media.url || media.downloadUrl || '');
                     }
                   })}
                   className="btn btn-outline-primary btn-xs py-1 px-2.5 d-inline-flex align-items-center gap-1.5 rounded"
                   style={{ fontSize: '11px' }}
+                  aria-label="Choisir une image pour la carte depuis la médiathèque"
                 >
                   <ImageIcon size={12} /> Choisir depuis la médiathèque
                 </button>
+                {settings.image && (
+                  <button
+                    type="button"
+                    onClick={() => updateSetting('image', '')}
+                    className="btn btn-outline-danger btn-xs py-1 px-2 rounded"
+                    style={{ fontSize: '11px' }}
+                    title="Retirer l'image de la carte"
+                    aria-label="Retirer l'image de la carte"
+                  >
+                    Retirer l'image
+                  </button>
+                )}
               </div>
             </div>
             <div>
@@ -1488,6 +1884,579 @@ export const BuilderSettings = ({ block, onChange }) => {
             className="db-input text-xs w-100"
           />
         </div>
+
+        {/* =========================================================================
+            15. ACCORDÉON : NUANCIER OFFICIEL ANJOU ÉDITION (17 TEINTES) (R3)
+           ========================================================================= */}
+        <SettingsAccordionItem
+          id={`acc-palette-${id}`}
+          title="Nuancier Officiel Anjou Édition"
+          icon={Palette}
+          isOpen={openSections.palette}
+          onToggle={() => toggleSection('palette')}
+          badge={
+            (settings.style?.backgroundColor || settings.style?.color) ? (
+              <span className="badge bg-primary text-white" style={{ fontSize: '10px' }}>
+                Personnalisé
+              </span>
+            ) : null
+          }
+        >
+          <div className="pb-palette-container space-y-3">
+            {/* Cible de couleur : Fond ou Texte */}
+            <div className="d-flex align-items-center justify-content-between p-1 bg-slate-100 dark:bg-slate-800 rounded">
+              <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 ms-1">Appliquer la couleur sur :</span>
+              <div className="btn-group btn-group-sm" role="group" aria-label="Cible de couleur">
+                <button
+                  type="button"
+                  onClick={() => setColorTarget('backgroundColor')}
+                  className={`btn btn-xs py-1 px-2.5 rounded ${colorTarget === 'backgroundColor' ? 'btn-primary text-white shadow-sm font-bold' : 'btn-light text-muted'}`}
+                  style={{ fontSize: '11px' }}
+                >
+                  🎨 Fond
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setColorTarget('color')}
+                  className={`btn btn-xs py-1 px-2.5 rounded ${colorTarget === 'color' ? 'btn-primary text-white shadow-sm font-bold' : 'btn-light text-muted'}`}
+                  style={{ fontSize: '11px' }}
+                >
+                  ✍️ Texte
+                </button>
+              </div>
+            </div>
+
+            {/* Grille des 17 nuances officielles */}
+            <div>
+              <div className="d-flex justify-content-between align-items-center mb-1.5">
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                  Palette certifiée Anjou (17 nuances)
+                </span>
+                <span className="text-muted" style={{ fontSize: '10px' }}>
+                  {colorTarget === 'backgroundColor' ? 'Arrière-plan' : 'Typographie'}
+                </span>
+              </div>
+              <div className="pb-palette-grid">
+                {ANJOU_EDITION_PALETTE.map((c) => {
+                  const currentValue = colorTarget === 'backgroundColor' 
+                    ? settings.style?.backgroundColor 
+                    : settings.style?.color;
+                  const isSelected = (currentValue || '').toLowerCase() === c.value.toLowerCase();
+                  const isWhite = c.value.toLowerCase() === '#ffffff';
+
+                  return (
+                    <button
+                      key={c.value}
+                      type="button"
+                      onClick={() => updateNestedStyle(colorTarget, c.value)}
+                      title={`${c.label} (${c.value})`}
+                      aria-label={`${c.label} (${c.value})`}
+                      className={`pb-palette-swatch ${isSelected ? 'pb-palette-swatch-active' : ''} ${isWhite ? 'pb-palette-swatch-white' : ''}`}
+                      style={{
+                        backgroundColor: c.value,
+                        color: c.textColor
+                      }}
+                    >
+                      {isSelected && <Check size={12} strokeWidth={3} />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Sélecteur libre + saisie hexa + réinitialisation */}
+            <div className="pt-2 border-top">
+              <div className="d-flex align-items-center gap-2">
+                <input
+                  type="color"
+                  value={
+                    (colorTarget === 'backgroundColor' ? settings.style?.backgroundColor : settings.style?.color) || '#004b7a'
+                  }
+                  onChange={(e) => updateNestedStyle(colorTarget, e.target.value)}
+                  className="p-0 border rounded cursor-pointer"
+                  style={{ width: '32px', height: '28px' }}
+                  title="Pipette de couleur personnalisée"
+                  aria-label="Pipette de couleur personnalisée"
+                />
+                <input
+                  type="text"
+                  value={(colorTarget === 'backgroundColor' ? settings.style?.backgroundColor : settings.style?.color) || ''}
+                  onChange={(e) => updateNestedStyle(colorTarget, e.target.value)}
+                  placeholder="#004b7a ou transparent"
+                  className="db-input text-xs flex-grow-1"
+                  style={{ height: '28px' }}
+                  aria-label="Code couleur hexadécimal"
+                />
+                <button
+                  type="button"
+                  onClick={() => updateNestedStyle(colorTarget, '')}
+                  className="btn btn-outline-secondary btn-xs py-1 px-2 rounded"
+                  style={{ fontSize: '11px', height: '28px' }}
+                  title="Effacer la couleur"
+                  aria-label="Effacer la couleur"
+                >
+                  <RotateCcw size={12} />
+                </button>
+              </div>
+            </div>
+          </div>
+        </SettingsAccordionItem>
+
+        {/* =========================================================================
+            16. ACCORDÉON : ESPACEMENTS (PADDING & MARGIN) (R3)
+           ========================================================================= */}
+        <SettingsAccordionItem
+          id={`acc-spacing-${id}`}
+          title="Espacements (Padding & Marges)"
+          icon={Maximize2}
+          isOpen={openSections.spacing}
+          onToggle={() => toggleSection('spacing')}
+          badge={
+            (settings.style?.padding || settings.style?.paddingTop || settings.style?.marginTop) ? (
+              <span className="badge bg-primary text-white" style={{ fontSize: '10px' }}>
+                Actif
+              </span>
+            ) : null
+          }
+        >
+          <div className="space-y-3">
+            {/* Contrôle général de padding (Requis pour TEST-R3-1) */}
+            <div>
+              <div className="d-flex justify-content-between align-items-center mb-1">
+                <label htmlFor={`pb-style-padding-${id}`} className="db-label font-bold text-xs mb-0">
+                  Espacement intérieur (Padding)
+                </label>
+                <button
+                  type="button"
+                  onClick={handleResetSpacing}
+                  className="btn btn-link btn-xs p-0 text-decoration-none text-muted"
+                  style={{ fontSize: '10px' }}
+                  title="Réinitialiser tous les espacements"
+                >
+                  Réinitialiser
+                </button>
+              </div>
+              <input
+                id={`pb-style-padding-${id}`}
+                aria-label="Espacement intérieur (Padding)"
+                type="text"
+                value={settings.style?.padding ?? settings.style?.paddingTop ?? ''}
+                onChange={handleGeneralPaddingChange}
+                placeholder="ex: 24px ou 1.5rem"
+                className="db-input text-xs w-100"
+              />
+            </div>
+
+            {/* Détail granulaire Padding 4 côtés */}
+            <div>
+              <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                Padding granulaire par côté
+              </span>
+              <div className="pb-spacing-grid">
+                <div className="pb-spacing-field">
+                  <label htmlFor={`pb-pad-top-${id}`}>Haut (Top)</label>
+                  <input
+                    id={`pb-pad-top-${id}`}
+                    type="text"
+                    value={settings.style?.paddingTop ?? ''}
+                    onChange={(e) => updateNestedStyle('paddingTop', e.target.value)}
+                    placeholder="ex: 16px"
+                    className="db-input text-xs"
+                  />
+                </div>
+                <div className="pb-spacing-field">
+                  <label htmlFor={`pb-pad-bottom-${id}`}>Bas (Bottom)</label>
+                  <input
+                    id={`pb-pad-bottom-${id}`}
+                    type="text"
+                    value={settings.style?.paddingBottom ?? ''}
+                    onChange={(e) => updateNestedStyle('paddingBottom', e.target.value)}
+                    placeholder="ex: 16px"
+                    className="db-input text-xs"
+                  />
+                </div>
+                <div className="pb-spacing-field">
+                  <label htmlFor={`pb-pad-left-${id}`}>Gauche (Left)</label>
+                  <input
+                    id={`pb-pad-left-${id}`}
+                    type="text"
+                    value={settings.style?.paddingLeft ?? ''}
+                    onChange={(e) => updateNestedStyle('paddingLeft', e.target.value)}
+                    placeholder="ex: 16px"
+                    className="db-input text-xs"
+                  />
+                </div>
+                <div className="pb-spacing-field">
+                  <label htmlFor={`pb-pad-right-${id}`}>Droite (Right)</label>
+                  <input
+                    id={`pb-pad-right-${id}`}
+                    type="text"
+                    value={settings.style?.paddingRight ?? ''}
+                    onChange={(e) => updateNestedStyle('paddingRight', e.target.value)}
+                    placeholder="ex: 16px"
+                    className="db-input text-xs"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Marges extérieures */}
+            <div className="pt-2 border-top">
+              <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                Marges extérieures (Margin)
+              </span>
+              <div className="pb-spacing-grid">
+                <div className="pb-spacing-field">
+                  <label htmlFor={`pb-mar-top-${id}`}>Marge Haute (Top)</label>
+                  <input
+                    id={`pb-mar-top-${id}`}
+                    type="text"
+                    value={settings.style?.marginTop ?? ''}
+                    onChange={(e) => updateNestedStyle('marginTop', e.target.value)}
+                    placeholder="ex: 20px"
+                    className="db-input text-xs"
+                  />
+                </div>
+                <div className="pb-spacing-field">
+                  <label htmlFor={`pb-mar-bottom-${id}`}>Marge Basse (Bottom)</label>
+                  <input
+                    id={`pb-mar-bottom-${id}`}
+                    type="text"
+                    value={settings.style?.marginBottom ?? ''}
+                    onChange={(e) => updateNestedStyle('marginBottom', e.target.value)}
+                    placeholder="ex: 20px"
+                    className="db-input text-xs"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </SettingsAccordionItem>
+
+        {/* =========================================================================
+            17. ACCORDÉON : BORDURES & COINS ARRONDIS (R3)
+           ========================================================================= */}
+        <SettingsAccordionItem
+          id={`acc-borders-${id}`}
+          title="Bordures & Coins Arrondis"
+          icon={Square}
+          isOpen={openSections.borders}
+          onToggle={() => toggleSection('borders')}
+          badge={
+            (settings.style?.borderStyle && settings.style?.borderStyle !== 'none') ? (
+              <span className="badge bg-primary text-white" style={{ fontSize: '10px' }}>
+                {settings.style.borderStyle}
+              </span>
+            ) : null
+          }
+        >
+          <div className="space-y-3">
+            {/* Style de bordure (Requis pour TEST-R3-1) */}
+            <div>
+              <div className="d-flex justify-content-between align-items-center mb-1">
+                <label htmlFor={`pb-style-border-style-${id}`} className="db-label font-bold text-xs mb-0">
+                  Style de bordure
+                </label>
+                {settings.style?.borderStyle && settings.style?.borderStyle !== 'none' && (
+                  <button
+                    type="button"
+                    onClick={handleResetBorders}
+                    className="btn btn-link btn-xs p-0 text-decoration-none text-muted"
+                    style={{ fontSize: '10px' }}
+                  >
+                    Effacer bordure
+                  </button>
+                )}
+              </div>
+              <select
+                id={`pb-style-border-style-${id}`}
+                aria-label="Style de bordure"
+                value={settings.style?.borderStyle || 'none'}
+                onChange={(e) => updateNestedStyle('borderStyle', e.target.value)}
+                className="db-select text-xs w-100"
+              >
+                <option value="none">Aucune bordure (none)</option>
+                <option value="solid">Ligne continue (solid)</option>
+                <option value="dashed">Tirets (dashed)</option>
+                <option value="dotted">Pointillés (dotted)</option>
+                <option value="double">Double trait (double)</option>
+              </select>
+            </div>
+
+            {/* Épaisseur et Couleur si bordure active */}
+            {settings.style?.borderStyle && settings.style?.borderStyle !== 'none' && (
+              <div className="pb-border-row">
+                <div>
+                  <label htmlFor={`pb-style-border-width-${id}`} className="db-label font-bold text-xs">
+                    Épaisseur
+                  </label>
+                  <input
+                    id={`pb-style-border-width-${id}`}
+                    type="text"
+                    value={settings.style?.borderWidth || ''}
+                    onChange={(e) => updateNestedStyle('borderWidth', e.target.value)}
+                    placeholder="ex: 2px"
+                    className="db-input text-xs w-100"
+                  />
+                </div>
+                <div>
+                  <label htmlFor={`pb-style-border-color-${id}`} className="db-label font-bold text-xs">
+                    Couleur de bordure
+                  </label>
+                  <div className="d-flex gap-1.5 align-items-center">
+                    <input
+                      type="color"
+                      value={settings.style?.borderColor || '#004b7a'}
+                      onChange={(e) => updateNestedStyle('borderColor', e.target.value)}
+                      className="p-0 border rounded cursor-pointer"
+                      style={{ width: '28px', height: '28px' }}
+                      title="Couleur de bordure"
+                    />
+                    <input
+                      id={`pb-style-border-color-${id}`}
+                      type="text"
+                      value={settings.style?.borderColor || ''}
+                      onChange={(e) => updateNestedStyle('borderColor', e.target.value)}
+                      placeholder="#004b7a"
+                      className="db-input text-xs flex-grow-1"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Arrondi des angles (border-radius) */}
+            <div className="pt-2 border-top">
+              <div className="d-flex justify-content-between align-items-center mb-1">
+                <label htmlFor={`pb-style-border-radius-${id}`} className="db-label font-bold text-xs mb-0">
+                  Arrondi des angles (Border Radius)
+                </label>
+                <span className="text-muted font-mono" style={{ fontSize: '11px' }}>
+                  {settings.style?.borderRadius || '0px'}
+                </span>
+              </div>
+              <input
+                id={`pb-style-border-radius-${id}`}
+                type="text"
+                value={settings.style?.borderRadius || ''}
+                onChange={(e) => updateNestedStyle('borderRadius', e.target.value)}
+                placeholder="ex: 8px ou 16px"
+                className="db-input text-xs w-100"
+              />
+              <div className="d-flex gap-1 mt-1.5 flex-wrap">
+                {['0px', '4px', '8px', '16px', '24px', '9999px'].map(r => (
+                  <button
+                    key={r}
+                    type="button"
+                    onClick={() => updateNestedStyle('borderRadius', r)}
+                    className={`btn btn-xs py-0.5 px-1.5 rounded ${settings.style?.borderRadius === r ? 'btn-primary' : 'btn-outline-secondary'}`}
+                    style={{ fontSize: '10px' }}
+                  >
+                    {r === '9999px' ? 'Pilule' : r}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </SettingsAccordionItem>
+
+        {/* =========================================================================
+            18. ACCORDÉON : OMBRES PORTÉES (BOX-SHADOW) (R3)
+           ========================================================================= */}
+        <SettingsAccordionItem
+          id={`acc-shadows-${id}`}
+          title="Ombres Portées (Box Shadow)"
+          icon={Sparkles}
+          isOpen={openSections.shadows}
+          onToggle={() => toggleSection('shadows')}
+          badge={
+            (settings.style?.boxShadow && settings.style?.boxShadow !== 'none') ? (
+              <span className="badge bg-primary text-white" style={{ fontSize: '10px' }}>
+                Active
+              </span>
+            ) : null
+          }
+        >
+          <div className="space-y-3">
+            {/* Sélecteur d'ombre portée (Requis pour TEST-R3-1) */}
+            <div>
+              <label htmlFor={`pb-style-box-shadow-${id}`} className="db-label font-bold text-xs">
+                Ombre portée
+              </label>
+              <select
+                id={`pb-style-box-shadow-${id}`}
+                aria-label="Ombre portée"
+                value={resolveShadowValue(settings.style?.boxShadow)}
+                onChange={handleShadowSelectChange}
+                className="db-select text-xs w-100"
+              >
+                <option value="none">Aucune ombre (none)</option>
+                <option value="light">Ombre légère (Subtile)</option>
+                <option value="medium">Ombre moyenne (Standard)</option>
+                <option value="large">Ombre forte (Élevée)</option>
+                <option value="anjou">Ombre marquée Loire (Bleu Anjou)</option>
+                <option value="custom">Ombre personnalisée...</option>
+              </select>
+            </div>
+
+            {/* Chips rapides de préréglages */}
+            <div>
+              <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                Préréglages d'ombres Anjou
+              </span>
+              <div className="pb-shadow-presets">
+                <button
+                  type="button"
+                  onClick={() => updateNestedStyle('boxShadow', 'none')}
+                  className={`pb-shadow-chip ${(!settings.style?.boxShadow || settings.style?.boxShadow === 'none') ? 'pb-shadow-chip-active' : ''}`}
+                >
+                  Aucune
+                </button>
+                <button
+                  type="button"
+                  onClick={() => updateNestedStyle('boxShadow', SHADOW_PRESETS.light)}
+                  className={`pb-shadow-chip ${settings.style?.boxShadow === SHADOW_PRESETS.light ? 'pb-shadow-chip-active' : ''}`}
+                >
+                  Légère
+                </button>
+                <button
+                  type="button"
+                  onClick={() => updateNestedStyle('boxShadow', SHADOW_PRESETS.medium)}
+                  className={`pb-shadow-chip ${settings.style?.boxShadow === SHADOW_PRESETS.medium ? 'pb-shadow-chip-active' : ''}`}
+                >
+                  Moyenne
+                </button>
+                <button
+                  type="button"
+                  onClick={() => updateNestedStyle('boxShadow', SHADOW_PRESETS.large)}
+                  className={`pb-shadow-chip ${settings.style?.boxShadow === SHADOW_PRESETS.large ? 'pb-shadow-chip-active' : ''}`}
+                >
+                  Forte
+                </button>
+                <button
+                  type="button"
+                  onClick={() => updateNestedStyle('boxShadow', SHADOW_PRESETS.anjou)}
+                  className={`pb-shadow-chip ${settings.style?.boxShadow === SHADOW_PRESETS.anjou ? 'pb-shadow-chip-active' : ''}`}
+                >
+                  Bleu Loire
+                </button>
+              </div>
+            </div>
+
+            {/* Champ personnalisé si custom */}
+            {resolveShadowValue(settings.style?.boxShadow) === 'custom' && (
+              <div className="pt-2 border-top">
+                <label htmlFor={`pb-custom-shadow-${id}`} className="db-label font-bold text-xs">
+                  CSS box-shadow personnalisé
+                </label>
+                <input
+                  id={`pb-custom-shadow-${id}`}
+                  type="text"
+                  value={settings.style?.boxShadow || ''}
+                  onChange={(e) => updateNestedStyle('boxShadow', e.target.value)}
+                  placeholder="0 4px 6px -1px rgba(0, 0, 0, 0.1)"
+                  className="db-input text-xs w-100"
+                />
+              </div>
+            )}
+          </div>
+        </SettingsAccordionItem>
+
+        {/* =========================================================================
+            19. ACCORDÉON : VISIBILITÉ RESPONSIVE PAR APPAREIL (R3)
+           ========================================================================= */}
+        <SettingsAccordionItem
+          id={`acc-visibility-${id}`}
+          title="Visibilité par Appareil (Responsive S/M/L)"
+          icon={Smartphone}
+          isOpen={openSections.visibility}
+          onToggle={() => toggleSection('visibility')}
+          badge={
+            (settings.hideOnMobile || settings.hideOnTablet || settings.hideOnDesktop) ? (
+              <span className="badge bg-warning text-dark" style={{ fontSize: '10px' }}>
+                Partielle
+              </span>
+            ) : (
+              <span className="badge bg-success text-white" style={{ fontSize: '10px' }}>
+                Tous
+              </span>
+            )
+          }
+        >
+          <div className="space-y-3">
+            <p className="text-xs text-muted mb-2">
+              Contrôlez sur quels types d'écrans ce bloc doit être affiché ou masqué aux visiteurs :
+            </p>
+
+            <div className="pb-visibility-options">
+              {/* Smartphone (S) */}
+              <div className="pb-visibility-option-item">
+                <label htmlFor={`chk-hide-mobile-${id}`} className="pb-visibility-option-label">
+                  <Smartphone size={15} className="text-primary" />
+                  <span>Masquer sur Smartphone (S &le; 599px)</span>
+                </label>
+                <input
+                  type="checkbox"
+                  id={`chk-hide-mobile-${id}`}
+                  aria-label="Masquer sur mobile"
+                  checked={Boolean(settings.hideOnMobile)}
+                  onChange={(e) => updateSetting('hideOnMobile', e.target.checked)}
+                  className="cursor-pointer"
+                  style={{ width: '16px', height: '16px' }}
+                />
+              </div>
+
+              {/* Tablette (M) */}
+              <div className="pb-visibility-option-item">
+                <label htmlFor={`chk-hide-tablet-${id}`} className="pb-visibility-option-label">
+                  <Tablet size={15} className="text-primary" />
+                  <span>Masquer sur Tablette (M 600-899px)</span>
+                </label>
+                <input
+                  type="checkbox"
+                  id={`chk-hide-tablet-${id}`}
+                  aria-label="Masquer sur tablette"
+                  checked={Boolean(settings.hideOnTablet)}
+                  onChange={(e) => updateSetting('hideOnTablet', e.target.checked)}
+                  className="cursor-pointer"
+                  style={{ width: '16px', height: '16px' }}
+                />
+              </div>
+
+              {/* Ordinateur (L / XL) */}
+              <div className="pb-visibility-option-item">
+                <label htmlFor={`chk-hide-desktop-${id}`} className="pb-visibility-option-label">
+                  <Monitor size={15} className="text-primary" />
+                  <span>Masquer sur Ordinateur (L/XL &ge; 900px)</span>
+                </label>
+                <input
+                  type="checkbox"
+                  id={`chk-hide-desktop-${id}`}
+                  aria-label="Masquer sur ordinateur"
+                  checked={Boolean(settings.hideOnDesktop)}
+                  onChange={(e) => updateSetting('hideOnDesktop', e.target.checked)}
+                  className="cursor-pointer"
+                  style={{ width: '16px', height: '16px' }}
+                />
+              </div>
+            </div>
+
+            {/* Synthèse du statut responsive */}
+            <div className="p-2 rounded bg-slate-50 dark:bg-slate-800 border text-center" style={{ fontSize: '11px' }}>
+              {(!settings.hideOnMobile && !settings.hideOnTablet && !settings.hideOnDesktop) ? (
+                <span className="text-success font-semibold">✓ Ce bloc est visible sur tous les écrans</span>
+              ) : (
+                <span className="text-warning font-semibold">
+                  ⚠️ Masqué sur : {[
+                    settings.hideOnMobile ? 'Smartphone' : '',
+                    settings.hideOnTablet ? 'Tablette' : '',
+                    settings.hideOnDesktop ? 'Ordinateur' : ''
+                  ].filter(Boolean).join(', ')}
+                </span>
+              )}
+            </div>
+          </div>
+        </SettingsAccordionItem>
 
       </div>
 
