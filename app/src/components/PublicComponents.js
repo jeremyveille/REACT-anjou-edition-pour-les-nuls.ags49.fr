@@ -93,17 +93,17 @@ export const PublicFooter = ({ setView, onNavigate }) => {
 
         {(onNavigate || setView) && (
           <nav className="footer-links-capsule" aria-label="Liens de pied de page">
-            <button type="button" onClick={() => handleNav({ type: 'home' }, '/', "Anjou Édition — Pour les Nuls")}>Accueil</button>
+            <button type="button" onClick={() => handleNav({ type: 'home' }, '/', "Anjou Édition, pour les nuls")}>Accueil</button>
             <span aria-hidden="true" className="footer-sep">|</span>
-            <button type="button" onClick={() => handleNav({ type: 'flipbooks' }, '/flipbooks', "Nos Flipbooks Interactifs — Anjou Édition")}>Flipbooks</button>
+            <button type="button" onClick={() => handleNav({ type: 'flipbooks' }, '/flipbooks', "Nos Flipbooks Interactifs — Anjou Édition, pour les nuls")}>Flipbooks</button>
             <span aria-hidden="true" className="footer-sep">|</span>
-            <button type="button" onClick={() => handleNav({ type: 'videos' }, '/videos', "Vidéos & Conférences — Anjou Édition")}>Vidéos</button>
+            <button type="button" onClick={() => handleNav({ type: 'videos' }, '/videos', "Vidéos & Conférences — Anjou Édition, pour les nuls")}>Vidéos</button>
             <span aria-hidden="true" className="footer-sep">|</span>
-            <button type="button" onClick={() => handleNav({ type: 'gallery' }, '/gallery', "Galerie Photos — Anjou Édition")}>Galerie</button>
+            <button type="button" onClick={() => handleNav({ type: 'gallery' }, '/gallery', "Galerie Photos — Anjou Édition, pour les nuls")}>Galerie</button>
             <span aria-hidden="true" className="footer-sep">|</span>
-            <button type="button" onClick={() => handleNav({ type: 'contact' }, '/contact', "Contact — Anjou Édition")}>Contact</button>
+            <button type="button" onClick={() => handleNav({ type: 'contact' }, '/contact', "Contact — Anjou Édition, pour les nuls")}>Contact</button>
             <span aria-hidden="true" className="footer-sep">|</span>
-            <button type="button" onClick={() => handleNav({ type: 'privacy' }, '/privacy', "Mentions Légales & RGPD — Anjou Édition")}>Mentions Légales & RGPD</button>
+            <button type="button" onClick={() => handleNav({ type: 'privacy' }, '/privacy', "Mentions Légales & RGPD — Anjou Édition, pour les nuls")}>Mentions Légales & RGPD</button>
           </nav>
         )}
 

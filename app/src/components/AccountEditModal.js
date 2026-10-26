@@ -368,7 +368,7 @@ export default function AccountEditModal({
                     </div>
                     <div style={{ flexGrow: 1, minWidth: '220px' }}>
                       <span className="ae-form-hint" style={{ marginBottom: '6px', display: 'block' }}>
-                        Couleur d'initiale de la charte Anjou Édition :
+                        Couleur d'initiale de la charte Anjou Édition, pour les nuls :
                       </span>
                       <div className="ae-palette-presets">
                         {AVATAR_COLOR_PALETTE.map((c) => (
@@ -517,7 +517,7 @@ export default function AccountEditModal({
                       <strong>Sécurité déléguée à Google :</strong>
                       <p style={{ margin: '4px 0 0 0' }}>
                         Ce compte s'authentifie via le protocole sécurisé Google OAuth. 
-                        <strong> Aucun mot de passe n'est stocké sur la plateforme Anjou Édition.</strong>
+                        <strong> Aucun mot de passe n'est stocké sur la plateforme Anjou Édition, pour les nuls.</strong>
                       </p>
                       <p style={{ margin: '6px 0 0 0' }}>
                         Pour modifier le mot de passe, activer l'authentification à deux facteurs ou gérer les clés de sécurité, rendez-vous directement dans les paramètres de votre compte Google.

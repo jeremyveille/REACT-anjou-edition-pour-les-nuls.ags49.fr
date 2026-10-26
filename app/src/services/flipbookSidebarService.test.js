@@ -20,7 +20,7 @@ describe('flipbookSidebarService Tests', () => {
   });
 
   test('provides valid DEFAULT_GLOBAL_SIDEBAR without fake tourist/historical data', () => {
-    expect(DEFAULT_GLOBAL_SIDEBAR.name).toBe("Modèle global — Anjou Édition");
+    expect(DEFAULT_GLOBAL_SIDEBAR.name).toBe("Modèle global — Anjou Édition, pour les nuls");
     expect(DEFAULT_GLOBAL_SIDEBAR.styles.leftWidth).toBe(20);
     expect(DEFAULT_GLOBAL_SIDEBAR.styles.rightWidth).toBe(20);
     expect(DEFAULT_GLOBAL_SIDEBAR.styles.visibility.left.desktop).toBe(true);
@@ -37,7 +37,7 @@ describe('flipbookSidebarService Tests', () => {
 
   test('getLocalGlobalSidebar returns default when localStorage is empty', () => {
     const sidebar = getLocalGlobalSidebar();
-    expect(sidebar.name).toBe("Modèle global — Anjou Édition");
+    expect(sidebar.name).toBe("Modèle global — Anjou Édition, pour les nuls");
     expect(sidebar.styles.leftWidth).toBe(20);
   });
 

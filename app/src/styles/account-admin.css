@@ -36,6 +36,7 @@
   border-radius: 16px;
   width: min(780px, 96vw);
   max-height: 90vh;
+  max-height: min(92dvh, calc(100dvh - 32px));
   display: flex;
   flex-direction: column;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.08);
@@ -90,9 +91,9 @@
   color: var(--text-main, #0f172a);
   margin: 0;
   line-height: 1.3;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .ae-account-modal-subtitle {
@@ -112,8 +113,8 @@
   align-items: center;
   justify-content: center;
   transition: all 0.15s ease;
-  min-width: 38px;
-  min-height: 38px;
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .ae-account-modal-close-btn:hover {

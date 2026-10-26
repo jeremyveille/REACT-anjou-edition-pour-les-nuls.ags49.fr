@@ -1,5 +1,6 @@
 import React from "react";
 import { ShieldCheck, Database, CheckCircle2, ChevronRight, HelpCircle, Layers } from "lucide-react";
+import { BRAND_NAME } from "../constants/brand";
 
 export default function InfoCard({ onLearnMore }) {
   return (
@@ -13,7 +14,7 @@ export default function InfoCard({ onLearnMore }) {
             <ShieldCheck size={20} />
           </div>
           <div>
-            <h3 className="ae-status-card-title">Service Anjou Édition</h3>
+            <h3 className="ae-status-card-title">Service {BRAND_NAME}</h3>
             <span className="ae-status-card-subtitle">Plateforme d'administration</span>
           </div>
         </div>
@@ -63,7 +64,7 @@ export default function InfoCard({ onLearnMore }) {
             type="button"
             onClick={onLearnMore}
             className="ae-status-learn-more-btn"
-            title="Consulter les informations sur le service Anjou Édition"
+            title="Consulter les informations sur le service Anjou Édition, pour les nuls"
           >
             <span className="ae-flex-center-gap-2">
               <HelpCircle size={15} className="text-blue-600" aria-hidden="true" />

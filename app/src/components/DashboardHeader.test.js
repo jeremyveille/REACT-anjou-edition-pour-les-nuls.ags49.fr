@@ -46,7 +46,7 @@ describe("DashboardHeader Component Tests", () => {
     // 3ème enfant : topbar-title-wrapper
     expect(children[2]).toHaveClass("topbar-title-wrapper");
     expect(children[2]).toHaveTextContent("Tableau de bord");
-    expect(children[2]).toHaveTextContent("Administration Anjou Édition");
+    expect(children[2]).toHaveTextContent("Administration Anjou Édition, pour les nuls");
   });
 
   test("renders sidebar-collapse-toggle-btn in expanded state (isCollapsed = false)", () => {

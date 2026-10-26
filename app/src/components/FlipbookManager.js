@@ -24,6 +24,7 @@ import {
 } from '../services/flipbookSidebarService';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
+import { BRAND_NAME } from '../constants/brand';
 
 /**
  * Utilitaires pour le tri et le formatage sécurisé des dates
@@ -119,7 +120,7 @@ export default function FlipbookManager({
       if (db && targetFb) {
         await setDoc(doc(db, "flipbooks", String(id)), targetFb);
       }
-      setNotification(`Mode "${newMode === 'global' ? 'Modèle global — Anjou Édition' : 'Configuration personnalisée'}" enregistré.`);
+      setNotification(`Mode "${newMode === 'global' ? `Modèle global — ${BRAND_NAME}` : 'Configuration personnalisée'}" enregistré.`);
     } catch (e) {
       console.warn("Erreur mise à jour mode flipbook:", e);
     }
@@ -135,7 +136,7 @@ export default function FlipbookManager({
     if (report.errorCount > 0) {
       setNotification(`Modèle global appliqué (${report.verifiedCount}/${report.totalCount} vérifiés, ${report.errorCount} erreur(s)).`);
     } else {
-      setNotification("Le « Modèle global — Anjou Édition » a été appliqué à tous les Flipbooks !");
+      setNotification(`Le « Modèle global — ${BRAND_NAME} » a été appliqué à tous les Flipbooks !`);
     }
     return report;
   };

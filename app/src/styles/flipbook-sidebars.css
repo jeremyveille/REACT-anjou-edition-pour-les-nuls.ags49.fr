@@ -1614,6 +1614,7 @@
   border: 1px solid #cbd5e1;
   max-width: min(92vw, 780px);
   max-height: min(88vh, 760px);
+  max-height: min(90dvh, 760px);
   height: auto;
   width: 100%;
   margin: auto;
@@ -1836,6 +1837,87 @@
 .ae-btn-reset-changes:hover {
   background: #fee2e2;
   border-color: #f87171;
+}
+
+/* Conteneur global de l'éditeur de barres avec padding-bottom de sécurité pour la barre sticky */
+.ae-global-sidebar-editor-container {
+  padding-bottom: 90px;
+  box-sizing: border-box;
+}
+
+/* --------------------------------------------------------------------------
+   Compacité et responsive de la barre inférieure sticky d'actions (.ae-editor-bottom-bar)
+   Adaptations pour tablettes (palier M <= 899px) et smartphones (palier S <= 599px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 899px) {
+  .ae-global-sidebar-editor-container {
+    padding-bottom: 140px;
+  }
+
+  .ae-editor-bottom-bar {
+    padding: 0.6rem 0.85rem;
+  }
+
+  .ae-bottom-bar-inner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .ae-bottom-bar-status {
+    justify-content: center;
+    font-size: 0.75rem;
+    text-align: center;
+    width: 100%;
+  }
+
+  .ae-bottom-bar-actions {
+    justify-content: center;
+    gap: 0.4rem;
+    width: 100%;
+  }
+
+  .ae-bottom-bar-actions button {
+    font-size: 0.75rem;
+    padding: 0.45rem 0.65rem;
+    min-height: 40px;
+  }
+}
+
+@media (max-width: 599px) {
+  .ae-global-sidebar-editor-container {
+    padding-bottom: 170px;
+  }
+
+  .ae-editor-bottom-bar {
+    padding: 0.5rem 0.65rem;
+  }
+
+  .ae-bottom-bar-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.35rem;
+    width: 100%;
+  }
+
+  .ae-bottom-bar-actions .ae-flipbook-btn-primary {
+    grid-column: 1 / -1;
+    min-height: 44px;
+    font-size: 0.82rem;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .ae-bottom-bar-actions .ae-flipbook-btn-secondary,
+  .ae-bottom-bar-actions .ae-btn-reset-changes,
+  .ae-bottom-bar-actions .ae-btn-outline-primary {
+    min-height: 40px;
+    font-size: 0.72rem;
+    padding: 0.35rem 0.5rem;
+    justify-content: center;
+    text-align: center;
+    width: 100%;
+  }
 }
 
 

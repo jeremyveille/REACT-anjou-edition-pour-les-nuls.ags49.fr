@@ -42,7 +42,7 @@ export function getOrCreateTextPdfUrl(item) {
     const contentWidth = pageWidth - (margin * 2);
 
     const safeTitle = cleanTextForPdf(item.title);
-    const safeAuthor = cleanTextForPdf(item.author || 'Comité éditorial Anjou Édition');
+    const safeAuthor = cleanTextForPdf(item.author || 'Comité éditorial Anjou Édition, pour les nuls');
     const safeDate = cleanTextForPdf(item.date || '2026');
     const safeCategory = cleanTextForPdf(item.category || "Création Littéraire");
     const safeContent = cleanTextForPdf(item.content || "Publication en cours de rédaction...");
@@ -128,7 +128,7 @@ export function getOrCreateTextPdfUrl(item) {
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(8);
       doc.setTextColor(148, 163, 184);
-      doc.text("Anjou Édition — Pour les Nuls", margin, 16);
+      doc.text("Anjou Édition, pour les nuls", margin, 16);
       doc.text(safeTitle.length > 35 ? safeTitle.slice(0, 35) + '...' : safeTitle, pageWidth - margin, 16, { align: 'right' });
       doc.setDrawColor(226, 232, 240);
       doc.setLineWidth(0.3);

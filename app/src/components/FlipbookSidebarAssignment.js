@@ -9,6 +9,7 @@ import {
   Edit3, 
   AlertCircle
 } from 'lucide-react';
+import { BRAND_NAME } from '../constants/brand';
 
 /**
  * Espace « Paramètres individuels » : Permet de visualiser et de gérer l'attribution
@@ -125,7 +126,7 @@ export default function FlipbookSidebarAssignment({
         {applyReport && (
           <div className="mt-3 p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-lg text-xs text-emerald-900 dark:text-emerald-200 flex items-center justify-between gap-2">
             <div>
-              <strong>Bilan de l'application :</strong> {applyReport.verifiedCount}/{applyReport.totalCount} Flipbooks synchronisés sur le « Modèle global — Anjou Édition » ({applyReport.replacedCustomCount} personnalisé(s) basculé(s), {applyReport.backedUpCount} configuration(s) individuelle(s) préservée(s) en sauvegarde).
+              <strong>Bilan de l'application :</strong> {applyReport.verifiedCount}/{applyReport.totalCount} Flipbooks synchronisés sur le « Modèle global — {BRAND_NAME} » ({applyReport.replacedCustomCount} personnalisé(s) basculé(s), {applyReport.backedUpCount} configuration(s) individuelle(s) préservée(s) en sauvegarde).
             </div>
             <button
               type="button"
@@ -326,7 +327,7 @@ export default function FlipbookSidebarAssignment({
 
             <p className="text-xs text-slate-600 dark:text-slate-300 mb-4 leading-relaxed">
               Ce Flipbook possède actuellement une configuration de barres latérales personnalisée.
-              En passant sur le modèle global, il utilisera désormais automatiquement les colonnes communes d'Anjou Édition.
+              En passant sur le modèle global, il utilisera désormais automatiquement les colonnes communes d'{BRAND_NAME}.
             </p>
 
             <div className="flex justify-end gap-2">

@@ -139,10 +139,13 @@
   text-align: left;
   transition: background-color 0.15s ease;
 }
-.menu-search-result-item:hover,
+.menu-search-result-item:hover {
+  background-color: #eff6ff;
+}
 .menu-search-result-item:focus-visible {
   background-color: #eff6ff;
-  outline: none;
+  outline: 2px solid var(--blue-primary, #336ddc);
+  outline-offset: 2px;
 }
 
 .menu-search-result-title {
@@ -483,11 +486,15 @@
   justify-content: center;
   transition: all 0.15s ease;
 }
-.menu-item-more-btn:hover,
+.menu-item-more-btn:hover {
+  background-color: #e2e8f0;
+  color: #0f172a;
+}
 .menu-item-more-btn:focus-visible {
   background-color: #e2e8f0;
   color: #0f172a;
-  outline: none;
+  outline: 2px solid var(--blue-primary, #336ddc);
+  outline-offset: 2px;
 }
 
 /* Menu contextuel flottant */
@@ -523,19 +530,28 @@
   text-align: left;
   transition: background-color 0.15s ease;
 }
-.menu-context-action-btn:hover,
+.menu-context-action-btn:hover {
+  background-color: #f1f5f9;
+  color: var(--blue-dark, #004b7a);
+}
 .menu-context-action-btn:focus-visible {
   background-color: #f1f5f9;
   color: var(--blue-dark, #004b7a);
-  outline: none;
+  outline: 2px solid var(--blue-primary, #336ddc);
+  outline-offset: 2px;
 }
 .menu-context-action-btn.danger {
   color: #dc2626;
 }
-.menu-context-action-btn.danger:hover,
+.menu-context-action-btn.danger:hover {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
 .menu-context-action-btn.danger:focus-visible {
   background-color: #fee2e2;
   color: #b91c1c;
+  outline: 2px solid #dc2626;
+  outline-offset: 2px;
 }
 
 /* Panneau d'Édition (3e volet) */
@@ -649,6 +665,7 @@
   border-radius: 14px;
   max-width: 480px;
   width: 100%;
+  max-height: min(90dvh, 600px);
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
@@ -661,6 +678,17 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.menu-modal-header .ae-icon-button {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .menu-modal-header h4 {
@@ -678,6 +706,9 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  overflow-y: auto;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .menu-modal-footer {
@@ -688,6 +719,7 @@
   align-items: center;
   justify-content: flex-end;
   gap: 10px;
+  flex-shrink: 0;
 }
 
 /* Responsive */

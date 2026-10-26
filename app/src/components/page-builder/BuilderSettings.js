@@ -26,6 +26,7 @@ import {
 import { extractYoutubeVideoId } from '../../utils/youtubeUtils';
 import { BLOCK_DEFINITIONS, ANJOU_EDITION_PALETTE } from './blockRegistry';
 import { MediaLibraryModal } from '../MediaLibraryModal';
+import { BRAND_NAME } from '../../constants/brand';
 
 const COMMON_ICONS = [
   'ArrowRight', 'BookOpen', 'ExternalLink', 'Calendar', 'Heart', 
@@ -1890,7 +1891,7 @@ export const BuilderSettings = ({ block, onChange }) => {
            ========================================================================= */}
         <SettingsAccordionItem
           id={`acc-palette-${id}`}
-          title="Nuancier Officiel Anjou Édition"
+          title={`Nuancier Officiel ${BRAND_NAME}`}
           icon={Palette}
           isOpen={openSections.palette}
           onToggle={() => toggleSection('palette')}

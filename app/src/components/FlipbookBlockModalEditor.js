@@ -263,7 +263,8 @@ export default function FlipbookBlockModalEditor({
           <button
             type="button"
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg transition-colors cursor-pointer"
+            className="ae-modal-close-btn"
+            style={{ minWidth: '44px', minHeight: '44px', width: '44px', height: '44px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
             aria-label="Fermer la fenêtre d'édition"
           >
             <X size={20} aria-hidden="true" />

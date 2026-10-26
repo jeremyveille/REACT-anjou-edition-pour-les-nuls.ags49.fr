@@ -19,7 +19,7 @@ describe('AdminLogoutSuccess Component', () => {
 
     // 2. Texts
     expect(screen.getByText(/Votre session administrative a été fermée de manière sécurisée/i)).toBeInTheDocument();
-    expect(screen.getByText(/À bientôt sur Anjou Édition !/i)).toBeInTheDocument();
+    expect(screen.getByText(/À bientôt sur Anjou Édition, pour les nuls !/i)).toBeInTheDocument();
 
     // 3. Primary CTA button
     const reconnectBtn = screen.getByRole('button', { name: /Se reconnecter avec Google/i });

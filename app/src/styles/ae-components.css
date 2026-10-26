@@ -1072,12 +1072,35 @@ body.dark .ae-badge-draft {
   gap: 1rem;
 }
 
-@media (max-width: 639.98px) {
+@media (max-width: 599px) {
   .ae-form-grid-2 {
     grid-template-columns: 1fr;
   }
   .ae-builder-sidebar-responsive {
     width: 100% !important;
+  }
+}
+
+/* --- Cibles Tactiles WCAG 2.2 AA (≥ 44x44px) sur Mobile et Tablette (Paliers M & S : ≤ 899px) --- */
+@media (max-width: 899px) {
+  .ae-btn-emerald-ghost,
+  .ae-btn-action-icon-blue-md,
+  .ae-btn-danger-ghost,
+  .ae-icon-btn-muted,
+  .ae-btn-danger-icon,
+  .ae-card-delete-overlay-btn,
+  .ae-action-btn-blue,
+  .ae-btn-icon-blue-action,
+  .ae-btn-ghost-remove-item,
+  .ae-btn-icon-danger-hover,
+  .ae-modal-close-floating,
+  .ae-overlay-action-btn {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    touch-action: manipulation;
   }
 }
 

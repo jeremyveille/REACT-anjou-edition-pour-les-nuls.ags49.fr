@@ -32,7 +32,7 @@ describe('GlobalFlipbookSidebarEditor Component Tests', () => {
       />
     );
 
-    expect(screen.getByText('Modèle global — Anjou Édition')).toBeInTheDocument();
+    expect(screen.getByText('Modèle global — Anjou Édition, pour les nuls')).toBeInTheDocument();
     expect(screen.getByText('Modèle global actif')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Enregistrer le modèle global/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Appliquer le modèle global à tous/i })).toBeInTheDocument();

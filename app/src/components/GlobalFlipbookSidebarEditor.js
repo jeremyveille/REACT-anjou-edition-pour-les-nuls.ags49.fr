@@ -47,6 +47,7 @@ import {
   applyStyleToAllBlocks, 
   SHADOW_PRESETS 
 } from '../utils/flipbookBlockStyleUtils';
+import { BRAND_NAME } from '../constants/brand';
 
 /**
  * Éditeur visuel moderne et ergonomique du « Modèle global — Anjou Édition » :
@@ -220,7 +221,7 @@ export default function GlobalFlipbookSidebarEditor({
       title: "Ouvrage de démonstration",
       description: "Aperçu en direct du modèle global des barres latérales.",
       pages: [
-        { pageNum: 1, title: "Couverture", content: "Anjou Édition\n\nModèle global interactif" }
+        { pageNum: 1, title: "Couverture", content: `${BRAND_NAME}\n\nModèle global interactif` }
       ],
       pdfFile: "secrets_vignoble_angevin.pdf"
     };
@@ -353,7 +354,7 @@ export default function GlobalFlipbookSidebarEditor({
       setIsSaving(false);
       setShowSavedFeedback(true);
       setTimeout(() => setShowSavedFeedback(false), 3000);
-      setNotification("Modèle global — Anjou Édition enregistré avec succès !");
+      setNotification(`Modèle global — ${BRAND_NAME} enregistré avec succès !`);
       onSaveSuccess(savedData);
     } catch (err) {
       console.error("Erreur enregistrement modèle global:", err);
@@ -425,7 +426,7 @@ export default function GlobalFlipbookSidebarEditor({
 
   // Réinitialisation aux valeurs par défaut
   const handleResetToDefault = () => {
-    if (window.confirm("Voulez-vous vraiment réinitialiser le modèle global aux valeurs par défaut d'Anjou Édition ? Vos personnalisations non enregistrées seront perdues.")) {
+    if (window.confirm(`Voulez-vous vraiment réinitialiser le modèle global aux valeurs par défaut d'${BRAND_NAME} ? Vos personnalisations non enregistrées seront perdues.`)) {
       setTemplate(normalizeSidebarTemplate(JSON.parse(JSON.stringify(DEFAULT_GLOBAL_SIDEBAR))));
     }
   };
@@ -712,7 +713,7 @@ export default function GlobalFlipbookSidebarEditor({
 
         <div className="mt-3">
           <h2 className="text-xl font-extrabold text-slate-900 dark:text-slate-100 mb-1 tracking-tight">
-            Modèle global — Anjou Édition
+            Modèle global — {BRAND_NAME}
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mb-0 leading-relaxed">
             Éditeur visuel des barres latérales du Flipbook. Personnalisez les dimensions, contours, ombres et contenus.
@@ -949,7 +950,7 @@ export default function GlobalFlipbookSidebarEditor({
                     className="ae-flipbook-select w-full text-xs font-semibold"
                     aria-label="Format et ratio des blocs images et vidéos"
                   >
-                    <option value="16 / 9">16:9 Panoramique vidéo (Standard Anjou Édition — Recommandé)</option>
+                    <option value="16 / 9">16:9 Panoramique vidéo (Standard {BRAND_NAME} — Recommandé)</option>
                     <option value="4 / 3">4:3 Classique photo</option>
                     <option value="1 / 1">1:1 Format carré</option>
                   </select>
@@ -970,7 +971,7 @@ export default function GlobalFlipbookSidebarEditor({
                     className="ae-flipbook-select w-full text-xs"
                   >
                     <option value="1400">1400 px — Modérée</option>
-                    <option value="1680">1680 px — Recommandée (Standard Anjou Édition)</option>
+                    <option value="1680">1680 px — Recommandée (Standard {BRAND_NAME})</option>
                     <option value="1920">1920 px — Pleine largeur écran</option>
                   </select>
                 </div>
@@ -1827,7 +1828,7 @@ export default function GlobalFlipbookSidebarEditor({
                 </div>
 
                 <p className="text-xs text-slate-600 dark:text-slate-300 mb-3 leading-relaxed">
-                  Cette action va configurer l'ensemble de vos <strong>{flipbooksAnalysis.totalCount} flipbooks</strong> pour utiliser la référence dynamique au <strong>« Modèle global — Anjou Édition »</strong>.
+                  Cette action va configurer l'ensemble de vos <strong>{flipbooksAnalysis.totalCount} flipbooks</strong> pour utiliser la référence dynamique au <strong>« Modèle global — {BRAND_NAME} »</strong>.
                 </p>
 
                 <div className="p-3 bg-slate-50 dark:bg-slate-800/70 rounded-lg border border-slate-200 dark:border-slate-700 mb-4 space-y-1.5 text-xs">

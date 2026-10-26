@@ -1,6 +1,7 @@
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import { compressBase64ImageIfNeeded } from "../utils/imageOptimizer";
+import { BRAND_NAME } from "../constants/brand";
 
 /**
  * Limite de sécurité en octets pour un document Firestore (limite stricte Firestore : 1 048 576 octets)
@@ -46,7 +47,7 @@ export const DEFAULT_SIDEBAR_SIDE_STYLE = {
  */
 export const DEFAULT_GLOBAL_SIDEBAR = {
   id: "global-flipbook-sidebars",
-  name: "Modèle global — Anjou Édition",
+  name: `Modèle global — ${BRAND_NAME}`,
   description: "Modèle commun de barres latérales partagé par l'ensemble des flipbooks du portail.",
   version: 1,
   updatedAt: new Date().toISOString(),
@@ -94,9 +95,9 @@ export const DEFAULT_GLOBAL_SIDEBAR = {
     {
       id: "global_left_2",
       type: "image",
-      title: "Anjou Édition",
+      title: BRAND_NAME,
       imageUrl: "/images/featured-article-book.jpg",
-      imageAlt: "Ouvrage et publication littéraire Anjou Édition",
+      imageAlt: `Ouvrage et publication littéraire ${BRAND_NAME}`,
       caption: "Maison d'édition dédiée aux créations et écrits inédits",
       linkUrl: "/flipbooks",
       openNewTab: false,
@@ -164,7 +165,7 @@ export const normalizeSidebarTemplate = (raw) => {
     ...DEFAULT_GLOBAL_SIDEBAR,
     ...raw,
     id: "global-flipbook-sidebars",
-    name: raw.name || "Modèle global — Anjou Édition",
+    name: raw.name || `Modèle global — ${BRAND_NAME}`,
     version: Number(raw.version) || 1,
     styles: {
       ...DEFAULT_GLOBAL_SIDEBAR.styles,
@@ -350,7 +351,7 @@ export const saveGlobalSidebarTemplate = async (template) => {
     leftSidebar: optimizedLeft,
     rightSidebar: optimizedRight,
     id: "global-flipbook-sidebars",
-    name: "Modèle global — Anjou Édition",
+    name: `Modèle global — ${BRAND_NAME}`,
     version: nextVersion,
     updatedAt: new Date().toISOString()
   };

@@ -126,7 +126,7 @@ describe('FlipbookLayout component', () => {
 
   test('resolves and displays global sidebar when sidebarMode is "global"', () => {
     const globalSidebarMock = {
-      name: 'Modèle global — Anjou Édition',
+      name: 'Modèle global — Anjou Édition, pour les nuls',
       styles: {
         leftWidth: 25,
         rightWidth: 22,

@@ -23,6 +23,7 @@ import {
   getLocalGlobalSidebar, 
   createCustomSidebarBackup 
 } from '../services/flipbookSidebarService';
+import { BRAND_NAME } from '../constants/brand';
 
 /**
  * Grande Modale d'Édition Responsive d'un Flipbook
@@ -518,7 +519,7 @@ export default function FlipbookEditModal({
                 {editingData.sidebarMode === 'global' ? (
                   <span className="ae-badge-global-active">
                     <Sparkles size={13} aria-hidden="true" />
-                    <span>Modèle global — Anjou Édition</span>
+                    <span>Modèle global — {BRAND_NAME}</span>
                   </span>
                 ) : (
                   <span className="ae-badge-custom-active">
@@ -530,7 +531,7 @@ export default function FlipbookEditModal({
             </div>
 
             <p className="text-xs text-slate-500 mb-3">
-              Choisissez entre le <strong>Modèle global — Anjou Édition</strong> (recommandé pour une cohérence éditoriale) ou une <strong>Configuration personnalisée</strong> propre à cet ouvrage.
+              Choisissez entre le <strong>Modèle global — {BRAND_NAME}</strong> (recommandé pour une cohérence éditoriale) ou une <strong>Configuration personnalisée</strong> propre à cet ouvrage.
             </p>
 
             {/* Sélecteur direct : Mode de barres latérales */}
@@ -558,7 +559,7 @@ export default function FlipbookEditModal({
                 className="db-input w-full text-xs font-semibold"
                 aria-label="Mode de barres latérales"
               >
-                <option value="global">Modèle global — Anjou Édition</option>
+                <option value="global">Modèle global — {BRAND_NAME}</option>
                 <option value="custom">Configuration personnalisée</option>
               </select>
             </div>
@@ -603,10 +604,10 @@ export default function FlipbookEditModal({
                     <div>
                       <label htmlFor="mode-choice-global" className="font-bold text-xs text-slate-800 dark:text-slate-100 flex items-center gap-1.5 cursor-pointer">
                         <Sparkles size={14} className="text-blue-600" />
-                        <span>Modèle global — Anjou Édition (Recommandé)</span>
+                        <span>Modèle global — {BRAND_NAME} (Recommandé)</span>
                       </label>
                       <p className="text-[11px] text-slate-500 mt-1 leading-snug">
-                        Ce Flipbook hérite par référence dynamique du « Modèle global — Anjou Édition ». Les modifications globales y sont immédiatement répercutées.
+                        Ce Flipbook hérite par référence dynamique du « Modèle global — {BRAND_NAME} ». Les modifications globales y sont immédiatement répercutées.
                       </p>
                     </div>
                   </div>
@@ -661,7 +662,7 @@ export default function FlipbookEditModal({
                   <div className="flex items-center gap-2">
                     <Sparkles className="text-blue-600" size={17} />
                     <span className="text-xs font-bold text-blue-900 dark:text-blue-200">
-                      Synchronisé avec le « Modèle global — Anjou Édition »
+                      Synchronisé avec le « Modèle global — {BRAND_NAME} »
                     </span>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
@@ -805,7 +806,7 @@ export default function FlipbookEditModal({
             {showLocalPreview && (
               <div className="mt-4 p-3 bg-slate-100 dark:bg-slate-900 rounded-xl border border-slate-300 dark:border-slate-700" data-testid="modal-local-preview">
                 <div className="text-xs font-bold text-slate-700 dark:text-slate-200 mb-2 flex items-center justify-between">
-                  <span>Aperçu local en direct ({editingData.sidebarMode === 'global' ? 'Modèle global — Anjou Édition' : 'Configuration personnalisée'})</span>
+                  <span>Aperçu local en direct ({editingData.sidebarMode === 'global' ? `Modèle global — ${BRAND_NAME}` : 'Configuration personnalisée'})</span>
                   <span className="text-[11px] text-slate-500">Non publié tant que non enregistré</span>
                 </div>
                 <FlipbookLayout
@@ -840,7 +841,7 @@ export default function FlipbookEditModal({
                 </div>
 
                 <p className="text-xs text-slate-600 dark:text-slate-300 mb-4 leading-relaxed">
-                  Ce Flipbook utilise actuellement une configuration individuelle. En basculant sur le <strong>« Modèle global — Anjou Édition »</strong>, l'affichage utilisera désormais le modèle commun partagé.
+                  Ce Flipbook utilise actuellement une configuration individuelle. En basculant sur le <strong>« Modèle global — {BRAND_NAME} »</strong>, l'affichage utilisera désormais le modèle commun partagé.
                   <br /><br />
                   Votre dernière configuration individuelle sera automatiquement <strong>conservée en sauvegarde</strong> afin de permettre un retour ultérieur sans perte de données.
                 </p>

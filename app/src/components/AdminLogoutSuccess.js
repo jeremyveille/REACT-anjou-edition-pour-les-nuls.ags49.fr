@@ -1,6 +1,7 @@
 import React from 'react';
 import { ShieldCheck, ArrowLeft, AlertCircle } from 'lucide-react';
 import { GoogleIcon } from './GoogleIcon';
+import { BRAND_NAME } from '../constants/brand';
 
 /**
  * Écran élégant et sécurisé affiché après la déconnexion du tableau de bord.
@@ -36,7 +37,7 @@ export function AdminLogoutSuccess({
             Votre session administrative a été fermée de manière sécurisée.
           </p>
           <p className="admin-logout-subtext">
-            À bientôt sur Anjou Édition !
+            À bientôt sur {BRAND_NAME} !
           </p>
         </div>
 
@@ -79,16 +80,16 @@ export function AdminLogoutSuccess({
           </button>
         </div>
 
-        {/* 5. Lien secondaire discret : Retourner sur Anjou Édition */}
+        {/* 5. Lien secondaire discret : Retourner sur Anjou Édition, pour les nuls */}
         <div>
           <button
             type="button"
             onClick={onBackToSite}
             className="admin-logout-back-link"
-            aria-label="Retourner sur Anjou Édition"
+            aria-label={`Retourner sur ${BRAND_NAME}`}
           >
             <ArrowLeft size={16} aria-hidden="true" />
-            <span>Retourner sur Anjou Édition</span>
+            <span>Retourner sur {BRAND_NAME}</span>
           </button>
         </div>
       </div>

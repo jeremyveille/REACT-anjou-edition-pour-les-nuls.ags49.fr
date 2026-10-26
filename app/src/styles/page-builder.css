@@ -387,10 +387,15 @@
     flex-wrap: wrap;
     padding: 4px 8px;
     border-radius: 6px;
+    gap: 6px;
   }
   .pb-control-btn {
-    width: 28px;
-    height: 28px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    border-radius: 6px;
+    touch-action: manipulation;
   }
 }
 
@@ -430,12 +435,15 @@
     flex-wrap: wrap;
     padding: 4px 6px;
     border-radius: 6px;
-    gap: 4px;
+    gap: 6px;
   }
   .pb-control-btn {
-    width: 32px !important;
-    height: 32px !important;
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
     border-radius: 6px !important;
+    touch-action: manipulation;
   }
   .pb-block-label {
     font-size: 10px;
@@ -1187,20 +1195,24 @@
   }
 }
 
-/* Tailles tactiles responsive pour les boutons de style */
+/* Tailles tactiles responsive pour les boutons de style (WCAG 2.2 AA ≥ 44x44px) */
 @media (min-width: 600px) and (max-width: 899px) {
   .pb-control-btn.pb-btn-copy-style,
   .pb-control-btn.pb-btn-paste-style {
-    width: 28px;
-    height: 28px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
   }
 }
 
 @media (max-width: 599px) {
   .pb-control-btn.pb-btn-copy-style,
   .pb-control-btn.pb-btn-paste-style {
-    width: 32px !important;
-    height: 32px !important;
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
     border-radius: 6px !important;
   }
 }

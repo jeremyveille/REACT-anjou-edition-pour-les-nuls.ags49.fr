@@ -1,5 +1,6 @@
 import React from "react";
 import { BookOpen, Lock, Menu, X, ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { BRAND_NAME } from "../constants/brand";
 
 export default function DashboardHeader({
   userName,
@@ -84,7 +85,7 @@ export default function DashboardHeader({
             <h2 className="topbar-title">
               Tableau de bord
             </h2>
-            <span className="topbar-subtitle">Administration Anjou Édition</span>
+            <span className="topbar-subtitle">Administration {BRAND_NAME}</span>
           </div>
 
           {activeSection && (

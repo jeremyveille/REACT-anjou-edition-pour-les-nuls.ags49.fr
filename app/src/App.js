@@ -63,6 +63,7 @@ import { OptimizedImage } from './utils/imageOptimizer';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { GoogleIcon } from './components/GoogleIcon';
 import { AdminLogoutSuccess } from './components/AdminLogoutSuccess';
+import { BRAND_NAME } from './constants/brand';
 import VideoFullscreenButton from './components/VideoFullscreenButton';
 
 
@@ -247,7 +248,7 @@ function App() {
         type: 'text',
         data: {
           title: decodedSlug.charAt(0).toUpperCase() + decodedSlug.slice(1),
-          author: "Comité éditorial Anjou Édition",
+          author: "Comité éditorial Anjou Édition, pour les nuls",
           date: "2026",
           content: `Le contenu pour la catégorie "${decodedSlug}" sera bientôt disponible sur notre portail.\n\nNous enrichissons notre catalogue d'ouvrages et de documents régulièrement.\n\nN'hésitez pas à nous faire part de vos demandes via la page Contact.`
         },
@@ -308,7 +309,7 @@ function App() {
     if (art.metaTitle) {
       document.title = art.metaTitle;
     } else {
-      document.title = `${art.title} — Anjou Édition`;
+      document.title = `${art.title} — ${BRAND_NAME}`;
     }
     if (typeof window.scrollTo === 'function') {
       try {
@@ -781,17 +782,17 @@ function App() {
     if (title) {
       document.title = title;
     } else if (viewObj.type === 'home') {
-      document.title = "Anjou Édition — Pour les Nuls";
+      document.title = BRAND_NAME;
     } else if (viewObj.type === 'flipbooks') {
-      document.title = "Nos Flipbooks Interactifs — Anjou Édition";
+      document.title = `Nos Flipbooks Interactifs — ${BRAND_NAME}`;
     } else if (viewObj.type === 'videos') {
-      document.title = "Vidéos & Conférences — Anjou Édition";
+      document.title = `Vidéos & Conférences — ${BRAND_NAME}`;
     } else if (viewObj.type === 'gallery') {
-      document.title = "Galerie Photos — Anjou Édition";
+      document.title = `Galerie Photos — ${BRAND_NAME}`;
     } else if (viewObj.type === 'contact') {
-      document.title = "Contact — Anjou Édition";
+      document.title = `Contact — ${BRAND_NAME}`;
     } else if (viewObj.type === 'privacy') {
-      document.title = "Politique de Confidentialité & Mentions Légales — Anjou Édition";
+      document.title = `Politique de Confidentialité & Mentions Légales — ${BRAND_NAME}`;
     }
     if (typeof window.scrollTo === 'function') {
       try {
@@ -878,7 +879,7 @@ function App() {
         author: "Jérémy V. / P. SWILLE.V",
         date: "2020",
         pdfFile: "Seraphin-le-marin.pdf",
-        description: "Fable illustrée d'Anjou Édition pour la jeunesse.",
+        description: "Fable illustrée d'Anjou Édition, pour les nuls pour la jeunesse.",
         leftSidebar: [
           {
             id: "sb_seraphin_left_1",
@@ -891,7 +892,7 @@ function App() {
             id: "sb_seraphin_left_2",
             type: "text",
             title: "Présentation de l'ouvrage",
-            content: "<p><strong>Séraphin le marin</strong> est une œuvre originale et inédite publiée par Anjou Édition.<br />Texte et illustrations de Jérémy V. Couverture de P. SWILLE.V.</p>",
+            content: "<p><strong>Séraphin le marin</strong> est une œuvre originale et inédite publiée par Anjou Édition, pour les nuls.<br />Texte et illustrations de Jérémy V. Couverture de P. SWILLE.V.</p>",
             enabled: true
           }
         ],
@@ -930,7 +931,7 @@ function App() {
     const foundKey = Object.keys(textsData).find(k => k.toLowerCase() === cleanLower) || cleanName;
     const dataObj = textsData[foundKey] || {
       title: cleanName,
-      author: "Comité éditorial Anjou Édition",
+      author: "Comité éditorial Anjou Édition, pour les nuls",
       date: "2026",
       content: `Le contenu pour la catégorie "${cleanName}" sera bientôt disponible sur notre portail.\n\nNous enrichissons notre catalogue d'ouvrages et de documents régulièrement.\n\nN'hésitez pas à nous faire part de vos demandes via la page Contact.`
     };
@@ -938,7 +939,7 @@ function App() {
     // 3. Génération dynamique du PDF pour consultation directe dans le lecteur de Flipbook
     const generatedPdfUrl = getOrCreateTextPdfUrl({
       title: dataObj.title || cleanName,
-      author: dataObj.author || "Comité éditorial Anjou Édition",
+      author: dataObj.author || "Comité éditorial Anjou Édition, pour les nuls",
       date: dataObj.date || "2026",
       category: cleanName,
       content: dataObj.content
@@ -948,7 +949,7 @@ function App() {
       id: `text_${slug}`,
       title: dataObj.title || cleanName,
       category: cleanName,
-      author: dataObj.author || "Comité éditorial Anjou Édition",
+      author: dataObj.author || "Comité éditorial Anjou Édition, pour les nuls",
       date: dataObj.date || "2026",
       description: (dataObj.content || '').slice(0, 160) + '...',
       pdfUrl: generatedPdfUrl,
@@ -965,7 +966,7 @@ function App() {
           id: `sb_txt_left_content_${slug}`,
           type: "text",
           title: "À propos du texte",
-          content: `<p><strong>${dataObj.title || cleanName}</strong><br />Auteur : ${dataObj.author || "Anjou Édition"}<br />Référence : ${dataObj.date || "2026"}</p>`,
+          content: `<p><strong>${dataObj.title || cleanName}</strong><br />Auteur : ${dataObj.author || "Anjou Édition, pour les nuls"}<br />Référence : ${dataObj.date || "2026"}</p>`,
           enabled: true
         }
       ],
@@ -1046,7 +1047,7 @@ function App() {
     navigateTo(
       { type: 'videos', selectedId: id },
       id ? `/videos/${id}` : '/videos',
-      "Vidéos & Conférences — Anjou Édition"
+      `Vidéos & Conférences — ${BRAND_NAME}`
     );
   };
 
@@ -1154,13 +1155,13 @@ function App() {
       // Whitelisted shortcode actions
       const ALLOWED_SHORTCODES = {
         'open_contact_modal': () => {
-          navigateTo({ type: 'contact' }, '/contact', "Contact — Anjou Édition");
+          navigateTo({ type: 'contact' }, '/contact', `Contact — ${BRAND_NAME}`);
         },
         'toggle_theme': () => {
           toggleDarkMode();
         },
         'play_speech': () => {
-          handleToggleSpeech("Bienvenue sur Anjou Édition.");
+          handleToggleSpeech(`Bienvenue sur ${BRAND_NAME}.`);
         },
         'increase_font': () => {
           setFontSize(prev => {
@@ -1170,16 +1171,16 @@ function App() {
           });
         },
         'show_flipbooks': () => {
-          navigateTo({ type: 'flipbooks' }, '/flipbooks', "Nos Flipbooks Interactifs — Anjou Édition");
+          navigateTo({ type: 'flipbooks' }, '/flipbooks', `Nos Flipbooks Interactifs — ${BRAND_NAME}`);
         },
         'show_videos': () => {
-          navigateTo({ type: 'videos' }, '/videos', "Vidéos & Conférences — Anjou Édition");
+          navigateTo({ type: 'videos' }, '/videos', `Vidéos & Conférences — ${BRAND_NAME}`);
         },
         'show_gallery': () => {
-          navigateTo({ type: 'gallery' }, '/gallery', "Galerie Photos — Anjou Édition");
+          navigateTo({ type: 'gallery' }, '/gallery', `Galerie Photos — ${BRAND_NAME}`);
         },
         'alert_hello': () => {
-          alert("Bienvenue sur Anjou Édition !");
+          alert(`Bienvenue sur ${BRAND_NAME} !`);
         }
       };
 
@@ -1227,7 +1228,7 @@ function App() {
         // Vérifier d'abord s'il s'agit d'une page personnalisée dynamique
         const customPage = customPages.find(p => p.slug === clean || p.title === clean || p.slug === tagName);
         if (customPage) {
-          navigateTo({ type: 'custom-page', page: customPage }, `/pages/${customPage.slug || clean}`, `${customPage.title} — Anjou Édition`);
+          navigateTo({ type: 'custom-page', page: customPage }, `/pages/${customPage.slug || clean}`, `${customPage.title} — ${BRAND_NAME}`);
         } else if (textsData[clean]) {
           handleSelectCategory(clean);
         } else {
@@ -1240,24 +1241,24 @@ function App() {
         window.open(item.url, "_blank", "noopener,noreferrer");
       } else {
         if (item.url === "/" || item.url === "/home" || item.url === "/accueil") {
-          navigateTo({ type: 'home' }, '/', "Anjou Édition — Pour les Nuls");
+          navigateTo({ type: 'home' }, '/', BRAND_NAME);
         } else if (item.url === "/contact") {
-          navigateTo({ type: 'contact' }, '/contact', "Contact — Anjou Édition");
+          navigateTo({ type: 'contact' }, '/contact', `Contact — ${BRAND_NAME}`);
         } else if (item.url === "/flipbooks") {
-          navigateTo({ type: 'flipbooks' }, '/flipbooks', "Nos Flipbooks Interactifs — Anjou Édition");
+          navigateTo({ type: 'flipbooks' }, '/flipbooks', `Nos Flipbooks Interactifs — ${BRAND_NAME}`);
         } else if (item.url === "/videos") {
-          navigateTo({ type: 'videos' }, '/videos', "Vidéos & Conférences — Anjou Édition");
+          navigateTo({ type: 'videos' }, '/videos', `Vidéos & Conférences — ${BRAND_NAME}`);
         } else if (item.url === "/gallery") {
-          navigateTo({ type: 'gallery' }, '/gallery', "Galerie Photos — Anjou Édition");
+          navigateTo({ type: 'gallery' }, '/gallery', `Galerie Photos — ${BRAND_NAME}`);
         } else if (item.url === "/ae-dashboard") {
-          navigateTo({ type: 'dashboard' }, '/ae-dashboard', "Administration — Anjou Édition");
+          navigateTo({ type: 'dashboard' }, '/ae-dashboard', `Administration — ${BRAND_NAME}`);
         } else if (item.url.startsWith("/articles/")) {
           const articleSlug = item.url.replace('/articles/', '').replace('/', '');
           const targetArticle = articles.find(a => a.slug === articleSlug || a.id === articleSlug);
           if (targetArticle) {
             handleOpenArticle(targetArticle);
           } else {
-            navigateTo({ type: 'home' }, '/', "Anjou Édition — Pour les Nuls");
+            navigateTo({ type: 'home' }, '/', BRAND_NAME);
           }
         } else {
           // Vérifier si l'URL correspond à un article ou une page dynamique
@@ -1268,7 +1269,7 @@ function App() {
           } else {
             const customPage = customPages.find(p => p.slug === cleanSlug || p.slug === item.url);
             if (customPage) {
-              navigateTo({ type: 'custom-page', page: customPage }, `/pages/${cleanSlug}`, `${customPage.title} — Anjou Édition`);
+              navigateTo({ type: 'custom-page', page: customPage }, `/pages/${cleanSlug}`, `${customPage.title} — ${BRAND_NAME}`);
             } else {
               // Si URL inconnue, essayer de charger le titre
               handleSelectCategory(item.title);
@@ -1280,7 +1281,7 @@ function App() {
       // Fallback si pas de shortcode ni de route
       const customPage = customPages.find(p => p.title === item.title || p.slug === item.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'));
       if (customPage) {
-        navigateTo({ type: 'custom-page', page: customPage }, `/pages/${customPage.slug}`, `${customPage.title} — Anjou Édition`);
+        navigateTo({ type: 'custom-page', page: customPage }, `/pages/${customPage.slug}`, `${customPage.title} — ${BRAND_NAME}`);
       } else {
         handleSelectCategory(item.title);
       }
@@ -1296,7 +1297,7 @@ function App() {
       if (Array.isArray(pages)) setCustomPages(pages);
       if (Array.isArray(fetchedArticles) && fetchedArticles.length > 0) setArticles(fetchedArticles);
     } catch (e) {}
-    navigateTo({ type: 'home' }, '/', "Anjou Édition — Pour les Nuls");
+    navigateTo({ type: 'home' }, '/', BRAND_NAME);
   };
 
   const handleGoogleLogin = async () => {
@@ -1446,7 +1447,7 @@ function App() {
             <div className="admin-unauthorized-icon-wrapper">
               <ShieldAlert size={32} />
             </div>
-            <h1 className="admin-login-title">Anjou Édition</h1>
+            <h1 className="admin-login-title">{BRAND_NAME}</h1>
             <h2 className="admin-login-subtitle" style={{ color: '#dc2626' }}>Accès Non Autorisé</h2>
             <p className="admin-login-desc" style={{ marginTop: '0.5rem' }}>
               Le compte suivant n'a pas les privilèges requis pour administrer ce site :
@@ -1455,7 +1456,7 @@ function App() {
               {adminUser?.email || 'Compte Google'}
             </div>
             <p className="admin-login-desc" style={{ marginBottom: '1.5rem', fontSize: '0.85rem' }}>
-              Seuls les administrateurs officiels d'Anjou Édition sont habilités à gérer cette plateforme.
+              Seuls les administrateurs officiels d'Anjou Édition, pour les nuls sont habilités à gérer cette plateforme.
             </p>
 
             {loginError && (
@@ -1526,7 +1527,7 @@ function App() {
               <div className="admin-login-icon-wrapper">
                 <Lock size={28} />
               </div>
-              <h1 className="admin-login-title">Anjou Édition</h1>
+              <h1 className="admin-login-title">{BRAND_NAME}</h1>
               <h2 className="admin-login-subtitle">Accès Administration</h2>
               <p className="admin-login-desc">Connectez-vous pour accéder au tableau de bord.</p>
             </div>
@@ -1732,7 +1733,7 @@ function App() {
         dropdownRefs={dropdownRefs}
         onHomeClick={() => {
           handleCloseFlipbookModal();
-          navigateTo({ type: 'home' }, '/', "Anjou Édition — Pour les Nuls");
+          navigateTo({ type: 'home' }, '/', BRAND_NAME);
         }}
       />
 
@@ -1745,14 +1746,14 @@ function App() {
           onClose={handleCloseFlipbookModal}
           onBackToHome={() => {
             handleCloseFlipbookModal();
-            navigateTo({ type: 'home' }, '/', "Anjou Édition — Pour les Nuls");
+            navigateTo({ type: 'home' }, '/', BRAND_NAME);
           }}
           triggerRef={flipbookTriggerRef}
         />
       )}
 
       {/* Layout Main Container */}
-      <main id="main-content">
+      <main id="main-content" tabIndex="-1">
         {/* Center Dynamic Content Area */}
         <section className="main-content">
           
@@ -1778,7 +1779,7 @@ function App() {
             <div className="article-view-container fade-in">
               <button 
                 type="button" 
-                onClick={() => navigateTo({ type: 'home' }, '/', "Anjou Édition — Pour les Nuls")} 
+                onClick={() => navigateTo({ type: 'home' }, '/', BRAND_NAME)} 
                 className="btn-back"
               >
                 <ArrowLeft size={16} /> Retour à l'accueil
@@ -1937,19 +1938,19 @@ function App() {
                 <div className="article-footer-cta-box">
                   <h3 className="article-footer-cta-title">Vous avez une histoire, un manuscrit ou une idée ?</h3>
                   <p className="article-footer-cta-desc">
-                    Chez Anjou Édition, nous étudions chaque projet avec bienveillance et simplicité. Écrivez-nous pour nous présenter votre projet littéraire ou patrimonial.
+                    Chez {BRAND_NAME}, nous étudions chaque projet avec bienveillance et simplicité. Écrivez-nous pour nous présenter votre projet littéraire ou patrimonial.
                   </p>
                   <div className="article-footer-cta-buttons">
                     <button 
                       type="button" 
-                      onClick={() => navigateTo({ type: 'contact' }, '/contact', "Contact — Anjou Édition")} 
+                      onClick={() => navigateTo({ type: 'contact' }, '/contact', `Contact — ${BRAND_NAME}`)} 
                       className="btn-hero-primary"
                     >
                       <Send size={18} /> Proposer votre projet
                     </button>
                     <button 
                       type="button" 
-                      onClick={() => navigateTo({ type: 'flipbooks' }, '/flipbooks', "Nos Flipbooks Interactifs — Anjou Édition")} 
+                      onClick={() => navigateTo({ type: 'flipbooks' }, '/flipbooks', `Nos Flipbooks Interactifs — ${BRAND_NAME}`)} 
                       className="btn-hero-secondary"
                     >
                       <BookOpen size={18} /> Découvrir nos publications
@@ -1962,7 +1963,7 @@ function App() {
 
           {/* Hidden elements for compatibility with existing tests */}
           <div style={{ position: 'absolute', width: '1px', height: '1px', overflow: 'hidden', opacity: 0 }}>
-            <h2>Bienvenue sur Anjou Édition</h2>
+            <h2>Bienvenue sur {BRAND_NAME}</h2>
             <button type="button" onClick={() => setView({ type: 'flipbooks' })}>Voir les Flipbooks</button>
           </div>
 
@@ -1989,7 +1990,7 @@ function App() {
                   </div>
                   
                   <h1 id="home-hero-heading" className="home-hero-title">
-                    <span className="hero-title-prefix">Anjou Édition,</span>
+                    <span className="hero-title-prefix">{BRAND_NAME},</span>
                     <span className="hero-title-highlight">la maison d’édition ouverte à tous</span>
                   </h1>
                   
@@ -1998,7 +1999,7 @@ function App() {
                   </p>
                   
                   <p className="home-hero-secondary">
-                    Que vous soyez auteur, lecteur, passionné ou simplement curieux, Anjou Édition vous invite à découvrir, apprendre, partager et transmettre.
+                    Que vous soyez auteur, lecteur, passionné ou simplement curieux, {BRAND_NAME} vous invite à découvrir, apprendre, partager et transmettre.
                   </p>
                   
                   <div className="home-hero-actions">
@@ -2006,14 +2007,14 @@ function App() {
                       type="button" 
                       onClick={() => handleOpenArticle(featuredArticle)} 
                       className="btn-hero-primary"
-                      aria-label="Découvrir Anjou Édition et notre vision"
+                      aria-label={`Découvrir ${BRAND_NAME} et notre vision`}
                     >
                       <BookOpen size={18} aria-hidden="true" />
-                      Découvrir Anjou Édition
+                      Découvrir {BRAND_NAME}
                     </button>
                     <button 
                       type="button" 
-                      onClick={() => navigateTo({ type: 'flipbooks' }, '/flipbooks', "Nos Flipbooks Interactifs — Anjou Édition")} 
+                      onClick={() => navigateTo({ type: 'flipbooks' }, '/flipbooks', `Nos Flipbooks Interactifs — ${BRAND_NAME}`)} 
                       className="btn-hero-secondary"
                       aria-label="Découvrir nos publications et livres à feuilleter"
                     >
@@ -2072,7 +2073,7 @@ function App() {
                         </div>
                         <h3 className="featured-article-title">{featuredArticle.title}</h3>
                         <p className="featured-article-excerpt">
-                          {featuredArticle.excerpt || "Anjou Édition souhaite rendre l’édition, la culture et la transmission accessibles à tous. Découvrez notre vision d’une maison d’édition simple, humaine et ouverte aux auteurs comme aux lecteurs."}
+                          {featuredArticle.excerpt || `${BRAND_NAME} souhaite rendre l’édition, la culture et la transmission accessibles à tous. Découvrez notre vision d’une maison d’édition simple, humaine et ouverte aux auteurs comme aux lecteurs.`}
                         </p>
                       </div>
                       <span className="featured-article-action">
@@ -2148,10 +2149,10 @@ function App() {
                 <div className="home-shortcuts-grid-mockup">
                   <div 
                     className="portal-shortcut-card shortcut-flipbooks"
-                    onClick={() => navigateTo({ type: 'flipbooks' }, '/flipbooks', "Nos Flipbooks Interactifs — Anjou Édition")}
+                    onClick={() => navigateTo({ type: 'flipbooks' }, '/flipbooks', `Nos Flipbooks Interactifs — ${BRAND_NAME}`)}
                     role="button"
                     tabIndex={0}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigateTo({ type: 'flipbooks' }, '/flipbooks', "Nos Flipbooks Interactifs — Anjou Édition"); }}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigateTo({ type: 'flipbooks' }, '/flipbooks', `Nos Flipbooks Interactifs — ${BRAND_NAME}`); }}
                     aria-label="Découvrir nos livres et flipbooks interactifs"
                   >
                     <div className="portal-shortcut-icon">
@@ -2164,10 +2165,10 @@ function App() {
 
                   <div 
                     className="portal-shortcut-card shortcut-project"
-                    onClick={() => navigateTo({ type: 'contact' }, '/contact', "Contact — Anjou Édition")}
+                    onClick={() => navigateTo({ type: 'contact' }, '/contact', `Contact — ${BRAND_NAME}`)}
                     role="button"
                     tabIndex={0}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigateTo({ type: 'contact' }, '/contact', "Contact — Anjou Édition"); }}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigateTo({ type: 'contact' }, '/contact', `Contact — ${BRAND_NAME}`); }}
                     aria-label="Proposer votre projet ou contacter la maison d'édition"
                   >
                     <div className="portal-shortcut-icon">
@@ -2237,7 +2238,7 @@ function App() {
             <div className="text-view fade-in">
               <button 
                 type="button" 
-                onClick={() => navigateTo({ type: 'home' }, '/', "Anjou Édition — Pour les Nuls")} 
+                onClick={() => navigateTo({ type: 'home' }, '/', BRAND_NAME)} 
                 className="btn-back"
               >
                 <ArrowLeft size={16} /> Retour à l'accueil
@@ -2266,7 +2267,7 @@ function App() {
                     </button>
                     <button 
                       type="button" 
-                      onClick={() => navigateTo({ type: 'contact' }, '/contact', "Contact — Anjou Édition")}
+                      onClick={() => navigateTo({ type: 'contact' }, '/contact', `Contact — ${BRAND_NAME}`)}
                       className="btn-hero-secondary"
                     >
                       <Send size={16} aria-hidden="true" /> Proposer un texte ou manuscrit
@@ -2390,7 +2391,7 @@ function App() {
             <div className="ae-page-view-container">
               <button 
                 type="button" 
-                onClick={() => navigateTo({ type: 'home' }, '/', "Anjou Édition — Pour les Nuls")} 
+                onClick={() => navigateTo({ type: 'home' }, '/', BRAND_NAME)} 
                 className="btn-back mb-4"
               >
                 <ArrowLeft size={16} /> Retour à l'accueil
@@ -2415,7 +2416,7 @@ function App() {
             <div className="flipbooks-view fade-in">
               <button 
                 type="button" 
-                onClick={() => navigateTo({ type: 'home' }, '/', "Anjou Édition — Pour les Nuls")} 
+                onClick={() => navigateTo({ type: 'home' }, '/', BRAND_NAME)} 
                 className="btn-back"
               >
                 <ArrowLeft size={16} /> Retour à l'accueil
@@ -2503,7 +2504,7 @@ function App() {
             <div className="videos-view fade-in">
               <button 
                 type="button" 
-                onClick={() => navigateTo({ type: 'home' }, '/', "Anjou Édition — Pour les Nuls")} 
+                onClick={() => navigateTo({ type: 'home' }, '/', BRAND_NAME)} 
                 className="btn-back"
               >
                 <ArrowLeft size={16} /> Retour à l'accueil
@@ -2591,7 +2592,7 @@ function App() {
             <div className="gallery-view fade-in">
               <button 
                 type="button" 
-                onClick={() => navigateTo({ type: 'home' }, '/', "Anjou Édition — Pour les Nuls")} 
+                onClick={() => navigateTo({ type: 'home' }, '/', BRAND_NAME)} 
                 className="btn-back"
               >
                 <ArrowLeft size={16} /> Retour à l'accueil
@@ -2604,7 +2605,7 @@ function App() {
                 <div className="text-center py-5 text-muted">
                   <ImageIcon size={48} className="mx-auto mb-3 text-slate-400" />
                   <h4 className="text-lg font-bold text-slate-700 dark:text-slate-200">Aucune photographie publiée</h4>
-                  <p className="text-sm text-slate-500">Les photographies d'Anjou Édition paraîtront prochainement.</p>
+                  <p className="text-sm text-slate-500">Les photographies d'Anjou Édition, pour les nuls paraîtront prochainement.</p>
                 </div>
               ) : (
                 <div className="full-gallery-grid">
@@ -2641,7 +2642,7 @@ function App() {
             <div className="contact-view fade-in">
               <button 
                 type="button" 
-                onClick={() => navigateTo({ type: 'home' }, '/', "Anjou Édition — Pour les Nuls")} 
+                onClick={() => navigateTo({ type: 'home' }, '/', BRAND_NAME)} 
                 className="btn-back"
               >
                 <ArrowLeft size={16} /> Retour à l'accueil

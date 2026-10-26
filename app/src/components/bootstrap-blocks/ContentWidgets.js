@@ -468,7 +468,7 @@ export const PopularVideos = ({ settings = {}, isEditing = false }) => {
 export const NewsList = ({ settings = {}, isEditing = false }) => {
   const title = settings.title || 'Actualités 2026';
   const news = Array.isArray(settings.news) && settings.news.length > 0 ? settings.news : [
-    { id: 'n1', title: 'Salon du Livre de Saumur', description: 'Retrouvez l\'équipe d\'Anjou Édition au stand C12 les 14 et 15 octobre 2026.' }
+    { id: 'n1', title: 'Salon du Livre de Saumur', description: 'Retrouvez l\'équipe d\'Anjou Édition, pour les nuls au stand C12 les 14 et 15 octobre 2026.' }
   ];
   const customClasses = settings.classes || '';
   const style = settings.style || {};

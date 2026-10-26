@@ -137,7 +137,7 @@ export default function CommandPalette({
       type: "action",
       category: "Accès",
       title: "Voir le site public",
-      subtitle: "Consulter Anjou Édition en mode lecteur",
+      subtitle: "Consulter Anjou Édition, pour les nuls en mode lecteur",
       icon: ExternalLink,
       iconColor: "text-blue-500",
       execute: () => onBackToSite && onBackToSite()
@@ -381,7 +381,7 @@ export default function CommandPalette({
             <span className="ae-cmd-hint"><kbd>↵</kbd> Sélectionner</span>
             <span className="ae-cmd-hint"><kbd>Échap</kbd> Fermer</span>
           </div>
-          <span className="ae-cmd-footer-brand">Anjou Édition</span>
+          <span className="ae-cmd-footer-brand">Anjou Édition, pour les nuls</span>
         </div>
       </div>
     </div>

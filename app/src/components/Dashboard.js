@@ -53,6 +53,7 @@ import '../styles/page-builder.css';
 import '../styles/dashboard.css';
 import '../styles/menu-manager.css';
 import '../styles/account-admin.css';
+import { BRAND_NAME, formatBrandName } from '../constants/brand';
 
 
 const normalizeParentId = (id) => {
@@ -391,7 +392,7 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
   const [messagesList, setMessagesList] = useState([]);
 
   const [settings, setSettings] = useState({
-    siteName: "Anjou Edition – Pour les Nuls",
+    siteName: BRAND_NAME,
     contactEmail: "contact@anjou-edition-nuls.fr",
     enableComments: true,
     maintenanceMode: false
@@ -585,7 +586,7 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
     } catch (e) {
       console.error("Pages error:", e);
       setPagesList([
-        { id: "1", title: "Accueil - Anjou Edition", author: "Jeremy Veille", date: "2026-05-12", status: "Publié" },
+        { id: "1", title: `Accueil - ${BRAND_NAME}`, author: "Jeremy Veille", date: "2026-05-12", status: "Publié" },
         { id: "2", title: "À Propos de nous", author: "Sylvie Gautier", date: "2026-06-01", status: "Brouillon" }
       ]);
     }
@@ -645,10 +646,14 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
       const docRef = doc(db, "settings", "global");
       const snap = await getDoc(docRef);
       if (snap && typeof snap.exists === 'function' && snap.exists()) {
-        setSettings(snap.data());
+        const loadedData = snap.data() || {};
+        if (loadedData.siteName) {
+          loadedData.siteName = formatBrandName(loadedData.siteName);
+        }
+        setSettings(loadedData);
       } else {
         const defaultSettings = {
-          siteName: "Anjou Edition – Pour les Nuls",
+          siteName: BRAND_NAME,
           contactEmail: "contact@anjou-edition-nuls.fr",
           enableComments: true,
           maintenanceMode: false
@@ -1290,7 +1295,7 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
           { 
             pageNum: 1, 
             title: "Couverture", 
-            content: `${cleanTitle.toUpperCase()}\n\nAnjou Édition\n\nDocument : ${fileName}` 
+            content: `${cleanTitle.toUpperCase()}\n\nAnjou Édition, pour les nuls\n\nDocument : ${fileName}` 
           },
           { 
             pageNum: 2, 
@@ -2333,7 +2338,7 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
         <div className="ae-card-panel">
           <p className="text-[10px] uppercase font-bold text-slate-400 mb-2">Aperçu Bloc de Contenu :</p>
           <div className="border-l-4 border-emerald-500 pl-3 py-1">
-            <h6 className="ae-item-title-bold-sm">Bienvenue sur le portail Anjou Édition</h6>
+            <h6 className="ae-item-title-bold-sm">Bienvenue sur le portail Anjou Édition, pour les nuls</h6>
             <p className="text-xs text-slate-550 leading-relaxed mt-1">
               Ce contenu réutilisable s'insère dynamiquement dans vos constructeurs de page et dans vos articles d'édition.
             </p>
@@ -3323,7 +3328,7 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
                                     <td className="py-3 text-right">
                                       <div className="d-flex align-items-center justify-content-end gap-1.5">
                                         <a
-                                          href={`mailto:${m.email}?subject=Re: ${encodeURIComponent(m.subject || 'Votre message à Anjou Édition')}`}
+                                          href={`mailto:${m.email}?subject=Re: ${encodeURIComponent(m.subject || 'Votre message à Anjou Édition, pour les nuls')}`}
                                           className="ae-btn-secondary-sm d-inline-flex align-items-center gap-1 text-xs"
                                           title="Répondre par e-mail direct"
                                           style={{ padding: '4px 8px', borderRadius: '5px', textDecoration: 'none' }}
@@ -3798,7 +3803,7 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
                             Actualités & Annonces
                           </h4>
                           <p className="ae-text-sm-muted">
-                            Publiez des informations sur les concours et les événements d'Anjou Édition.
+                            Publiez des informations sur les concours et les événements d'Anjou Édition, pour les nuls.
                           </p>
                         </div>
                         <button
@@ -4242,7 +4247,7 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
                     {/* Administrative Status Card: Service Anjou Édition */}
                     <InfoCard 
                       onLearnMore={() => {
-                        setNotification("Le portail Anjou Edition est configuré avec l'API Éditeur v2.4 pour la production.");
+                        setNotification("Le portail Anjou Édition, pour les nuls est configuré avec l'API Éditeur v2.4 pour la production.");
                       }} 
                     />
 
@@ -4327,7 +4332,7 @@ export default function Dashboard({ onBackToSite, onLogout, currentUser, flipboo
 
             {/* Footer of container */}
             <footer className="bg-slate-50 border-t border-slate-100 dark:bg-slate-900/20 dark:border-slate-800 px-6 py-4 flex flex-col md:flex-row items-center justify-between text-xs text-slate-505 italic">
-              <span>&copy; {new Date().getFullYear()} Anjou Edition – Tous droits réservés.</span>
+              <span>&copy; {new Date().getFullYear()} Anjou Édition, pour les nuls – Tous droits réservés.</span>
               <span className="mt-1 md:mt-0 not-italic font-bold text-slate-400 font-mono">
                 Version 2.0.0 (Propulsé par React-Vite & Firebase)
               </span>

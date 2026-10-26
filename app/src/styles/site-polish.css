@@ -1,52 +1,441 @@
-/* Shared public layout: keep navigation inside its container at every breakpoint. */
-.public-nav { max-width: 1280px; border-radius: 24px; margin-bottom: 1.5rem; }
-.public-nav .nav-container { gap: 12px; min-width: 0; }
-.public-nav .nav-links { min-width: 0; display: flex; align-items: center; justify-content: center; flex-wrap: nowrap; gap: 6px; }
-.public-nav .nav-actions { display: flex; flex-shrink: 0; align-items: center; gap: 8px; }
-.public-nav .nav-logo { flex-shrink: 0; height: 30px; }
-.public-nav .contact-btn { flex-shrink: 0; height: 30px; }
-.public-nav .nav-links button { min-height: 30px; height: 30px; }
-.public-nav .mobile-menu-toggle-btn { display: none; }
-.public-nav .ae-input-addon-btn { min-width: unset; min-height: unset; height: auto; }
-.public-nav .dropdown-menu { max-width: min(320px, calc(100vw - 32px)); }
-.dropdown-submenu:focus-within > .dropdown-menu { display: block; opacity: 1; visibility: visible; }
-.public-nav :focus-visible, .footer-links-capsule :focus-visible {
-  outline: 3px solid var(--secondary); outline-offset: 3px;
+/* ==========================================================================
+   ANJOU ÉDITION — POLISH RESPONSIVE & HARMONISATION UNIVERSELLE
+   Vanilla CSS pur (Conformité stricte : 0 Tailwind)
+   4 Paliers : S (0-599px), M (600-899px), L (900-1199px), XL (>= 1200px)
+   ========================================================================== */
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: clamp(50px, 8vw, 75px);
 }
-.header-mockup-titles .brand-title {
-  font-size: clamp(1.65rem, 3.8vw, 3.1rem); font-weight: 800; line-height: 1.1;
-  color: #fff; letter-spacing: -.03em; margin: 0; text-shadow: 0 2px 8px #10274433;
+
+:target,
+#main-content,
+section[id],
+main[id],
+article[id],
+.main-content section,
+.anchor-target,
+.ae-flipbook-inpage-wrapper,
+.ae-flipbook-inpage-dialog,
+.ae-flipbook-modal-dialog {
+  scroll-margin-top: clamp(50px, 8vw, 75px);
 }
-.header-mockup-titles .brand-subtitle {
-  font-size: .85rem; letter-spacing: .2em; font-weight: 700; color: #fff;
-  margin: .5rem 0 0; align-self: flex-end;
+
+#main-content:focus {
+  outline: none;
 }
-.App main { width: 100%; max-width: 1280px; margin-inline: auto; padding-top: 2rem; }
-.home-hero-wrapper { min-height: 450px; }
-.home-hero-content-layer { padding: 3rem; max-width: 62%; }
-.home-hero-title { text-wrap: balance; font-size: clamp(2rem, 3.5vw, 3rem); }
-.home-hero-secondary { font-size: 1rem; line-height: 1.7; }
-.dark-mode .home-hero-secondary { color: #e2e8f0; text-shadow: 0 1px 4px #0f172a; }
-.featured-article-card { text-align: left; }
-.text-reader-card, .contact-card { border: 1px solid var(--border); border-radius: 24px; }
-.text-content.prose { max-width: 70ch; margin-inline: auto; line-height: 1.85; }
+
+body.no-scroll {
+  overflow: hidden !important;
+}
+
+/* --------------------------------------------------------------------------
+   1. STRUCTURE COMMUNE & NAVIGATION PRINCIPALE (STICKY DESKTOP & MOBILES)
+   -------------------------------------------------------------------------- */
+nav.public-nav,
+.public-nav {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  max-width: 1280px;
+  border-radius: 9999px;
+  margin-top: 0;
+  margin-inline: auto;
+  box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  transition: background 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.dark-mode nav.public-nav,
+.dark-mode .public-nav {
+  background: rgba(15, 23, 42, 0.98);
+  border-color: rgba(51, 65, 85, 0.95);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+}
+
+.public-nav .nav-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 8px;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.public-nav .nav-links {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  flex: 1 1 auto;
+}
+
+.public-nav .nav-actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+}
+
+.public-nav .nav-logo {
+  flex-shrink: 0;
+  height: 28px;
+  min-height: 28px;
+  padding: 0 0.8rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #005ce6 !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 6px rgba(0, 92, 230, 0.22);
+}
+
+.public-nav .contact-btn {
+  flex-shrink: 0;
+  height: 28px;
+  min-height: 28px;
+  padding: 0 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  background: #ffffff !important;
+  border: 1.5px solid #005ce6 !important;
+  color: #005ce6 !important;
+}
+
+.public-nav .mobile-menu-toggle-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  min-height: 30px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-main);
+  border-radius: 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease;
+}
+
+.public-nav .mobile-menu-toggle-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.dark-mode .public-nav .mobile-menu-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.public-nav .nav-links button {
+  min-height: 30px;
+  height: 30px;
+}
+
+.public-nav .ae-input-addon-btn {
+  min-width: unset;
+  min-height: unset;
+  height: auto;
+}
+
+.public-nav .dropdown-menu {
+  max-width: min(320px, calc(100vw - 32px));
+}
+
+.dropdown-submenu:focus-within > .dropdown-menu {
+  display: block;
+  opacity: 1;
+  visibility: visible;
+}
+
+.public-nav :focus-visible, 
+.footer-links-capsule :focus-visible {
+  outline: 3px solid var(--secondary);
+  outline-offset: 3px;
+}
+
+/* --------------------------------------------------------------------------
+   2. TIROIR MOBILE ET BACKDROP (ZÉRO DÉBORDEMENT PARASITE)
+   -------------------------------------------------------------------------- */
+.mobile-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: min(320px, 85vw);
+  max-width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  background: var(--bg-card);
+  border-right: 1px solid var(--border);
+  box-shadow: none;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(-105%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.3s ease;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.mobile-drawer.open {
+  transform: translateX(0);
+  visibility: visible;
+  pointer-events: auto;
+  box-shadow: 10px 0 35px rgba(0, 0, 0, 0.25);
+}
+
+.mobile-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  z-index: 1999;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.mobile-drawer-backdrop.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* --------------------------------------------------------------------------
+   3. BANNIÈRE ANJOU ÉDITION (.ae-mockup-header)
+   -------------------------------------------------------------------------- */
+.ae-mockup-header {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  margin: 12px auto 10px auto;
+  box-sizing: border-box;
+  width: calc(100% - 48px);
+  max-width: 1280px;
+  height: clamp(160px, 14vw, 195px);
+  min-height: 160px;
+  max-height: 220px;
+  border-radius: 20px;
+  padding: 0 !important;
+}
+
+.ae-mockup-header .header-mockup-banner-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+.ae-mockup-header .header-mockup-bg-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ae-mockup-header .theme-toggle {
+  position: absolute;
+  z-index: 10;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: all 0.2s ease;
+}
+
+.ae-mockup-header .theme-toggle:hover {
+  background: rgba(255, 255, 255, 0.32);
+  transform: scale(1.06);
+}
+
+/* --------------------------------------------------------------------------
+   4. SECTION PRINCIPALE (HÉRO ÉDITORIAL)
+   -------------------------------------------------------------------------- */
+.home-hero-wrapper {
+  position: relative;
+  width: 100%;
+  padding: 0 !important;
+  margin-inline: auto;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.home-hero-content-layer {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.home-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(191, 219, 254, 0.9);
+  color: #004ecc;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  padding: 0.3rem 0.75rem;
+  border-radius: 9999px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  backdrop-filter: blur(8px);
+  width: fit-content;
+  max-width: 100%;
+  white-space: normal;
+  word-break: normal;
+}
+
+.dark-mode .home-hero-badge {
+  background: rgba(30, 58, 138, 0.6);
+  border-color: rgba(96, 165, 250, 0.4);
+  color: #93c5fd;
+}
+
+.home-hero-title {
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.75rem 0;
+  display: flex;
+  flex-direction: column;
+  text-wrap: normal;
+  overflow-wrap: break-word;
+  min-width: 0;
+}
+
+.home-hero-subtitle {
+  font-weight: 600;
+  color: #1e3a8a;
+  line-height: 1.45;
+  margin: 0 0 0.65rem 0;
+  max-width: 58ch;
+}
+
+.dark-mode .home-hero-subtitle {
+  color: #93c5fd;
+}
+
+.home-hero-secondary {
+  line-height: 1.6;
+  margin: 0 0 1.25rem 0;
+  max-width: 62ch;
+  color: var(--text-muted);
+}
+
+.dark-mode .home-hero-secondary {
+  color: #cbd5e1;
+}
+
+/* --------------------------------------------------------------------------
+   5. CONTENUS PUBLICS (PROSE, CONTACT, CARTES, FOOTER)
+   -------------------------------------------------------------------------- */
+.text-reader-card, 
+.contact-card {
+  border: 1px solid var(--border);
+  border-radius: 24px;
+}
+
+.text-content.prose {
+  max-width: 70ch;
+  margin-inline: auto;
+  line-height: 1.85;
+}
+
 .article-header-meta {
-  background: transparent; color: var(--text-main); padding: 0 0 1.25rem;
-  border-radius: 0; box-shadow: none; overflow: visible; text-align: left;
-  display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;
+  background: transparent;
+  color: var(--text-main);
+  padding: 0 0 1.25rem;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
+  text-align: left;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
 }
-.contact-card { max-width: 760px; margin-inline: auto; }
-.contact-form input, .contact-form textarea { font-size: 1rem; }
-.contact-form input:not([type='checkbox']) { min-height: 48px; }
-.form-status-alert { align-items: flex-start; }
-.form-status-alert svg { flex-shrink: 0; margin-top: 2px; }
-.footer-links-capsule { width: auto; margin: 0; max-width: 100%; box-shadow: none; }
-.footer-links-capsule button { min-height: 40px; }
+
+.contact-card {
+  max-width: 760px;
+  margin-inline: auto;
+}
+
+.contact-form input, 
+.contact-form textarea {
+  font-size: 1rem;
+}
+
+.contact-form input:not([type='checkbox']) {
+  min-height: 48px;
+}
+
+.form-status-alert {
+  align-items: flex-start;
+}
+
+.form-status-alert svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
 .video-empty-state {
-  display: grid; place-items: center; gap: 12px; min-height: 220px; padding: 2rem;
-  text-align: center; border: 1px dashed var(--border); border-radius: 20px;
-  color: var(--text-muted); background: var(--bg-sidebar);
+  display: grid;
+  place-items: center;
+  gap: 12px;
+  min-height: 220px;
+  padding: 2rem;
+  text-align: center;
+  border: 1px dashed var(--border);
+  border-radius: 20px;
+  color: var(--text-muted);
+  background: var(--bg-sidebar);
 }
+
+.footer-links-capsule {
+  width: auto;
+  margin: 0;
+  max-width: 100%;
+  box-shadow: none;
+}
+
+.footer-links-capsule button {
+  min-height: 38px;
+}
+
+/* Styles dark mode piliers & raccourcis */
 .dark-mode .pillar-welcome { background: #152d48; }
 .dark-mode .pillar-explain { background: #312b22; }
 .dark-mode .pillar-guide, .dark-mode .shortcut-photos { background: #16372f; }
@@ -59,60 +448,491 @@
 .dark-mode .shortcut-photos .portal-shortcut-link { color: #6ee7b7; }
 .dark-mode .shortcut-videos .portal-shortcut-link { color: #fda4af; }
 
+/* ==========================================================================
+   6. RESPONSIVE UNIVERSEL EN 4 PALIERS HARMONISÉS
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   PALIER XL : GRANDS ÉCRANS (>= 1200px)
+   -------------------------------------------------------------------------- */
 @media (min-width: 1200px) {
+  .ae-mockup-header {
+    width: calc(100% - 48px);
+    max-width: 1280px;
+    margin-top: 14px;
+    margin-bottom: 12px;
+    height: clamp(180px, 14vw, 210px);
+    min-height: 180px;
+    max-height: 220px;
+    border-radius: 20px;
+  }
+  .header-mockup-content {
+    left: clamp(2rem, 3.5vw, 3.25rem);
+    max-width: 65%;
+  }
+  .header-mockup-titles .brand-title {
+    font-size: clamp(1.8rem, 2.2vw, 2.3rem);
+  }
+  .ae-mockup-header .theme-toggle {
+    top: 16px;
+    right: 24px;
+    width: 36px;
+    height: 36px;
+  }
+  nav.public-nav,
+  .public-nav {
+    width: calc(100% - 48px);
+    max-width: 1280px;
+    height: 44px;
+    min-height: 44px;
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    padding: 0 0.85rem;
+  }
   .public-nav .nav-container {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
+    display: flex;
     align-items: center;
+    justify-content: space-between;
     width: 100%;
+    min-width: 0;
   }
   .public-nav .nav-logo {
-    justify-self: start;
+    height: 30px;
+    min-height: 30px;
+    padding: 0 0.85rem;
+    font-size: 0.74rem;
+  }
+  .public-nav .contact-btn {
+    height: 30px;
+    min-height: 30px;
+    padding: 0 0.8rem;
+    font-size: 0.74rem;
   }
   .public-nav .nav-links {
-    grid-column: 2;
-    justify-self: center;
-    margin-inline: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    flex-wrap: wrap;
+    flex: 1 1 auto;
+    max-width: 100%;
   }
-  .public-nav .nav-actions {
-    grid-column: 3;
-    justify-self: end;
+  .public-nav .nav-links button,
+  .public-nav .nav-item,
+  .public-nav .ae-nav-item-compact {
+    height: 30px;
+    min-height: 30px;
+    font-size: 0.74rem;
+    padding: 0.2rem 0.6rem;
+  }
+  .App main {
+    width: 100%;
+    max-width: 1280px;
+    margin-inline: auto;
+    padding: 0 24px 3.5rem;
+  }
+  .home-hero-wrapper {
+    margin-bottom: 3rem;
+    border-radius: 28px;
+  }
+  .home-hero-content-layer {
+    max-width: 62%;
+    padding: 3rem;
+  }
+  .home-hero-title {
+    font-size: clamp(2rem, 3.2vw, 2.65rem);
+  }
+  .home-pillars-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 1023.98px) {
-  .public-nav .nav-links { display: none; }
-  .public-nav .mobile-menu-toggle-btn { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; }
-  .public-nav { width: calc(100% - 48px); }
-  .header-mockup-content { left: 2rem; }
-  .home-hero-content-layer { max-width: 75%; padding: 2.5rem; }
-  .home-pillars-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .pillar-card { padding: 1.5rem; }
+/* --------------------------------------------------------------------------
+   PALIER L : ORDINATEURS PORTABLES & DESKTOPS COMPACTS (900px à 1199.98px)
+   -------------------------------------------------------------------------- */
+@media (min-width: 900px) and (max-width: 1199.98px) {
+  .ae-mockup-header {
+    width: calc(100% - 56px);
+    margin-top: 12px;
+    margin-bottom: 10px;
+    height: clamp(165px, 16vw, 185px);
+    min-height: 165px;
+    max-height: 195px;
+    border-radius: 20px;
+  }
+  .header-mockup-content {
+    left: 2rem;
+    max-width: 70%;
+  }
+  .header-mockup-titles .brand-title {
+    font-size: clamp(1.6rem, 2.5vw, 2.1rem);
+  }
+  .ae-mockup-header .theme-toggle {
+    top: 14px;
+    right: 20px;
+    width: 36px;
+    height: 36px;
+  }
+  nav.public-nav,
+  .public-nav {
+    width: calc(100% - 56px);
+    height: 42px;
+    min-height: 42px;
+    margin-top: 0;
+    margin-bottom: 1.25rem;
+    padding: 0 0.75rem;
+  }
+  .public-nav .nav-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-width: 0;
+  }
+  .public-nav .nav-logo {
+    height: 28px;
+    min-height: 28px;
+    padding: 0 0.8rem;
+    font-size: 0.72rem;
+  }
+  .public-nav .contact-btn {
+    height: 28px;
+    min-height: 28px;
+    padding: 0 0.75rem;
+    font-size: 0.72rem;
+  }
+  .public-nav .nav-links {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    flex-wrap: wrap;
+    flex: 1 1 auto;
+    max-width: 100%;
+  }
+  .public-nav .nav-links button,
+  .public-nav .nav-item,
+  .public-nav .ae-nav-item-compact {
+    height: 28px;
+    min-height: 28px;
+    font-size: 0.72rem;
+    padding: 0.2rem 0.5rem;
+  }
+  .App main {
+    width: 100%;
+    max-width: 100%;
+    padding: 0 28px 3rem;
+  }
+  .home-hero-wrapper {
+    margin-bottom: 2.5rem;
+    border-radius: 26px;
+  }
+  .home-hero-content-layer {
+    max-width: 72%;
+    padding: 2.75rem 2.25rem;
+  }
+  .home-hero-title {
+    font-size: clamp(1.85rem, 3vw, 2.35rem);
+  }
+  .home-pillars-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
-@media (max-width: 639.98px) {
-  .ae-mockup-header { width: calc(100% - 24px); height: 164px; min-height: 164px; border-radius: 18px 18px 28px 28px; }
-  .header-mockup-content { left: 1rem; right: 3rem; }
-  .header-mockup-logo-area { gap: .5rem; }
-  .header-mockup-logo-icon svg { width: 34px; height: 40px; }
-  .header-mockup-titles .brand-title { font-size: 1.65rem; }
-  .header-mockup-titles .brand-subtitle { font-size: .65rem; }
-  .theme-toggle { top: 14px; right: 14px; min-width: 36px; min-height: 36px; }
-  .public-nav { width: calc(100% - 40px); padding: .35rem .6rem; margin-top: 0.75rem; margin-bottom: .75rem; }
-  .public-nav .nav-container { gap: 4px; }
-  .public-nav .nav-actions { gap: 4px; }
-  .App main { padding: 1.25rem 16px 2rem; }
-  .home-hero-wrapper { min-height: auto; margin-bottom: 2rem; }
-  .home-hero-content-layer { max-width: 100%; padding: 2rem 1.25rem 3rem; }
-  .home-hero-title { font-size: 2rem; line-height: 1.15; }
-  .home-hero-badge { font-size: .63rem; line-height: 1.5; }
-  .home-hero-secondary { font-size: .95rem; }
-  .home-hero-actions { gap: .75rem; }
-  .home-hero-actions button { min-height: 48px; }
-  .home-pillars-grid { grid-template-columns: 1fr; }
-  .section-heading-title { line-height: 1.3; }
-  .contact-card, .text-reader-card { padding: 1.25rem; border-radius: 20px; }
-  .footer-links-capsule { border-radius: 20px; padding: .75rem; gap: .3rem; }
-  .footer-sep { display: none; }
-  .mobile-drawer { width: min(340px, 100vw); max-width: 100%; }
-  .mobile-nav-link, .mobile-summary { min-height: 44px; }
+
+/* --------------------------------------------------------------------------
+   PALIER M : TABLETTES (600px à 899.98px)
+   -------------------------------------------------------------------------- */
+@media (min-width: 600px) and (max-width: 899.98px) {
+  .ae-mockup-header {
+    width: calc(100% - 40px);
+    margin-top: 10px;
+    margin-bottom: 8px;
+    height: clamp(140px, 20vw, 165px);
+    min-height: 140px;
+    max-height: 170px;
+    border-radius: 18px;
+  }
+  .header-mockup-bg-img {
+    object-position: 65% 30%;
+  }
+  .header-mockup-content {
+    left: 1.5rem;
+    max-width: calc(100% - 80px);
+  }
+  .header-mockup-titles .brand-title {
+    font-size: clamp(1.4rem, 2.8vw, 1.85rem);
+  }
+  .ae-mockup-header .theme-toggle {
+    top: 14px;
+    right: 16px;
+    width: 34px;
+    height: 34px;
+  }
+  nav.public-nav,
+  .public-nav {
+    width: calc(100% - 40px);
+    height: 40px;
+    min-height: 40px;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    padding: 0 0.65rem;
+  }
+  .public-nav .nav-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-width: 0;
+  }
+  .public-nav .nav-links {
+    display: none;
+  }
+  .public-nav .nav-logo {
+    font-size: 0.72rem !important;
+    padding: 0 0.8rem !important;
+    height: 28px;
+    min-height: 28px;
+  }
+  .public-nav .contact-btn {
+    font-size: 0.72rem !important;
+    padding: 0 0.75rem !important;
+    height: 28px;
+    min-height: 28px;
+  }
+  .public-nav .mobile-menu-toggle-btn {
+    display: inline-flex;
+    height: 28px;
+    width: 28px;
+    min-height: 28px;
+    min-width: 28px;
+    border-radius: 6px;
+  }
+  .public-nav .nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .App main {
+    width: 100%;
+    max-width: 100%;
+    padding: 0 20px 2.5rem;
+  }
+  .home-hero-wrapper {
+    margin-bottom: 2.25rem;
+    border-radius: 22px;
+  }
+  .home-hero-content-layer {
+    max-width: 82%;
+    padding: 2.25rem 1.75rem;
+  }
+  .home-hero-title {
+    font-size: clamp(1.7rem, 3.2vw, 2.15rem);
+  }
+  .home-pillars-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   PALIER S : SMARTPHONES (< 600px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 599.98px) {
+  .ae-mockup-header {
+    width: calc(100% - 24px);
+    margin-top: 10px;
+    margin-bottom: 8px;
+    height: clamp(120px, 28vw, 140px);
+    min-height: 120px;
+    max-height: 145px;
+    border-radius: 16px;
+  }
+  .ae-mockup-header .header-mockup-bg-img {
+    object-position: 72% 35%;
+  }
+  .header-mockup-content {
+    left: 10px;
+    right: 50px;
+    max-width: calc(100% - 58px);
+  }
+  .header-mockup-logo-area {
+    padding: 0.35rem 0.65rem;
+    gap: 0.5rem;
+    border-radius: 12px;
+    max-width: 100%;
+  }
+  .header-mockup-logo-icon svg {
+    width: 28px;
+    height: 32px;
+  }
+  .header-mockup-shelf-logo {
+    height: 34px !important;
+  }
+  .header-mockup-titles .brand-title,
+  .header-mockup-titles h1 {
+    font-size: clamp(1.05rem, 4.4vw, 1.35rem);
+    white-space: nowrap;
+    line-height: 1.1;
+  }
+  .header-mockup-titles .brand-subtitle,
+  .header-mockup-titles h2,
+  .header-mockup-titles p {
+    font-size: clamp(0.5rem, 1.8vw, 0.6rem);
+    letter-spacing: 0.14em;
+    margin-top: 2px;
+    line-height: 1;
+  }
+  .ae-mockup-header .theme-toggle {
+    top: 50%;
+    transform: translateY(-50%);
+    right: 10px;
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    min-height: 34px;
+  }
+  nav.public-nav,
+  .public-nav {
+    width: calc(100% - 24px) !important;
+    max-width: calc(100% - 24px) !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    margin-top: 0 !important;
+    margin-bottom: 0.75rem !important;
+    padding: 0 0.5rem !important;
+  }
+  .public-nav .nav-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    width: 100%;
+    min-width: 0;
+  }
+  .public-nav .nav-links {
+    display: none;
+  }
+  .public-nav .nav-logo {
+    font-size: 0.70rem !important;
+    padding: 0 0.75rem !important;
+    height: 28px !important;
+    min-height: 28px !important;
+  }
+  .public-nav .contact-btn {
+    font-size: 0.70rem !important;
+    padding: 0 0.70rem !important;
+    height: 28px !important;
+    min-height: 28px !important;
+  }
+  .public-nav .mobile-menu-toggle-btn {
+    display: inline-flex !important;
+    height: 30px !important;
+    width: 30px !important;
+    min-height: 30px !important;
+    min-width: 30px !important;
+    border-radius: 6px !important;
+  }
+  .public-nav .nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .App main {
+    width: 100%;
+    max-width: 100%;
+    padding: 0 12px 2rem;
+  }
+  .home-hero-wrapper {
+    margin-bottom: 1.75rem;
+    border-radius: 20px;
+  }
+  .home-hero-content-layer {
+    max-width: 100%;
+    padding: 1.5rem 1.15rem 1.75rem;
+  }
+  .home-hero-badge {
+    font-size: clamp(0.62rem, 2.2vw, 0.7rem);
+    line-height: 1.4;
+    padding: 0.25rem 0.65rem;
+    margin-bottom: 0.65rem;
+  }
+  .home-hero-title {
+    font-size: clamp(1.45rem, 5.2vw, 1.95rem);
+    line-height: 1.18;
+    margin-bottom: 0.65rem;
+  }
+  .home-hero-subtitle {
+    font-size: clamp(0.92rem, 2.8vw, 1.05rem);
+    line-height: 1.45;
+    margin-bottom: 0.6rem;
+  }
+  .home-hero-secondary {
+    font-size: clamp(0.85rem, 2.5vw, 0.95rem);
+    line-height: 1.55;
+    margin-bottom: 1.15rem;
+  }
+  .home-hero-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    width: 100%;
+  }
+  .home-hero-actions button,
+  .btn-hero-primary,
+  .btn-hero-secondary {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+  }
+  .home-pillars-grid {
+    grid-template-columns: 1fr;
+  }
+  .section-heading-title {
+    line-height: 1.3;
+  }
+  .contact-card, 
+  .text-reader-card {
+    padding: 1.25rem;
+    border-radius: 20px;
+  }
+  .footer-links-capsule {
+    border-radius: 18px;
+    padding: 0.65rem 0.75rem;
+    gap: 0.35rem;
+    width: 100%;
+  }
+  .footer-sep {
+    display: none;
+  }
+  .mobile-drawer {
+    width: min(320px, 85vw);
+    max-width: 100%;
+  }
+  .mobile-nav-link, 
+  .mobile-summary {
+    min-height: 44px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   ADAPTATION SMARTPHONES EN PAYSAGE (HAUTEUR <= 500px)
+   -------------------------------------------------------------------------- */
+@media (max-height: 500px) and (orientation: landscape) {
+  .ae-mockup-header {
+    height: 85px;
+    min-height: 85px;
+  }
+  .header-mockup-titles .brand-title {
+    font-size: 1.15rem;
+  }
+  .header-mockup-titles .brand-subtitle {
+    display: none;
+  }
+  nav.public-nav,
+  .public-nav {
+    margin-top: 0;
+    margin-bottom: 0.65rem;
+  }
+  .home-hero-content-layer {
+    padding: 1.25rem;
+  }
 }

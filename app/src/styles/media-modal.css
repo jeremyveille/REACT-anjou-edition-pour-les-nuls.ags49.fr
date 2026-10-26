@@ -33,7 +33,9 @@
   width: min(1100px, 96vw);
   max-width: 1100px;
   height: 85vh;
+  height: min(88dvh, 820px);
   max-height: min(90vh, 820px);
+  max-height: min(90dvh, 820px);
   background-color: #ffffff;
   border-radius: 16px;
   box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.35);
@@ -131,8 +133,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
   border-radius: 50%;
   border: 1px solid transparent;
   background: transparent;
@@ -806,7 +810,9 @@
   .ae-media-modal-dialog {
     width: 98vw;
     height: 94vh;
+    height: min(92dvh, calc(100dvh - 24px));
     max-height: 94vh;
+    max-height: min(92dvh, calc(100dvh - 24px));
     border-radius: 12px;
   }
 

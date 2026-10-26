@@ -344,7 +344,7 @@ describe('Anjou Édition Presentation Article & Homepage Integration', () => {
     await renderApp();
 
     // Verify Hero title and positioning
-    expect(screen.getByRole('heading', { level: 1, name: /Anjou Édition, la maison d['’]édition ouverte à tous/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: /Anjou Édition, pour les nuls, la maison d['’]édition ouverte à tous/i })).toBeInTheDocument();
     expect(screen.getByText(/Des livres, des histoires, des connaissances et des projets accessibles à chacun/i)).toBeInTheDocument();
 
     // Verify 3 pillars: Accueillir, Expliquer, Guider
@@ -353,7 +353,7 @@ describe('Anjou Édition Presentation Article & Homepage Integration', () => {
     expect(screen.getByRole('heading', { name: /Guider/i })).toBeInTheDocument();
 
     // Verify featured article card on homepage
-    expect(screen.getByRole('heading', { level: 3, name: /Anjou Édition : une maison d['’]édition ouverte à tous/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 3, name: /Anjou Édition(?:, pour les nuls)? : une maison d['’]édition ouverte à tous/i })).toBeInTheDocument();
     expect(screen.getByText(/rendre l['’]édition, la culture et la transmission accessibles à tous/i)).toBeInTheDocument();
   });
 
@@ -366,8 +366,8 @@ describe('Anjou Édition Presentation Article & Homepage Integration', () => {
     fireEvent.click(heroCta);
 
     // Verify article reader view is rendered
-    expect(await screen.findByRole('heading', { level: 1, name: /Anjou Édition : une maison d['’]édition ouverte à tous/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 2, name: /Bienvenue chez Anjou Édition/i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: /Anjou Édition(?:, pour les nuls)? : une maison d['’]édition ouverte à tous/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: /Bienvenue chez Anjou Édition(?:, pour les nuls)?/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 2, name: /Pourquoi « pour les nuls » \?/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 2, name: /Une maison d['’]édition ouverte à tous/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 3, name: /Vous aimez écrire \?/i })).toBeInTheDocument();
@@ -390,14 +390,14 @@ describe('Anjou Édition Presentation Article & Homepage Integration', () => {
     const readBtn = screen.getByRole('button', { name: /Lire l['’]article/i });
     fireEvent.click(readBtn);
 
-    expect(await screen.findByRole('heading', { level: 1, name: /Anjou Édition : une maison d['’]édition ouverte à tous/i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: /Anjou Édition(?:, pour les nuls)? : une maison d['’]édition ouverte à tous/i })).toBeInTheDocument();
 
     // Click back button
     const backBtn = screen.getByRole('button', { name: /Retour à l['’]accueil/i });
     fireEvent.click(backBtn);
 
     // Should return to homepage
-    expect(await screen.findByRole('heading', { level: 1, name: /Anjou Édition, la maison d['’]édition ouverte à tous/i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: /Anjou Édition, pour les nuls, la maison d['’]édition ouverte à tous/i })).toBeInTheDocument();
   });
 });
 
@@ -523,10 +523,10 @@ describe('Dashboard -> Save -> Public Site Live Update Cycle', () => {
     render(<App />);
 
     // 1. Check that the featured article title is rendered
-    expect(await screen.findByText("Anjou Édition : une maison d’édition ouverte à tous")).toBeInTheDocument();
+    expect(await screen.findByText(/Anjou Édition(?:, pour les nuls)? : une maison d’édition ouverte à tous/i)).toBeInTheDocument();
 
     // 2. Check that the featured article image uses /anjou-edition-livre.png
-    const featuredImg = screen.getByAltText("Anjou Édition : une maison d’édition ouverte à tous");
+    const featuredImg = screen.getByAltText(/Anjou Édition(?:, pour les nuls)? : une maison d’édition ouverte à tous/i);
     expect(featuredImg).toBeInTheDocument();
     expect(featuredImg.getAttribute('src')).toContain('anjou-edition-livre.png');
 
@@ -654,7 +654,7 @@ describe('Deep Routing, Navigation and Accessibility Enhancements', () => {
     await renderApp();
 
     // 1. Initial state: homepage is rendered with hero
-    expect(screen.getByRole('heading', { level: 1, name: /Anjou Édition, la maison d['’]édition ouverte à tous/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: /Anjou Édition, pour les nuls, la maison d['’]édition ouverte à tous/i })).toBeInTheDocument();
     expect(screen.queryByTestId('flipbook-modal-dialog')).toBeNull();
 
     // 2. Click on a menu item e.g. "RAPPEL"
@@ -686,7 +686,7 @@ describe('Deep Routing, Navigation and Accessibility Enhancements', () => {
 
     // 7. The reader is closed and homepage is restored
     expect(screen.queryByTestId('flipbook-modal-dialog')).toBeNull();
-    expect(await screen.findByRole('heading', { level: 1, name: /Anjou Édition, la maison d['’]édition ouverte à tous/i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: /Anjou Édition, pour les nuls, la maison d['’]édition ouverte à tous/i })).toBeInTheDocument();
   });
 });
 

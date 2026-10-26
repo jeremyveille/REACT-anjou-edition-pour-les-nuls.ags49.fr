@@ -153,7 +153,7 @@ export const ContactForm = ({ setView, onNavigate }) => {
               onClick={(e) => { 
                 e.preventDefault(); 
                 if (onNavigate) {
-                  onNavigate({ type: 'privacy' }, '/privacy', "Politique de Confidentialité & Mentions Légales — Anjou Édition");
+                  onNavigate({ type: 'privacy' }, '/privacy', "Politique de Confidentialité & Mentions Légales — Anjou Édition, pour les nuls");
                 } else if (setView) {
                   setView({ type: 'privacy' }); 
                 }

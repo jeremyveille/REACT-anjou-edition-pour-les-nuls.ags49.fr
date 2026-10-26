@@ -41,6 +41,7 @@ import {
 import { instantiateSectionTemplate } from './sectionTemplates';
 import { MediaLibraryModal } from '../MediaLibraryModal';
 import { BlockActionsContext } from './BlockRenderer';
+import { BRAND_NAME } from '../../constants/brand';
 
 /**
  * Vérifie si un élément correspond à la page Accueil selon l'ordre de priorité défini.
@@ -1567,7 +1568,7 @@ export const PageBuilder = ({
               type="text"
               value={pageTitle}
               onChange={handleTitleChange}
-              placeholder="Titre de la page (ex: Accueil - Anjou Edition)"
+              placeholder={`Titre de la page (ex: Accueil - ${BRAND_NAME})`}
               className="border-0 bg-transparent text-slate-800 dark:text-slate-100 font-bold px-1.5 py-0.5"
               style={{ fontSize: '15px', outline: 'none', maxWidth: '240px' }}
             />

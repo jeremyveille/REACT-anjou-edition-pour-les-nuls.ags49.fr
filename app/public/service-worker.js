@@ -1,7 +1,7 @@
 /* eslint-disable no-restricted-globals */
 
 // Cache versioning
-const CACHE_VERSION = 'v17';
+const CACHE_VERSION = 'v18';
 const STATIC_CACHE = `anjou-edition-static-${CACHE_VERSION}`;
 const MEDIA_CACHE = `anjou-edition-media-${CACHE_VERSION}`;
 const PDF_CACHE = `anjou-edition-pdf-${CACHE_VERSION}`;
@@ -49,7 +49,7 @@ const getSpaFallbackResponse = async () => {
   }
 
   return new Response(
-    '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Anjou Édition</title></head><body><div id="root"></div></body></html>',
+    '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Anjou Édition, pour les nuls</title></head><body><div id="root"></div></body></html>',
     {
       status: 200,
       headers: { 'Content-Type': 'text/html; charset=utf-8' }

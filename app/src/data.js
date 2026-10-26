@@ -427,10 +427,10 @@ export const flipbooksData = [
     category: "Fable",
     author: "Jérémy V. / P. SWILLE.V",
     date: "2020",
-    description: "Fable illustrée d'Anjou Édition pour la jeunesse, contant les aventures de Séraphin marin malin à l'œil d'airain, Léon le thon et Titine la sardine.",
+    description: "Fable illustrée d'Anjou Édition, pour les nuls pour la jeunesse, contant les aventures de Séraphin marin malin à l'œil d'airain, Léon le thon et Titine la sardine.",
     pdfFile: "Seraphin-le-marin.pdf",
     pages: [
-      { pageNum: 1, title: "Couverture", content: "Anjou Édition\n\nSéraphin, le marin" },
+      { pageNum: 1, title: "Couverture", content: "Anjou Édition, pour les nuls\n\nSéraphin, le marin" },
       { pageNum: 2, title: "Ohé, les poissons !!!", content: "Un marin marinait dans son bain un verre à la main..." },
       { pageNum: 3, title: "Léon et Harald le crabe", content: "Léon s'était arrêté un moment pour discuter avec Harald..." },
       { pageNum: 4, title: "La surprise du crabe", content: "Non pas aujourd'hui, je crois qu'il est chez lui..." },
@@ -448,7 +448,7 @@ export const flipbooksData = [
         id: "sb_seraphin_left_2",
         type: "text",
         title: "Présentation de l'ouvrage",
-        content: "<p><strong>Séraphin le marin</strong> est une œuvre originale et inédite publiée par Anjou Édition.<br />Texte et illustrations de Jérémy V. Couverture de P. SWILLE.V.<br />Dépôt légal INPI.</p>",
+        content: "<p><strong>Séraphin le marin</strong> est une œuvre originale et inédite publiée par Anjou Édition, pour les nuls.<br />Texte et illustrations de Jérémy V. Couverture de P. SWILLE.V.<br />Dépôt légal INPI.</p>",
         enabled: true
       }
     ],
@@ -545,24 +545,24 @@ export const galleryImages = [
 export const articlesData = [
   {
     id: "art_presentation_anjou_edition",
-    title: "Anjou Édition : une maison d’édition ouverte à tous",
+    title: "Anjou Édition, pour les nuls : une maison d’édition ouverte à tous",
     slug: "anjou-edition-maison-edition-ouverte-a-tous",
-    metaTitle: "Anjou Édition — Une maison d’édition ouverte à tous",
-    metaDescription: "Découvrez Anjou Édition, une maison d’édition ouverte aux auteurs, lecteurs, passionnés et curieux, avec une volonté simple : rendre l’édition et la culture accessibles à tous.",
-    hook: "Parce qu’il n’est pas nécessaire d’être un expert pour écrire, lire, découvrir, apprendre ou partager.\n\nAnjou Édition est une maison d’édition qui souhaite rendre la culture et l’édition accessibles à chacun.\nAuteurs débutants ou confirmés, lecteurs passionnés, curieux, associations, créateurs et porteurs de projets : chacun doit pouvoir trouver sa place.",
-    excerpt: "Anjou Édition souhaite rendre l’édition, la culture et la transmission accessibles à tous. Découvrez notre vision d’une maison d’édition simple, humaine et ouverte aux auteurs comme aux lecteurs.",
+    metaTitle: "Anjou Édition, pour les nuls — Une maison d’édition ouverte à tous",
+    metaDescription: "Découvrez Anjou Édition, pour les nuls, une maison d’édition ouverte aux auteurs, lecteurs, passionnés et curieux, avec une volonté simple : rendre l’édition et la culture accessibles à tous.",
+    hook: "Parce qu’il n’est pas nécessaire d’être un expert pour écrire, lire, découvrir, apprendre ou partager.\n\nAnjou Édition, pour les nuls est une maison d’édition qui souhaite rendre la culture et l’édition accessibles à chacun.\nAuteurs débutants ou confirmés, lecteurs passionnés, curieux, associations, créateurs et porteurs de projets : chacun doit pouvoir trouver sa place.",
+    excerpt: "Anjou Édition, pour les nuls souhaite rendre l’édition, la culture et la transmission accessibles à tous. Découvrez notre vision d’une maison d’édition simple, humaine et ouverte aux auteurs comme aux lecteurs.",
     image: "/anjou-edition-livre.png",
     thumbnailUrl: "/anjou-edition-livre.png",
     category: "Maison d'édition",
-    author: "Anjou Édition",
+    author: "Anjou Édition, pour les nuls",
     date: "2026-09-20",
     readTime: "4 min de lecture",
     status: "published",
     isFeatured: true,
     views: 142,
-    content: `## Bienvenue chez Anjou Édition
+    content: `## Bienvenue chez Anjou Édition, pour les nuls
 
-Anjou Édition est née d’une volonté simple : rendre l’édition plus accessible, plus humaine et plus proche de tous.
+Anjou Édition, pour les nuls est née d’une volonté simple : rendre l’édition plus accessible, plus humaine et plus proche de tous.
 
 Nous pensons que les idées, les histoires, les connaissances et les passions méritent d’être partagées.
 
@@ -583,7 +583,7 @@ Cela signifie :
 * donner envie d’apprendre ;
 * ne pas réserver la connaissance à quelques spécialistes.
 
-Chez Anjou Édition, il n’y a pas besoin d’être expert pour commencer.
+Chez Anjou Édition, pour les nuls, il n’y a pas besoin d’être expert pour commencer.
 
 La curiosité suffit.
 
@@ -591,7 +591,7 @@ La curiosité suffit.
 
 ## Une maison d’édition ouverte à tous
 
-Anjou Édition souhaite accueillir des profils très différents.
+Anjou Édition, pour les nuls souhaite accueillir des profils très différents.
 
 ### Vous aimez écrire ?
 
@@ -610,7 +610,7 @@ Votre projet mérite d’être étudié.
 
 ### Vous aimez lire ?
 
-Découvrez progressivement les ouvrages, publications, articles et contenus proposés par Anjou Édition.
+Découvrez progressivement les ouvrages, publications, articles et contenus proposés par Anjou Édition, pour les nuls.
 
 ### Vous souhaitez transmettre ?
 
@@ -629,13 +629,13 @@ Associations, passionnés, chercheurs amateurs, historiens locaux, enseignants, 
               {
                 id: "h_welcome",
                 type: "heading",
-                settings: { content: "Bienvenue chez Anjou Édition", level: "h2", classes: "mb-3 text-dark", style: { color: "#1e293b" } }
+                settings: { content: "Bienvenue chez Anjou Édition, pour les nuls", level: "h2", classes: "mb-3 text-dark", style: { color: "#1e293b" } }
               },
               {
                 id: "txt_welcome_1",
                 type: "text",
                 settings: {
-                  content: "<p>Anjou Édition est née d’une volonté simple : rendre l’édition plus accessible, plus humaine et plus proche de tous.</p><p>Nous pensons que les idées, les histoires, les connaissances et les passions méritent d’être partagées.</p><p>Il n’est pas nécessaire d’être écrivain professionnel, historien, chercheur ou spécialiste pour avoir quelque chose d’intéressant à transmettre.</p><p><strong>Tout le monde peut avoir une histoire à raconter.</strong></p>",
+                  content: "<p>Anjou Édition, pour les nuls est née d’une volonté simple : rendre l’édition plus accessible, plus humaine et plus proche de tous.</p><p>Nous pensons que les idées, les histoires, les connaissances et les passions méritent d’être partagées.</p><p>Il n’est pas nécessaire d’être écrivain professionnel, historien, chercheur ou spécialiste pour avoir quelque chose d’intéressant à transmettre.</p><p><strong>Tout le monde peut avoir une histoire à raconter.</strong></p>",
                   classes: "mb-4"
                 }
               },
@@ -676,7 +676,7 @@ Associations, passionnés, chercheurs amateurs, historiens locaux, enseignants, 
                 id: "txt_why_nuls_2",
                 type: "text",
                 settings: {
-                  content: "<p>Chez Anjou Édition, il n’y a pas besoin d’être expert pour commencer.<br /><strong>La curiosité suffit.</strong></p>",
+                  content: "<p>Chez Anjou Édition, pour les nuls, il n’y a pas besoin d’être expert pour commencer.<br /><strong>La curiosité suffit.</strong></p>",
                   classes: "mb-4"
                 }
               },
@@ -694,7 +694,7 @@ Associations, passionnés, chercheurs amateurs, historiens locaux, enseignants, 
                 id: "txt_open_intro",
                 type: "text",
                 settings: {
-                  content: "<p>Anjou Édition souhaite accueillir des profils très différents.</p>",
+                  content: "<p>Anjou Édition, pour les nuls souhaite accueillir des profils très différents.</p>",
                   classes: "mb-3"
                 }
               },
@@ -739,7 +739,7 @@ Associations, passionnés, chercheurs amateurs, historiens locaux, enseignants, 
                 id: "txt_you_read",
                 type: "text",
                 settings: {
-                  content: "<p>Découvrez progressivement les ouvrages, publications, articles et contenus proposés par Anjou Édition.</p>",
+                  content: "<p>Découvrez progressivement les ouvrages, publications, articles et contenus proposés par Anjou Édition, pour les nuls.</p>",
                   classes: "mb-4"
                 }
               },
@@ -766,14 +766,14 @@ Associations, passionnés, chercheurs amateurs, historiens locaux, enseignants, 
     id: "art_poesie_joachim_du_bellay",
     title: "Joachim du Bellay et la douceur angevine",
     slug: "joachim-du-bellay-douceur-angevine",
-    metaTitle: "Joachim du Bellay — La douceur angevine | Anjou Édition",
+    metaTitle: "Joachim du Bellay — La douceur angevine | Anjou Édition, pour les nuls",
     metaDescription: "Retour sur la vie et les œuvres de Joachim du Bellay, poète emblématique de Liré et chantre de la douceur angevine.",
     hook: "« Heureux qui, comme Ulysse, a fait un beau voyage... »\nDécouvrez comment le poète de Liré a immortalisé l’Anjou et sa douceur.",
     excerpt: "Figure majeure de la Pléiade, Joachim du Bellay a célébré les bords de Loire et son petit Liré avec une sensibilité intemporelle.",
     image: "https://images.unsplash.com/photo-1455390582262-044cdead277a?q=80&w=1200",
     thumbnailUrl: "https://images.unsplash.com/photo-1455390582262-044cdead277a?q=80&w=600",
     category: "Poésies",
-    author: "Anjou Édition",
+    author: "Anjou Édition, pour les nuls",
     date: "2026-09-18",
     readTime: "3 min de lecture",
     status: "published",

@@ -145,7 +145,7 @@ const PdfPage = ({ pdfDoc, pageNumber, scale, rotation = 0, textLayerActive, sea
 
     return () => {
       isCancelled = true;
-      if (renderTaskRef.current) {
+      if (renderTaskRef.current && typeof renderTaskRef.current.cancel === 'function') {
         renderTaskRef.current.cancel();
       }
     };
@@ -436,13 +436,14 @@ export default function PdfFlipbookReader({ book, onClose }) {
     const rotatedWidth = isRotated90or270 ? pdfPageOriginalSize.height : pdfPageOriginalSize.width;
     const rotatedHeight = isRotated90or270 ? pdfPageOriginalSize.width : pdfPageOriginalSize.height;
 
-    const padding = 24; // 12px padding on each side
-    const availableWidth = Math.max(100, viewportSize.width - padding);
-    const availableHeight = Math.max(100, viewportSize.height - padding);
+    const isMobile = viewportSize.width < 600;
+    const padding = isMobile ? 8 : (viewportSize.width < 900 ? 14 : 24);
+    const availableWidth = Math.max(80, viewportSize.width - padding);
+    const availableHeight = Math.max(80, viewportSize.height - padding);
 
     let calculatedFitScale = 1.0;
     if (readerMode === "double") {
-      const gap = 16;
+      const gap = isMobile ? 6 : 16;
       const totalOriginalWidth = rotatedWidth * 2 + gap;
       const scaleW = availableWidth / totalOriginalWidth;
       const scaleH = availableHeight / rotatedHeight;
@@ -706,12 +707,68 @@ export default function PdfFlipbookReader({ book, onClose }) {
     }
   };
 
-  const handlePageInputChange = (e) => {
-    const val = parseInt(e.target.value, 10);
-    if (!isNaN(val) && val >= 1 && val <= numPages) {
+  // Active page computation for displaying page numbers
+  const displayCurrentPage = useMemo(() => {
+    if (!numPages || numPages <= 0) return 1;
+    if (readerMode === "double") {
+      return currentPage === 0 ? 1 : Math.min(numPages, Math.max(1, currentPage));
+    }
+    return Math.max(1, Math.min(numPages, currentPage));
+  }, [readerMode, currentPage, numPages]);
+
+  // Synchronisation du champ de saisie avec la page réellement affichée
+  const [pageInputValue, setPageInputValue] = useState(String(displayCurrentPage));
+
+  useEffect(() => {
+    setPageInputValue(String(displayCurrentPage));
+  }, [displayCurrentPage]);
+
+  // Validation et application de la saisie numérique
+  const commitPageInput = () => {
+    if (!numPages || numPages <= 0) {
+      setPageInputValue("1");
+      return;
+    }
+    const val = parseInt(pageInputValue, 10);
+    if (isNaN(val) || val < 1) {
+      // Si la saisie est invalide ou < 1, restaurer la page actuelle
+      setPageInputValue(String(displayCurrentPage));
+    } else if (val > numPages) {
+      // Ne jamais afficher de numéro supérieur au total : borner au maximum
+      goToPage(numPages);
+      setPageInputValue(String(numPages));
+    } else {
+      // Saisie directe d'un numéro valide
       goToPage(val);
+      setPageInputValue(String(val));
     }
   };
+
+  const handlePageInputChange = (e) => {
+    // Saisie directe autorisée (chiffres uniquement)
+    const sanitized = e.target.value.replace(/[^0-9]/g, "");
+    setPageInputValue(sanitized);
+  };
+
+  const handlePageInputKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      commitPageInput();
+      e.target.blur();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      setPageInputValue(String(displayCurrentPage));
+      e.target.blur();
+    }
+  };
+
+  const handlePageInputBlur = () => {
+    commitPageInput();
+  };
+
+  // États désactivés stricts pour les flèches de navigation
+  const isFirstPage = Boolean(!numPages || numPages <= 1 || (readerMode === "double" ? currentPage <= 0 || displayCurrentPage <= 1 : currentPage <= 1));
+  const isLastPage = Boolean(!numPages || numPages <= 1 || (readerMode === "double" ? currentPage >= numPages || displayCurrentPage >= numPages : currentPage >= numPages));
 
   const handlePrevPage = () => {
     if (readerMode === "double") {
@@ -798,13 +855,7 @@ export default function PdfFlipbookReader({ book, onClose }) {
     }
   };
 
-  // Active page computation for displaying page numbers
-  const displayCurrentPage = (() => {
-    if (readerMode === "double") {
-      return currentPage === 0 ? 1 : Math.min(numPages, currentPage);
-    }
-    return Math.max(1, Math.min(numPages, currentPage));
-  })();
+
 
   const handleTouchStart = (e) => {
     touchStartX.current = e.changedTouches[0].screenX;
@@ -975,18 +1026,33 @@ export default function PdfFlipbookReader({ book, onClose }) {
             </button>
           </div>
 
-          {/* Fullscreen */}
+          {/* Fullscreen Controls */}
           <div className="pdf-toolbar-group">
-            <button 
-              type="button" 
-              onClick={toggleFullscreen} 
-              disabled={loading || !!error} 
-              className="pdf-toolbar-btn"
-              title={isFullscreen ? "Quitter le plein écran" : "Plein écran"}
-              aria-label={isFullscreen ? "Quitter le mode plein écran" : "Activer le mode plein écran"}
-            >
-              {isFullscreen ? <Minimize className="ae-icon-size-sm" aria-hidden="true" /> : <Maximize className="ae-icon-size-sm" aria-hidden="true" />}
-            </button>
+            {!isFullscreen ? (
+              <button 
+                type="button" 
+                onClick={toggleFullscreen} 
+                disabled={loading || !!error} 
+                className="pdf-toolbar-btn"
+                title="Plein écran"
+                aria-label="Activer le mode plein écran"
+                data-testid="enter-fullscreen-btn"
+              >
+                <Maximize className="ae-icon-size-sm" aria-hidden="true" />
+              </button>
+            ) : (
+              <button 
+                type="button" 
+                onClick={toggleFullscreen} 
+                disabled={loading || !!error} 
+                className="pdf-toolbar-btn active"
+                title="Quitter le plein écran"
+                aria-label="Quitter le mode plein écran"
+                data-testid="exit-fullscreen-btn"
+              >
+                <Minimize className="ae-icon-size-sm" aria-hidden="true" />
+              </button>
+            )}
           </div>
 
           {onClose && (
@@ -1097,8 +1163,8 @@ export default function PdfFlipbookReader({ book, onClose }) {
                   ) : (
                     /* Inside Left Cover */
                     <div className="ae-pdf-empty-placeholder" style={containerStyle}>
-                      <span className="text-4xl mb-3">⚜️</span>
-                      <h3>Anjou Édition</h3>
+                      <BookOpen className="ae-icon-size-xl mb-3" size={36} />
+                      <h3>Anjou Édition, pour les nuls</h3>
                       <p className="ae-caption-constrained">Lecteur PDF Numérique Premium</p>
                     </div>
                   )}
@@ -1118,7 +1184,7 @@ export default function PdfFlipbookReader({ book, onClose }) {
                   ) : (
                     /* Inside Right Cover (End of Book) */
                     <div className="ae-pdf-empty-placeholder" style={containerStyle}>
-                      <span className="text-3xl mb-2">📖</span>
+                      <BookOpen className="ae-icon-size-xl mb-2" size={32} />
                       <h3>Fin de l'ouvrage</h3>
                       <p className="ae-caption-italic-muted">Merci pour votre lecture !</p>
                     </div>
@@ -1129,8 +1195,8 @@ export default function PdfFlipbookReader({ book, onClose }) {
                 <div className="ae-flex-col-center">
                   {currentPage === 0 ? (
                     <div className="ae-pdf-empty-placeholder" style={containerStyle}>
-                      <span className="text-4xl mb-3">⚜️</span>
-                      <h3>Anjou Édition</h3>
+                      <BookOpen className="ae-icon-size-xl mb-3" size={36} />
+                      <h3>Anjou Édition, pour les nuls</h3>
                       <p className="ae-caption-constrained">{book.title}</p>
                       <button 
                         type="button" 
@@ -1142,7 +1208,7 @@ export default function PdfFlipbookReader({ book, onClose }) {
                     </div>
                   ) : currentPage > numPages ? (
                     <div className="ae-pdf-empty-placeholder" style={containerStyle}>
-                      <span className="text-3xl mb-2">📖</span>
+                      <BookOpen className="ae-icon-size-xl mb-2" size={32} />
                       <h3>Fin de l'ouvrage</h3>
                       <button 
                         type="button" 
@@ -1293,66 +1359,69 @@ export default function PdfFlipbookReader({ book, onClose }) {
       {/* Footer / Pagination Controls */}
       {!loading && !error && pdfDoc && (
         <div className="pdf-reader-footer" role="navigation" aria-label="Pagination du document">
-          <div className="ae-flex-gap-sm">
+          <div className="pdf-footer-pagination">
             <button 
               type="button" 
               onClick={handleGoToFirst} 
-              disabled={readerMode === "double" ? currentPage === 0 : currentPage <= 1} 
-              className="pdf-nav-btn px-2.5" 
+              disabled={isFirstPage} 
+              className="pdf-nav-btn pdf-nav-btn--first" 
               title="Première page"
               aria-label="Aller à la première page"
+              data-testid="first-page-btn"
             >
               <ChevronsLeft className="ae-icon-size-sm" aria-hidden="true" />
             </button>
             <button 
               type="button" 
               onClick={handlePrevPage} 
-              disabled={readerMode === "double" ? currentPage === 0 : currentPage <= 1} 
-              className="pdf-nav-btn"
+              disabled={isFirstPage} 
+              className="pdf-nav-btn pdf-nav-btn--prev"
               title="Page précédente"
               aria-label="Page précédente"
+              data-testid="prev-page-btn"
             >
               <ChevronLeft className="ae-icon-size-sm" aria-hidden="true" />
             </button>
-          </div>
 
-          <div className="pdf-page-indicator">
-            <label htmlFor="pdf-current-page-input" className="sr-only">Numéro de page actuelle</label>
-            <span>Page</span>
-            <input 
-              id="pdf-current-page-input"
-              type="text" 
-              inputMode="numeric"
-              pattern="[0-9]*"
-              value={displayCurrentPage} 
-              onChange={handlePageInputChange} 
-              className="pdf-page-input"
-              aria-label={`Page actuelle sur un total de ${numPages}`}
-            />
-            <span>sur {numPages}</span>
-            <span className="sr-only" aria-live="polite" aria-atomic="true">
-              Page {displayCurrentPage} sur {numPages}
-            </span>
-          </div>
+            <div className="pdf-page-indicator">
+              <label htmlFor="pdf-current-page-input" className="pdf-page-prefix">
+                Page
+              </label>
+              <input 
+                id="pdf-current-page-input"
+                type="text" 
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={pageInputValue} 
+                onChange={handlePageInputChange} 
+                onKeyDown={handlePageInputKeyDown}
+                onBlur={handlePageInputBlur}
+                className="pdf-page-input"
+                aria-label={`Numéro de page, page actuelle ${displayCurrentPage} sur un total de ${numPages}`}
+                title={`Page ${displayCurrentPage} sur ${numPages}`}
+              />
+              <span className="pdf-page-total">sur {numPages}</span>
+            </div>
 
-          <div className="ae-flex-gap-sm">
             <button 
               type="button" 
               onClick={handleNextPage} 
-              disabled={readerMode === "double" ? currentPage >= numPages : currentPage >= numPages} 
-              className="pdf-nav-btn"
+              disabled={isLastPage} 
+              className="pdf-nav-btn pdf-nav-btn--next"
               title="Page suivante"
               aria-label="Page suivante"
+              data-testid="next-page-btn"
             >
               <ChevronRight className="ae-icon-size-sm" aria-hidden="true" />
             </button>
             <button 
               type="button" 
               onClick={handleGoToLast} 
-              disabled={readerMode === "double" ? currentPage >= numPages : currentPage >= numPages} 
-              className="pdf-nav-btn px-2.5" 
+              disabled={isLastPage} 
+              className="pdf-nav-btn pdf-nav-btn--last" 
               title="Dernière page"
               aria-label="Aller à la dernière page"
+              data-testid="last-page-btn"
             >
               <ChevronsRight className="ae-icon-size-sm" aria-hidden="true" />
             </button>

@@ -334,7 +334,7 @@ export const BLOCK_DEFINITIONS = {
         {
           id: 'news_1',
           title: 'Salon du Livre de Saumur',
-          description: 'Retrouvez l\'équipe d\'Anjou Édition au stand C12 les 14 et 15 octobre 2026.'
+          description: 'Retrouvez l\'équipe d\'Anjou Édition, pour les nuls au stand C12 les 14 et 15 octobre 2026.'
         },
         {
           id: 'news_2',

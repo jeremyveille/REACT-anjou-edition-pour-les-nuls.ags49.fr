@@ -14,7 +14,7 @@ export const PrivacyPolicy = ({ setView, onNavigate }) => {
 
   const handleBack = () => {
     if (onNavigate) {
-      onNavigate({ type: 'home' }, '/', "Anjou Édition — Pour les Nuls");
+      onNavigate({ type: 'home' }, '/', "Anjou Édition, pour les nuls");
     } else if (setView) {
       setView({ type: 'home' });
     }
@@ -48,11 +48,11 @@ export const PrivacyPolicy = ({ setView, onNavigate }) => {
           <section>
             <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '0.5rem', color: 'var(--primary)' }}>1. Informations Générales & Responsable du Traitement</h3>
             <p>
-              Le site <strong>Anjou Édition – Pour les Nuls</strong> est un portail culturel dédié au patrimoine littéraire et historique de l'Anjou.
+              Le site <strong>Anjou Édition, pour les nuls</strong> est un portail culturel dédié au patrimoine littéraire et historique de l'Anjou.
             </p>
             <p style={{ marginTop: '0.5rem' }}>
               <strong>Responsable de publication et du traitement des données :</strong><br />
-              Équipe Éditoriale Anjou Édition – Maine-et-Loire (49), France.<br />
+              Équipe Éditoriale Anjou Édition, pour les nuls – Maine-et-Loire (49), France.<br />
               <strong>Contact Référent RGPD / DPO :</strong> <a href="mailto:contact@anjou-edition-nuls.fr" style={{ color: 'var(--secondary)' }}>contact@anjou-edition-nuls.fr</a>
             </p>
             <p style={{ marginTop: '0.5rem' }}>
@@ -88,7 +88,7 @@ export const PrivacyPolicy = ({ setView, onNavigate }) => {
           <section>
             <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '0.5rem', color: 'var(--primary)' }}>5. Sécurité et Destinataires des Données</h3>
             <p>
-              Vos données sont transmises via un protocole chiffré HTTPS (TLS 1.3) et stockées de façon sécurisée. Elles sont réservées à l'usage exclusif de l'équipe d'Anjou Édition et <strong>ne font l'objet d'aucune cession, revente ou transfert commercial</strong> à des tiers.
+              Vos données sont transmises via un protocole chiffré HTTPS (TLS 1.3) et stockées de façon sécurisée. Elles sont réservées à l'usage exclusif de l'équipe d'Anjou Édition, pour les nuls et <strong>ne font l'objet d'aucune cession, revente ou transfert commercial</strong> à des tiers.
             </p>
           </section>
 
@@ -108,7 +108,7 @@ export const PrivacyPolicy = ({ setView, onNavigate }) => {
                 type="button" 
                 onClick={() => {
                   if (onNavigate) {
-                    onNavigate({ type: 'contact' }, '/contact', "Contact — Anjou Édition");
+                    onNavigate({ type: 'contact' }, '/contact', "Contact — Anjou Édition, pour les nuls");
                   } else if (setView) {
                     setView({ type: 'contact' });
                   }

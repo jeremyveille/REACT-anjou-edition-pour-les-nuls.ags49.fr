@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { ChevronDown, ChevronRight, Search, Send, Menu, X } from 'lucide-react';
+import { BRAND_NAME } from '../constants/brand';
 
 export const PublicNav = ({
   setView,
@@ -22,6 +23,7 @@ export const PublicNav = ({
     const trigger = toggleRef.current;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
+    document.body.classList.add('no-scroll');
     drawer?.querySelector('button')?.focus();
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
@@ -40,15 +42,23 @@ export const PublicNav = ({
         }
       }
     };
+    const handleResize = () => {
+      if (window.innerWidth >= 900) {
+        setMobileMenuOpen(false);
+      }
+    };
     document.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('resize', handleResize);
     return () => {
       document.body.style.overflow = previousOverflow;
+      document.body.classList.remove('no-scroll');
       document.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('resize', handleResize);
       trigger?.focus();
     };
   }, [mobileMenuOpen, setMobileMenuOpen]);
 
-  const renderDropdownItems = (items, depth = 2, isArts = false) => {
+  const renderDropdownItems = (items, depth = 2, isArts = false, shouldOpenLeft = false) => {
     return items.map((child) => {
       const hasChilds = child.children && child.children.length > 0;
       const isLevel2 = depth === 2;
@@ -56,7 +66,7 @@ export const PublicNav = ({
         return (
           <div 
             key={child.id} 
-            className={`dropdown-submenu level-${depth} ${isArts && isLevel2 ? 'dropdown-submenu-below' : ''}`}
+            className={`dropdown-submenu level-${depth} ${isArts && isLevel2 ? 'dropdown-submenu-below' : ''} ${shouldOpenLeft ? 'open-left' : ''}`}
           >
             <div className={`ae-dropdown-submenu-item level-${depth}`}>
               {(child.status === "Actif" || child.isActive) && (child.url || child.shortcode) ? (
@@ -74,11 +84,18 @@ export const PublicNav = ({
                 <span className={`ae-dropdown-sub-text level-${depth}`}>{child.title}</span>
               )}
               <span className="ae-dropdown-chevron">
-                <ChevronRight size={depth === 2 ? 12 : 11} />
+                {isArts && isLevel2 ? (
+                  <ChevronDown size={depth === 2 ? 12 : 11} />
+                ) : (
+                  <ChevronRight size={depth === 2 ? 12 : 11} />
+                )}
               </span>
             </div>
-            <div className={`dropdown-menu dropdown-level-${depth + 1} ${isArts && isLevel2 ? 'dropdown-menu-below' : ''}`}>
-              {renderDropdownItems(child.children, depth + 1, isArts)}
+            <div 
+              className={`dropdown-menu dropdown-level-${depth + 1} ${isArts && isLevel2 ? 'dropdown-menu-below' : ''}`}
+              style={{ maxWidth: 'calc(100vw - 20px)' }}
+            >
+              {renderDropdownItems(child.children, depth + 1, isArts, shouldOpenLeft)}
             </div>
           </div>
         );
@@ -163,15 +180,20 @@ export const PublicNav = ({
                 if (item.shortcode === 'show_flipbooks' || item.shortcode === 'show_videos' || item.shortcode === 'show_gallery') return false;
                 return true;
               })
-              .map((item) => {
+              .map((item, itemIndex, filteredItems) => {
               const hasChildren = item.children && item.children.length > 0;
               let displayTitle = item.title || '';
               if (displayTitle.trim().toUpperCase() === 'ART') displayTitle = 'ARTS';
               if (displayTitle.trim().toUpperCase() === 'CONTES ET LÉGENDES' || displayTitle.trim().toUpperCase() === 'CONTES ET LEGENDES') displayTitle = 'CONTES et LÉGENDES';
               if (hasChildren) {
                 const isArts = (item.title || item.label || "").trim().toLowerCase().startsWith("art");
+                const shouldOpenLeft = itemIndex >= Math.floor(filteredItems.length / 2);
                 return (
-                  <div className="dropdown" key={item.id} ref={(el) => { if(dropdownRefs) dropdownRefs.current[item.title] = el; }}>
+                  <div 
+                    className={`dropdown ${shouldOpenLeft ? 'dropdown-menu-align-left' : ''}`} 
+                    key={item.id} 
+                    ref={(el) => { if(dropdownRefs && dropdownRefs.current) dropdownRefs.current[item.title] = el; }}
+                  >
                     <div className="ae-nav-item-compact" style={{ color: activeDropdown === item.title ? 'var(--secondary)' : 'inherit' }}>
                       {(item.status === "Actif" || item.isActive) && (item.url || item.shortcode) ? (
                         <button 
@@ -203,8 +225,11 @@ export const PublicNav = ({
                         <ChevronDown size={11} aria-hidden="true" />
                       </button>
                     </div>
-                    <div className={`dropdown-menu ${activeDropdown === item.title ? 'show' : ''}`} style={{ minWidth: '180px' }}>
-                      {renderDropdownItems(item.children, 2, isArts)}
+                    <div 
+                      className={`dropdown-menu ${activeDropdown === item.title ? 'show' : ''}`} 
+                      style={{ minWidth: '180px', maxWidth: 'calc(100vw - 20px)' }}
+                    >
+                      {renderDropdownItems(item.children, 2, isArts, shouldOpenLeft)}
                     </div>
                   </div>
                 );
@@ -255,16 +280,23 @@ export const PublicNav = ({
               aria-expanded={mobileMenuOpen}
               aria-controls="mobile-drawer"
             >
-              {mobileMenuOpen ? <X size={22} aria-hidden="true" /> : <Menu size={22} aria-hidden="true" />}
+              {mobileMenuOpen ? <X size={18} aria-hidden="true" /> : <Menu size={18} aria-hidden="true" />}
             </button>
           </div>
         </div>
       </nav>
 
+      {/* Mobile Drawer Backdrop */}
+      <div 
+        className={`mobile-drawer-backdrop ${mobileMenuOpen ? 'open' : ''}`} 
+        onClick={() => setMobileMenuOpen(false)} 
+        aria-hidden="true" 
+      />
+
       {/* Mobile Drawer Navigation Menu */}
       <div id="mobile-drawer" ref={drawerRef} className={`mobile-drawer ${mobileMenuOpen ? 'open' : ''}`} role="dialog" aria-modal={mobileMenuOpen ? true : undefined} aria-hidden={!mobileMenuOpen} inert={!mobileMenuOpen} aria-label="Menu principal de navigation mobile">
         <div className="mobile-drawer-header">
-          <h2>Anjou Édition</h2>
+          <h2>{BRAND_NAME}</h2>
           <button type="button" onClick={() => setMobileMenuOpen(false)} aria-label="Fermer le menu">
             <X size={24} />
           </button>

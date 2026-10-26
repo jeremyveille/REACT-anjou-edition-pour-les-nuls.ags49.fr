@@ -136,8 +136,8 @@ export default function DashboardSidebar({
             type="button"
             className="sidebar-brand"
             onClick={handleHomeClick}
-            aria-label="Accueil Anjou Édition"
-            title="Anjou Édition - Accueil du tableau de bord"
+            aria-label="Accueil Anjou Édition, pour les nuls"
+            title="Anjou Édition, pour les nuls - Accueil du tableau de bord"
           >
             <div className="sidebar-brand-icon">
               <BookOpen size={20} aria-hidden="true" />

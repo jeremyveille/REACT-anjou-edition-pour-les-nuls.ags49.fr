@@ -15,6 +15,7 @@ import {
 import { galleryImages, videosData, flipbooksData, articlesData } from '../data';
 import { normalizeBlocks, getDefaultHomepageBlocks } from '../components/page-builder/blockRegistry';
 import { compressBase64ImageIfNeeded } from '../utils/imageOptimizer';
+import { BRAND_NAME } from '../constants/brand';
 
 /**
  * Purge récursivement les anciens blocs de flipbook reader et le bloc d'introduction de la page d'accueil.
@@ -351,7 +352,7 @@ export const pageService = {
         return [
           {
             id: 'page_home_default',
-            title: 'Accueil - Anjou Édition',
+            title: `Accueil - ${BRAND_NAME}`,
             slug: 'accueil',
             isHome: true,
             isHomePage: true,
@@ -755,12 +756,12 @@ export const pageService = {
     const defaultImages = [
       {
         id: "media_anjou_edition_livre",
-        name: "Livre Anjou Édition",
+        name: `Livre ${BRAND_NAME}`,
         url: "/anjou-edition-livre.png",
         type: "image",
         mimeType: "image/png",
         size: 87044,
-        alt: "Anjou Édition - Une maison d’édition ouverte à tous",
+        alt: `${BRAND_NAME} - Une maison d’édition ouverte à tous`,
         createdAt: new Date().toISOString()
       },
       ...(galleryImages || []).map((img, i) => ({

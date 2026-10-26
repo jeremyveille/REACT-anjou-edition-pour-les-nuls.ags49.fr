@@ -8,7 +8,7 @@ describe("InfoCard Administrative Status Card Tests", () => {
     render(<InfoCard onLearnMore={mockLearnMore} />);
 
     // Service title & status
-    expect(screen.getByText("Service Anjou Édition")).toBeInTheDocument();
+    expect(screen.getByText("Service Anjou Édition, pour les nuls")).toBeInTheDocument();
     expect(screen.getByText(/Statut : Actif/i)).toBeInTheDocument();
 
     // Cloud Firestore & access
@@ -28,7 +28,7 @@ describe("InfoCard Administrative Status Card Tests", () => {
 
   test("renders gracefully without onLearnMore callback", () => {
     render(<InfoCard />);
-    expect(screen.getByText("Service Anjou Édition")).toBeInTheDocument();
+    expect(screen.getByText("Service Anjou Édition, pour les nuls")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /En savoir plus/i })).not.toBeInTheDocument();
   });
 });

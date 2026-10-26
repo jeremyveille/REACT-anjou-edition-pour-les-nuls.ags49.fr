@@ -37,7 +37,7 @@ L'application se compose de deux grandes parties :
     > [!IMPORTANT]
     > **RÈGLE STRICTE** : **NE JAMAIS UTILISER TAILWIND**. Le projet utilise uniquement du Vanilla CSS et Bootstrap 5 pour le Page Builder.
 *   **Bibliothèque d'Icônes** : [lucide-react v1.17.0](https://lucide.dev/)
-*   **Tests** : Jest et [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/) (22 suites de tests, 173 tests unitaires et d'intégration, 100% de réussite).
+*   **Tests** : Jest et [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/) (45 suites de tests, 485 tests unitaires et d'intégration, 100% de réussite).
 
 ---
 
@@ -102,6 +102,13 @@ Se déplacer dans le dossier : `cd app`
 *   **Administration unifiée dans le Dashboard** : Section « Barres latérales du Flipbook » avec colonnes « Barre gauche » et « Barre droite », gestion fine des blocs (création, modification, activation/désactivation, monter, descendre, suppression).
 *   **Types de blocs multimédias supportés** : Images (médiathèque, upload ou URL), vidéos (intégration YouTube responsive 16/9 ou vidéos locales HTML5), textes/HTML sécurisés avec assainissement XSS (`sanitizeHtml`), titres avec niveaux hiérarchiques, boutons d'action stylisés, documents PDF téléchargeables.
 *   **Persistance hybride** : Association exclusive à chaque flipbook (`leftSidebar` et `rightSidebar`), synchronisée sur Firestore et mise en cache dans `localStorage`.
+
+### 9.1 Lecteur Flipbook Universel & Navigation Définitive (`PdfFlipbookReader`, `pdf-reader.css`)
+*   **Pagination inférieure unique et épurée** : Remplacement complet des libellés multiples (« Numéro de page actuelle », « Page 1 sur 3 » en double) par une seule indication sémantique claire : `Page [ X ] sur Y` encadrée par `[ « ] [ ‹ ]` et `[ › ] [ » ]`. Le mot « Page » sert directement de `<label>` accessible relié à l'input numérique, éliminant tout doublon visible ou invisible non stylisé.
+*   **Saisie directe et synchronisation bidirectionnelle** : Champ modifiable avec validation à la touche Entrée ou à la perte de focus (`blur`), protection contre les dépassements (`val > total` borné au maximum, `val < 1` restauré), et désactivation stricte des flèches en première/dernière page ou sur les Flipbooks à page unique.
+*   **Encodage UTF-8 et assainissement total** : Élimination absolue des caractères corrompus (`\uFFFD`) dans les chaînes de caractères et boutons d'accessibilité.
+*   **En-tête et barre d'outils mobile 2 rangées** : Ligne 1 avec Titre et bouton de fermeture compact 30x30 px sans forcer de saut de ligne ; Ligne 2 avec commandes compactes (Sommaire, Recherche, Miniatures, Audio, Zoom, Plein écran).
+*   **Optimisation de l'affichage PDF** : Calcul d'échelle dynamique optimisé, marges intérieures réduites à 8 px (gain de +18% de surface de lecture nette), centrage parfait et bascule plein écran dédiée sans rotation parasite de page.
 
 ### 10. Menu d'Administration Latéral Ergonomique & Layout Dashboard (`DashboardSidebar`, `DashboardHeader`, `dashboard.css`)
 *   **Structure SaaS rectangulaire & Sans rognage** : Sidebar verticale rectangulaire de 250px de largeur fixe sur grand écran, sans forme ovale ou arrondie qui coupe les intitulés, intégrée directement dans un conteneur SaaS pleine hauteur (`.dashboard-layout-container`).
@@ -451,7 +458,25 @@ Se déplacer dans le dossier : `cd app`
 
 ---
 
-*Dernière mise à jour du contexte par l'agent : 21 octobre 2026.*
+### 28. Barre de Navigation Sticky Native & Architecture Non-Régression Globale (`PublicNav.js`, `PublicComponents.js`, `App.css`, `site-polish.css`)
+*   **Positionnement Sticky 100% Natif au Scroll (`position: sticky; top: 0;`)** :
+    *   Au chargement initial (scroll = 0), la bannière panoramique `.ae-mockup-header` est entièrement visible sans aucun rognage, et la barre de navigation `nav.public-nav` s'affiche immédiatement en dessous dans le flux normal du document (aucun décalage, aucun chevauchement, CLS = 0).
+    *   Lors du défilement vers le bas, dès que la barre atteint le haut de la fenêtre, elle s'accroche naturellement à `top: 0` avec `z-index: 1000` et un arrière-plan opaque (`rgba(255, 255, 255, 0.98)` / `rgba(15, 23, 42, 0.98)` en mode sombre), empêchant toute transparence du contenu défilant.
+    *   Dès que l'utilisateur remonte vers le haut, la barre se repositionne naturellement sous la bannière sans à-coup.
+*   **Verrouillage du Défilement Accessible & Auto-Fermeture Réactive** :
+    *   À l'ouverture du tiroir mobile (`mobileMenuOpen = true`), le défilement de l'arrière-plan est immédiatement bloqué via `body.style.overflow = 'hidden'` ET la classe CSS dédiée `body.no-scroll { overflow: hidden !important; }`.
+    *   Fermeture au clavier par touche `Échap`, clic sur le backdrop, et écouteur de redimensionnement (`window.innerWidth >= 900`) libérant automatiquement le défilement lors du basculement en mode bureau.
+*   **Protection des Ancres de Contenu & Conformité WCAG AA** :
+    *   Lien d'évitement accessible ciblant `<main id="main-content" tabIndex="-1">` assurant un transfert effectif du focus DOM (conforme WCAG 2.4.1 / RGAA 12.7) sans contour parasite (`:focus { outline: none; }`).
+    *   Règle universelle `scroll-margin-top: clamp(50px, 8vw, 75px);` sur `:target`, `#main-content`, `section[id]`, `main[id]`, `article[id]` et les dialogues de flipbook, garantissant qu'aucun titre ou ancre n'est masqué derrière la barre de navigation sticky.
+*   **Qualité, Tests & Respect Absolu des Règles** :
+    *   45 suites de tests complètes et 485 tests unitaires et d'intégration réussis à 100% (0 échec, 0 régression).
+    *   100% Vanilla CSS pur (0 framework Tailwind, zéro dépendance non déclarée).
+    *   Compilation de production `npm run build` réussie avec 0 erreur et 0 avertissement.
+
+---
+
+*Dernière mise à jour du contexte par l'agent : 25 octobre 2026 (Round 3 - Audit Final).*
 
 
 

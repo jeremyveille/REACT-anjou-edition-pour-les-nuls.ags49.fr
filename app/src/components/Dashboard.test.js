@@ -174,7 +174,7 @@ describe('Dashboard Articles Management Tests', () => {
 
     // Verify header and articles
     expect(await screen.findByText(/Articles du portail/i)).toBeInTheDocument();
-    expect(await screen.findByText(/Anjou Édition : une maison d[’']édition ouverte à tous/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Anjou Édition(?:, pour les nuls)? : une maison d[’']édition ouverte à tous/i)).toBeInTheDocument();
 
     // Verify featured article badge
     expect(screen.getByText(/Article Principal \(Accueil\)/i)).toBeInTheDocument();
@@ -184,7 +184,7 @@ describe('Dashboard Articles Management Tests', () => {
     render(<Dashboard onBackToSite={() => {}} />);
 
     fireEvent.click(screen.getByRole('button', { name: /Articles/i }));
-    expect(await screen.findByText(/Anjou Édition : une maison d[’']édition ouverte à tous/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Anjou Édition(?:, pour les nuls)? : une maison d[’']édition ouverte à tous/i)).toBeInTheDocument();
 
     // Click Edit on the presentation article
     const editBtn = screen.getByRole('button', { name: /Modifier l['’]article Anjou Édition/i });
@@ -192,11 +192,11 @@ describe('Dashboard Articles Management Tests', () => {
 
     // Modal should be visible
     expect(await screen.findByText(/Modifier l['’]article/i)).toBeInTheDocument();
-    expect(screen.getByDisplayValue(/Anjou Édition : une maison d[’']édition ouverte à tous/i)).toBeInTheDocument();
+    expect(screen.getByDisplayValue(/Anjou Édition(?:, pour les nuls)? : une maison d[’']édition ouverte à tous/i)).toBeInTheDocument();
     expect(screen.getByText(/Afficher cet article sur la page d[’']accueil/i)).toBeInTheDocument();
 
     // Change title
-    const titleInput = screen.getByDisplayValue(/Anjou Édition : une maison d[’']édition ouverte à tous/i);
+    const titleInput = screen.getByDisplayValue(/Anjou Édition(?:, pour les nuls)? : une maison d[’']édition ouverte à tous/i);
     fireEvent.change(titleInput, { target: { value: "Anjou Édition : Titre Modifié" } });
 
     // Click save
